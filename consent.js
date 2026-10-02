@@ -1,162 +1,143 @@
 /* ============================================================
-   consent.js — ระบบขออนุญาตผู้ปกครองก่อนลงพื้นที่
-   • ครูออกลิงก์ใช้ครั้งเดียวรายคน → นักเรียนคัดลอกส่งให้ผู้ปกครอง → ผู้ปกครองเซ็นบนเครื่องของตนเอง เลือก "อนุญาต" หรือ "ไม่อนุญาต" ได้
-   • ทุกการตัดสินใจบันทึกพร้อมเวลา ชื่อผู้ปกครอง และประวัติการแก้ไข
-   • พิมพ์/บันทึก PDF "หนังสือขออนุญาตผู้ปกครอง" ได้ทั้งฉบับเปล่าและฉบับที่เซ็นแล้ว
-   • คำนวณสัดส่วนการลงพื้นที่ เพื่อปรับคะแนนงานภาคสนามอัตโนมัติ
-   © 2569 พัฒนาโดย นนทพัทธ์ วงค์มูล
+   consent.js — ขั้นที่ 4: ใบขออนุญาตผู้ปกครอง (ลิงก์ใช้ครั้งเดียว เซ็นบนเครื่องผู้ปกครอง ไม่ต้องล็อกอิน)
+   ข้อมูล: ctoken/{token} = รายละเอียด + sign (เขียนได้ครั้งเดียว) + verified · y/{ปี}/consents/{sid}/{eid} = token
    ============================================================ */
 (function () {
   'use strict';
-  const M = window.MC, C = M.C;
-  const { $, $$, esc, thDate, thDateTime, modal, toast } = M;
-
-  /* ---------- สไตล์เฉพาะโมดูล (ฉีดครั้งเดียว) ---------- */
-  if (!document.getElementById('consent-css')) {
-    const st = document.createElement('style'); st.id = 'consent-css';
-    st.textContent = `
-.cs-chip{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:2px 10px;font-size:.78rem;font-weight:600}
-.cs-allow{background:#d9f3ea;color:#0f8a6a}.cs-deny{background:#fde7ef;color:#b4235a}.cs-pend{background:#fff1d6;color:#8a5a00}
-.cs-letter{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.92rem;line-height:1.65;max-height:38vh;overflow:auto;margin-bottom:12px}
-.cs-dec{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.cs-dec button{min-height:56px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:700;font-size:1rem;cursor:pointer}
-.cs-dec button.on[data-dec=allow]{background:#d9f3ea;border-color:#0f8a6a;color:#0f8a6a}
-.cs-dec button.on[data-dec=deny]{background:#fde7ef;border-color:#b4235a;color:#b4235a}
-.cs-sign{width:100%;height:150px;background:#fff;border:1.5px dashed var(--p200);border-radius:12px;touch-action:none;display:block}
-.cs-table{width:100%;border-collapse:collapse;font-size:.86rem}.cs-table th,.cs-table td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}.cs-table th{background:var(--p50);color:var(--p600)}
-/* ---- หนังสือขออนุญาต A4 ---- */
-.cl-page{font:400 13.5px/1.5 'Sarabun','TH SarabunPSK',sans-serif;color:#111;background:#fff}
-.cl-page .cl-head{text-align:center}.cl-page .cl-head img{height:60px}
-.cl-page .cl-school{font-weight:700;font-size:16px;margin-top:4px}
-.cl-page h1{font-size:17px;line-height:1.35;text-align:center;margin:6px 0 2px;font-weight:700}
-.cl-page .cl-date{text-align:right;margin:6px 0 10px}
-.cl-page p{margin:0 0 6px;text-indent:44px;text-align:justify}
-.cl-page .cl-np{text-indent:0}
-.cl-page table.cl-info{width:100%;border-collapse:collapse;margin:4px 0 6px;font-size:13px}.cl-page table.cl-info td{border:1px solid #c4b5fd;padding:1px 8px;vertical-align:top}.cl-page table.cl-info td:first-child{width:28%;background:#f6f3fc;font-weight:600}
-.cl-page .cl-sig{width:46%;margin-left:auto;text-align:center;margin-top:4px;line-height:1.45}
-.cl-page .cl-cut{border-top:2px dashed #999;margin:14px 0 4px;position:relative;text-align:center;font-size:12px;color:#666}
-.cl-page .cl-cut span{background:#fff;padding:0 8px;position:relative;top:-11px}
-.cl-page .cl-box{display:inline-block;width:14px;height:14px;border:1.5px solid #333;vertical-align:-2px;margin:0 4px 0 12px;text-align:center;line-height:12px;font-size:12px;font-weight:700}
-.cl-page .cl-signimg{height:46px;max-width:220px;display:block;margin:0 auto -6px}
-.cl-page .cl-line{display:inline-block;min-width:180px;border-bottom:1px dotted #333;text-align:center;padding:0 6px}
-.cl-page .cl-ref{position:absolute;left:60px;right:60px;bottom:26px;font-size:10.5px;color:#777;text-align:center;border-top:1px solid #eee;padding-top:4px}
-.cl-page .cl-stamp{position:absolute;top:70px;right:60px;border:2.5px solid;border-radius:10px;padding:2px 10px;font-weight:700;transform:rotate(-8deg);font-size:15px}
-.cl-page .cl-stamp.allow{color:#0f8a6a;border-color:#0f8a6a}.cl-page .cl-stamp.deny{color:#b4235a;border-color:#b4235a}`;
-    document.head.appendChild(st);
-  }
-
-  const DEC = { allow: ['✅ ผู้ปกครองอนุญาต', 'cs-allow'], deny: ['❌ ผู้ปกครองไม่อนุญาต', 'cs-deny'] };
-  function chip(c) { if (!c || !c.decision) return '<span class="cs-chip cs-pend">⏳ ยังไม่ได้ขออนุญาต</span>'; const d = DEC[c.decision]; return '<span class="cs-chip ' + d[1] + '">' + d[0] + '</span>'; }
-  const needsConsent = e => e && e.date && e.status !== 'cancelled' && e.status !== 'proposed';
-  const commOf = e => (M.commObj ? M.commObj(e) : M.comm(e.community)) || (e && e._commName ? { name: e._commName } : {});
-
-  /* ---------- เนื้อความหนังสือ ---------- */
-  function letterBody(ev, stu) {
-    const c = commOf(ev); const t = C.course;
-    return { intro: 'ด้วยรายวิชา' + t.name + ' (' + t.code + ') ' + (t.unit || '') + ' ' + t.school + ' ได้จัดกิจกรรมให้นักเรียนออกไปศึกษาเรียนรู้นอกสถานที่ เพื่อศึกษาดนตรีพหุวัฒนธรรมในชุมชน โดยการสังเกต สัมภาษณ์ผู้รู้ และบันทึกข้อมูลภาคสนาม ซึ่งเป็นส่วนหนึ่งของการเรียนรู้และการประเมินผลในรายวิชา',
-      rows: [['ชื่อนักเรียน', (stu.name || '') + '  ชั้น ม.' + (stu.room || '') + '  เลขที่ ' + (stu.no || '')], ['กลุ่ม', stu.group || '-'], ['กิจกรรม', ev.title || 'ลงพื้นที่ศึกษาดนตรี'], ['วัน เวลา', thDate(ev.date, true) + (ev.start ? ' เวลา ' + ev.start + (ev.end ? '–' + ev.end : '') + ' น.' : '')], ['สถานที่ / ชุมชน', [ev.place, c.name ? 'ชุมชน' + c.name : ''].filter(Boolean).join(' · ') || '-'], ['จุดนัดพบ / การเดินทาง', ev.meet || '-'], ['ครูผู้ควบคุม', t.teacher + (t.teacherPosition ? ' (' + t.teacherPosition + ')' : '') + (ev.teacherJoin ? ' — ร่วมเดินทางไปกับนักเรียน' : '')], ].concat(ev.note ? [['หมายเหตุ', ev.note]] : []),
-      close: 'จึงเรียนมาเพื่อโปรดพิจารณาอนุญาตให้นักเรียนในปกครองของท่านเข้าร่วมกิจกรรมดังกล่าว ทั้งนี้ ท่านสามารถเลือก “อนุญาต” หรือ “ไม่อนุญาต” ได้ตามความเหมาะสม หากไม่อนุญาต นักเรียนจะได้รับมอบหมายงานทดแทนตามที่ครูกำหนด' };
-  }
-
-  /* ---------- หน้า A4 สำหรับพิมพ์ ---------- */
-  function letterPage(ev, stu, c) {
-    const L = letterBody(ev, stu); const t = C.course; const signed = c && c.decision;
-    const pg = document.createElement('section'); pg.className = 'rp-page cl-page';
-    pg.style.cssText = 'width:794px;height:1123px;padding:34px 60px 50px;position:relative;overflow:hidden;background:#fff';
-    const box = v => '<span class="cl-box">' + (signed && c.decision === v ? '✓' : '') + '</span>';
-    pg.innerHTML = (signed ? '<div class="cl-stamp ' + c.decision + '">' + (c.decision === 'allow' ? 'อนุญาต' : 'ไม่อนุญาต') + '</div>' : '') +
-      '<div class="cl-head"><img src="icons/school-logo.png" alt=""><div class="cl-school">' + esc(t.school) + '</div></div>' +
-      '<h1>หนังสือขออนุญาตผู้ปกครอง<br><span style="font-size:16px;font-weight:600">ให้นักเรียนออกไปศึกษาเรียนรู้นอกสถานที่</span></h1>' +
-      '<div class="cl-date">วันที่ ' + esc(thDate(M.today(), true)) + '</div>' +
-      '<p class="cl-np"><b>เรื่อง</b> ขออนุญาตให้นักเรียนลงพื้นที่ศึกษาดนตรีพหุวัฒนธรรม<br><b>เรียน</b> ผู้ปกครองของ ' + esc(stu.name || '') + '</p>' +
-      '<p>' + esc(L.intro) + ' รายละเอียดดังนี้</p><table class="cl-info">' + L.rows.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>').join('') + '</table>' +
-      '<p>' + esc(L.close) + '</p>' +
-      '<div class="cl-sig">ขอแสดงความนับถือ<br><span class="cl-line">&nbsp;</span><br>(' + esc(t.teacher) + ')<br>' + esc(t.teacherPosition || 'ครูผู้สอน') + '</div>' +
-      '<div class="cl-cut"><span>✂ ส่วนของผู้ปกครอง</span></div>' +
-      '<p class="cl-np">ข้าพเจ้า <span class="cl-line">' + esc(signed ? c.parentName : '') + '</span> เกี่ยวข้องเป็น <span class="cl-line" style="min-width:90px">' + esc(signed ? c.relation : '') + '</span> ของ ' + esc(stu.name || '') + ' ชั้น ม.' + esc(stu.room || '') + ' เลขที่ ' + esc(stu.no || '') + '</p>' +
-      '<p class="cl-np">ได้รับทราบรายละเอียดกิจกรรม “' + esc(ev.title || '') + '” วันที่ ' + esc(thDate(ev.date, true)) + ' แล้ว และขอแจ้งว่า</p>' +
-      '<p class="cl-np" style="margin:6px 0">' + box('allow') + ' <b>อนุญาต</b> ให้นักเรียนเข้าร่วมกิจกรรม &nbsp;&nbsp; ' + box('deny') + ' <b>ไม่อนุญาต</b> เนื่องจาก <span class="cl-line" style="min-width:220px">' + esc(signed && c.decision === 'deny' ? (c.reason || '-') : '') + '</span></p>' +
-      '<p class="cl-np">เบอร์โทรศัพท์ที่ติดต่อได้ <span class="cl-line">' + esc(signed ? (c.phone || '-') : '') + '</span></p>' +
-      '<div class="cl-sig">' + (signed && c.sign ? '<img class="cl-signimg" src="' + c.sign + '" alt="">' : '<br>') + 'ลงชื่อ <span class="cl-line">&nbsp;</span> ผู้ปกครอง<br>(' + (signed ? esc(c.parentName) : '<span class="cl-line">&nbsp;</span>') + ')<br>วันที่ ' + (signed ? esc(thDateTime(c.at)) : '........./........./.........') + '</div>' +
-      '<div class="cl-ref">' + (signed ? 'บันทึกทางอิเล็กทรอนิกส์ผ่านแอป ' + esc(C.appName) + ' เมื่อ ' + esc(thDateTime(c.at)) + (c.method === 'paper' ? ' (ครูบันทึกจากใบกระดาษ)' : ' (ผู้ปกครองลงนามผ่านลิงก์บนอุปกรณ์ของผู้ปกครอง)' + (c.verified ? ' · ครูยืนยันแล้ว' : '')) + ' · รหัสอ้างอิง ' + esc(ev.id) + '-' + esc(stu.sid) : 'ฉบับสำหรับพิมพ์ให้ผู้ปกครองลงนาม · รหัสอ้างอิง ' + esc(ev.id) + '-' + esc(stu.sid)) + ' · ' + esc(C.copyright) + '</div>';
-    return pg;
-  }
-  function letters(items) { const root = document.createElement('div'); root.className = 'rp-root'; items.forEach(it => root.appendChild(letterPage(it.ev, it.stu, it.c))); return root; }
-  function printLetters(items) { M.printPages(letters(items)); }
-  async function pdfLetters(items, name) { return M.exportPDF(letters(items), (name || 'ใบขออนุญาตผู้ปกครอง') + '.pdf'); }
-
-  /* ---------- ลิงก์ใบอนุญาต: ctoken/{token} = รายละเอียดนัด + sign (ผู้ปกครองเขียนได้ครั้งเดียว) + verified (ครู) ---------- */
+  const M = window.MC, B = window.B, A = window.APP, C = M.C;
+  const { $, esc, toast, modal } = M;
+  const CT = {};   /* token → ข้อมูล (โหลดเมื่อเปิดหน้ากิจกรรม) */
+  const canForm = () => A.teacher() || A.is('secretary');
+  const Y = () => 'y/' + A.year();
   const newToken = () => { const a = new Uint8Array(18); crypto.getRandomValues(a); return Array.from(a).map(x => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join(''); };
-  const linkOf = t => location.origin + location.pathname.replace(/teacher\.html$/, 'index.html').replace(/index\.html$/, '') + '?c=' + t + (window.B && B.mode === 'demo' ? '&demo=1' : '');
-  const COURSE_KEYS = ['school', 'code', 'name', 'unit', 'teacher', 'teacherPosition'];
-  function tokenData(ev, stu) {
-    const course = {}; COURSE_KEYS.forEach(k => { if (C.course[k] != null) course[k] = C.course[k]; });
-    const o = { eid: ev.id, sid: stu.sid, gid: stu.gid || null, student: stu.name || '', room: stu.room || '', no: stu.no == null ? '' : stu.no, group: stu.group || '', title: ev.title || '', date: ev.date || '', start: ev.start || null, end: ev.end || null, community: ev.community || null, communityOther: ev.communityOther || null, commName: (commOf(ev) || {}).name || null, place: ev.place || null, meet: ev.meet || null, note: ev.note || null, teacherJoin: !!ev.teacherJoin, course };
-    return JSON.parse(JSON.stringify(o));
-  }
-  /* แปลงข้อมูลลิงก์ → รูปแบบที่หนังสือ/การคิดคะแนนใช้ */
-  function rec(ct) { const s = ct && ct.sign; if (!s) return null; return { decision: s.allow ? 'allow' : 'deny', parentName: s.name || '', relation: s.relation || '', phone: s.phone || '', reason: s.reason || '', sign: s.sig || '', at: s.at, method: s.paper ? 'paper' : 'link', verified: ct.verified || null }; }
-  function fromToken(ct, blank) { return { ev: { id: ct.eid, title: ct.title, date: ct.date, start: ct.start, end: ct.end, community: ct.community, communityOther: ct.communityOther, _commName: ct.commName, place: ct.place, meet: ct.meet, note: ct.note, teacherJoin: ct.teacherJoin }, stu: { sid: ct.sid, name: ct.student, room: ct.room, no: ct.no, group: ct.group, gid: ct.gid }, c: blank ? null : rec(ct) }; }
-  function status(t, ct) {
-    if (!t) return ['⏳ ครูยังไม่ได้ออกลิงก์', 'cs-pend']; if (ct === undefined || ct === null) return ['กำลังโหลด…', 'cs-pend']; if (ct === false) return ['ลิงก์ถูกยกเลิก', 'cs-pend'];
-    const s = ct.sign; if (!s) return ['⏳ รอผู้ปกครองตอบ', 'cs-pend'];
-    if (!s.allow) return ['❌ ผู้ปกครองไม่อนุญาต', 'cs-deny'];
-    return [ct.verified ? '✅ อนุญาต · ครูยืนยันแล้ว' : '✅ อนุญาต · รอครูยืนยัน', 'cs-allow'];
-  }
-  const statusChip = (t, ct) => { const s = status(t, ct); return '<span class="cs-chip ' + s[1] + '">' + s[0] + '</span>'; };
-  async function copyLink(t) { const l = linkOf(t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว — วางส่งให้ผู้ปกครองทาง LINE ได้เลย', 3200); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><div class="muted" style="margin-bottom:6px">กดค้างที่ข้อความเพื่อคัดลอก</div><textarea rows="3" readonly style="font-size:14px">' + esc(l) + '</textarea><button class="btn sec block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } }
-  async function shareLink(t, ct) { const l = linkOf(t); if (navigator.share) { try { await navigator.share({ title: 'ใบขออนุญาตผู้ปกครอง', text: 'ขออนุญาตให้ ' + ((ct && ct.student) || 'นักเรียน') + ' ร่วมกิจกรรม “' + ((ct && ct.title) || 'ลงพื้นที่ศึกษาดนตรี') + '” กรุณาเปิดลิงก์เพื่ออ่านรายละเอียดและลงชื่อ', url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } return copyLink(t); }
+  const linkOf = t => location.origin + location.pathname + '?c=' + t + (B.mode === 'demo' ? '&demo=1' : '');
+  const tokenOf = (sid, eid) => ((A.D.consents || {})[sid] || {})[eid] || '';
+  const stOf = ct => !ct ? ['ยังไม่สร้างลิงก์', 'line'] : !ct.sign ? ['รอผู้ปกครอง', 'gold'] : ct.sign.allow ? (ct.verified ? ['อนุญาต · ครูยืนยันแล้ว', 'ok'] : ['อนุญาต · รอครูยืนยัน', 'ok']) : ['ไม่อนุญาต', 'bad'];
 
-  /* ---------- สัดส่วนการลงพื้นที่ (ใช้ปรับคะแนน): mine = { eid: rec } ---------- */
-  function participation(events, mine) {
-    const evs = events.filter(needsConsent); let allow = 0, deny = 0, pend = 0; mine = mine || {};
-    evs.forEach(e => { const c = mine[e.id]; if (c && c.decision === 'allow') allow++; else if (c && c.decision === 'deny') deny++; else pend++; });
-    return { total: evs.length, allow, deny, pend, ratio: evs.length ? (evs.length - deny) / evs.length : 1 };
+  if (A) A.SUBS.push({ key: 'consents', path: y => canForm() ? 'y/' + y + '/consents' : 'y/' + y + '/consents/' + A.sid(), norm: v => canForm() ? v : { [A.sid()]: v } });
+
+  async function load(tokens) {
+    const need = tokens.filter(t => t && CT[t] === undefined); if (!need.length) return;
+    need.forEach(t => { CT[t] = null; });
+    await Promise.all(need.map(async t => { try { CT[t] = (await B.get('ctoken/' + t)) || false; } catch (e) { CT[t] = false; } }));
+    A.rerender();
   }
 
-  /* ============ หน้าสาธารณะสำหรับผู้ปกครอง (index.html?c=token) — ไม่ต้องล็อกอิน เซ็นบนเครื่องผู้ปกครอง ส่งได้ครั้งเดียว ============ */
-  async function publicPage() {
-    let t = null; try { t = new URLSearchParams(location.search).get('c'); } catch (e) { /* ignore */ } if (!t) return false;
-    const root = $('#root');
-    const page = h => { root.innerHTML = '<div class="hero small"><div class="logos"><img class="big" src="icons/logo-full.png" alt=""></div><h1>ใบขออนุญาตผู้ปกครอง</h1><p>' + esc(C.course.school) + '</p></div><div class="card login-card" style="max-width:560px">' + h + '</div>' + M.copyrightHTML(); window.scrollTo(0, 0); };
-    if (!/^[a-z0-9]{12,40}$/.test(t)) { page('<h3>ลิงก์ไม่ถูกต้อง</h3><p class="muted">กรุณาขอลิงก์ใหม่จากนักเรียนหรือครูผู้สอน</p>'); return true; }
-    page('<div class="empty">กำลังโหลด…</div>');
-    try { await B.init(); } catch (e) { page('<h3>เชื่อมต่อระบบไม่สำเร็จ</h3><p class="muted">ตรวจอินเทอร์เน็ตแล้วเปิดลิงก์ใหม่อีกครั้ง</p>'); return true; }
-    let ct = null; try { ct = await Promise.race([B.get('ctoken/' + t), new Promise((_, rj) => setTimeout(() => rj(new Error('timeout')), 15000))]); } catch (e) { page('<h3>โหลดข้อมูลไม่สำเร็จ</h3><p class="muted">สัญญาณอินเทอร์เน็ตอาจช้า กรุณาเปิดลิงก์ใหม่อีกครั้ง</p><button class="btn gold block" onclick="location.reload()">↻ ลองใหม่</button>'); return true; }
-    if (!ct) { page('<h3>ไม่พบใบขออนุญาตนี้</h3><p class="muted">ลิงก์อาจไม่ถูกต้อง หรือครูออกลิงก์ใหม่แทนแล้ว กรุณาขอลิงก์ล่าสุดจากนักเรียนหรือครูผู้สอน</p>'); return true; }
-    if (ct.course) COURSE_KEYS.forEach(k => { if (ct.course[k]) C.course[k] = ct.course[k]; });
-    const it = fromToken(ct), L = letterBody(it.ev, it.stu);
-    const letter = '<div class="cs-letter" style="max-height:none"><b>เรียน ผู้ปกครองของ ' + esc(ct.student) + '</b><br>' + esc(L.intro) + '<table class="mini" style="margin:8px 0">' + L.rows.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>').join('') + '</table>' + esc(L.close) + '</div>';
-    const done = () => { const c = rec(ct); page(letter + '<div class="' + (c.decision === 'allow' ? 'tip' : 'warn-box') + '"><b>' + (c.decision === 'allow' ? '✅ บันทึกแล้ว: ผู้ปกครองอนุญาต' : '❌ บันทึกแล้ว: ผู้ปกครองไม่อนุญาต') + '</b><br>ลงชื่อโดย ' + esc(c.parentName) + (c.relation ? ' (' + esc(c.relation) + ')' : '') + ' · ' + esc(thDateTime(c.at)) + (c.reason ? '<br>เหตุผล: ' + esc(c.reason) : '') + (c.sign ? '<br><img src="' + esc(c.sign) + '" alt="ลายเซ็น" style="height:60px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:6px">' : '') + '</div><p class="muted">ขอบคุณครับ ปิดหน้านี้ได้เลย คำตอบส่งถึงครูผู้สอนแล้วและแก้ไขเองไม่ได้ หากต้องการเปลี่ยนคำตอบ กรุณาติดต่อครูผู้สอน (' + esc(C.course.teacher) + ') เพื่อออกลิงก์ใหม่</p>'); };
+  /* ---------- ตัวหนังสือ (ใช้ทั้งหน้าผู้ปกครอง ตัวอย่าง และ PDF) ---------- */
+  function letterHTML(ct) {
+    const s = ct.sign;
+    return '<div class="lt-logo"><img src="icons/school-logo.png" alt="ตราโรงเรียนสรรพวิทยาคม"></div><div class="lt-title">หนังสือขออนุญาตผู้ปกครอง</div><div class="lt-sub">ชมรมสรรพวาทิต (ชมรมดนตรีไทย) โรงเรียนสรรพวิทยาคม</div>' +
+      '<div class="lt-r">วันที่ ' + esc(ct.issued) + '</div><div><b>เรื่อง</b> ขออนุญาตให้นักเรียนเข้าร่วมกิจกรรม</div><div><b>เรียน</b> ผู้ปกครองของ ' + esc(ct.student) + ' ชั้น ' + esc(ct.cls) + '</div>' +
+      '<p class="lt-p">ด้วยชมรมสรรพวาทิต โรงเรียนสรรพวิทยาคม จะนำนักเรียนในความปกครองของท่านเข้าร่วม <b>' + esc(ct.title) + '</b> ' + esc(ct.when) + (ct.time ? ' เวลา ' + esc(ct.time) : '') + (ct.place ? ' ณ ' + esc(ct.place) : '') + (ct.purpose ? ' เพื่อ' + esc(ct.purpose) : '') +
+      ' โดยมีครูที่ปรึกษาชมรมเป็นผู้ควบคุมดูแล จึงเรียนมาเพื่อขออนุญาต</p>' + (ct.note ? '<p class="lt-p" style="text-indent:0"><b>หมายเหตุ:</b> ' + esc(ct.note) + '</p>' : '') +
+      '<div class="lt-sign">ขอแสดงความนับถือ<br><br>( ' + esc(ct.teacher || '.............................................') + ' )<br>ครูที่ปรึกษาชมรม</div>' +
+      '<div class="lt-cut">ส่วนตอบรับของผู้ปกครอง</div>' +
+      (s ? '<p class="lt-p" style="text-indent:0">ข้าพเจ้า <b>' + esc(s.name) + '</b> เกี่ยวข้องเป็น <b>' + esc(s.relation) + '</b> ของ ' + esc(ct.student) + ' โทรศัพท์ ' + esc(s.phone || '-') + '</p><div class="lt-ans ' + (s.allow ? 'yes' : 'no') + '">' + (s.allow ? 'อนุญาต' : 'ไม่อนุญาต') + 'ให้เข้าร่วมกิจกรรม</div>' +
+        '<div class="lt-sign">' + (s.sig ? '<img src="' + s.sig + '" alt="ลายมือชื่อผู้ปกครอง">' : s.paper ? '<i>(รับเป็นเอกสารกระดาษ)</i><br>' : '') + '<br>( ' + esc(s.name) + ' )<br>ผู้ปกครอง</div>' +
+        '<div class="lt-meta">' + (s.paper ? 'บันทึกโดยครูจากเอกสารกระดาษเมื่อ ' : 'ลงนามทางอิเล็กทรอนิกส์เมื่อ ') + esc(M.thDate(s.at)) + ' ' + esc(new Date(s.at).toTimeString().slice(0, 5)) + ' น.' + (ct.verified ? ' · ครูตรวจสอบและยืนยันแล้วโดย ' + esc(ct.verified.by) + ' เมื่อ ' + esc(M.thDate(ct.verified.at)) : ' · รอครูตรวจสอบ') + '</div>'
+        : '<p class="lt-p" style="text-indent:0;color:#6B5A64">(ยังไม่ได้ตอบรับ)</p>');
+  }
+  function letterPage(ct) { const root = document.createElement('div'), pg = document.createElement('div'); pg.className = 'rp-page lt'; pg.innerHTML = letterHTML(ct); root.appendChild(pg); return root; }
+
+  /* ============ การ์ดในหน้ากิจกรรม ============ */
+  if (A) A.EVHOOKS.push(function (e, ps) {
+    if (!ps.length && canForm()) return '<section class="card" id="consent"><div class="lb">ใบขออนุญาตผู้ปกครอง</div><div class="muted">เลือกผู้เข้าร่วมกิจกรรมก่อน (กด “แก้ไข”) แล้วจึงสร้างลิงก์ขออนุญาตได้</div></section>';
+    if (canForm()) {
+      const toks = ps.map(s => tokenOf(s, e.id)); load(toks);
+      const cnt = { yes: 0, no: 0, wait: 0, none: 0 }; ps.forEach(s => { const t = tokenOf(s, e.id), ct = t ? CT[t] : null; if (!t) cnt.none++; else if (!ct || !ct.sign) cnt.wait++; else if (ct.sign.allow) cnt.yes++; else cnt.no++; });
+      return '<section class="card" id="consent"><div class="lb">ใบขออนุญาตผู้ปกครอง</div><div class="stat4"><div><b class="ok">' + cnt.yes + '</b><span>อนุญาต</span></div><div><b class="bad">' + cnt.no + '</b><span>ไม่อนุญาต</span></div><div><b>' + cnt.wait + '</b><span>รอตอบ</span></div><div><b>' + cnt.none + '</b><span>ยังไม่มีลิงก์</span></div></div>' +
+        '<div class="row wrap" style="margin:12px 0 4px">' + (cnt.none ? '<button class="btn" data-act="ctMake" data-id="' + esc(e.id) + '">สร้างลิงก์ให้ ' + cnt.none + ' คนที่ยังไม่มี</button>' : '') + (ps.length - cnt.none ? '<button class="btn ghost" data-act="ctRefresh" data-id="' + esc(e.id) + '">ตรวจคำตอบล่าสุด</button>' : '') + '</div>' +
+        '<div class="muted" style="margin-bottom:6px">ส่งลิงก์ของแต่ละคนให้ผู้ปกครองเปิดเซ็นบนเครื่องของผู้ปกครองเอง ลิงก์หนึ่งเซ็นได้ครั้งเดียว</div>' +
+        ps.map(s => { const m = A.members()[s], t = tokenOf(s, e.id), ct = t ? CT[t] : null, st = t && ct === null ? ['กำลังโหลด…', 'line'] : stOf(t ? ct : null);
+          return '<div class="mrow"><span class="mrow-main"><span class="grow"><b>' + esc(A.fullName(m)) + '</b><span class="muted">' + esc(A.cls(m)) + '</span></span></span><span class="mrow-tags">' + A.chip(st[0], st[1]) + '</span><span class="mrow-act">' +
+            (t ? '<button class="btn ghost sm" data-act="ctCopy" data-t="' + esc(t) + '">คัดลอกลิงก์</button>' : '') + (ct && ct.sign ? '<button class="btn ghost sm" data-act="ctView" data-t="' + esc(t) + '">ดูใบ</button>' : '') +
+            (A.teacher() && ct && ct.sign && ct.sign.allow && !ct.verified ? '<button class="btn gold sm" data-act="ctVerify" data-t="' + esc(t) + '">ยืนยัน</button>' : '') +
+            (A.teacher() && t && ct && !ct.sign ? '<button class="btn ghost sm" data-act="ctPaper" data-t="' + esc(t) + '">รับใบกระดาษ</button>' : '') + '</span></div>'; }).join('') + '</section>';
+    }
+    const sid = A.sid(); if (!sid || !(e.people || {})[sid]) return '';
+    const t = tokenOf(sid, e.id); if (t) load([t]); const ct = t ? CT[t] : null, st = t && ct === null ? ['กำลังโหลด…', 'line'] : stOf(t ? ct : null);
+    return '<section class="card"><div class="row"><div class="lb grow" style="margin:0">ใบขออนุญาตผู้ปกครองของฉัน</div>' + A.chip(st[0], st[1]) + '</div>' +
+      (t ? '<div class="muted" style="margin:8px 0">ส่งลิงก์นี้ให้ผู้ปกครองเปิดบนโทรศัพท์ของผู้ปกครอง แล้วกรอกชื่อและเซ็นอนุญาต</div><div class="row wrap"><button class="btn" data-act="ctShare" data-t="' + esc(t) + '">ส่งลิงก์ให้ผู้ปกครอง</button>' + (ct && ct.sign ? '<button class="btn ghost" data-act="ctView" data-t="' + esc(t) + '">ดูใบขออนุญาต</button>' : '') + '</div>' : '<div class="muted" style="margin-top:8px">ครูหรือเลขานุการยังไม่ได้สร้างลิงก์ขออนุญาตสำหรับกิจกรรมนี้</div>') + '</section>';
+  });
+
+  /* ---------- หน้ารวม “ใบขออนุญาต” (เข้าจากเมนู) ---------- */
+  const myTokens = () => { const o = (A.D.consents || {})[A.sid()] || {}; return Object.keys(o).filter(e => (A.D.events || {})[e]).map(e => ({ eid: e, t: o[e], ev: A.D.events[e] })).sort((a, b) => b.ev.date.localeCompare(a.ev.date)); };
+  const myWaiting = () => myTokens().filter(x => x.ev.status !== 'cancelled' && (x.ev.dateEnd || x.ev.date) >= A.todayISO() && CT[x.t] !== undefined && CT[x.t] && !CT[x.t].sign);
+  A.NAVS.push({ id: 'consent', label: 'ใบขออนุญาต', icon: 'doc', order: 33 });
+  A.V.consent = function () {
+    let b = '';
+    if (canForm()) {
+      const evs = A.evList().filter(e => e.status !== 'cancelled'), up = evs.filter(e => (e.dateEnd || e.date) >= A.todayISO()), past = evs.filter(e => (e.dateEnd || e.date) < A.todayISO()).reverse();
+      b += '<section class="card"><div class="lb">วิธีขออนุญาตผู้ปกครอง</div><ol class="steps"><li>สร้างกิจกรรมและเลือกผู้เข้าร่วม (เมนูกิจกรรม)</li><li>กด “จัดการใบขออนุญาต” ของกิจกรรมนั้น แล้วกด “สร้างลิงก์”</li><li>นักเรียนเปิดแอป กด “ส่งลิงก์ให้ผู้ปกครอง” หรือครูคัดลอกลิงก์ส่งเอง</li><li>ผู้ปกครองเปิดลิงก์ กรอกชื่อ เซ็น แล้วส่ง ครูกด “ยืนยัน”</li></ol></section>';
+      const row = e => { const ps = A.evPeople(e), toks = ps.map(s => tokenOf(s, e.id)), has = toks.filter(Boolean); if ((e.dateEnd || e.date) >= A.todayISO()) load(has);
+        const yes = has.filter(t => CT[t] && CT[t].sign && CT[t].sign.allow).length, no = has.filter(t => CT[t] && CT[t].sign && !CT[t].sign.allow).length;
+        return '<div class="li"><div class="row"><div class="grow"><b>' + esc(e.title) + '</b><div class="muted">' + esc(A.evDate(e) + ' · ผู้เข้าร่วม ' + ps.length + ' คน') + '</div></div><a class="btn sm" href="#/ev/' + esc(e.id) + '">จัดการใบขออนุญาต</a></div>' +
+          '<div class="row wrap" style="gap:6px;margin-top:6px">' + (!ps.length ? A.chip('ยังไม่ได้เลือกผู้เข้าร่วม', 'line') : !has.length ? A.chip('ยังไม่ได้สร้างลิงก์', 'gold') : A.chip('อนุญาต ' + yes + '/' + ps.length, 'ok') + (no ? A.chip('ไม่อนุญาต ' + no, 'bad') : '') + (ps.length - has.length ? A.chip('ยังไม่มีลิงก์ ' + (ps.length - has.length), 'gold') : '')) + '</div></div>'; };
+      b += '<section class="card"><div class="lb">กิจกรรมที่กำลังจะมาถึง</div>' + (up.map(row).join('') || '<div class="muted">ยังไม่มีกิจกรรม — สร้างที่เมนูกิจกรรมก่อน</div>') + '</section>';
+      if (past.length) b += '<section class="card"><div class="lb">กิจกรรมที่ผ่านมา</div>' + past.slice(0, 15).map(e => '<a class="evc" href="#/ev/' + esc(e.id) + '"><span class="grow"><b>' + esc(e.title) + '</b><span class="muted">' + esc(A.evDate(e)) + '</span></span></a>').join('') + '</section>';
+    }
+    if (A.sid()) { const l = myTokens(); load(l.map(x => x.t));
+      b += '<section class="card"><div class="lb">ใบขออนุญาตของฉัน</div>' + (l.map(x => { const ct = CT[x.t], st = ct === null || ct === undefined ? ['กำลังโหลด…', 'line'] : stOf(ct);
+        return '<div class="li"><div class="row"><div class="grow"><b>' + esc(x.ev.title) + '</b><div class="muted">' + esc(A.evDate(Object.assign({}, x.ev))) + '</div></div>' + A.chip(st[0], st[1]) + '</div><div class="row wrap" style="margin-top:8px">' + (ct && !ct.sign ? '<button class="btn sm" data-act="ctShare" data-t="' + esc(x.t) + '">ส่งลิงก์ให้ผู้ปกครอง</button>' : '') + (ct && ct.sign ? '<button class="btn ghost sm" data-act="ctView" data-t="' + esc(x.t) + '">ดูใบขออนุญาต</button>' : '') + '<a class="btn ghost sm" href="#/ev/' + esc(x.eid) + '">ดูกิจกรรม</a></div></div>'; }).join('') || '<div class="muted">ยังไม่มีใบขออนุญาต — เมื่อครูสร้างลิงก์สำหรับกิจกรรมที่คุณเข้าร่วม จะแสดงที่นี่</div>') + '</section>'; }
+    return { title: 'ใบขออนุญาตผู้ปกครอง', body: b };
+  };
+  A.HOME.push({ order: 32, html: () => { if (!A.sid()) return ''; load(myTokens().map(x => x.t)); const w = myWaiting(); return w.length ? '<section class="card"><div class="lb">รอผู้ปกครองเซ็นอนุญาต (' + w.length + ')</div>' + w.map(x => '<div class="li"><div class="row"><b class="grow">' + esc(x.ev.title) + '</b><button class="btn sm" data-act="ctShare" data-t="' + esc(x.t) + '">ส่งลิงก์ให้ผู้ปกครอง</button></div></div>').join('') + '</section>' : ''; } });
+
+  if (A) Object.assign(A.ACT, {
+    ctMake: d => {
+      if (!canForm()) return; const e = A.D.events[d.id]; const upd = {}; let n = 0;
+      A.evPeople(e).forEach(s => { if (tokenOf(s, d.id)) return; const m = A.members()[s], t = newToken(); n++;
+        const ct = { y: A.year(), eid: d.id, sid: s, student: A.fullName(m), cls: A.cls(m), title: e.title, when: A.evDate(e, 'dow'), time: A.evTime(e) || null, place: e.place || null, purpose: e.purpose || null, note: e.note || null, teacher: A.school().teacher || null, issued: A.dTH(A.todayISO(), 'full'), createdAt: Date.now() };
+        upd['ctoken/' + t] = JSON.parse(JSON.stringify(ct)); upd[Y() + '/consents/' + s + '/' + d.id] = t; CT[t] = ct; });
+      if (n) { A.W(B.update('', upd)); A.log('consent.make', '', e.title + ' ' + n + ' คน'); toast('สร้างลิงก์แล้ว ' + n + ' คน'); }
+    },
+    ctRefresh: d => { A.evPeople(A.D.events[d.id]).forEach(s => { const t = tokenOf(s, d.id); if (t) delete CT[t]; }); A.rerender(); toast('กำลังตรวจคำตอบล่าสุด'); },
+    ctCopy: async d => { const l = linkOf(d.t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว'); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><textarea class="in" rows="3" readonly>' + esc(l) + '</textarea><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } },
+    ctShare: async d => { const l = linkOf(d.t), ct = CT[d.t] || {}; if (navigator.share) { try { await navigator.share({ title: 'ใบขออนุญาตผู้ปกครอง ชมรมสรรพวาทิต', text: 'ขออนุญาตให้ ' + (ct.student || 'นักเรียน') + ' เข้าร่วม ' + (ct.title || 'กิจกรรม'), url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.ctCopy(d); },
+    ctView: d => {
+      const ct = CT[d.t]; if (!ct) return;
+      const w = M.previewPages(letterPage(ct), 'ใบขออนุญาตผู้ปกครอง', '<div class="row wrap" style="margin-bottom:10px"><button class="btn sm" id="lt-pdf">บันทึกเป็น PDF</button><span class="muted" id="lt-msg"></span></div>');
+      $('#lt-pdf', w).addEventListener('click', async () => { const msg = $('#lt-msg', w); msg.textContent = 'กำลังสร้าง …'; try { await M.exportPDF(letterPage(ct), 'ใบขออนุญาต-' + M.safeName(ct.student) + '-' + M.safeName(ct.title) + '.pdf'); msg.textContent = 'เสร็จแล้ว'; } catch (er) { msg.textContent = 'สร้างไม่สำเร็จ: ' + (er.message || er); } });
+    },
+    ctVerify: d => { if (!A.teacher()) return; const v = { by: A.myName(), at: Date.now() }; A.W(B.set('ctoken/' + d.t + '/verified', v)); if (CT[d.t]) CT[d.t].verified = v; A.rerender(); toast('ยืนยันแล้ว'); },
+    ctPaper: async d => {
+      if (!A.teacher()) return; const ct = CT[d.t]; if (!ct) return;
+      const w = modal('<h3>บันทึกใบอนุญาตแบบกระดาษ</h3><div class="muted" style="margin-bottom:10px">' + esc(ct.student) + '</div><form class="form">' + A.fld('ชื่อผู้ปกครอง', '<input class="in" id="p-n" required>') + A.fld('เกี่ยวข้องเป็น', '<input class="in" id="p-r" value="ผู้ปกครอง">') +
+        '<div class="fld"><span>คำตอบ</span><div class="checks"><label class="ck"><input type="radio" name="al" value="1" checked><span>อนุญาต</span></label><label class="ck"><input type="radio" name="al" value="0"><span>ไม่อนุญาต</span></label></div></div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
+      $('form', w).addEventListener('submit', e => { e.preventDefault(); const name = $('#p-n', w).value.trim(); if (!name) return; const s = { name, relation: $('#p-r', w).value.trim() || 'ผู้ปกครอง', allow: $('input[name=al]:checked', w).value === '1', paper: true, at: Date.now() }, v = { by: A.myName(), at: Date.now() };
+        A.W(B.update('ctoken/' + d.t, { sign: s, verified: v })); ct.sign = s; ct.verified = v; w.remove(); A.rerender(); });
+    }
+  });
+
+  /* ============ หน้าสาธารณะสำหรับผู้ปกครอง (?c=token) ============ */
+  window.APP_PUBLIC = async function () {
+    const t = new URLSearchParams(location.search).get('c'); if (!t) return false;
+    const root = $('#root'); const page = h => { root.innerHTML = '<div class="pub"><div class="pub-in">' + h + '</div></div>'; };
+    if (!/^[a-z0-9]{12,40}$/.test(t)) { page('<h1>ลิงก์ไม่ถูกต้อง</h1>'); return true; }
+    try { await B.init(); } catch (e) { page('<h1>เชื่อมต่อระบบไม่สำเร็จ</h1><p>ตรวจอินเทอร์เน็ตแล้วเปิดลิงก์ใหม่</p>'); return true; }
+    let ct = null; try { ct = await B.get('ctoken/' + t); } catch (e) { ct = null; }
+    if (!ct) { page('<h1>ไม่พบใบขออนุญาตนี้</h1><p>ลิงก์อาจไม่ถูกต้องหรือถูกยกเลิกแล้ว กรุณาติดต่อครูที่ปรึกษาชมรม</p>'); return true; }
+    const done = () => page('<div class="lt scr">' + letterHTML(ct) + '</div><div class="note" style="margin-top:16px">บันทึกคำตอบเรียบร้อยแล้ว ขอบคุณครับ/ค่ะ ปิดหน้านี้ได้เลย หากต้องการแก้ไขคำตอบ กรุณาติดต่อครูที่ปรึกษาชมรม</div>');
     if (ct.sign) { done(); return true; }
-    page(letter + '<form id="pf" novalidate><div class="f"><label>ชื่อ-นามสกุลผู้ปกครอง <span class="req">*</span></label><input type="text" id="cs_name" autocomplete="name"></div>' +
-      '<div class="row wrap"><div class="f grow"><label>เกี่ยวข้องเป็น</label><select id="cs_rel">' + ['บิดา', 'มารดา', 'ผู้ปกครอง', 'ปู่ / ย่า / ตา / ยาย', 'ญาติ'].map(x => '<option>' + x + '</option>').join('') + '</select></div><div class="f grow"><label>เบอร์โทรที่ติดต่อได้ <span class="req">*</span></label><input type="tel" id="cs_phone" inputmode="tel" autocomplete="tel"></div></div>' +
-      '<div class="lab" style="font-weight:600;margin-bottom:6px">ข้าพเจ้าขอแจ้งว่า <span class="req">*</span></div><div class="cs-dec"><button type="button" data-dec="allow">✅ อนุญาต</button><button type="button" data-dec="deny">❌ ไม่อนุญาต</button></div>' +
-      '<div class="f" id="cs_rw" hidden><label>เหตุผลที่ไม่อนุญาต (ไม่บังคับ)</label><input type="text" id="cs_reason"></div>' +
-      '<div class="f"><label>ลายมือชื่อผู้ปกครอง <span class="req">*</span> (ใช้นิ้วเซ็นในกรอบ)</label><canvas class="cs-sign" id="cs_sign" width="640" height="300"></canvas><div class="row" style="margin-top:6px"><button class="btn sec sm" id="cs_clear" type="button">ล้างลายเซ็น</button></div></div>' +
-      '<label class="chk" style="margin-bottom:12px"><input type="checkbox" id="cs_ok"><span>ข้าพเจ้าเป็นผู้ปกครองของนักเรียน ได้อ่านรายละเอียดแล้ว และเป็นผู้ลงนามด้วยตนเอง</span></label>' +
-      '<div class="warn-box" id="cs_err" hidden></div><button class="btn gold block" id="cs_save">ส่งคำตอบถึงครู</button><div class="muted" style="margin-top:8px">ข้อมูลนี้ใช้เป็นหลักฐานการขออนุญาตของรายวิชาเท่านั้น · ส่งแล้วแก้ไขไม่ได้</div></form>');
-    let dec = '', drawn = 0, down = false; const cv = $('#cs_sign'), g = cv.getContext('2d'); g.lineWidth = 3.2; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111';
+    page('<div class="lt scr">' + letterHTML(ct) + '</div><form class="form" id="pf" style="margin-top:8px">' +
+      A.fld('ชื่อ-สกุลผู้ปกครอง', '<input class="in" id="p-n" autocomplete="name" required>') + '<div class="g3">' + A.fld('เกี่ยวข้องเป็น', '<select class="in" id="p-r">' + A.opt(['บิดา', 'มารดา', 'ผู้ปกครอง', 'ปู่ / ย่า / ตา / ยาย', 'ญาติ'].map(x => [x, x])) + '</select>') + A.fld('เบอร์โทรที่ติดต่อได้', '<input class="in" id="p-p" inputmode="tel" autocomplete="tel" required>') + '</div>' +
+      '<div class="fld"><span>คำตอบ</span><div class="checks"><label class="ck"><input type="radio" name="al" value="1" checked><span>อนุญาต</span></label><label class="ck"><input type="radio" name="al" value="0"><span>ไม่อนุญาต</span></label></div></div>' +
+      '<div class="fld"><span>ลายมือชื่อผู้ปกครอง (ใช้นิ้วเซ็นในกรอบ)</span><canvas id="sig" class="sig" width="640" height="240" aria-label="ช่องลงลายมือชื่อ"></canvas><button type="button" class="btn ghost sm" id="sig-clr" style="margin-top:6px">ล้างลายเซ็น</button></div>' +
+      '<div class="note bad" id="p-err" hidden></div><button class="btn gold block lg">ส่งคำตอบ</button><div class="muted" style="margin-top:10px">ข้อมูลนี้ใช้เป็นหลักฐานการขออนุญาตของชมรมเท่านั้น ส่งแล้วแก้ไขไม่ได้</div></form>');
+    const cv = $('#sig'), g = cv.getContext('2d'); let drawn = 0, down = false; g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#1c1c3a';
     const pos = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
-    cv.addEventListener('pointerdown', e => { e.preventDefault(); down = true; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ } const p = pos(e); g.beginPath(); g.moveTo(p[0], p[1]); });
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); down = true; cv.setPointerCapture(e.pointerId); const p = pos(e); g.beginPath(); g.moveTo(p[0], p[1]); });
     cv.addEventListener('pointermove', e => { if (!down) return; e.preventDefault(); const p = pos(e); g.lineTo(p[0], p[1]); g.stroke(); drawn++; });
     ['pointerup', 'pointercancel'].forEach(k => cv.addEventListener(k, () => { down = false; }));
-    $('#cs_clear').onclick = () => { g.clearRect(0, 0, cv.width, cv.height); drawn = 0; };
-    root.addEventListener('click', e => { const b = e.target.closest('[data-dec]'); if (!b) return; dec = b.dataset.dec; $$('[data-dec]', root).forEach(x => x.classList.toggle('on', x === b)); $('#cs_rw').hidden = dec !== 'deny'; });
+    $('#sig-clr').addEventListener('click', () => { g.clearRect(0, 0, cv.width, cv.height); drawn = 0; });
     $('#pf').addEventListener('submit', async e => {
-      e.preventDefault(); const er = $('#cs_err'), err = x => { er.textContent = x; er.hidden = false; er.scrollIntoView({ block: 'center' }); };
-      const name = $('#cs_name').value.trim(), phone = $('#cs_phone').value.trim();
-      if (name.length < 4) return err('กรอกชื่อ-นามสกุลผู้ปกครอง'); if (!/^[0-9+\- ]{9,15}$/.test(phone)) return err('กรอกเบอร์โทรให้ถูกต้อง (ตัวเลข 9–15 หลัก)'); if (!dec) return err('เลือก อนุญาต หรือ ไม่อนุญาต'); if (drawn < 6) return err('กรุณาเซ็นชื่อในกรอบ'); if (!$('#cs_ok').checked) return err('ติ๊กยืนยันว่าเป็นผู้ปกครองและลงนามด้วยตนเอง');
-      const s = { name, relation: $('#cs_rel').value, phone, allow: dec === 'allow', reason: dec === 'deny' ? $('#cs_reason').value.trim().slice(0, 300) : '', sig: cv.toDataURL('image/png'), at: Date.now() };
-      const btn = $('#cs_save'); btn.disabled = true; btn.textContent = 'กำลังส่ง…'; er.hidden = true;
-      try {
-        const now = await B.get('ctoken/' + t); if (!now) throw new Error('ลิงก์นี้ถูกยกเลิกแล้ว กรุณาขอลิงก์ใหม่'); if (now.sign) { ct = now; done(); return; }
-        await Promise.race([B.set('ctoken/' + t + '/sign', s), new Promise((_, rj) => setTimeout(() => rj(new Error('ส่งไม่สำเร็จ — ตรวจอินเทอร์เน็ตแล้วกดส่งอีกครั้ง')), 20000))]);
-        ct.sign = s; done();
-      } catch (ex) { btn.disabled = false; btn.textContent = 'ส่งคำตอบถึงครู'; err((ex && (ex.message || ex.code)) || 'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+      e.preventDefault(); const err = x => { const el = $('#p-err'); el.textContent = x; el.hidden = false; };
+      const name = $('#p-n').value.trim(), phone = $('#p-p').value.trim(); if (name.length < 4) return err('กรอกชื่อ-สกุลผู้ปกครอง'); if (!/^[0-9+\- ]{9,15}$/.test(phone)) return err('กรอกเบอร์โทรให้ถูกต้อง'); if (drawn < 8) return err('กรุณาเซ็นชื่อในกรอบ');
+      const sign = { name, relation: $('#p-r').value, phone, allow: $('input[name=al]:checked').value === '1', sig: cv.toDataURL('image/png'), at: Date.now() };
+      const btn = $('#pf button.block'); btn.disabled = true; btn.textContent = 'กำลังส่ง …';
+      try { await B.direct('set', 'ctoken/' + t + '/sign', sign); ct.sign = sign; done(); window.scrollTo(0, 0); }
+      catch (er) { btn.disabled = false; btn.textContent = 'ส่งคำตอบ'; err('ส่งไม่สำเร็จ — ลิงก์นี้อาจถูกใช้ตอบไปแล้ว หรืออินเทอร์เน็ตขัดข้อง'); }
     });
     return true;
-  }
-
-  window.CONSENT = { chip, statusChip, status, letterBody, letterPage, letters, printLetters, pdfLetters, participation, needsConsent, DEC, newToken, linkOf, tokenData, rec, fromToken, copyLink, shareLink, publicPage };
+  };
 })();

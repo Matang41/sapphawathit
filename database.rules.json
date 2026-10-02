@@ -1,156 +1,244 @@
 {
-  "rules": {
-    ".read": false,
-    ".write": false,
-    "roster": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
+ "rules": {
+  ".read": false,
+  ".write": false,
+  "config": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "teachers": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$key": {
+    ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key"
+   }
+  },
+  "members": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$sid": {
+    ".read": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid",
+    ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary')) && newData.exists() && newData.child('status').val() == 'active' && (!data.exists() || data.child('status').val() == 'active') && (data.exists() ? (newData.child('am').val() == data.child('am').val() && newData.child('pm').val() == data.child('pm').val()) : (newData.child('am').val() == false && newData.child('pm').val() == false)))",
+    ".validate": "$sid.matches(/^[0-9]{4,8}$/)",
+    "photo": {
+     ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+     ".validate": "newData.isString() && newData.val().length < 40000"
+    },
+    "updatedAt": {
+     ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+    },
+    "updatedBy": {
+     ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+    }
+   }
+  },
+  "roles": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "skills": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "privateInfo": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$sid": {
+    ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary')) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'rep' && root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('grade').val() == root.child('members').child($sid).child('grade').val())",
+    ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))"
+   }
+  },
+  "photos": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$sid": {
+    ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+    ".validate": "newData.isString() && newData.val().length < 200000"
+   }
+  },
+  "history": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$hid": {
+    ".write": "((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')) && !data.exists() && newData.exists()"
+   }
+  },
+  "actions": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "y": {
+   "$y": {
+    "attmeta": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$date": {
+      "$ses": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))"
+      }
+     }
+    },
+    "att": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))",
+      "$key": {
+       ".validate": "newData.isString() && newData.val().matches(/^[plva]$/)"
+      }
+     }
+    },
+    "attphoto": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$date": {
+      "$ses": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))",
+       ".validate": "newData.isString() && newData.val().length < 400000"
+      }
+     }
+    },
+    "leaves": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+      "$lid": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) && !data.exists() && newData.child('status').val() == 'pending'"
+      }
+     }
+    },
+    "leavemark": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$key": {
       "$sid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) && !data.exists() && newData.val() == 'pending'"
       }
+     }
     },
-    "memberOf": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$sid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
-      }
+    "events": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))"
     },
-    "groups": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())",
-        "roles": {
-          "$sid": {
-            ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
-          }
-        },
-        "assign": {
-          "$tid": {
-            "$sid": {
-              ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
-            }
-          }
-        },
-        "flags": {
-          "$tid": {
-            ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())"
-          }
-        },
-        "fieldwork": {
-          "$eid": {
-            "$sid": {
-              ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && (auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th'",
-              ".validate": "newData.val() === 'allow' || newData.val() === 'deny'"
-            }
-          }
-        }
-      }
+    "announce": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$aid": {
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).exists())"
+     }
     },
-    "records": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())",
-        "$kind": {
-          "$rid": {
-            ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && newData.exists() && (!data.exists() || newData.child('createdBy/sid').val() === data.child('createdBy/sid').val())",
-            ".validate": "newData.hasChildren(['createdAt', 'createdBy', 'updatedAt', 'updatedBy'])"
-          }
-        }
-      }
+    "acks": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).exists())",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+     }
     },
-    "docs": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())",
-        "$kind": {
-          ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && newData.exists()"
-        }
-      }
+    "forms12": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))"
     },
-    "history": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())",
-        "$hid": {
-          ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && !data.exists() && newData.child('by/sid').val() === auth.token.email.replace('@sappha.ac.th', '')",
-          ".validate": "newData.hasChildren(['at', 'by', 'act'])"
-        }
-      }
-    },
-    "media": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())",
-        "$mid": {
-          ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && newData.exists() && (!data.exists() || data.child('by/sid').val() === auth.token.email.replace('@sappha.ac.th', ''))",
-          ".validate": "newData.hasChildren(['type', 'd']) && newData.child('d').isString() && newData.child('d').val().length < 3000000"
-        }
-      }
-    },
-    "personal": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$sid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')",
-        ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
-      }
-    },
-    "calendar": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com') || (auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th'))",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$eid": {
-        ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && !data.exists() && newData.child('status').val() === 'proposed' && newData.child('createdBy/sid').val() === auth.token.email.replace('@sappha.ac.th', '')"
-      }
-    },
-    "grades": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "groups": {
-        "$gid": {
-          ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists()) && data.child('released').val() === true"
-        }
-      },
-      "students": {
-        "$sid": {
-          ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th') && data.child('released').val() === true"
-        }
-      }
-    },
-    "config": {
-      ".read": "auth != null",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')"
-    },
-    "tcomments": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$gid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('groups/' + $gid + '/members/' + auth.token.email.replace('@sappha.ac.th', '')).exists())"
-      }
+    "bands": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
     },
     "consents": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$sid": {
-        ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email == $sid + '@sappha.ac.th')"
-      }
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+     }
     },
-    "ctoken": {
-      ".read": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email == 'ntpwm2541@gmail.com')",
-      "$t": {
-        ".read": true,
-        ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)",
-        "sign": {
-          ".write": "!data.exists() && newData.exists()",
-          ".validate": "newData.hasChildren(['name', 'allow', 'at']) && newData.child('name').isString() && newData.child('name').val().length < 120 && newData.child('allow').isBoolean() && (!newData.child('sig').exists() || newData.child('sig').val().length < 200000) && (!newData.child('reason').exists() || newData.child('reason').val().length < 400)"
-        }
-      }
+    "ledger": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'treasurer' || root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$tx": {
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'treasurer')) && !data.exists() && newData.child('status').val() == 'pending' && newData.child('by').child('id').val() == auth.token.email.replace('@sappha.ac.th', '')",
+      ".validate": "newData.child('amount').isNumber() && newData.child('amount').val() > 0"
+     }
+    },
+    "counters": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'treasurer'))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'treasurer'))",
+     "$k": {
+      ".validate": "newData.isNumber() && (!data.exists() || newData.val() == data.val() + 1 || newData.val() == 1)"
+     }
+    },
+    "finsum": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+    },
+    "behave": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+     }
     }
+   }
+  },
+  "ctoken": {
+   "$t": {
+    ".read": true,
+    ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+    ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)",
+    "sign": {
+     ".write": "!data.exists() && newData.exists()",
+     ".validate": "newData.hasChildren(['name', 'allow', 'at']) && newData.child('name').isString() && newData.child('name').val().length < 120 && (!newData.child('sig').exists() || newData.child('sig').val().length < 90000)"
+    }
+   }
+  },
+  "polls": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "ballots": {
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$pid": {
+    ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && root.child('polls').child($pid).child('openBallot').val() == true && !root.child('polls').child($pid).child('election').exists())",
+    "$sid": {
+     ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+     ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) && !data.exists() && newData.exists() && root.child('polls').child($pid).child('status').val() == 'open'"
+    }
+   }
+  },
+  "griev": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+   "$sid": {
+    ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+    "$gid": {
+     ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) && !data.exists() && newData.child('status').val() == 'new'",
+     ".validate": "newData.child('text').isString() && newData.child('text').val().length < 5000"
+    }
+   }
+  },
+  "rulesProbe": {
+   "v3": {
+    ".read": true
+   }
+  },
+  "public": {
+   ".read": true,
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "applications": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'secretary'))",
+   "$sid": {
+    ".write": "!data.exists() && newData.exists() && root.child('public').child('join').child('open').val() == true && !root.child('members').child($sid).exists()",
+    ".validate": "$sid.matches(/^[0-9]{4,8}$/) && newData.hasChildren(['first', 'last', 'grade', 'room', 'at']) && newData.child('first').isString() && newData.child('first').val().length < 80 && newData.child('last').isString() && newData.child('last').val().length < 80 && (!newData.child('about').exists() || newData.child('about').val().length <= 1000)"
+   }
+  },
+  "alumni": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
+  },
+  "archive": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+   ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
   }
+ }
 }
