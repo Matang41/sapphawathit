@@ -1,8 +1,8 @@
-/* Service worker: ให้แอปเปิดได้แม้ไม่มีสัญญาณ
-   ★ ทุกครั้งที่ออกรุ่นใหม่ ให้เปลี่ยนเลขใน CACHE (เช่น spw-v2) เพื่อให้เครื่องผู้ใช้โหลดไฟล์ใหม่ */
-const CACHE = 'spw-v3';
-const SHELL = ['./', 'index.html', 'style.css', 'config.js', 'core.js', 'backend.js', 'app.js', 'practice.js', 'behave.js', 'join.js', 'events.js', 'consent.js', 'finance.js', 'vote.js', 'alumni.js', 'manifest.webmanifest',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/logo-256.png', 'icons/school-logo.png'];
+/* Service worker: ให้แอปเปิดและบันทึกข้อมูลได้แม้ไม่มีสัญญาณ (ตอนลงพื้นที่) */
+const CACHE = 'mcm5-v11';
+const SHELL = ['./', 'index.html', 'teacher.html', 'style.css', 'config.js', 'core.js', 'consent.js', 'report.js', 'extras.js', 'backend.js', 'student.js', 'teacher.js',
+  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
+  'icons/logo-full.png', 'icons/logo-mark-512.png', 'icons/school-logo.png'];
 const CDN = ['cdnjs.cloudflare.com', 'www.gstatic.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 // หมายเหตุ: ไม่แคชคำขอ Firebase/Google Sign-in (ต้องสดเสมอ)
 
