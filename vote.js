@@ -63,7 +63,8 @@
     b += '<div class="mo-h">หยั่งเสียงผู้บริหารชมรม</div>' + (el.map(pollCard).join('') || '<section class="card"><div class="muted">ยังไม่มีการหยั่งเสียง</div></section>') + '<div class="mo-h">โหวตทั่วไป</div>' + (ge.map(pollCard).join('') || '<section class="card"><div class="muted">ยังไม่มีโหวต</div></section>');
     return { title: 'โหวตและหยั่งเสียง', body: b };
   };
-  A.HOME.push({ order: 70, html: () => { if (A.teacher()) return ''; const l = polls().filter(p => p.status === 'open' && eligible(p, A.sid())); l.forEach(loadMine); const n = l.filter(p => MY[p.id] === false).length; return n ? '<a class="card rowcard" href="#/vote"><div class="grow"><div class="lb" style="margin:0">โหวตที่รอคุณลงคะแนน</div><div class="num">' + n + ' รายการ</div></div><span class="muted">ไปลงคะแนน</span></a>' : ''; } });
+  A.TODO.push(() => { if (A.teacher()) { const n = polls().filter(p => p.status === 'open').length; return n ? { n, label: 'โหวตที่เปิดรับคะแนนอยู่', sub: 'ปิดรับและประกาศผลได้ที่เมนูโหวต', href: '#/vote' } : null; }
+    const l = polls().filter(p => p.status === 'open' && eligible(p, A.sid())); l.forEach(loadMine); return l.filter(p => MY[p.id] === false).map(p => ({ badge: 'โหวต', label: p.title, sub: p.election ? 'หยั่งเสียงผู้บริหารชมรม รอคุณลงคะแนน' : 'เปิดอยู่ รอคุณลงคะแนน', href: '#/vote', hot: true })); });
 
   function pollForm(mode) {
     const el = mode === 'election', ms = A.members();

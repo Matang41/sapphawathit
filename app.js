@@ -28,6 +28,7 @@
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
     cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     left: '<path d="M14 6l-6 6 6 6"/>', right: '<path d="M10 6l6 6-6 6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>',
     me: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
@@ -205,14 +206,16 @@
       '<div class="tile"><div class="lb">กำหนดซ้อมเช้า</div><div class="num">' + act.filter(s => ms[s].am).length + '</div><div class="muted">คน</div></div>' +
       '<div class="tile"><div class="lb">กำหนดซ้อมเย็น</div><div class="num">' + act.filter(s => ms[s].pm).length + '</div><div class="muted">คน</div></div>' +
       (ME.teacher ? '<a class="tile dark" href="#/members"><div class="lb">รอประเมินฝีมือ</div><div class="num">' + unassessed + '</div><div class="muted">คน</div></a>' : '<a class="tile dark" href="#/chart"><div class="lb">ที่ปรึกษาชมรม</div><div class="num">' + advisors().length + '</div><div class="muted">ท่าน</div></a>') + '</div>';
-    if (ME.teacher || ME.role) { const td = TODO.map(f => { try { return f(); } catch (e) { return null; } }).filter(x => x && x.n > 0);
-      if (td.length) b += '<section class="card"><div class="lb">งานที่รอ' + (ME.teacher ? 'ครู' : 'คุณ') + '</div>' + td.map(x => '<a class="todo" href="' + x.href + '"><b>' + x.n + '</b><span class="grow">' + esc(x.label) + '</span>' + ic('right', 20) + '</a>').join('') + '</section>'; }
     HOME.slice().sort((x, y) => x.order - y.order).forEach(h => { try { b += h.html() || ''; } catch (e) { console.error(e); } });
     if (can.edit()) b += '<section class="card"><div class="lb">ทางลัด</div><div class="row wrap">' +
       '<button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / รายชื่อ</button></div></section>';
     const noSes = act.filter(s => !ms[s].am && !ms[s].pm);
     if (ME.teacher && noSes.length) b += '<section class="card"><div class="lb">ยังไม่กำหนดรอบซ้อม ' + noSes.length + ' คน</div>' + noSes.sort(byClass).slice(0, 5).map(memberRow).join('') + '</section>';
-    return { title: 'หน้าหลัก', body: b };
+    /* แถบ “ต้องดำเนินการ” สีทองเด่นบนสุด: งานค้าง โหวตที่เปิดอยู่ กิจกรรมที่ใกล้ถึง — โมดูลต่าง ๆ ลงทะเบียนผ่าน APP.TODO */
+    const td = []; TODO.forEach(f => { try { const r = f(); (Array.isArray(r) ? r : [r]).forEach(x => { if (x && (x.n > 0 || x.badge)) td.push(x); }); } catch (e) { console.error(e); } });
+    td.sort((x, y) => (y.hot ? 1 : 0) - (x.hot ? 1 : 0));
+    const alertHTML = td.length ? '<section class="card alert" aria-label="สิ่งที่ต้องดำเนินการ"><div class="lb">' + ic('bell', 18) + 'ต้องดำเนินการ ' + td.length + ' เรื่อง</div>' + td.map(x => '<a class="todo' + (x.hot ? ' hot' : '') + '" href="' + x.href + '"><b>' + esc(x.badge || x.n) + '</b><span class="grow">' + esc(x.label) + (x.sub ? '<small>' + esc(x.sub) + '</small>' : '') + '</span>' + ic('right', 20) + '</a>').join('') + '</section>' : '';
+    return { title: 'หน้าหลัก', body: alertHTML + b };
   }
   function skillLine(sid, inst, editable) {
     const n = lvOf(sid, inst);
@@ -483,32 +486,64 @@
   const pageHead = (title, sub) => '<div class="rp-head"><img src="icons/logo-256.png" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
   const bigAv = (m, src) => src ? '<img class="rp-ph" src="' + esc(src) + '" alt="">' : '<div class="rp-ph none">' + esc(((m.first || m.name || '?').replace(/^(ครู|พ่อครู|แม่ครู|นาย|นางสาว|นาง)/, '').trim().charAt(0)) || '?') + '</div>';
   async function printPhotos(sids) { const o = {}; await Promise.all(sids.map(async s => { try { o[s] = await B.get('photos/' + s); } catch (e) { o[s] = null; } if (!o[s]) o[s] = members()[s].photo || null; })); return o; }
-  async function boardPages(sc) {
-    const sids = scopeSids(sc), ms = members(), ph = await printPhotos(sids), per = 12, root = document.createElement('div');
-    const sub = C.club.full + ' · ปีการศึกษา ' + year() + ' · ' + SCOPES.find(x => x[0] === sc)[1] + ' ' + sids.length + ' คน';
-    for (let i = 0; i < Math.max(1, sids.length); i += per) {
-      const pg = document.createElement('div'); pg.className = 'rp-page';
-      pg.innerHTML = pageHead('ทำเนียบสมาชิกชมรม' + C.club.name, sub) + '<div class="rp-grid">' + sids.slice(i, i + per).map(s => { const m = ms[s], lv = topLv(s);
-        return '<div class="rp-card">' + bigAv(m, ph[s]) + '<div class="rp-n">' + esc(fullName(m)) + '</div><div class="rp-c">' + esc(cls(m) + ' · ' + typeName(m.type)) + '</div>' + (roleOf(s) ? '<div class="rp-r">' + esc(roleName(roleOf(s))) + '</div>' : '') + '<div class="rp-i">' + esc(insts(m).join(', ') || '-') + '</div>' + (lv ? '<div class="rp-l">' + esc(lvName(lv)) + '</div>' : '') + '</div>'; }).join('') +
-        '</div><div class="rp-foot">หน้า ' + (i / per + 1) + ' / ' + Math.max(1, Math.ceil(sids.length / per)) + '</div>';
-      root.appendChild(pg);
+  /* ============ บอร์ด / แผนผังสำหรับพิมพ์ ============
+     จัดหน้าด้วยการวัดความสูงจริงของเนื้อหา (ไม่ตัดข้อความ) · เลือกแนวตั้ง/แนวนอน · โปสเตอร์หน้าเดียวหรือหลายหน้า A4 */
+  const CONTENTS = [['full', 'บอร์ดรวม: โครงสร้างผู้บริหารด้านบน สมาชิกด้านล่าง'], ['chart', 'แผนผังผู้บริหารชมรมอย่างเดียว'], ['all', 'สมาชิกทุกคนแบบการ์ด'], ['am', 'ผู้ซ้อมรอบเช้า'], ['pm', 'ผู้ซ้อมรอบเย็น']];
+  const printHead = (title, sub) => '<div class="rp-head"><img src="icons/logo-1024.jpg" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
+  /* การ์ดบุคคล: แสดงครบทุกบรรทัด ตำแหน่ง ชั้น เครื่องดนตรีทุกชนิด และระดับฝีมือ */
+  function bpCard(m, sid, src, o) {
+    o = o || {}; const lv = sid ? topLv(sid) : 0, ins = sid ? insts(m) : [];
+    return '<div class="bp ' + (o.size || '') + '">' + bigAv(m, src) + '<div class="bp-n">' + esc(m.first ? fullName(m) : m.name) + '</div>' + (o.role ? '<div class="bp-r">' + esc(o.role) + '</div>' : '') +
+      (sid ? '<div class="bp-c">' + esc(cls(m) + ' · ' + typeName(m.type)) + '</div>' : '') + (ins.length ? '<div class="bp-i">' + esc(ins.join(' · ')) + '</div>' : '') + (lv ? '<div class="bp-l">' + esc(lvName(lv)) + '</div>' : '') + '</div>';
+  }
+  async function boardData(content) {
+    const ms = members(), act = activeSids(), withRole = id => act.filter(s => (roleOf(s) || {}).role === id).sort(byClass);
+    const exec = content === 'full' || content === 'chart';
+    const sids = content === 'chart' ? [] : content === 'full' ? act.filter(s => !roleOf(s)).sort(byClass) : scopeSids(content);
+    const ph = await printPhotos(exec ? act : sids), blocks = [];
+    if (exec) {
+      const adv = advisors();
+      if (adv.length) blocks.push({ lab: 'ที่ปรึกษาชมรม', cards: adv.map(a => bpCard(a, '', a.photo, { role: a.position || (a.kind === 'expert' ? 'วิทยากรท้องถิ่น' : 'ครูที่ปรึกษาชมรม'), size: 'lg' })), tier: 1 });
+      const pr = withRole('president'); if (pr.length) blocks.push({ lab: 'ประธานชมรม', cards: pr.map(s => bpCard(ms[s], s, ph[s], { role: 'ประธานชมรม', size: 'lg' })), tier: 1 });
+      const mid = ['vice', 'treasurer', 'secretary'].reduce((a, id) => a.concat(withRole(id).map(s => bpCard(ms[s], s, ph[s], { role: roleName({ role: id }) }))), []); if (mid.length) blocks.push({ lab: 'คณะกรรมการบริหาร', cards: mid, tier: 1 });
+      const reps = [1, 2, 3, 4, 5, 6].map(g => act.find(x => { const r = roleOf(x); return r && r.role === 'rep' && +r.grade === g; })).filter(Boolean); if (reps.length) blocks.push({ lab: 'กรรมการตัวแทนระดับชั้น', cards: reps.map(s => bpCard(ms[s], s, ph[s], { role: 'กรรมการ ม.' + roleOf(s).grade })), tier: 1 });
     }
-    return root;
+    if (sids.length) blocks.push({ lab: (content === 'full' ? 'สมาชิกชมรม' : CONTENTS.find(x => x[0] === content)[1]) + ' (' + sids.length + ' คน)', cards: sids.map(s => bpCard(ms[s], s, ph[s], { role: content === 'full' ? '' : roleName(roleOf(s)) })), tier: 0 });
+    const title = content === 'chart' ? 'แผนผังผู้บริหารชมรม' + C.club.name : content === 'full' ? 'ทำเนียบชมรม' + C.club.name : 'ทำเนียบสมาชิกชมรม' + C.club.name;
+    return { blocks, title, sub: C.club.full + ' · ปีการศึกษา ' + year() + ' · สมาชิกทั้งหมด ' + act.length + ' คน' };
   }
-  async function chartPages() {
-    const ms = members(), act = activeSids(), ph = await printPhotos(act.filter(s => roleOf(s)));
-    const p = (m, sub, src, c) => '<div class="rp-pp ' + (c || '') + '">' + bigAv(m, src) + '<div class="rp-n">' + esc(m.first ? fullName(m) : m.name) + '</div><div class="rp-r">' + esc(sub) + '</div></div>';
-    const withRole = id => act.filter(s => (roleOf(s) || {}).role === id).sort(byClass);
-    const tier = l => '<div class="rp-tier">' + l.join('') + '</div>';
-    const root = document.createElement('div'); const pg = document.createElement('div'); pg.className = 'rp-page';
-    pg.innerHTML = pageHead('แผนผังคณะกรรมการชมรม' + C.club.name, C.club.full + ' · ปีการศึกษา ' + year()) +
-      '<div class="rp-lab">ที่ปรึกษาชมรม</div>' + tier(advisors().map(a => p(a, a.position || '', a.photo, 'top'))) +
-      '<div class="rp-lab">ประธานชมรม</div>' + tier(withRole('president').map(s => p(ms[s], cls(ms[s]), ph[s], 'top'))) +
-      '<div class="rp-lab">คณะกรรมการบริหาร</div>' + tier(['vice', 'treasurer', 'secretary'].map(id => withRole(id).map(s => p(ms[s], roleName({ role: id }), ph[s])).join(''))) +
-      '<div class="rp-lab">กรรมการตัวแทนระดับชั้น</div>' + tier([1, 2, 3, 4, 5, 6].map(g => { const s = act.find(x => { const r = roleOf(x); return r && r.role === 'rep' && +r.grade === g; }); return s ? p(ms[s], 'ม.' + g, ph[s], 'sm') : '<div class="rp-pp sm"><div class="rp-ph none">–</div><div class="rp-n">ว่าง</div><div class="rp-r">ม.' + g + '</div></div>'; })) +
-      '<div class="rp-foot">สมาชิกทั้งหมด ' + act.length + ' คน</div>';
-    root.appendChild(pg); return root;
+  const blockHTML = (b, cont) => '<div class="bx-lab">' + esc(b.lab) + (cont ? ' (ต่อ)' : '') + '</div><div class="' + (b.tier ? 'bx-tier' : 'bx-grid') + '"></div>';
+  const stageEl = el => { const w = document.createElement('div'); w.style.cssText = 'position:fixed;left:-30000px;top:0;'; w.appendChild(el); document.body.appendChild(w); return w; };
+  const ready = async el => { if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) { /* ignore */ } } await Promise.all($$('img', el).map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))); };
+  /* โปสเตอร์หน้าเดียว สัดส่วนกระดาษชุด A: ขยายความกว้างของผืนงานจนเนื้อหาทั้งหมดลงพอดี แล้วส่งออกด้วยความละเอียดสูง */
+  async function buildPoster(content, land) {
+    const d = await boardData(content), pg = document.createElement('div'); pg.className = 'rp-page poster' + (land ? ' land' : '');
+    pg.innerHTML = printHead(d.title, d.sub) + '<div class="bx">' + d.blocks.map(b => '<div class="bx-sec ' + (b.tier ? 'bx-t' : 'bx-g') + '">' + blockHTML(b).replace('></div>', '>' + b.cards.join('') + '</div>') + '</div>').join('') + '</div><div class="bx-foot">' + esc(C.club.full) + ' · ข้อมูล ณ ' + esc(M.thDate(Date.now())) + '</div>';
+    const st = stageEl(pg); await ready(pg); const R = land ? 1 / Math.SQRT2 : Math.SQRT2; let W = land ? 1123 : 794;
+    for (; W < 7000; W += 40) { pg.style.width = W + 'px'; pg.style.height = 'auto'; if (pg.offsetHeight <= W * R) break; }
+    const H = Math.round(W * R); pg.style.height = H + 'px'; pg.dataset.w = W; pg.dataset.h = H; st.remove();
+    const root = document.createElement('div'); root.appendChild(pg); return root;
   }
+  /* หลายหน้า A4: เติมการ์ดทีละใบ ถ้าล้นหน้าให้ขึ้นหน้าใหม่ */
+  async function buildA4(content, land) {
+    const d = await boardData(content), root = document.createElement('div'), st = stageEl(root), pages = [];
+    const newPage = () => { const pg = document.createElement('div'); pg.className = 'rp-page a4b' + (land ? ' land' : ''); pg.innerHTML = printHead(d.title, d.sub) + '<div class="bx"></div><div class="rp-foot"></div>'; root.appendChild(pg); pages.push(pg); return pg; };
+    const over = pg => { const bx = $('.bx', pg); return bx.getBoundingClientRect().bottom > pg.getBoundingClientRect().bottom - 52; };
+    let pg = newPage(); await ready(root);
+    for (const b of d.blocks) {
+      let sec = document.createElement('div'); sec.className = 'bx-sec ' + (b.tier ? 'bx-t' : 'bx-g'); sec.innerHTML = blockHTML(b); $('.bx', pg).appendChild(sec); let box = sec.lastChild, n = 0;
+      for (const c of b.cards) {
+        box.insertAdjacentHTML('beforeend', c); await ready(box);
+        if (over(pg) && (n > 0 || $('.bx', pg).children.length > 1)) {
+          box.lastChild.remove(); if (!n) sec.remove();
+          pg = newPage(); sec = document.createElement('div'); sec.className = 'bx-sec ' + (b.tier ? 'bx-t' : 'bx-g'); sec.innerHTML = blockHTML(b, n > 0); $('.bx', pg).appendChild(sec); box = sec.lastChild; box.insertAdjacentHTML('beforeend', c); await ready(box);
+        }
+        n++;
+      }
+    }
+    pages.forEach((p, i) => { $('.rp-foot', p).textContent = 'หน้า ' + (i + 1) + ' / ' + pages.length; }); st.remove(); return root;
+  }
+  const buildBoard = (content, land, poster) => poster ? buildPoster(content, land) : buildA4(content, land);
   function rosterDocx(sc) {
     const sids = scopeSids(sc), ms = members();
     return M.docxTable({
@@ -519,27 +554,27 @@
     });
   }
   function exportMenu() {
-    const w = modal('<h3>ส่งออก</h3>' + fld('ขอบเขตรายชื่อ', '<select class="in" id="x-sc">' + opt(SCOPES) + '</select>') +
-      '<div class="xlist"><button class="xbtn" data-x="board-pdf"><b>บอร์ดสมาชิก (PDF)</b><span>การ์ดรูป ชื่อ ชั้น ตำแหน่ง เครื่องดนตรี ระดับฝีมือ ขนาด A4 สำหรับพิมพ์ติดห้องดนตรี</span></button>' +
-      '<button class="xbtn" data-x="board-png"><b>บอร์ดสมาชิก (รูป PNG)</b><span>หน้าละหนึ่งรูป นำไปขยายหรือจัดวางต่อได้</span></button>' +
-      '<button class="xbtn" data-x="chart-pdf"><b>แผนผังคณะกรรมการ (PDF)</b><span>ที่ปรึกษา ประธาน กรรมการบริหาร และตัวแทนระดับชั้น</span></button>' +
-      '<button class="xbtn" data-x="chart-png"><b>แผนผังคณะกรรมการ (รูป PNG)</b><span>รูปเดียว ความละเอียดสูง</span></button>' +
-      '<button class="xbtn" data-x="docx"><b>รายชื่อสมาชิก (DOCX)</b><span>ตารางรายชื่อ เปิดแก้ต่อใน Word ได้</span></button>' +
-      '<button class="xbtn" data-x="board-view"><b>ดูตัวอย่างบอร์ดก่อน</b><span>แสดงบนหน้าจอ ไม่บันทึกไฟล์</span></button></div>' +
-      '<div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
+    const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
+    const w = modal('<h3>ส่งออกบอร์ดและแผนผัง</h3><form class="form" onsubmit="return false">' + fld('เนื้อหา', '<select class="in" id="x-c">' + opt(CONTENTS) + '</select>') +
+      '<div class="fld"><span>แนวกระดาษ</span><div class="checks"><label class="ck"><input type="radio" name="xo" value="land" checked><span>แนวนอน</span></label><label class="ck"><input type="radio" name="xo" value="port"><span>แนวตั้ง</span></label></div></div>' +
+      '<div class="fld"><span>รูปแบบ</span><label class="ck wide"><input type="radio" name="xf" value="poster" checked><span>โปสเตอร์หน้าเดียว — ทุกคนอยู่ในภาพเดียว สัดส่วนกระดาษชุด A (A4–A0) ส่งร้านพิมพ์ขยายได้</span></label><label class="ck wide"><input type="radio" name="xf" value="a4"><span>หลายหน้า A4 — พิมพ์เองแล้วนำไปติดต่อกัน</span></label></div></form>' +
+      '<div class="xlist"><button class="xbtn" data-x="view"><b>ดูตัวอย่าง</b><span>ตรวจการจัดวางก่อนบันทึก</span></button><button class="xbtn" data-x="png"><b>รูปภาพ PNG ความละเอียดสูง</b><span>' + (mob ? 'ราว 4,400 พิกเซลด้านยาว (ขีดจำกัดของโทรศัพท์/แท็บเล็ต) — ต้องการละเอียดกว่านี้ให้ส่งออกจากคอมพิวเตอร์' : 'ราว 7,000 พิกเซลด้านยาว พิมพ์ได้ถึงขนาด A1 ที่ 200 dpi') + '</span></button>' +
+      '<button class="xbtn" data-x="pdf"><b>PDF</b><span>โปสเตอร์เป็นหน้า A3 ขยายได้ตามสัดส่วน · หลายหน้าเป็น A4</span></button><button class="xbtn" data-x="docx"><b>รายชื่อสมาชิก (DOCX)</b><span>ตารางรายชื่อ เปิดแก้ต่อใน Word</span></button></div>' +
+      '<div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true, wide: true });
     w.addEventListener('click', async e => {
-      const b = e.target.closest('[data-x]'); if (!b || w.dataset.busy) return; const sc = $('#x-sc', w).value, x = b.dataset.x, msg = $('#x-msg', w);
-      const prog = (i, n) => { msg.textContent = 'กำลังสร้างหน้า ' + i + ' / ' + n + ' …'; };
-      w.dataset.busy = '1'; msg.textContent = 'กำลังเตรียมข้อมูล …';
+      const b = e.target.closest('[data-x]'); if (!b || w.dataset.busy) return; const x = b.dataset.x, msg = $('#x-msg', w), content = $('#x-c', w).value, land = $('input[name=xo]:checked', w).value === 'land', poster = $('input[name=xf]:checked', w).value === 'poster';
+      const prog = (i, n) => { msg.textContent = 'กำลังสร้างหน้า ' + i + ' / ' + n + ' …'; }, sc = content === 'chart' ? 'committee' : content === 'full' ? 'all' : content;
+      const name = (content === 'chart' ? 'แผนผังผู้บริหาร' : content === 'full' ? 'บอร์ดรวม' : 'บอร์ดสมาชิก') + 'สรรพวาทิต-' + year() + '-' + (land ? 'แนวนอน' : 'แนวตั้ง');
+      w.dataset.busy = '1'; msg.textContent = 'กำลังจัดหน้า …';
       try {
-        const tag = M.safeName(SCOPES.find(k => k[0] === sc)[1]) + '-' + year();
-        if (x === 'docx') await M.saveBlob(rosterDocx(sc), 'รายชื่อสมาชิกสรรพวาทิต-' + tag + '.docx');
-        else if (x === 'board-view') { const root = await boardPages(sc); w.remove(); M.previewPages(root, 'ตัวอย่างบอร์ดสมาชิก'); return; }
-        else if (x === 'board-pdf') await M.exportPDF(await boardPages(sc), 'บอร์ดสมาชิกสรรพวาทิต-' + tag + '.pdf', prog);
-        else if (x === 'board-png') await M.exportPNGs(await boardPages(sc), 'บอร์ดสมาชิกสรรพวาทิต-' + tag, prog);
-        else if (x === 'chart-pdf') await M.exportPDF(await chartPages(), 'แผนผังสรรพวาทิต-' + year() + '.pdf', prog);
-        else if (x === 'chart-png') await M.exportPNGs(await chartPages(), 'แผนผังสรรพวาทิต-' + year(), prog);
-        msg.textContent = 'เสร็จแล้ว'; log('export', '', x + ' ' + sc);
+        if (x === 'docx') { await M.saveBlob(rosterDocx(sc), 'รายชื่อสมาชิกสรรพวาทิต-' + M.safeName(SCOPES.find(k => k[0] === sc)[1]) + '-' + year() + '.docx'); msg.textContent = 'เสร็จแล้ว'; }
+        else {
+          const root = await buildBoard(content, land, poster), pg = root.firstChild, long = poster ? Math.max(+pg.dataset.w, +pg.dataset.h) : 1123;
+          if (x === 'view') { w.remove(); M.previewPages(root, 'ตัวอย่าง' + (poster ? 'โปสเตอร์' : ' (' + root.children.length + ' หน้า)')); return; }
+          const scale = Math.max(2, Math.min(8, (mob ? 4400 : 7000) / long));
+          if (x === 'png') await M.exportPNGs(root, name, prog, { scale }); else await M.exportPDF(root, name + '.pdf', prog, { scale: Math.min(scale, (mob ? 3600 : 5000) / long), format: poster ? 'a3' : 'a4' });
+          msg.textContent = 'เสร็จแล้ว'; log('export', '', x + ' ' + content);
+        }
       } catch (er) { console.error(er); msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er) + ' (PDF/PNG ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์)'; }
       delete w.dataset.busy;
     });

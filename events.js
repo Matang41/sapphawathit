@@ -34,7 +34,7 @@
   function evCard(e) {
     const p = e.date.split('-'), mine = A.sid() && (e.people || {})[A.sid()], past = evEnd(e) < A.todayISO();
     return '<a class="evc' + (past ? ' past' : '') + '" href="#/ev/' + esc(e.id) + '"><span class="evd"><b>' + (+p[2]) + '</b><i>' + M.MONTHS[+p[1] - 1] + '</i></span><span class="grow"><b>' + esc(e.title) + '</b><span class="muted">' + esc([dateTxt(e), timeTxt(e), e.place].filter(Boolean).join(' · ')) + '</span>' +
-      '<span class="row wrap" style="gap:6px;margin-top:4px">' + chip(kindName(e.kind), 'plum') + (e.status === 'cancelled' ? chip('ยกเลิก', 'bad') : '') + (mine ? chip('คุณเข้าร่วม', 'gold') : '') + (people(e).length ? chip(people(e).length + ' คน', 'line') : '') + '</span></span></a>';
+      '<span class="row wrap" style="gap:6px;margin-top:4px">' + chip(kindName(e.kind), 'plum') + (e.status === 'cancelled' ? chip('ยกเลิก', 'bad') : '') + (mine ? chip('คุณเข้าร่วม', 'gold') : '') + (!past && e.status !== 'cancelled' && Math.round((new Date(e.date + 'T00:00:00') - new Date(A.todayISO() + 'T00:00:00')) / 864e5) <= 3 ? chip(Math.round((new Date(e.date + 'T00:00:00') - new Date(A.todayISO() + 'T00:00:00')) / 864e5) <= 0 ? 'วันนี้' : 'ใกล้ถึงแล้ว', 'hot') : '') + (people(e).length ? chip(people(e).length + ' คน', 'line') : '') + '</span></span></a>';
   }
 
   /* ---------- ประกาศ ---------- */
@@ -85,9 +85,17 @@
     b += '<section class="card"><div class="lb">ผู้เข้าร่วม ' + ps.length + ' คน</div>' + (ps.map(s => { const m = A.members()[s]; return '<div class="mrow"><a class="mrow-main" href="#/m/' + esc(s) + '">' + avatar(m) + '<span class="grow"><b>' + esc(A.fullName(m)) + '</b><span class="muted">' + esc(A.cls(m) + (A.insts(m).length ? ' · ' + A.insts(m).join(', ') : '')) + '</span></span></a></div>'; }).join('') || '<div class="muted">ยังไม่ได้เลือกผู้เข้าร่วม</div>') + '</section>';
     return { title: 'กิจกรรม', body: b, back: '#/events' };
   };
+  const dayDiff = iso => Math.round((new Date(iso + 'T00:00:00') - new Date(A.todayISO() + 'T00:00:00')) / 864e5);
+  const soonTxt = n => n <= 0 ? 'วันนี้' : n === 1 ? 'พรุ่งนี้' : 'อีก ' + n + ' วัน';
+  A.TODO.push(() => {
+    const o = [], sid = A.sid(), un = unacked();
+    if (un.length) o.push({ n: un.length, label: 'ประกาศที่ยังไม่ได้กดรับทราบ', sub: un[0].title, href: '#/events', hot: true });
+    upcoming().filter(e => dayDiff(e.date) <= 3 && (!sid || !e.people || e.people[sid])).slice(0, 4).forEach(e => { const n = dayDiff(e.date); o.push({ badge: soonTxt(n), label: e.title, sub: [timeTxt(e), e.place].filter(Boolean).join(' · '), href: '#/ev/' + e.id, hot: n <= 1 }); });
+    return o;
+  });
   A.HOME.push({ order: 30, html: () => {
     const up = upcoming().slice(0, 2), un = unacked();
-    return (un.length ? '<section class="card"><div class="lb">ประกาศที่ยังไม่ได้รับทราบ (' + un.length + ')</div>' + un.slice(0, 3).map(annCard).join('') + '</section>' : '') +
+    return (un.length ? '<section class="card hl"><div class="lb">ประกาศที่ยังไม่ได้รับทราบ (' + un.length + ')</div>' + un.slice(0, 3).map(annCard).join('') + '</section>' : '') +
       '<section class="card"><div class="row"><div class="lb grow" style="margin:0 0 8px">กำลังจะมาถึง</div><a href="#/events" class="muted">ดูทั้งหมด</a></div>' + (up.map(evCard).join('') || '<div class="muted">ยังไม่มีกิจกรรมที่กำลังจะมาถึง</div>') + '</section>';
   } });
 

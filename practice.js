@@ -122,7 +122,11 @@
     if (!A.teacher()) b += myLeaves();
     return { title: 'การซ้อม', body: b };
   };
-  A.TODO.push(() => A.teacher() ? { n: pendingLeaves().length, label: 'ใบลารอรับทราบ', href: '#/practice' } : null);
+  A.TODO.push(() => {
+    if (A.teacher()) return { n: pendingLeaves().length, label: 'ใบลารอรับทราบ', href: '#/practice', hot: true };
+    if (!checker()) return null; const t = A.todayISO(), dow = new Date().getDay(), s = new Date().getHours() < 12 ? 'am' : 'pm';
+    return dow >= 1 && dow <= 5 && !meta(t, s) && roster(t, s).length ? { badge: 'วันนี้', label: 'ยังไม่ได้เช็กการซ้อมช่วง' + SES[s], href: '#/practice', hot: true } : null;
+  });
   A.HOME.push({ order: 20, html: () => {
     const t = A.todayISO();
     if (A.teacher()) { const n = pendingLeaves().length; const st = s => { const mt = meta(t, s); return mt ? 'เช็กแล้ว (' + ((mt.n || {}).p + (mt.n || {}).l || 0) + ' คน)' : 'ยังไม่เช็ก'; };

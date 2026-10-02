@@ -50,24 +50,26 @@
   const canvasBlob = (c, type, q) => new Promise(res => c.toBlob(res, type, q));
   const imgsReady = el => Promise.all($$('img', el).map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
   const fontsReady = () => (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(() => { }) : Promise.resolve();
-  async function exportPDF(root, filename, onProgress) {
-    await Promise.all([loadLibs('h2c'), loadLibs('pdf'), fontsReady()]);
+  /* opts: { scale: ตัวคูณความละเอียด, format: 'a4' | 'a3' … } — หน้าแนวนอนใช้ class "land" · หน้าขนาดกำหนดเองใส่ data-w / data-h (px) */
+  async function exportPDF(root, filename, onProgress, opts) {
+    opts = opts || {}; await Promise.all([loadLibs('h2c'), loadLibs('pdf'), fontsReady()]);
     const w = stage(root); await imgsReady(root); const pages = $$('.rp-page', root); const { jsPDF } = window.jspdf;
     const land = pages[0] && pages[0].classList.contains('land');
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: land ? 'landscape' : 'portrait', compress: true });
-    try { for (let i = 0; i < pages.length; i++) { if (onProgress) onProgress(i + 1, pages.length); const cv = await html2canvas(pages[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false }); if (i) doc.addPage(); doc.addImage(cv.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, land ? 297 : 210, land ? 210 : 297); cv.width = cv.height = 0; } }
+    const doc = new jsPDF({ unit: 'mm', format: opts.format || 'a4', orientation: land ? 'landscape' : 'portrait', compress: true });
+    const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+    try { for (let i = 0; i < pages.length; i++) { if (onProgress) onProgress(i + 1, pages.length); const cv = await html2canvas(pages[i], { scale: opts.scale || 2, backgroundColor: '#ffffff', useCORS: true, logging: false }); if (i) doc.addPage(); doc.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pw, ph); cv.width = cv.height = 0; } }
     finally { w.remove(); }
     return saveBlob(doc.output('blob'), filename);
   }
-  async function exportPNGs(root, base, onProgress) {
-    await Promise.all([loadLibs('h2c'), fontsReady()]); const w = stage(root); await imgsReady(root); const pages = $$('.rp-page', root); const files = [];
-    try { for (let i = 0; i < pages.length; i++) { if (onProgress) onProgress(i + 1, pages.length); const cv = await html2canvas(pages[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false }); files.push(new File([await canvasBlob(cv, 'image/png')], base + (pages.length > 1 ? '-หน้า' + (i + 1) : '') + '.png', { type: 'image/png' })); cv.width = cv.height = 0; } }
+  async function exportPNGs(root, base, onProgress, opts) {
+    opts = opts || {}; await Promise.all([loadLibs('h2c'), fontsReady()]); const w = stage(root); await imgsReady(root); const pages = $$('.rp-page', root); const files = [];
+    try { for (let i = 0; i < pages.length; i++) { if (onProgress) onProgress(i + 1, pages.length); const cv = await html2canvas(pages[i], { scale: opts.scale || 2, backgroundColor: '#ffffff', useCORS: true, logging: false }); files.push(new File([await canvasBlob(cv, 'image/png')], base + (pages.length > 1 ? '-หน้า' + (i + 1) : '') + '.png', { type: 'image/png' })); cv.width = cv.height = 0; } }
     finally { w.remove(); }
     return saveFiles(files);
   }
   function previewPages(root, title, footerHTML) {
     const pages = Array.from(root.children); const land = pages[0] && pages[0].classList.contains('land');
-    const PW = land ? 1123 : 794, PH = land ? 794 : 1123;
+    const PW = +(pages[0] && pages[0].dataset.w) || (land ? 1123 : 794), PH = +(pages[0] && pages[0].dataset.h) || (land ? 794 : 1123);
     const k = Math.min(1, (Math.min(window.innerWidth, 900) - 40) / PW);
     const w = modal('<div class="row" style="margin-bottom:10px"><h3 class="grow" style="margin:0">' + esc(title || 'ตัวอย่าง') + '</h3><button class="btn ghost sm" data-close>ปิด</button></div>' + (footerHTML || '') + '<div class="pv"></div>', { full: true });
     const box = $('.pv', w);
