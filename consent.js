@@ -41,11 +41,11 @@
 
   /* ============ การ์ดในหน้ากิจกรรม ============ */
   if (A) A.EVHOOKS.push(function (e, ps) {
-    if (e.kind === 'meet' || e.kind === 'appoint') return '';
+    if (!ps.length && canForm()) return '<section class="card" id="consent"><div class="lb">ใบขออนุญาตผู้ปกครอง</div><div class="muted">เลือกผู้เข้าร่วมกิจกรรมก่อน (กด “แก้ไข”) แล้วจึงสร้างลิงก์ขออนุญาตได้</div></section>';
     if (canForm()) {
       const toks = ps.map(s => tokenOf(s, e.id)); load(toks);
       const cnt = { yes: 0, no: 0, wait: 0, none: 0 }; ps.forEach(s => { const t = tokenOf(s, e.id), ct = t ? CT[t] : null; if (!t) cnt.none++; else if (!ct || !ct.sign) cnt.wait++; else if (ct.sign.allow) cnt.yes++; else cnt.no++; });
-      return '<section class="card"><div class="lb">ใบขออนุญาตผู้ปกครอง</div><div class="stat4"><div><b class="ok">' + cnt.yes + '</b><span>อนุญาต</span></div><div><b class="bad">' + cnt.no + '</b><span>ไม่อนุญาต</span></div><div><b>' + cnt.wait + '</b><span>รอตอบ</span></div><div><b>' + cnt.none + '</b><span>ยังไม่มีลิงก์</span></div></div>' +
+      return '<section class="card" id="consent"><div class="lb">ใบขออนุญาตผู้ปกครอง</div><div class="stat4"><div><b class="ok">' + cnt.yes + '</b><span>อนุญาต</span></div><div><b class="bad">' + cnt.no + '</b><span>ไม่อนุญาต</span></div><div><b>' + cnt.wait + '</b><span>รอตอบ</span></div><div><b>' + cnt.none + '</b><span>ยังไม่มีลิงก์</span></div></div>' +
         '<div class="row wrap" style="margin:12px 0 4px">' + (cnt.none ? '<button class="btn" data-act="ctMake" data-id="' + esc(e.id) + '">สร้างลิงก์ให้ ' + cnt.none + ' คนที่ยังไม่มี</button>' : '') + (ps.length - cnt.none ? '<button class="btn ghost" data-act="ctRefresh" data-id="' + esc(e.id) + '">ตรวจคำตอบล่าสุด</button>' : '') + '</div>' +
         '<div class="muted" style="margin-bottom:6px">ส่งลิงก์ของแต่ละคนให้ผู้ปกครองเปิดเซ็นบนเครื่องของผู้ปกครองเอง ลิงก์หนึ่งเซ็นได้ครั้งเดียว</div>' +
         ps.map(s => { const m = A.members()[s], t = tokenOf(s, e.id), ct = t ? CT[t] : null, st = t && ct === null ? ['กำลังโหลด…', 'line'] : stOf(t ? ct : null);
@@ -59,6 +59,29 @@
     return '<section class="card"><div class="row"><div class="lb grow" style="margin:0">ใบขออนุญาตผู้ปกครองของฉัน</div>' + A.chip(st[0], st[1]) + '</div>' +
       (t ? '<div class="muted" style="margin:8px 0">ส่งลิงก์นี้ให้ผู้ปกครองเปิดบนโทรศัพท์ของผู้ปกครอง แล้วกรอกชื่อและเซ็นอนุญาต</div><div class="row wrap"><button class="btn" data-act="ctShare" data-t="' + esc(t) + '">ส่งลิงก์ให้ผู้ปกครอง</button>' + (ct && ct.sign ? '<button class="btn ghost" data-act="ctView" data-t="' + esc(t) + '">ดูใบขออนุญาต</button>' : '') + '</div>' : '<div class="muted" style="margin-top:8px">ครูหรือเลขานุการยังไม่ได้สร้างลิงก์ขออนุญาตสำหรับกิจกรรมนี้</div>') + '</section>';
   });
+
+  /* ---------- หน้ารวม “ใบขออนุญาต” (เข้าจากเมนู) ---------- */
+  const myTokens = () => { const o = (A.D.consents || {})[A.sid()] || {}; return Object.keys(o).filter(e => (A.D.events || {})[e]).map(e => ({ eid: e, t: o[e], ev: A.D.events[e] })).sort((a, b) => b.ev.date.localeCompare(a.ev.date)); };
+  const myWaiting = () => myTokens().filter(x => x.ev.status !== 'cancelled' && (x.ev.dateEnd || x.ev.date) >= A.todayISO() && CT[x.t] !== undefined && CT[x.t] && !CT[x.t].sign);
+  A.NAVS.push({ id: 'consent', label: 'ใบขออนุญาต', icon: 'doc', order: 33 });
+  A.V.consent = function () {
+    let b = '';
+    if (canForm()) {
+      const evs = A.evList().filter(e => e.status !== 'cancelled'), up = evs.filter(e => (e.dateEnd || e.date) >= A.todayISO()), past = evs.filter(e => (e.dateEnd || e.date) < A.todayISO()).reverse();
+      b += '<section class="card"><div class="lb">วิธีขออนุญาตผู้ปกครอง</div><ol class="steps"><li>สร้างกิจกรรมและเลือกผู้เข้าร่วม (เมนูกิจกรรม)</li><li>กด “จัดการใบขออนุญาต” ของกิจกรรมนั้น แล้วกด “สร้างลิงก์”</li><li>นักเรียนเปิดแอป กด “ส่งลิงก์ให้ผู้ปกครอง” หรือครูคัดลอกลิงก์ส่งเอง</li><li>ผู้ปกครองเปิดลิงก์ กรอกชื่อ เซ็น แล้วส่ง ครูกด “ยืนยัน”</li></ol></section>';
+      const row = e => { const ps = A.evPeople(e), toks = ps.map(s => tokenOf(s, e.id)), has = toks.filter(Boolean); if ((e.dateEnd || e.date) >= A.todayISO()) load(has);
+        const yes = has.filter(t => CT[t] && CT[t].sign && CT[t].sign.allow).length, no = has.filter(t => CT[t] && CT[t].sign && !CT[t].sign.allow).length;
+        return '<div class="li"><div class="row"><div class="grow"><b>' + esc(e.title) + '</b><div class="muted">' + esc(A.evDate(e) + ' · ผู้เข้าร่วม ' + ps.length + ' คน') + '</div></div><a class="btn sm" href="#/ev/' + esc(e.id) + '">จัดการใบขออนุญาต</a></div>' +
+          '<div class="row wrap" style="gap:6px;margin-top:6px">' + (!ps.length ? A.chip('ยังไม่ได้เลือกผู้เข้าร่วม', 'line') : !has.length ? A.chip('ยังไม่ได้สร้างลิงก์', 'gold') : A.chip('อนุญาต ' + yes + '/' + ps.length, 'ok') + (no ? A.chip('ไม่อนุญาต ' + no, 'bad') : '') + (ps.length - has.length ? A.chip('ยังไม่มีลิงก์ ' + (ps.length - has.length), 'gold') : '')) + '</div></div>'; };
+      b += '<section class="card"><div class="lb">กิจกรรมที่กำลังจะมาถึง</div>' + (up.map(row).join('') || '<div class="muted">ยังไม่มีกิจกรรม — สร้างที่เมนูกิจกรรมก่อน</div>') + '</section>';
+      if (past.length) b += '<section class="card"><div class="lb">กิจกรรมที่ผ่านมา</div>' + past.slice(0, 15).map(e => '<a class="evc" href="#/ev/' + esc(e.id) + '"><span class="grow"><b>' + esc(e.title) + '</b><span class="muted">' + esc(A.evDate(e)) + '</span></span></a>').join('') + '</section>';
+    }
+    if (A.sid()) { const l = myTokens(); load(l.map(x => x.t));
+      b += '<section class="card"><div class="lb">ใบขออนุญาตของฉัน</div>' + (l.map(x => { const ct = CT[x.t], st = ct === null || ct === undefined ? ['กำลังโหลด…', 'line'] : stOf(ct);
+        return '<div class="li"><div class="row"><div class="grow"><b>' + esc(x.ev.title) + '</b><div class="muted">' + esc(A.evDate(Object.assign({}, x.ev))) + '</div></div>' + A.chip(st[0], st[1]) + '</div><div class="row wrap" style="margin-top:8px">' + (ct && !ct.sign ? '<button class="btn sm" data-act="ctShare" data-t="' + esc(x.t) + '">ส่งลิงก์ให้ผู้ปกครอง</button>' : '') + (ct && ct.sign ? '<button class="btn ghost sm" data-act="ctView" data-t="' + esc(x.t) + '">ดูใบขออนุญาต</button>' : '') + '<a class="btn ghost sm" href="#/ev/' + esc(x.eid) + '">ดูกิจกรรม</a></div></div>'; }).join('') || '<div class="muted">ยังไม่มีใบขออนุญาต — เมื่อครูสร้างลิงก์สำหรับกิจกรรมที่คุณเข้าร่วม จะแสดงที่นี่</div>') + '</section>'; }
+    return { title: 'ใบขออนุญาตผู้ปกครอง', body: b };
+  };
+  A.HOME.push({ order: 32, html: () => { if (!A.sid()) return ''; load(myTokens().map(x => x.t)); const w = myWaiting(); return w.length ? '<section class="card"><div class="lb">รอผู้ปกครองเซ็นอนุญาต (' + w.length + ')</div>' + w.map(x => '<div class="li"><div class="row"><b class="grow">' + esc(x.ev.title) + '</b><button class="btn sm" data-act="ctShare" data-t="' + esc(x.t) + '">ส่งลิงก์ให้ผู้ปกครอง</button></div></div>').join('') + '</section>' : ''; } });
 
   if (A) Object.assign(A.ACT, {
     ctMake: d => {

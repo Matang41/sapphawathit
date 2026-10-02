@@ -8,8 +8,9 @@
   const M = window.MC, B = window.B, C = M.C;
   const { $, $$, esc, toast, modal, thNum } = M;
   let USER = null, ME = null, D = {}, LOADED = {}, OFFS = [], YOFFS = [], SIG = '', STATUS = {}, lastHTML = '', lastRoute = '';
-  const SUBS = [], HOME = [], NAVS = [];   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
+  const SUBS = [], HOME = [], NAVS = [], TODO = [];   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
+  const RULES_V = 3;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -62,7 +63,8 @@
   const advisors = () => Object.keys(cfg().advisors || {}).map(id => Object.assign({ id }, cfg().advisors[id])).sort((a, b) => (a.order || 99) - (b.order || 99));
   const myName = () => ME.teacher ? ((advisors().find(a => (a.email || '').toLowerCase() === ME.email) || {}).name || USER.name || 'ครู') : fullName(members()[ME.sid] || {});
   const by = () => ({ id: ME.teacher ? 'teacher' : ME.sid, name: myName() });
-  const W = p => Promise.resolve(p).catch(e => { toast('บันทึกไม่สำเร็จ: ' + ((e && (e.code || e.message)) || e), 4500); });
+  const errTH = e => { const c = String((e && (e.code || e.message)) || e || ''); return /PERMISSION_DENIED|permission_denied/i.test(c) ? 'ฐานข้อมูลไม่อนุญาต (สิทธิ์ไม่พอ หรือ Rules ในฐานข้อมูลยังไม่ใช่รุ่นล่าสุด)' : /network|disconnect|offline/i.test(c) ? 'เครือข่ายขัดข้อง' : c; };
+  const W = p => Promise.resolve(p).catch(e => { console.warn('write failed', e); toast('บันทึกไม่สำเร็จ: ' + errTH(e) + ' — แตะป้ายมุมขวาบนเพื่อดูรายละเอียด', 6000); });
   const log = (act, sid, detail) => W(B.set('history/' + B.uid(), { at: Date.now(), by: by(), act, sid: sid || '', detail: detail || '' }));
 
   /* ---------- สิทธิ์ (ฝั่งหน้าจอ — ของจริงบังคับที่ database.rules.json) ---------- */
@@ -109,6 +111,7 @@
       if (!m || m.status !== 'active') return renderDenied('nomember', sid);
       ME = { teacher: false, sid, email: u.email, role: '' };
     }
+    B.get('rulesProbe/v' + RULES_V).then(() => { D.rulesOld = false; }).catch(() => { D.rulesOld = true; lastHTML = ''; render(); });   /* ตรวจว่า Rules ในฐานข้อมูลเป็นรุ่นเดียวกับแอป */
     const paths = ['config', 'members', 'roles', 'skills'];
     paths.forEach(k => OFFS.push(B.on(k, v => { D[k] = v || {}; LOADED[k] = true; render(); }, e => { LOADED[k] = true; D[k] = D[k] || {}; console.warn('read ' + k, e); render(); })));
     $('#root').innerHTML = '<div class="empty" style="padding-top:30vh">' + brand(true) + '<br>กำลังโหลดข้อมูล…</div>';
@@ -129,8 +132,8 @@
     });
   }
   function syncBadge() {
-    if (STATUS.failed) return '<button class="sync bad" data-act="retry">ส่งไม่สำเร็จ ' + STATUS.failed + ' · ลองใหม่</button>';
-    if (STATUS.pending) return '<span class="sync pend">กำลังส่ง ' + STATUS.pending + '</span>';
+    if (STATUS.failed) return '<button class="sync bad" data-act="syncInfo">ส่งไม่สำเร็จ ' + STATUS.failed + ' · ดูรายละเอียด</button>';
+    if (STATUS.pending) return '<button class="sync pend" data-act="syncInfo">กำลังส่ง ' + STATUS.pending + '</button>';
     if (STATUS.online === false) return '<span class="sync pend">ออฟไลน์</span>';
     return '<span class="sync ok">บันทึกแล้ว</span>';
   }
@@ -144,6 +147,7 @@
       '<div class="main"><header class="topbar">' + (back ? '<a class="tb-back" href="' + back + '" aria-label="กลับ">' + ic('back') + '</a>' : '<span class="tb-logo">' + brand() + '</span>') +
       '<h1>' + esc(title) + '</h1>' + syncBadge() + '</header>' +
       (B.mode === 'demo' ? '<div class="demo-bar">โหมดสาธิต · ข้อมูลสมมติ เก็บในเบราว์เซอร์นี้เท่านั้น</div>' : '') +
+      (D.rulesOld && ME.teacher ? '<div class="demo-bar bad">Rules ในฐานข้อมูลยังเป็นรุ่นเก่า บางเมนูจะบันทึกไม่ได้ — คัดลอกไฟล์ database.rules.json ไปวางที่ Firebase Console › Realtime Database › Rules แล้วกด Publish</div>' : '') +
       '<main class="page">' + body + '</main></div>' +
       '<nav class="tabbar" aria-label="เมนูหลัก">' + tabs.map(n => '<a class="' + ((n.id === 'more' ? !tabs.some(t => t.id === cur) || cur === 'more' : cur === n.id) ? 'on' : '') + '" href="#/' + n.id + '">' + ic(n.icon, 24) + '<span>' + n.label + '</span></a>').join('') + '</nav></div>';
   }
@@ -201,6 +205,8 @@
       '<div class="tile"><div class="lb">กำหนดซ้อมเช้า</div><div class="num">' + act.filter(s => ms[s].am).length + '</div><div class="muted">คน</div></div>' +
       '<div class="tile"><div class="lb">กำหนดซ้อมเย็น</div><div class="num">' + act.filter(s => ms[s].pm).length + '</div><div class="muted">คน</div></div>' +
       (ME.teacher ? '<a class="tile dark" href="#/members"><div class="lb">รอประเมินฝีมือ</div><div class="num">' + unassessed + '</div><div class="muted">คน</div></a>' : '<a class="tile dark" href="#/chart"><div class="lb">ที่ปรึกษาชมรม</div><div class="num">' + advisors().length + '</div><div class="muted">ท่าน</div></a>') + '</div>';
+    if (ME.teacher || ME.role) { const td = TODO.map(f => { try { return f(); } catch (e) { return null; } }).filter(x => x && x.n > 0);
+      if (td.length) b += '<section class="card"><div class="lb">งานที่รอ' + (ME.teacher ? 'ครู' : 'คุณ') + '</div>' + td.map(x => '<a class="todo" href="' + x.href + '"><b>' + x.n + '</b><span class="grow">' + esc(x.label) + '</span>' + ic('right', 20) + '</a>').join('') + '</section>'; }
     HOME.slice().sort((x, y) => x.order - y.order).forEach(h => { try { b += h.html() || ''; } catch (e) { console.error(e); } });
     if (can.edit()) b += '<section class="card"><div class="lb">ทางลัด</div><div class="row wrap">' +
       '<button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / รายชื่อ</button></div></section>';
@@ -251,7 +257,7 @@
   function viewMembers() {
     const sel = (k, opts) => '<select class="in sm" data-filter="' + k + '" aria-label="' + esc(opts[0][1]) + '">' + opts.map(o => '<option value="' + o[0] + '"' + (String(UI[k]) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
     let b = '';
-    if (can.edit()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button>' + (can.exp() ? '<button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออก</button>' : '') + '</div>';
+    if (can.edit()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><a class="btn ghost" href="#/join">' + ic('doc', 18) + 'ใบสมัครผ่านลิงก์</a>' + (can.exp() ? '<button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออก</button>' : '') + '</div>';
     b += '<section class="card"><div class="filters"><input id="q" class="in" type="search" placeholder="ค้นหาชื่อ เลขประจำตัว เครื่องดนตรี" value="' + esc(UI.q) + '" aria-label="ค้นหาสมาชิก">' +
       sel('type', [['', 'ทุกประเภท']].concat(C.memberTypes.map(t => [t.id, t.name]))) +
       sel('ses', [['', 'ทุกรอบซ้อม'], ['am', 'ซ้อมเช้า'], ['pm', 'ซ้อมเย็น']]) +
@@ -551,6 +557,17 @@
     signin: async () => { try { B.authError = null; await B.signIn({}); } catch (e) { renderLogin(esc(B.authErrorText(e))); } },
     signout: () => B.signOut(),
     retry: () => B.retryFailed(),
+    syncInfo: async () => {
+      const f = await B.failedOps(), pn = B.pendingList(); const line = o => (o.t === 'update' && !o.p ? Object.keys(o.v || {}).slice(0, 3).join(', ') : o.p) || '(ราก)';
+      const txt = 'สรรพวาทิต ' + C.version + ' · ' + B.mode + ' · ' + (USER ? USER.email : '') + '\n' + f.map(o => 'FAILED ' + o.t + ' ' + line(o) + ' :: ' + o.error).concat(pn.map(o => 'PENDING ' + o.t + ' ' + line(o))).join('\n');
+      const w = modal('<h3>สถานะการส่งข้อมูล</h3>' + (D.rulesOld ? '<div class="note bad">ฐานข้อมูลยังใช้ Rules รุ่นเก่า — คัดลอกไฟล์ database.rules.json ไปวางที่ Firebase Console › Realtime Database › Rules แล้วกด Publish</div>' : '') +
+        '<div class="lb">ส่งไม่สำเร็จ (' + f.length + ')</div>' + (f.map(o => '<div class="li"><b>' + esc(line(o)) + '</b><div class="muted">' + esc(errTH({ code: o.error })) + ' · ' + esc(M.thDate(o.failedAt)) + '</div></div>').join('') || '<div class="muted">ไม่มี</div>') +
+        '<div class="lb" style="margin-top:14px">กำลังรอส่ง (' + pn.length + ')</div><div class="muted">' + (pn.map(o => esc(line(o))).join('<br>') || 'ไม่มี') + (STATUS.online === false ? '<br>ขณะนี้ออฟไลน์ ระบบจะส่งเองเมื่อมีสัญญาณ' : '') + '</div>' +
+        '<div class="row wrap" style="margin-top:16px">' + (f.length ? '<button class="btn" id="s-retry">ลองส่งใหม่</button><button class="btn ghost danger" id="s-clear">ล้างรายการที่ส่งไม่สำเร็จ</button>' : '') + '<button class="btn ghost" id="s-copy">คัดลอกรายละเอียด</button><button class="btn ghost" data-close>ปิด</button></div><div class="muted" style="margin-top:8px">ถ้าส่งไม่สำเร็จซ้ำ ๆ ให้คัดลอกรายละเอียดส่งให้ผู้พัฒนา</div>', { center: true, wide: true });
+      const on = (id, fn) => { const el = $(id, w); if (el) el.addEventListener('click', fn); };
+      on('#s-retry', async () => { await B.retryFailed(); w.remove(); toast('กำลังลองส่งใหม่'); }); on('#s-clear', async () => { await B.discardFailed(); w.remove(); toast('ล้างรายการแล้ว'); });
+      on('#s-copy', async () => { try { await navigator.clipboard.writeText(txt); toast('คัดลอกแล้ว'); } catch (e) { modal('<h3>รายละเอียด</h3><textarea class="in" rows="8" readonly>' + esc(txt) + '</textarea><button class="btn ghost block" data-close style="margin-top:10px">ปิด</button>', { center: true }); } });
+    },
     addMember: () => { if (can.edit()) memberForm(null); },
     editMember: d => { if (can.edit()) memberForm(d.sid); },
     editSelf: () => memberForm(ME.sid, true),
@@ -607,7 +624,7 @@
   const DOWS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'], MONTHS_F = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   /* 'YYYY-MM-DD' → ข้อความไทย: mode 'short' = 2 ต.ค. 69 · 'full' = 2 ตุลาคม 2569 · 'dow' = วันศุกร์ที่ 2 ตุลาคม 2569 */
   function dTH(iso, mode) { if (!iso) return ''; const p = iso.split('-').map(Number); const d = new Date(p[0], p[1] - 1, p[2]); const y = p[0] + 543; return mode === 'short' ? p[2] + ' ' + M.MONTHS[p[1] - 1] + ' ' + String(y).slice(2) : (mode === 'dow' ? 'วัน' + DOWS[d.getDay()] + 'ที่ ' : '') + p[2] + ' ' + MONTHS_F[p[1] - 1] + ' ' + y; }
-  window.APP = { V, ACT, NAVS, SUBS, HOME, MANAGE, UI, PRIV, ICON, can, ic, chip, fld, opt, avatar, brand, members, cfg, year, instList, activeSids, fullName, cls, typeName, roleOf, roleName, insts, byClass, advisors, myName, by, W, log, lvOf, lvName, topLv, sesText, memberRow, pageHead, bigAv, printPhotos, route, todayISO, dTH, MONTHS_F, DOWS, ROLE_ORDER,
+  window.APP = { V, ACT, NAVS, SUBS, HOME, MANAGE, TODO, errTH, UI, PRIV, ICON, can, ic, chip, fld, opt, avatar, brand, members, cfg, year, instList, activeSids, fullName, cls, typeName, roleOf, roleName, insts, byClass, advisors, myName, by, W, log, lvOf, lvName, topLv, sesText, memberRow, pageHead, bigAv, printPhotos, route, todayISO, dTH, MONTHS_F, DOWS, ROLE_ORDER,
     get D() { return D; }, get ME() { return ME; }, get USER() { return USER; }, get STATUS() { return STATUS; },
     is: (...r) => !!ME && !ME.teacher && r.includes(ME.role), teacher: () => !!ME && ME.teacher, sid: () => ME && ME.sid,
     rerender() { lastHTML = ''; render(); } };

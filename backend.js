@@ -95,7 +95,7 @@
   };
 
   /* ---------- Demo implementation (localStorage + IndexedDB) ---------- */
-  const DKEY = 'spw_demo_db2', DUSER = 'spw_demo_user';
+  const DKEY = 'spw_demo_db3', DUSER = 'spw_demo_user';
   const DemoImpl = {
     name: 'demo', ls: [], authCb: null,
     tree() { try { return JSON.parse(localStorage.getItem(DKEY)) || {}; } catch (e) { return {}; } },
@@ -187,6 +187,10 @@
     t.archive = { [String(+C.club.year - 1)]: { n: 31, at: now, roles: { x1: { role: 'president', name: 'นายศิษย์เก่า ตัวอย่าง', cls: 'ม.6/1' }, x2: { role: 'vice', name: 'น.ส.รุ่นพี่ ตัวอย่าง', cls: 'ม.6/3' } } } };
     t.alumni = { al1: { name: 'นายรุ่นแรก ตัวอย่าง', gradYear: String(+C.club.year - 3), role: 'ประธานชมรม', roleYear: String(+C.club.year - 3), inst: 'ระนาดเอก', note: 'ข้อมูลตัวอย่าง', at: now } };
     t.griev = { '90011': { g1: { topic: 'เครื่องดนตรี / อุปกรณ์', text: 'สายซอด้วงตัวที่ใช้ซ้อมขาดบ่อย อยากขอเปลี่ยนสายใหม่ (ข้อความตัวอย่าง)', at: now - 9e6, status: 'new' } } };
+    t.public = { join: { open: true, year: C.club.year, inst: C.instruments } };
+    t.applications = { '90021': { prefix: 'ด.ญ.', first: 'ใหม่', last: 'ตัวอย่างสมัคร', grade: 1, room: 4, phone: '0800000021', parentName: 'นางผู้ปกครอง ตัวอย่าง', parentPhone: '0800000022', inst: { 'ขิม': true }, about: 'เคยเรียนขิมตอนประถม (ข้อความตัวอย่าง)', at: now - 4e6 } };
+    const mon = n => { const d = new Date(now); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    yy.behave = {}; rows.forEach((r, i) => { yy.behave[r[0]] = {}; [1, 2, 3].forEach(w => { yy.behave[r[0]][mon(w)] = Object.assign({ s: 4 - ((i + w) % 4 === 0 ? 2 : (i + w) % 3 === 0 ? 1 : 0), at: now, by: 'ครูตัวอย่าง ใจดี' }, i === 4 && w === 1 ? { note: 'มาซ้อมให้ตรงเวลามากขึ้นนะ (ข้อความตัวอย่าง)' } : {}); }); });
     t._demo = { seededAt: now };
     return t;
   }
@@ -222,10 +226,12 @@
   async function refreshCounts() { status.pending = pendingOps.size; status.failed = (await IDB.all('failed')).length; emitStatus(); }
   function send(op) {
     pendingOps.set(op.id, op); refreshCounts();
-    return Promise.resolve(impl.raw(op)).then(async () => {
+    let pr; try { pr = Promise.resolve(impl.raw(op)); } catch (e) { pr = Promise.reject(e); }   /* SDK อาจ throw ทันที (ข้อมูลผิดรูปแบบ) — ต้องนับเป็นส่งไม่สำเร็จ ไม่ค้างในกล่องขาออก */
+    return pr.then(async () => {
       pendingOps.delete(op.id); await IDB.del('outbox', op.id); status.lastSync = Date.now(); refreshCounts();
     }).catch(async e => {
       pendingOps.delete(op.id); await IDB.del('outbox', op.id);
+      subs.forEach(s => { if (opTouches(op, s.p)) { try { s.cb(overlay(s.p, s.last)); } catch (e2) { /* ignore */ } } });   /* ถอนค่าที่แสดงล่วงหน้าออก ให้หน้าจอตรงกับฐานข้อมูล */
       if (op.replayed && /^history\//.test(op.p || '')) { refreshCounts(); return; } // ประวัติที่ส่งสำเร็จไปแล้วก่อนปิดแอป
       op.error = (e && (e.code || e.message)) || String(e); op.failedAt = Date.now(); await IDB.put('failed', op);
       refreshCounts(); console.warn('write failed', op.p, e); throw e;
@@ -300,6 +306,8 @@
     on, query: (p, c, e) => impl.query(p, c, e),
     snapshot, snapshots,
     failedOps: () => IDB.all('failed'),
+    pendingList: () => Array.from(pendingOps.values()),
+    async discardFailed() { for (const op of await IDB.all('failed')) await IDB.del('failed', op.id); refreshCounts(); },
     async retryFailed() { for (const op of await IDB.all('failed')) { await IDB.del('failed', op.id); delete op.error; await IDB.put('outbox', op); send(op).catch(() => { }); } refreshCounts(); },
     onStatus(cb) { statusCbs.add(cb); cb(Object.assign({}, status)); return () => statusCbs.delete(cb); },
     authErrorText(e) {

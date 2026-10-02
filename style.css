@@ -274,3 +274,21 @@ b.ok { color: var(--ok); } b.bad { color: var(--bad); } b.gold { color: var(--go
 .fn-wm { position: absolute; top: 44%; left: 0; right: 0; text-align: center; font-size: 96px; font-weight: 700; color: rgba(140, 29, 43, .13); transform: rotate(-18deg); }
 
 .fn-line { border-bottom: 1px dotted #261720; height: 40px; margin: 0 8px 6px; text-align: left; font-size: 14px; color: #6B5A64; display: flex; align-items: flex-end; }
+
+/* ============ รุ่น 2.1 ============ */
+.demo-bar.bad { background: var(--bad-l); color: var(--bad); font-weight: 500; }
+.todo { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); text-decoration: none; color: inherit; } .lb + .todo { border-top: 0; }
+.todo b { min-width: 34px; height: 34px; border-radius: 99px; background: var(--gold); color: var(--deep); display: flex; align-items: center; justify-content: center; font-weight: 600; } .todo .ic { color: var(--mut); }
+.steps { margin: 0; padding-left: 22px; } .steps li { padding: 3px 0; }
+button.seat { font: inherit; cursor: pointer; min-height: 52px; }
+.plot.edit .plot-row { align-items: stretch; min-height: 56px; position: relative; padding-top: 18px; border-top: 1px dashed rgba(243, 201, 91, .25); }
+.plot-rn { position: absolute; left: 4px; top: 0; font-size: .7rem; color: #E9DCE4; }
+.seat.sel { background: var(--gold); border-color: #fff; } .seat.sel b, .seat.sel span { color: var(--deep); }
+.seat.add { background: transparent; border-style: dashed; color: #E9DCE4; font-size: .82rem; min-width: 72px; }
+.selbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; padding: 12px; border: 1px solid var(--gold-d); border-radius: 12px; background: var(--gold-l); }
+.plist.tall { max-height: 340px; } .pick { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; } .pick .ck { flex: 1; min-width: 0; } .pick select { max-width: 46%; }
+.bh { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0; border-top: 1px solid var(--line); } .card > .bh:first-child { border-top: 0; }
+.bh .mrow-main { flex: 1 1 220px; } .bh-b { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .bh-b .stb { min-width: 0; padding: 0 12px; }
+.stb.off { background: #fff; color: var(--mut); border-color: var(--line); font-weight: 500; }
+.icb:disabled { opacity: .3; }
+.pub-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; } .pub-head img { width: 60px; height: 60px; border-radius: 14px; } .pub-head b { display: block; font-family: var(--head); font-size: 1.2rem; color: var(--deep); line-height: 1.3; } .pub-head span { font-size: .85rem; color: var(--mut); }

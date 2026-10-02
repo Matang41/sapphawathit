@@ -50,6 +50,7 @@
     else b += '<div class="muted">สมาชิกทั่วไปเห็นยอดคงเหลือและสรุปรายเดือน รายการย่อยดูได้เฉพาะคณะกรรมการบริหารและครู</div>';
     return { title: 'การเงินชมรม', body: b };
   };
+  A.TODO.push(() => A.teacher() ? { n: pend().length, label: 'รายการเงินรออนุมัติ', href: '#/finance' } : null);
   A.HOME.push({ order: 60, html: () => '<a class="card rowcard" href="#/finance"><div class="grow"><div class="lb" style="margin:0">ยอดเงินคงเหลือของชมรม</div><div class="num">' + money(sum().bal) + ' บาท</div></div>' + (A.teacher() && pend().length ? chip('รออนุมัติ ' + pend().length, 'gold') : '<span class="muted">ดูสรุป</span>') + '</a>' });
 
   /* ---------- เอกสาร A4 ---------- */

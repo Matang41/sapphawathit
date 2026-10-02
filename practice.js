@@ -122,6 +122,7 @@
     if (!A.teacher()) b += myLeaves();
     return { title: 'การซ้อม', body: b };
   };
+  A.TODO.push(() => A.teacher() ? { n: pendingLeaves().length, label: 'ใบลารอรับทราบ', href: '#/practice' } : null);
   A.HOME.push({ order: 20, html: () => {
     const t = A.todayISO();
     if (A.teacher()) { const n = pendingLeaves().length; const st = s => { const mt = meta(t, s); return mt ? 'เช็กแล้ว (' + ((mt.n || {}).p + (mt.n || {}).l || 0) + ' คน)' : 'ยังไม่เช็ก'; };

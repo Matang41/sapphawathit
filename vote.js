@@ -101,8 +101,9 @@
     B.get(A.teacher() ? 'griev' : 'griev/' + sid).then(v => { G.data = A.teacher() ? (v || {}) : { [sid]: v || {} }; }).catch(() => { G.data = {}; }).then(A.rerender); }
   const gList = () => { const o = []; Object.keys(G.data || {}).forEach(s => Object.keys(G.data[s] || {}).forEach(id => o.push(Object.assign({ sid: s, id }, G.data[s][id])))); return o.sort((a, b) => b.at - a.at); };
   const gNew = () => { if (G.data === undefined) gLoad(); return gList().filter(g => g.status === 'new').length; };
+  let gSeen = 0;
   A.V.griev = function () {
-    gLoad(); const T = A.teacher(), l = gList();
+    if (Date.now() - gSeen > 15000) { gSeen = Date.now(); gLoad(G.data !== undefined); } else gLoad(); const T = A.teacher(), l = gList();
     let b = '<section class="card"><div class="row">' + ic('lock', 28) + '<div class="grow"><b>ร้องทุกข์ถึงครูที่ปรึกษา</b><div class="muted">ข้อความลับ อ่านได้เฉพาะผู้ส่งกับครูที่ปรึกษา กรรมการชมรมอ่านไม่ได้</div></div></div>' +
       (T ? '' : '<div class="note warn">เหตุเร่งด่วนหรืออันตราย ให้ติดต่อครูโดยตรงทันที ระบบนี้ไม่มีการแจ้งเตือนถึงครู<br>หากเรื่องเกี่ยวกับครูที่ปรึกษาเอง ให้แจ้งครูประจำชั้นหรือฝ่ายกิจการนักเรียนของโรงเรียน</div><button class="btn block" data-act="gNew">เขียนเรื่องร้องทุกข์</button>') +
       '<div class="row" style="margin-top:10px"><button class="btn ghost sm" data-act="gReload">โหลดล่าสุด</button></div></section>';
@@ -111,7 +112,7 @@
         (g.reply ? '<div class="note"><b>ครูตอบ</b> (' + esc(M.thDate(g.replyAt)) + ')<br><span style="white-space:pre-line">' + esc(g.reply) + '</span></div>' : '') + (T ? '<button class="btn ghost sm" data-act="gReply" data-sid="' + esc(g.sid) + '" data-id="' + esc(g.id) + '">ตอบ / เปลี่ยนสถานะ</button>' : '') + '</div>'; }).join('') || '<div class="muted">ยังไม่มีเรื่อง</div>') + '</section>';
     return { title: 'ร้องทุกข์', body: b };
   };
-  A.HOME.push({ order: 75, html: () => { if (!A.teacher()) return ''; const n = gNew(); return n ? '<a class="card rowcard" href="#/griev"><div class="grow"><div class="lb" style="margin:0">เรื่องร้องทุกข์ใหม่</div><div class="num">' + n + ' เรื่อง</div></div><span class="muted">เปิดอ่าน</span></a>' : ''; } });
+  A.TODO.push(() => A.teacher() ? { n: gNew(), label: 'เรื่องร้องทุกข์ใหม่', href: '#/griev' } : null);
 
   Object.assign(A.ACT, {
     pollNew: d => { if (A.teacher()) pollForm(d.m); },

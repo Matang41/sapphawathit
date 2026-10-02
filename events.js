@@ -76,7 +76,7 @@
     const e0 = events()[eid]; if (!e0) return { title: 'กิจกรรม', body: '<div class="empty">กำลังโหลด หรือไม่พบกิจกรรมนี้</div>', back: '#/events' }; const e = Object.assign({ id: eid }, e0); const ps = people(e);
     const kv = (k, v) => v ? '<div class="kv"><span>' + k + '</span><b>' + esc(v) + '</b></div>' : '';
     let b = '<section class="card hero"><div class="hero-name">' + esc(e.title) + '</div><div class="hero-sub">' + esc([dateTxt(e, 'dow'), timeTxt(e)].filter(Boolean).join(' · ')) + '</div><div class="row wrap" style="margin-top:10px;gap:8px">' + chip(kindName(e.kind), 'gold') + (e.status === 'cancelled' ? chip('ยกเลิกแล้ว', 'bad') : '') + '</div></section>';
-    if (canEvent()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="evEdit" data-id="' + esc(eid) + '">' + ic('edit', 18) + 'แก้ไข</button>' + (canForm() ? '<button class="btn ghost" data-act="form12" data-id="' + esc(eid) + '">' + ic('doc', 18) + 'สร้างใบ วก.12</button>' : '') +
+    if (canEvent()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="evEdit" data-id="' + esc(eid) + '">' + ic('edit', 18) + 'แก้ไข</button>' + (canForm() ? '<button class="btn ghost" data-act="form12" data-id="' + esc(eid) + '">' + ic('doc', 18) + 'สร้างใบ วก.12</button>' : '') + (canForm() ? '<a class="btn ghost" href="#/consent">' + ic('doc', 18) + 'ใบขออนุญาตผู้ปกครอง</a>' : '') +
       (A.teacher() ? '<button class="btn ghost" data-act="bandNew" data-eid="' + esc(eid) + '">' + ic('band', 18) + 'จัดวงสำหรับงานนี้</button>' : '') + '<button class="btn ghost danger" data-act="evCancel" data-id="' + esc(eid) + '">' + (e.status === 'cancelled' ? 'เปิดกิจกรรมอีกครั้ง' : 'ยกเลิกกิจกรรม') + '</button></div>';
     b += '<section class="card"><div class="lb">รายละเอียด</div>' + kv('สถานที่', e.place) + kv('วัตถุประสงค์ / เพื่อ', e.purpose) + kv('หมายเหตุ', e.note) + kv('ผู้สร้าง', (e.createdBy || {}).name) + '</section>';
     const bands = Object.keys(A.D.bands || {}).filter(k => A.D.bands[k].eid === eid);
@@ -211,16 +211,28 @@
       return '<a class="evc" href="#/band/' + esc(x.id) + '">' + ic('band', 28) + '<span class="grow"><b>' + esc(x.name) + '</b><span class="muted">' + esc([x.type, bandInfo(x)].filter(Boolean).join(' · ')) + '</span><span class="row wrap" style="gap:6px;margin-top:4px">' + chip(seatsOf(x).length + ' ตำแหน่ง', 'line') + (mine ? chip('คุณอยู่ในวงนี้', 'gold') : '') + '</span></span></a>'; }).join('') || '<div class="empty">ยังไม่มีผังวง' + (A.teacher() ? ' — กด “จัดวงใหม่” เพื่อเริ่ม' : '') + '</div>') + '</section>';
     return { title: 'จัดวง', body: b };
   };
+  /* ---------- หน้าผังวง: ครูแตะที่นั่งเพื่อเลือก แล้วแตะที่นั่งอื่นเพื่อสลับ หรือแตะปุ่มท้ายแถวเพื่อย้าย/เพิ่ม ---------- */
+  const BS = { bid: '', seat: '' };
+  const seatWho = s => s.sid && A.members()[s.sid] ? A.fullName(A.members()[s.sid]) : (s.name || '');
+  function editPlot(bid, b) {
+    const st = seatsOf(b), sel = BS.bid === bid ? BS.seat : ''; let h = '<div class="plot edit"><div class="plot-lab">ด้านหลังเวที</div>';
+    for (let r = 5; r >= 1; r--) h += '<div class="plot-row"><span class="plot-rn">' + ROWN[r] + '</span>' + st.filter(s => s.row === r).map(s => '<button class="seat' + (sel === s.id ? ' sel' : '') + '" data-act="seatTap" data-id="' + esc(bid) + '" data-s="' + esc(s.id) + '" aria-pressed="' + (sel === s.id) + '"><b>' + esc(s.inst) + '</b><span>' + esc(seatName(s)) + '</span></button>').join('') +
+      '<button class="seat add" data-act="rowTap" data-id="' + esc(bid) + '" data-r="' + r + '">' + (sel ? 'ย้ายมา' + ROWN[r] : '+ เพิ่ม') + '</button></div>';
+    return h + '<div class="plot-lab front">ผู้ชม / ด้านหน้าเวที</div></div>';
+  }
   A.V.band = function (bid) {
     const b = bands()[bid]; if (!b) return { title: 'ผังวง', body: '<div class="empty">กำลังโหลด หรือไม่พบผังวงนี้</div>', back: '#/bands' }; const st = seatsOf(b), T = A.teacher();
+    const sel = T && BS.bid === bid ? st.find(s => s.id === BS.seat) : null;
     let h = '<section class="card hero"><div class="hero-name">' + esc(b.name) + '</div><div class="hero-sub">' + esc([b.type, bandInfo(b)].filter(Boolean).join(' · ')) + '</div>' + (b.note ? '<div class="hero-sub" style="margin-top:6px">' + esc(b.note) + '</div>' : '') + '</section>' +
       '<div class="row wrap" style="margin-bottom:14px">' + (T ? '<button class="btn" data-act="seatAdd" data-id="' + esc(bid) + '">' + ic('plus', 18) + 'เพิ่มผู้บรรเลง</button><button class="btn ghost" data-act="bandEdit" data-id="' + esc(bid) + '">' + ic('edit', 18) + 'รายละเอียดงาน</button>' : '') +
-      '<button class="btn ghost" data-act="bandExport" data-id="' + esc(bid) + '">' + ic('down', 18) + 'ส่งออกเป็นภาพ</button>' + (T ? '<button class="btn ghost danger" data-act="bandDel" data-id="' + esc(bid) + '">ลบผังวง</button>' : '') + '</div>' +
-      '<section class="card"><div class="lb">ผังวง</div>' + plotHTML(b) + '</section>';
-    if (T) h += '<section class="card"><div class="lb">จัดตำแหน่ง (◀ ▶ สลับในแถว · ▲ ▼ ย้ายแถวหลัง/หน้า)</div>' + ([5, 4, 3, 2, 1].map(r => { const l = st.filter(s => s.row === r); return l.length ? '<div class="mo-h">' + ROWN[r] + '</div>' + l.map(s => '<div class="mrow"><span class="mrow-main"><span class="grow"><b>' + esc(s.inst) + '</b><span class="muted">' + esc(s.sid && A.members()[s.sid] ? A.fullName(A.members()[s.sid]) : s.name || '') + '</span></span></span><span class="mrow-act">' +
-        [['left', 'ย้ายไปทางซ้าย', 'left'], ['right', 'ย้ายไปทางขวา', 'right'], ['back', 'ย้ายไปแถวหลัง', 'up'], ['front', 'ย้ายไปแถวหน้า', 'down']].map(x => '<button class="icb" data-act="seatMove" data-id="' + esc(bid) + '" data-s="' + esc(s.id) + '" data-m="' + x[0] + '" aria-label="' + x[1] + '">' + ic(x[2], 20) + '</button>').join('') +
-        '<button class="icb danger" data-act="seatDel" data-id="' + esc(bid) + '" data-s="' + esc(s.id) + '" aria-label="นำออกจากวง">' + ic('x', 20) + '</button></span></div>').join('') : ''; }).join('') || '<div class="muted">ยังไม่มีผู้บรรเลง</div>') + '</section>';
-    else h += '<section class="card"><div class="lb">รายชื่อผู้บรรเลง (' + st.length + ')</div>' + st.map(s => '<div class="kv"><span>' + esc(s.inst) + '</span><b>' + esc(s.sid && A.members()[s.sid] ? A.fullName(A.members()[s.sid]) : s.name || '') + '</b></div>').join('') + '</section>';
+      '<button class="btn ghost" data-act="bandExport" data-id="' + esc(bid) + '">' + ic('down', 18) + 'ส่งออกเป็นภาพ</button>' + (T ? '<button class="btn ghost danger" data-act="bandDel" data-id="' + esc(bid) + '">ลบผังวง</button>' : '') + '</div>';
+    if (T) {
+      h += '<section class="card"><div class="lb">ผังวง — แตะที่นั่งเพื่อเลือก แล้วแตะที่นั่งอื่นเพื่อสลับที่ หรือแตะปุ่มท้ายแถวเพื่อย้าย</div>' + editPlot(bid, b);
+      if (sel) h += '<div class="selbar"><div class="grow"><b>' + esc(sel.inst) + '</b> · ' + esc(seatWho(sel)) + '<div class="muted">' + ROWN[sel.row] + '</div></div><select class="in sm" data-seatinst="' + esc(sel.id) + '" data-id="' + esc(bid) + '" aria-label="เปลี่ยนเครื่องดนตรี">' + opt((A.instList().includes(sel.inst) ? [] : [[sel.inst, sel.inst]]).concat(A.instList().map(i => [i, i])), sel.inst) + '</select>' +
+        '<button class="btn ghost sm danger" data-act="seatDel" data-id="' + esc(bid) + '" data-s="' + esc(sel.id) + '">นำออกจากวง</button><button class="btn ghost sm" data-act="seatCancel">ยกเลิกการเลือก</button></div>';
+      h += '</section>';
+    } else h += '<section class="card"><div class="lb">ผังวง</div>' + plotHTML(b) + '</section>';
+    h += '<section class="card"><div class="lb">รายชื่อผู้บรรเลง (' + st.length + ')</div>' + (st.map(s => '<div class="kv"><span>' + esc(s.inst) + '</span><b>' + esc(seatWho(s)) + '</b></div>').join('') || '<div class="muted">ยังไม่มีผู้บรรเลง' + (T ? ' — กด “เพิ่มผู้บรรเลง”' : '') + '</div>') + '</section>';
     return { title: 'ผังวง', body: h, back: '#/bands' };
   };
   function bandForm(bid, eid) {
@@ -241,18 +253,23 @@
       w.remove(); toast('บันทึกแล้ว');
     });
   }
-  function seatForm(bid) {
-    const b = bands()[bid], used = new Set(seatsOf(b).map(s => s.sid).filter(Boolean)), ms = A.members();
-    const list = A.activeSids().sort((x, y) => used.has(x) - used.has(y) || A.byClass(x, y));
-    const w = modal('<h3>เพิ่มผู้บรรเลง</h3><form class="form">' + fld('สมาชิก', '<select class="in" id="s-sid">' + opt(list.map(s => [s, (used.has(s) ? '(อยู่ในวงแล้ว) ' : '') + A.fullName(ms[s]) + ' · ' + A.cls(ms[s]) + (A.insts(ms[s]).length ? ' · ' + A.insts(ms[s]).join(', ') : '')]).concat([['', '— บุคคลอื่น (พิมพ์ชื่อ) —']])) + '</select>') +
-      '<div id="s-nw" hidden>' + fld('ชื่อ', '<input class="in" id="s-name" placeholder="เช่น ครู / วิทยากร / นักร้องรับเชิญ">') + '</div>' + '<div class="g3">' + fld('เครื่องดนตรี', '<select class="in" id="s-inst"></select>') + fld('แถว', '<select class="in" id="s-row">' + opt([1, 2, 3, 4, 5].map(r => [r, ROWN[r]])) + '</select>') + '</div>' +
-      '<div class="muted">แถวถูกเลือกเบื้องต้นตามชนิดเครื่อง ปรับได้ตามรูปแบบวงจริง</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ปิด</button><button class="btn grow">เพิ่มลงผัง</button></div></form>', { center: true, sticky: true });
-    const fillInst = () => { const s = $('#s-sid', w).value, own = s ? A.insts(ms[s]) : []; $('#s-nw', w).hidden = !!s; $('#s-inst', w).innerHTML = opt(own.map(i => [i, i + ' (เล่นได้)']).concat(A.instList().filter(i => !own.includes(i)).map(i => [i, i]))); $('#s-row', w).value = guessRow($('#s-inst', w).value); };
-    fillInst(); $('#s-sid', w).addEventListener('change', fillInst); $('#s-inst', w).addEventListener('change', x => { $('#s-row', w).value = guessRow(x.target.value); });
+  function seatForm(bid, row) {
+    const b = bands()[bid], used = new Set(seatsOf(b).map(s => s.sid).filter(Boolean)), ms = A.members(), list = A.activeSids().filter(s => !used.has(s)).sort(A.byClass);
+    const instOpt = own => opt(own.map(i => [i, i]).concat(A.instList().filter(i => !own.includes(i)).map(i => [i, i])));
+    const w = modal('<h3>เพิ่มผู้บรรเลง' + (row ? ' · ' + ROWN[row] : '') + '</h3><form class="form"><div class="muted" style="margin-bottom:8px">ติ๊กเลือกได้หลายคน เครื่องดนตรีเลือกจากที่แต่ละคนเล่นได้ก่อน เปลี่ยนได้</div>' +
+      (list.length ? '<div class="plist tall">' + list.map(s => '<div class="pick"><label class="ck"><input type="checkbox" name="ad" value="' + esc(s) + '"><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s])) + '</small></span></label><select class="in sm" data-for="' + esc(s) + '" aria-label="เครื่องดนตรีของ ' + esc(ms[s].first) + '">' + instOpt(A.insts(ms[s])) + '</select></div>').join('') + '</div>'
+        : '<div class="note">' + (A.activeSids().length ? 'สมาชิกทุกคนอยู่ในวงนี้แล้ว' : 'ยังไม่มีสมาชิกในทะเบียน — เพิ่มสมาชิกก่อน หรือพิมพ์ชื่อด้านล่าง') + '</div>') +
+      '<div class="lb" style="margin-top:14px">บุคคลอื่น (ครู วิทยากร นักร้องรับเชิญ)</div><div class="g3">' + fld('ชื่อ', '<input class="in" id="s-name">') + fld('เครื่องดนตรี', '<select class="in" id="s-inst">' + instOpt([]) + '</select>') + '</div>' +
+      fld('วางที่แถว', '<select class="in" id="s-row">' + opt([[0, 'อัตโนมัติตามชนิดเครื่อง']].concat([1, 2, 3, 4, 5].map(r => [r, ROWN[r]])), row || 0) + '</select>') +
+      '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">เพิ่มลงผัง</button></div></form>', { sticky: true, wide: true });
+    w.addEventListener('change', e => { const f = e.target.dataset && e.target.dataset.for; if (f) { const c = w.querySelector('input[name=ad][value="' + f + '"]'); if (c) c.checked = true; } });
     $('form', w).addEventListener('submit', x => {
-      x.preventDefault(); const sid = $('#s-sid', w).value, name = $('#s-name', w).value.trim(), row = +$('#s-row', w).value; if (!sid && !name) return toast('พิมพ์ชื่อ');
-      const ord = Math.max(0, ...seatsOf(bands()[bid]).filter(s => s.row === row).map(s => s.ord)) + 1; const rec = { inst: $('#s-inst', w).value, row, ord }; if (sid) rec.sid = sid; else rec.name = name;
-      A.W(B.set(Y() + '/bands/' + bid + '/seats/s' + B.uid(), rec)); used.add(sid); toast('เพิ่ม ' + (sid ? ms[sid].first : name) + ' แล้ว'); const i = $('#s-sid', w); if (i.selectedIndex < i.options.length - 2) { i.selectedIndex++; fillInst(); }
+      x.preventDefault(); const fix = +$('#s-row', w).value, cnt = {}, upd = {}; seatsOf(bands()[bid]).forEach(s => { cnt[s.row] = Math.max(cnt[s.row] || 0, s.ord || 0); });
+      const add = rec => { const r = fix || guessRow(rec.inst); cnt[r] = (cnt[r] || 0) + 1; rec.row = r; rec.ord = cnt[r]; upd['s' + B.uid() + Object.keys(upd).length] = rec; };
+      $$('input[name=ad]:checked', w).forEach(c => add({ sid: c.value, inst: w.querySelector('select[data-for="' + c.value + '"]').value }));
+      const name = $('#s-name', w).value.trim(); if (name) add({ name, inst: $('#s-inst', w).value });
+      const n = Object.keys(upd).length; if (!n) return toast('ติ๊กเลือกสมาชิก หรือพิมพ์ชื่อ');
+      A.W(B.update(Y() + '/bands/' + bid + '/seats', upd)); w.remove(); toast('เพิ่ม ' + n + ' คนลงผังแล้ว');
     });
   }
   function bandPage(b) {
@@ -284,13 +301,22 @@
     bandNew: d => { if (A.teacher()) bandForm(null, d.eid || ''); },
     bandEdit: d => { if (A.teacher()) bandForm(d.id); },
     bandDel: async d => { if (!A.teacher()) return; if (!(await M.confirmBox('ลบผังวง', esc(bands()[d.id].name), 'ลบ', true))) return; A.W(B.remove(Y() + '/bands/' + d.id)); location.hash = '#/bands'; },
-    seatAdd: d => { if (A.teacher()) seatForm(d.id); },
-    seatDel: d => { if (A.teacher()) A.W(B.remove(Y() + '/bands/' + d.id + '/seats/' + d.s)); },
-    seatMove: d => {
-      if (!A.teacher()) return; const st = seatsOf(bands()[d.id]), s = st.find(x => x.id === d.s); if (!s) return; const base = Y() + '/bands/' + d.id + '/seats/', upd = {};
-      if (d.m === 'left' || d.m === 'right') { const row = st.filter(x => x.row === s.row), i = row.indexOf(s), j = i + (d.m === 'left' ? -1 : 1); if (j < 0 || j >= row.length) return; upd[base + s.id + '/ord'] = row[j].ord; upd[base + row[j].id + '/ord'] = s.ord; }
-      else { const r = s.row + (d.m === 'back' ? 1 : -1); if (r < 1 || r > 5) return; upd[base + s.id + '/row'] = r; upd[base + s.id + '/ord'] = Math.max(0, ...st.filter(x => x.row === r).map(x => x.ord)) + 1; }
-      A.W(B.update('', upd));
+    seatAdd: d => { if (A.teacher()) seatForm(d.id, 0); },
+    seatCancel: () => { BS.seat = ''; A.rerender(); },
+    seatDel: d => { if (!A.teacher()) return; A.W(B.remove(Y() + '/bands/' + d.id + '/seats/' + d.s)); BS.seat = ''; A.rerender(); },
+    seatTap: d => {
+      if (!A.teacher()) return; const st = seatsOf(bands()[d.id]);
+      if (BS.bid !== d.id || !BS.seat || !st.some(x => x.id === BS.seat)) { BS.bid = d.id; BS.seat = d.s; return A.rerender(); }
+      if (BS.seat === d.s) { BS.seat = ''; return A.rerender(); }
+      const a = st.find(x => x.id === BS.seat), c = st.find(x => x.id === d.s), base = Y() + '/bands/' + d.id + '/seats/', upd = {};   /* สลับที่กัน */
+      upd[base + a.id + '/row'] = c.row; upd[base + a.id + '/ord'] = c.ord; upd[base + c.id + '/row'] = a.row; upd[base + c.id + '/ord'] = a.ord;
+      BS.seat = ''; A.W(B.update('', upd)); A.rerender();
+    },
+    rowTap: d => {
+      if (!A.teacher()) return; const st = seatsOf(bands()[d.id]), r = +d.r, s = BS.bid === d.id ? st.find(x => x.id === BS.seat) : null;
+      if (!s) return seatForm(d.id, r);
+      const upd = { row: r, ord: Math.max(0, ...st.filter(x => x.row === r && x.id !== s.id).map(x => x.ord || 0)) + 1 };
+      BS.seat = ''; A.W(B.update(Y() + '/bands/' + d.id + '/seats/' + s.id, upd)); A.rerender();
     },
     bandExport: d => {
       const b = bands()[d.id], name = 'ผังวง-' + M.safeName(b.name);
@@ -300,5 +326,6 @@
         catch (er) { console.error(er); msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er) + ' (ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างไฟล์)'; } });
     }
   });
+  document.addEventListener('change', e => { const sid = e.target.dataset && e.target.dataset.seatinst; if (sid && A.teacher()) A.W(B.update(Y() + '/bands/' + e.target.dataset.id + '/seats/' + sid, { inst: e.target.value })); });
   A.evList = evList; A.evPeople = people; A.evDate = dateTxt; A.evTime = timeTxt; A.school = school;
 })();
