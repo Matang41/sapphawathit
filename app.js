@@ -8,9 +8,11 @@
   const M = window.MC, B = window.B, C = M.C;
   const { $, $$, esc, toast, modal, thNum } = M;
   let USER = null, ME = null, D = {}, LOADED = {}, OFFS = [], YOFFS = [], SIG = '', STATUS = {}, lastHTML = '', lastRoute = '';
-  const SUBS = [], HOME = [], NAVS = [], TODO = [];   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
+  const SUBS = [], HOME = [], NAVS = [], TODO = [];
+  let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
+  const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 3;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 4;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -28,6 +30,7 @@
     book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
     cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    swap: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     left: '<path d="M14 6l-6 6 6 6"/>', right: '<path d="M10 6l6 6-6 6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>',
     me: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
@@ -46,7 +49,7 @@
   const members = () => D.members || {};
   const cfg = () => D.config || {};
   const year = () => cfg().year || C.club.year;
-  const instList = () => (Array.isArray(cfg().instruments) && cfg().instruments.length ? cfg().instruments : C.instruments);
+  const instList = () => (Array.isArray(cfg().instruments) && cfg().instruments.length ? cfg().instruments : (C.club.instruments || []));
   const activeSids = () => Object.keys(members()).filter(s => members()[s] && members()[s].status === 'active');
   const fullName = m => (m.prefix || '') + (m.first || '') + ' ' + (m.last || '');
   const cls = m => m.grade ? 'ม.' + m.grade + '/' + (m.room || '-') : '-';
@@ -55,7 +58,9 @@
   const roleName = r => { if (!r) return ''; if (r.role === 'rep') return 'กรรมการ ม.' + r.grade; const x = C.roles.find(y => y.id === r.role); return x ? x.name : ''; };
   const insts = m => Object.keys((m && m.inst) || {});
   const lvOf = (sid, i) => { const s = ((D.skills || {})[sid] || {})[i]; return s && s.lv ? s.lv : 0; };
-  const lvName = n => n ? C.levels[n - 1] : 'ยังไม่ประเมิน';
+  /* ระดับฝีมือของชมรม: ครูแก้ชื่อ/รายละเอียด/จำนวนขั้นได้ (config/levels) — แสดงเลขระดับนำหน้าเสมอ */
+  const levels = () => { const l = Array.isArray(cfg().levels) && cfg().levels.length ? cfg().levels : C.club.levels; return l.map(x => typeof x === 'string' ? { name: x } : (x || { name: '' })); };
+  const lvName = n => { if (!n) return 'ยังไม่ประเมิน'; const L = levels()[n - 1]; return 'Lv.' + n + (L && L.name ? ' ' + L.name : ''); };
   const topLv = sid => Math.max(0, ...insts(members()[sid]).map(i => lvOf(sid, i)));
   const byClass = (a, b) => (members()[a].grade || 9) - (members()[b].grade || 9) || (members()[a].room || 0) - (members()[b].room || 0) || a.localeCompare(b);
   const ROLE_ORDER = ['president', 'vice', 'treasurer', 'secretary', 'rep'];
@@ -66,6 +71,24 @@
   const by = () => ({ id: ME.teacher ? 'teacher' : ME.sid, name: myName() });
   const errTH = e => { const c = String((e && (e.code || e.message)) || e || ''); return /PERMISSION_DENIED|permission_denied/i.test(c) ? 'ฐานข้อมูลไม่อนุญาต (สิทธิ์ไม่พอ หรือ Rules ในฐานข้อมูลยังไม่ใช่รุ่นล่าสุด)' : /network|disconnect|offline/i.test(c) ? 'เครือข่ายขัดข้อง' : c; };
   const W = p => Promise.resolve(p).catch(e => { console.warn('write failed', e); toast('บันทึกไม่สำเร็จ: ' + errTH(e) + ' — แตะป้ายมุมขวาบนเพื่อดูรายละเอียด', 6000); });
+  /* ----- ทะเบียนกลาง ↔ สำเนาในชมรม: people/{sid} เป็นต้นฉบับของชื่อ ชั้น ห้อง รูป ----- */
+  const sharedOf = m => { const o = {}; SHARED.forEach(f => { if (m[f] !== undefined && m[f] !== null && m[f] !== '') o[f] = m[f]; }); return o; };
+  /* เขียนช่องที่ใช้ร่วมกันลงทะเบียนกลาง (+ สำเนาในชมรมอื่นที่คนนี้อยู่ ถ้าเป็นครู) */
+  function sharedWrites(sid, fields, upd) {
+    Object.keys(fields).forEach(f => { upd['/people/' + sid + '/' + f] = fields[f]; });
+    if (ME.teacher) Object.keys(((D.people || {})[sid] || {}).clubs || {}).filter(c => c !== C._club && MYCLUBS.includes(c)).forEach(c => Object.keys(fields).forEach(f => { upd['/c/' + c + '/members/' + sid + '/' + f] = fields[f]; }));
+    return upd;
+  }
+  let recT = 0;
+  function reconcileSoon() { if (!ME || !ME.teacher) return; clearTimeout(recT); recT = setTimeout(reconcile, 1500); }
+  function reconcile() {
+    if (!ME || !ME.teacher || !LOADED.people || !LOADED.members) return; const P = D.people || {}, ms = members(), upd = {};
+    Object.keys(ms).forEach(sid => { const m = ms[sid]; if (!m || !m.first) return; const p = P[sid];
+      if (!p) { const o = sharedOf(m); Object.keys(o).forEach(f => { upd['/people/' + sid + '/' + f] = o[f]; }); if (m.status === 'active') upd['/people/' + sid + '/clubs/' + C._club] = true; return; }
+      SHARED.forEach(f => { const pv = p[f], mv = m[f]; if ((pv === undefined || pv === null || pv === '') && mv !== undefined && mv !== null && mv !== '') upd['/people/' + sid + '/' + f] = mv; else if (pv !== undefined && pv !== null && pv !== '' && JSON.stringify(pv) !== JSON.stringify(mv)) upd['members/' + sid + '/' + f] = pv; });
+      const flag = !!((p.clubs || {})[C._club]); if ((m.status === 'active') !== flag) upd['/people/' + sid + '/clubs/' + C._club] = m.status === 'active' ? true : null; });
+    if (Object.keys(upd).length) W(B.update('', upd));
+  }
   const log = (act, sid, detail) => W(B.set('history/' + B.uid(), { at: Date.now(), by: by(), act, sid: sid || '', detail: detail || '' }));
 
   /* ---------- สิทธิ์ (ฝั่งหน้าจอ — ของจริงบังคับที่ database.rules.json) ---------- */
@@ -81,7 +104,7 @@
   };
 
   /* ============ ล็อกอิน ============ */
-  function brand(big) { return '<img class="logo ' + (big ? 'big' : '') + '" src="icons/logo-256.png" alt="ตราชมรมสรรพวาทิต">'; }
+  function brand(big) { return '<img class="logo ' + (big ? 'big' : '') + (C.club.round ? ' round' : '') + '" src="' + C.club.logo + '" alt="ตราชมรม' + esc(C.club.name) + '">'; }
   function renderLogin(msg) {
     lastHTML = '';
     $('#root').innerHTML = '<div class="login"><div class="login-card">' + brand(true) +
@@ -103,18 +126,39 @@
     OFFS.forEach(f => f()); OFFS = []; YOFFS.forEach(f => f()); YOFFS = []; SIG = ''; D = {}; LOADED = {}; USER = u; ME = null;
     if (!u) return renderLogin(B.authError ? esc(B.authErrorText(B.authError)) : '');
     if (u.verified === false) return renderDenied('domain');
-    let teacher = B.isBootTeacher(u.email); const sid = B.sidFromEmail(u.email);
-    if (!teacher && !sid) { try { teacher = !!(await B.get('teachers/' + B.emailKey(u.email))); } catch (e) { teacher = false; } }
-    if (teacher) ME = { teacher: true, email: u.email };
-    else {
+    const all = C.clubs.map(c => c.id); let teacher = B.isBootTeacher(u.email), clubs = teacher ? all : []; const sid = B.sidFromEmail(u.email);
+    if (!teacher && !sid) { let t = null; try { t = await B.get('/teachers/' + B.emailKey(u.email)); } catch (e) { t = null; }
+      if (t === true) { teacher = true; clubs = all; } else if (t && typeof t === 'object') { clubs = all.filter(id => t[id]); teacher = clubs.length > 0; } }
+    if (!teacher) {
       if (!sid) return renderDenied('domain');
-      let m = null; try { m = await B.get('members/' + sid); } catch (e) { m = null; }
-      if (!m || m.status !== 'active') return renderDenied('nomember', sid);
-      ME = { teacher: false, sid, email: u.email, role: '' };
+      const rs = await Promise.all(all.map(id => B.get('/c/' + id + '/members/' + sid).catch(() => null)));
+      clubs = all.filter((id, i) => rs[i] && rs[i].status === 'active');
+      if (!clubs.length) return renderDenied('nomember', sid);
     }
+    MYCLUBS = clubs; let saved = null; try { saved = localStorage.getItem('spw_club'); } catch (e) { /* ignore */ }
+    const want = [new URLSearchParams(location.search).get('club'), window.CLUB_DEFAULT, saved].find(x => x && clubs.includes(x)) || (clubs.length === 1 ? clubs[0] : null);
+    if (!want) return renderClubPick(u, teacher, sid);
+    enterClub(want, u, teacher, sid);
+  }
+  function applyClub(cid) {
+    C._club = cid; try { localStorage.setItem('spw_club', cid); } catch (e) { /* ignore */ }
+    document.documentElement.dataset.club = cid; document.title = C.club.name + ' — ' + C.club.full;
+    const mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.setAttribute('content', C.club.themeColor || '#5E3650');
+  }
+  function renderClubPick(u, teacher, sid) {
+    lastHTML = '';
+    $('#root').innerHTML = '<div class="login"><div class="login-card"><h1 style="font-size:1.5rem">เลือกชมรม</h1><div class="login-sub">' + esc(C.school) + '</div><div class="clubpick">' +
+      C.clubs.filter(c => MYCLUBS.includes(c.id)).map(c => '<button class="clubbtn" data-club="' + c.id + '"><img class="' + (c.round ? 'round' : '') + '" src="' + c.logo + '" alt=""><b>' + esc(c.name) + '</b><span>' + esc(c.full) + '</span></button>').join('') + '</div><div class="muted" style="margin-top:14px">สลับชมรมภายหลังได้จากเมนู</div></div></div>';
+    $('#root').querySelectorAll('[data-club]').forEach(b => b.addEventListener('click', () => enterClub(b.dataset.club, u, teacher, sid)));
+  }
+  function enterClub(cid, u, teacher, sid) {
+    applyClub(cid); B.setScope(cid);
+    ME = teacher ? { teacher: true, email: u.email } : { teacher: false, sid, email: u.email, role: '' };
+    if (teacher) { OFFS.push(B.on('/people', v => { D.people = v || {}; LOADED.people = true; reconcileSoon(); if (route().name === 'people') render(); }, () => { D.people = {}; }));
+      if (cid === C.clubs[0].id) B.get('/members').then(v => { if (v) { D.legacy = true; lastHTML = ''; render(); } }).catch(() => { }); }
     B.get('rulesProbe/v' + RULES_V).then(() => { D.rulesOld = false; }).catch(() => { D.rulesOld = true; lastHTML = ''; render(); });   /* ตรวจว่า Rules ในฐานข้อมูลเป็นรุ่นเดียวกับแอป */
     const paths = ['config', 'members', 'roles', 'skills'];
-    paths.forEach(k => OFFS.push(B.on(k, v => { D[k] = v || {}; LOADED[k] = true; render(); }, e => { LOADED[k] = true; D[k] = D[k] || {}; console.warn('read ' + k, e); render(); })));
+    paths.forEach(k => OFFS.push(B.on(k, v => { D[k] = v || {}; LOADED[k] = true; if (k === 'members') reconcileSoon(); render(); }, e => { LOADED[k] = true; D[k] = D[k] || {}; console.warn('read ' + k, e); render(); })));
     $('#root').innerHTML = '<div class="empty" style="padding-top:30vh">' + brand(true) + '<br>กำลังโหลดข้อมูล…</div>';
   }
 
@@ -143,9 +187,10 @@
     const side = nav.filter(n => !n.tabOnly), tabs = nav.filter(n => n.tab);
     return '<div class="app">' +
       '<aside class="side"><div class="side-brand">' + brand() + '<div><div class="side-name">' + esc(C.club.name) + '</div><div class="side-sub">' + (ME.teacher ? 'ครูที่ปรึกษา' : esc(roleName(roleOf(ME.sid)) || 'สมาชิก')) + '</div></div></div>' +
+      (MYCLUBS.length > 1 ? '<button class="swclub" data-act="switchClub">' + ic('swap', 18) + 'สลับชมรม</button>' : '') +
       '<div class="side-nav">' + side.map(n => '<a class="side-link' + (cur === n.id ? ' on' : '') + '" href="#/' + n.id + '">' + ic(n.icon) + n.label + (n.badge && n.badge() ? '<span class="bdg">' + n.badge() + '</span>' : '') + '</a>').join('') + '</div>' +
       '<div class="grow"></div><div class="side-foot"><img src="icons/school-logo.png" alt="ตราโรงเรียนสรรพวิทยาคม"><div>' + esc(C.club.school) + '<br>ปีการศึกษา ' + esc(year()) + '</div></div></aside>' +
-      '<div class="main"><header class="topbar">' + (back ? '<a class="tb-back" href="' + back + '" aria-label="กลับ">' + ic('back') + '</a>' : '<span class="tb-logo">' + brand() + '</span>') +
+      '<div class="main"><header class="topbar">' + (back ? '<a class="tb-back" href="' + back + '" aria-label="กลับ">' + ic('back') + '</a>' : (MYCLUBS.length > 1 ? '<button class="tb-logo tb-sw" data-act="switchClub" aria-label="สลับชมรม">' + brand() + '</button>' : '<span class="tb-logo">' + brand() + '</span>')) +
       '<h1>' + esc(title) + '</h1>' + syncBadge() + '</header>' +
       (B.mode === 'demo' ? '<div class="demo-bar">โหมดสาธิต · ข้อมูลสมมติ เก็บในเบราว์เซอร์นี้เท่านั้น</div>' : '') +
       (D.rulesOld && ME.teacher ? '<div class="demo-bar bad">Rules ในฐานข้อมูลยังเป็นรุ่นเก่า บางเมนูจะบันทึกไม่ได้ — คัดลอกไฟล์ database.rules.json ไปวางที่ Firebase Console › Realtime Database › Rules แล้วกด Publish</div>' : '') +
@@ -172,7 +217,7 @@
 
   /* ============ ชิ้นส่วนที่ใช้ซ้ำ ============ */
   const chip = (t, c) => t ? '<span class="chip ' + (c || '') + '">' + esc(t) + '</span>' : '';
-  function lvBar(n) { return '<div class="lvbar" role="img" aria-label="ระดับ ' + n + ' จาก 8"><i style="width:' + (n / 8 * 100) + '%"></i></div>'; }
+  function lvBar(n) { const N = Math.max(1, levels().length); return '<div class="lvbar" role="img" aria-label="ระดับ ' + n + ' จาก ' + N + '"><i style="width:' + Math.min(100, n / N * 100) + '%"></i></div>'; }
   function sesToggle(sid, m) {
     return '<div class="ses" role="group" aria-label="รอบซ้อม">' +
       ['am', 'pm'].map(k => '<button class="tg' + (m[k] ? ' on' : '') + '" aria-pressed="' + (m[k] ? 'true' : 'false') + '" data-act="toggle" data-sid="' + esc(sid) + '" data-k="' + k + '">' + (k === 'am' ? 'เช้า' : 'เย็น') + '</button>').join('') + '</div>';
@@ -240,7 +285,7 @@
       const ps = act.filter(s => (ms[s].inst || {})[i]).sort((a, c) => lvOf(c, i) - lvOf(a, i) || byClass(a, c));
       return '<div class="igroup"><div class="igroup-h"><b>' + esc(i) + '</b><span class="muted">' + ps.length + ' คน</span></div><div class="row wrap" style="gap:6px">' + ps.map(s => '<a class="pill" href="#/m/' + esc(s) + '">' + esc(ms[s].first) + '<i>' + esc(lvOf(s, i) ? lvName(lvOf(s, i)) : 'ยังไม่ประเมิน') + '</i></a>').join('') + '</div></div>';
     }).join('') : '<div class="muted">ยังไม่มีข้อมูลเครื่องดนตรี</div>') + '</section>';
-    b += '<section class="card"><div class="lb">ลำดับระดับฝีมือ 8 ขั้น</div><ol class="lvlist">' + C.levels.map(l => '<li>' + esc(l) + '</li>').join('') + '</ol></section>';
+    b += '<section class="card"><div class="row"><div class="lb grow" style="margin:0 0 8px">ลำดับระดับฝีมือ ' + levels().length + ' ขั้น</div>' + (can.manage() ? '<button class="btn sm ghost" data-act="setLevels">แก้ไข</button>' : '') + '</div><div class="lvl">' + levels().map((l, i) => '<div class="lvl-i"><b>Lv.' + (i + 1) + '</b><span><b>' + esc(l.name) + '</b>' + (l.desc ? '<small>' + esc(l.desc) + '</small>' : '') + '</span></div>').join('') + '</div></section>';
     return { title: 'แผนผังชมรม', body: b };
   }
 
@@ -308,7 +353,8 @@
       (advisors().map(a => '<div class="mrow">' + '<span class="mrow-main">' + avatar(a) + '<span class="grow"><b>' + esc(a.name) + '</b><span class="muted">' + esc((a.position || '') + (a.kind === 'teacher' ? ' · ' + (a.email || 'ยังไม่ระบุอีเมล') + ' · ล็อกอินได้ สิทธิ์สูงสุด' : ' · มีชื่อในแผนผังและเอกสาร ไม่มีบัญชีเข้าใช้')) + '</span></span></span>' +
         '<span class="mrow-tags">' + chip(a.kind === 'teacher' ? 'ครู' : 'วิทยากรท้องถิ่น', a.kind === 'teacher' ? 'gold' : 'plum') + '</span><span class="mrow-act"><button class="icb" data-act="editAdvisor" data-id="' + esc(a.id) + '" aria-label="แก้ไขที่ปรึกษา">' + ic('edit', 20) + '</button><button class="icb danger" data-act="removeAdvisor" data-id="' + esc(a.id) + '" aria-label="นำที่ปรึกษาออก">' + ic('trash', 20) + '</button></span></div>').join('') || '<div class="muted">ยังไม่มีรายชื่อที่ปรึกษา</div>') + '</section>';
     b += '<section class="card"><div class="lb">นำเข้าและส่งออก</div><div class="row wrap"><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / แผนผัง / รายชื่อ</button></div></section>';
-    b += '<section class="card"><div class="lb">ตั้งค่า</div><div class="kv"><span>ปีการศึกษาปัจจุบัน</span><b>' + esc(year()) + '</b><button class="btn sm ghost" data-act="setYear">แก้ไข</button></div><div class="kv"><span>รายการเครื่องดนตรี</span><b>' + instList().length + ' ชนิด</b><button class="btn sm ghost" data-act="setInst">แก้ไข</button></div></section>';
+    b += '<section class="card"><div class="lb">ตั้งค่า</div><div class="kv"><span>ปีการศึกษาปัจจุบัน</span><b>' + esc(year()) + '</b><button class="btn sm ghost" data-act="setYear">แก้ไข</button></div><div class="kv"><span>รายการเครื่องดนตรี</span><b>' + instList().length + ' ชนิด</b><button class="btn sm ghost" data-act="setInst">แก้ไข</button></div><div class="kv"><span>ระดับฝีมือ (ชื่อ รายละเอียด จำนวนขั้น)</span><b>' + levels().length + ' ขั้น</b><button class="btn sm ghost" data-act="setLevels">แก้ไข</button></div></section>';
+    if (D.legacy) b += '<section class="card hl"><div class="lb">ข้อมูลจากรุ่นก่อน (ก่อนแยกชมรม)</div><div class="muted" style="margin-bottom:10px">' + (activeSids().length ? 'ย้ายเข้าชมรม' + esc(C.club.name) + 'แล้ว ข้อมูลชุดเก่ายังเก็บไว้เป็นสำรอง ลบได้เมื่อตรวจว่าครบ' : 'พบข้อมูลสมาชิก การซ้อม กิจกรรม และบัญชีของรุ่นก่อน กดย้ายเพื่อนำเข้าชมรม' + esc(C.club.name) + ' ข้อมูลเดิมไม่ถูกลบ') + '</div><div class="row wrap">' + (activeSids().length ? '' : '<button class="btn gold" data-act="migrate">ย้ายข้อมูลรุ่นก่อนเข้าชมรมนี้</button>') + '<button class="btn ghost danger" data-act="legacyDelete">ลบข้อมูลชุดเก่า</button></div></section>';
     b += '<section class="card"><div class="lb">สมาชิกที่นำออกแล้ว / ศิษย์เก่า (' + gone.length + ')</div>' + (gone.map(s => '<div class="mrow"><a class="mrow-main" href="#/m/' + esc(s) + '">' + avatar(ms[s]) + '<span class="grow"><b>' + esc(fullName(ms[s])) + '</b><span class="muted">' + esc(s + ' · ' + ((C.removeReasons.find(x => x.id === ms[s].removedReason) || {}).name || 'นำออก') + ' · ' + M.thDate(ms[s].removedAt)) + '</span></span></a>' +
       '<span class="mrow-act"><button class="btn sm ghost" data-act="restore" data-sid="' + esc(s) + '">กู้คืน</button>' + (ms[s].removedReason === 'mistake' ? '<button class="btn sm ghost danger" data-act="purge" data-sid="' + esc(s) + '">ลบถาวร</button>' : '') + '</span></div>').join('') || '<div class="muted">ไม่มี</div>') + '</section>';
     MANAGE.forEach(f => { try { b += f() || ''; } catch (e) { console.error(e); } });
@@ -345,7 +391,7 @@
       const id = isNew ? v('#f-sid') : sid; const now = Date.now();
       const priv = { phone: v('#f-phone') }; if (!selfOnly) { priv.parentName = v('#f-pname'); priv.parentPhone = v('#f-pphone'); }
       if (selfOnly) {
-        if (F.photo) { W(B.update('members/' + id, { photo: F.photo, updatedAt: now, updatedBy: by() })); W(B.set('photos/' + id, F.print)); }
+        if (F.photo) { W(B.update('', { ['members/' + id + '/photo']: F.photo, ['members/' + id + '/updatedAt']: now, ['members/' + id + '/updatedBy']: by(), ['/people/' + id + '/photo']: F.photo })); W(B.set('photos/' + id, F.print)); }
         W(B.update('privateInfo/' + id, priv)); delete PRIV[id]; w.remove(); toast('บันทึกแล้ว'); return;
       }
       if (isNew) {
@@ -359,10 +405,11 @@
       if (teacher) { rec.am = $('#f-am', w).checked; rec.pm = $('#f-pm', w).checked; }
       if (F.photo) rec.photo = F.photo;
       if (isNew) {
-        W(B.set('members/' + id, Object.assign({ status: 'active', am: false, pm: false, createdAt: now, createdBy: by() }, rec))); log('member.add', id, fullName(rec));
+        const upd = { ['members/' + id]: Object.assign({ status: 'active', am: false, pm: false, createdAt: now, createdBy: by() }, rec), ['/people/' + id + '/clubs/' + C._club]: true }; sharedWrites(id, sharedOf(rec), upd);
+        W(B.update('', upd)); log('member.add', id, fullName(rec));
       } else {
         const diff = {}; Object.keys(rec).forEach(k => { if (JSON.stringify(rec[k]) !== JSON.stringify(m[k] === undefined ? (k === 'inst' ? {} : undefined) : m[k])) diff[k] = k === 'inst' && !Object.keys(inst).length ? null : rec[k]; });
-        if (Object.keys(diff).length) { diff.updatedAt = now; diff.updatedBy = by(); W(B.update('members/' + id, diff)); log('member.edit', id, Object.keys(diff).filter(k => !/^updated/.test(k)).join(',')); }
+        if (Object.keys(diff).length) { diff.updatedAt = now; diff.updatedBy = by(); const upd = {}, sh = {}; Object.keys(diff).forEach(k => { upd['members/' + id + '/' + k] = diff[k]; if (SHARED.includes(k)) sh[k] = diff[k]; }); sharedWrites(id, sh, upd); W(B.update('', upd)); log('member.edit', id, Object.keys(diff).filter(k => !/^updated/.test(k)).join(',')); }
       }
       if (F.print) W(B.set('photos/' + id, F.print));
       if (priv.phone || priv.parentName || priv.parentPhone || !isNew) { W(B.update('privateInfo/' + id, priv)); delete PRIV[id]; }
@@ -390,7 +437,7 @@
   function skillForm(sid, inst) {
     const cur = lvOf(sid, inst);
     const w = modal('<h3>ประเมินระดับฝีมือ</h3><div class="muted" style="margin-bottom:10px">' + esc(fullName(members()[sid])) + ' · ' + esc(inst) + '</div><div class="lvpick">' +
-      C.levels.map((l, i) => '<button class="lvopt' + (cur === i + 1 ? ' on' : '') + '" data-lv="' + (i + 1) + '"><i>' + (i + 1) + '</i>' + esc(l) + '</button>').join('') + '</div>' +
+      levels().map((l, i) => '<button class="lvopt' + (cur === i + 1 ? ' on' : '') + '" data-lv="' + (i + 1) + '"><i>' + (i + 1) + '</i><span><b>' + esc(l.name) + '</b>' + (l.desc ? '<small>' + esc(l.desc) + '</small>' : '') + '</span></button>').join('') + '</div>' +
       '<div class="row" style="margin-top:14px"><button class="btn ghost grow" data-close>ยกเลิก</button>' + (cur ? '<button class="btn ghost grow danger" data-lv="0">ล้างการประเมิน</button>' : '') + '</div>', { center: true });
     w.addEventListener('click', e => {
       const b = e.target.closest('[data-lv]'); if (!b) return; const lv = +b.dataset.lv;
@@ -407,7 +454,7 @@
       e.preventDefault(); const why = $('input[name=why]:checked', w).value;
       const upd = {}; upd['members/' + sid + '/status'] = why === 'graduate' ? 'alumni' : 'removed'; upd['members/' + sid + '/removedReason'] = why; upd['members/' + sid + '/removedAt'] = Date.now(); upd['members/' + sid + '/removedBy'] = by();
       if (why === 'graduate') upd['members/' + sid + '/gradYear'] = year();
-      upd['roles/' + sid] = null;
+      upd['roles/' + sid] = null; upd['/people/' + sid + '/clubs/' + C._club] = null;
       W(B.update('', upd)); log('member.remove', sid, why); w.remove(); toast('นำออกแล้ว');
       if (route().name === 'm') location.hash = '#/members';
     });
@@ -431,8 +478,8 @@
       const rec = { name, kind, position: $('#a-pos', w).value.trim() || (kind === 'teacher' ? 'ครูที่ปรึกษาชมรม' : 'วิทยากรท้องถิ่น'), order: a.order || (advisors().length + 1) };
       if (email) rec.email = email; if (photo || a.photo) rec.photo = photo || a.photo;
       upd['config/advisors/' + aid] = rec;
-      if (a.email && a.email !== email) upd['teachers/' + B.emailKey(a.email)] = null;
-      if (email) upd['teachers/' + B.emailKey(email)] = true;
+      if (a.email && a.email !== email) upd['/teachers/' + B.emailKey(a.email) + '/' + C._club] = null;
+      if (email && !B.isBootTeacher(email)) upd['/teachers/' + B.emailKey(email) + '/' + C._club] = true;
       W(B.update('', upd)); log('advisor.save', '', name); w.remove(); toast('บันทึกแล้ว');
     });
   }
@@ -471,8 +518,8 @@
     });
     $('#i-go', w).addEventListener('click', () => {
       const upd = {}, now = Date.now(), type = $('#i-type', w).value;
-      ready.forEach(o => { upd[o.sid] = { prefix: o.prefix, first: o.first, last: o.last, grade: o.grade, room: o.room, type, status: 'active', am: false, pm: false, createdAt: now, createdBy: by() }; });
-      W(B.update('members', upd)); log('member.import', '', ready.length + ' คน'); w.remove(); toast('นำเข้า ' + ready.length + ' คนแล้ว');
+      ready.forEach(o => { const sh = { prefix: o.prefix, first: o.first, last: o.last, grade: o.grade, room: o.room }; upd['members/' + o.sid] = Object.assign({ type, status: 'active', am: false, pm: false, createdAt: now, createdBy: by() }, sh); Object.keys(sh).forEach(f => { upd['/people/' + o.sid + '/' + f] = sh[f]; }); upd['/people/' + o.sid + '/clubs/' + C._club] = true; });
+      W(B.update('', upd)); log('member.import', '', ready.length + ' คน'); w.remove(); toast('นำเข้า ' + ready.length + ' คนแล้ว');
     });
   }
 
@@ -483,13 +530,13 @@
     if (sc === 'committee') l = l.filter(s => roleOf(s)); else if (sc === 'am' || sc === 'pm') l = l.filter(s => ms[s][sc]);
     return sc === 'committee' ? l.sort((a, b) => ROLE_ORDER.indexOf(roleOf(a).role) - ROLE_ORDER.indexOf(roleOf(b).role) || (roleOf(a).grade || 0) - (roleOf(b).grade || 0)) : l.sort(byClass);
   }
-  const pageHead = (title, sub) => '<div class="rp-head"><img src="icons/logo-256.png" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
+  const pageHead = (title, sub) => '<div class="rp-head"><img src="' + C.club.logo + '" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
   const bigAv = (m, src) => src ? '<img class="rp-ph" src="' + esc(src) + '" alt="">' : '<div class="rp-ph none">' + esc(((m.first || m.name || '?').replace(/^(ครู|พ่อครู|แม่ครู|นาย|นางสาว|นาง)/, '').trim().charAt(0)) || '?') + '</div>';
   async function printPhotos(sids) { const o = {}; await Promise.all(sids.map(async s => { try { o[s] = await B.get('photos/' + s); } catch (e) { o[s] = null; } if (!o[s]) o[s] = members()[s].photo || null; })); return o; }
   /* ============ บอร์ด / แผนผังสำหรับพิมพ์ ============
      จัดหน้าด้วยการวัดความสูงจริงของเนื้อหา (ไม่ตัดข้อความ) · เลือกแนวตั้ง/แนวนอน · โปสเตอร์หน้าเดียวหรือหลายหน้า A4 */
   const CONTENTS = [['full', 'บอร์ดรวม: โครงสร้างผู้บริหารด้านบน สมาชิกด้านล่าง'], ['chart', 'แผนผังผู้บริหารชมรมอย่างเดียว'], ['all', 'สมาชิกทุกคนแบบการ์ด'], ['am', 'ผู้ซ้อมรอบเช้า'], ['pm', 'ผู้ซ้อมรอบเย็น']];
-  const printHead = (title, sub) => '<div class="rp-head"><img src="icons/logo-1024.jpg" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
+  const printHead = (title, sub) => '<div class="rp-head"><img src="' + C.club.logoPrint + '" alt=""><div class="grow"><div class="rp-t">' + esc(title) + '</div><div class="rp-s">' + esc(sub) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>';
   /* การ์ดบุคคล: แสดงครบทุกบรรทัด ตำแหน่ง ชั้น เครื่องดนตรีทุกชนิด และระดับฝีมือ */
   function bpCard(m, sid, src, o) {
     o = o || {}; const lv = sid ? topLv(sid) : 0, ins = sid ? insts(m) : [];
@@ -564,10 +611,10 @@
     w.addEventListener('click', async e => {
       const b = e.target.closest('[data-x]'); if (!b || w.dataset.busy) return; const x = b.dataset.x, msg = $('#x-msg', w), content = $('#x-c', w).value, land = $('input[name=xo]:checked', w).value === 'land', poster = $('input[name=xf]:checked', w).value === 'poster';
       const prog = (i, n) => { msg.textContent = 'กำลังสร้างหน้า ' + i + ' / ' + n + ' …'; }, sc = content === 'chart' ? 'committee' : content === 'full' ? 'all' : content;
-      const name = (content === 'chart' ? 'แผนผังผู้บริหาร' : content === 'full' ? 'บอร์ดรวม' : 'บอร์ดสมาชิก') + 'สรรพวาทิต-' + year() + '-' + (land ? 'แนวนอน' : 'แนวตั้ง');
+      const name = (content === 'chart' ? 'แผนผังผู้บริหาร' : content === 'full' ? 'บอร์ดรวม' : 'บอร์ดสมาชิก') + '' + M.C.club.name + '-' + year() + '-' + (land ? 'แนวนอน' : 'แนวตั้ง');
       w.dataset.busy = '1'; msg.textContent = 'กำลังจัดหน้า …';
       try {
-        if (x === 'docx') { await M.saveBlob(rosterDocx(sc), 'รายชื่อสมาชิกสรรพวาทิต-' + M.safeName(SCOPES.find(k => k[0] === sc)[1]) + '-' + year() + '.docx'); msg.textContent = 'เสร็จแล้ว'; }
+        if (x === 'docx') { await M.saveBlob(rosterDocx(sc), 'รายชื่อสมาชิก' + M.C.club.name + '-' + M.safeName(SCOPES.find(k => k[0] === sc)[1]) + '-' + year() + '.docx'); msg.textContent = 'เสร็จแล้ว'; }
         else {
           const root = await buildBoard(content, land, poster), pg = root.firstChild, long = poster ? Math.max(+pg.dataset.w, +pg.dataset.h) : 1123;
           if (x === 'view') { w.remove(); M.previewPages(root, 'ตัวอย่าง' + (poster ? 'โปสเตอร์' : ' (' + root.children.length + ' หน้า)')); return; }
@@ -594,7 +641,7 @@
     retry: () => B.retryFailed(),
     syncInfo: async () => {
       const f = await B.failedOps(), pn = B.pendingList(); const line = o => (o.t === 'update' && !o.p ? Object.keys(o.v || {}).slice(0, 3).join(', ') : o.p) || '(ราก)';
-      const txt = 'สรรพวาทิต ' + C.version + ' · ' + B.mode + ' · ' + (USER ? USER.email : '') + '\n' + f.map(o => 'FAILED ' + o.t + ' ' + line(o) + ' :: ' + o.error).concat(pn.map(o => 'PENDING ' + o.t + ' ' + line(o))).join('\n');
+      const txt = '' + M.C.club.name + ' ' + C.version + ' · ' + B.mode + ' · ' + (USER ? USER.email : '') + '\n' + f.map(o => 'FAILED ' + o.t + ' ' + line(o) + ' :: ' + o.error).concat(pn.map(o => 'PENDING ' + o.t + ' ' + line(o))).join('\n');
       const w = modal('<h3>สถานะการส่งข้อมูล</h3>' + (D.rulesOld ? '<div class="note bad">ฐานข้อมูลยังใช้ Rules รุ่นเก่า — คัดลอกไฟล์ database.rules.json ไปวางที่ Firebase Console › Realtime Database › Rules แล้วกด Publish</div>' : '') +
         '<div class="lb">ส่งไม่สำเร็จ (' + f.length + ')</div>' + (f.map(o => '<div class="li"><b>' + esc(line(o)) + '</b><div class="muted">' + esc(errTH({ code: o.error })) + ' · ' + esc(M.thDate(o.failedAt)) + '</div></div>').join('') || '<div class="muted">ไม่มี</div>') +
         '<div class="lb" style="margin-top:14px">กำลังรอส่ง (' + pn.length + ')</div><div class="muted">' + (pn.map(o => esc(line(o))).join('<br>') || 'ไม่มี') + (STATUS.online === false ? '<br>ขณะนี้ออฟไลน์ ระบบจะส่งเองเมื่อมีสัญญาณ' : '') + '</div>' +
@@ -618,10 +665,10 @@
       const a = cfg().advisors[d.id]; if (!a) return;
       if (a.email && a.email.toLowerCase() === ME.email) return toast('นำบัญชีที่กำลังใช้อยู่ออกไม่ได้', 3500);
       if (!(await M.confirmBox('นำที่ปรึกษาออก', esc(a.name) + (a.kind === 'teacher' ? ' จะเข้าใช้ระบบในฐานะครูไม่ได้อีก' : ' จะไม่แสดงในแผนผังและเอกสาร'), 'นำออก', true))) return;
-      const upd = {}; upd['config/advisors/' + d.id] = null; if (a.email) upd['teachers/' + B.emailKey(a.email)] = null;
+      const upd = {}; upd['config/advisors/' + d.id] = null; if (a.email && !B.isBootTeacher(a.email)) upd['/teachers/' + B.emailKey(a.email) + '/' + C._club] = null;
       W(B.update('', upd)); log('advisor.remove', '', a.name);
     },
-    restore: d => { const upd = { status: 'active', removedReason: null, removedAt: null, removedBy: null, gradYear: null }; W(B.update('members/' + d.sid, upd)); log('member.restore', d.sid); toast('กู้คืนแล้ว'); },
+    restore: d => { const upd = { status: 'active', removedReason: null, removedAt: null, removedBy: null, gradYear: null }; W(B.update('members/' + d.sid, upd)); W(B.set('/people/' + d.sid + '/clubs/' + C._club, true)); log('member.restore', d.sid); toast('กู้คืนแล้ว'); },
     purge: async d => {
       const m = members()[d.sid]; if (!m || m.removedReason !== 'mistake') return;
       if (!(await M.confirmBox('ลบถาวร', 'ลบข้อมูลของ ' + esc(fullName(m)) + ' ออกจากระบบทั้งหมด กู้คืนไม่ได้', 'ลบถาวร', true))) return;
@@ -631,6 +678,28 @@
     setYear: () => {
       const w = modal('<h3>ปีการศึกษาปัจจุบัน</h3><form class="form">' + fld('ปี พ.ศ.', '<input class="in" id="y" inputmode="numeric" value="' + esc(year()) + '">', 'ใช้ในหัวเอกสารและบอร์ด (การเลื่อนชั้นและย้ายศิษย์เก่าอัตโนมัติจะมาในขั้นถัดไป)') + '<div class="row" style="margin-top:16px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const y = $('#y', w).value.trim(); if (!/^25[0-9]{2}$/.test(y)) return toast('ปี พ.ศ. ไม่ถูกต้อง'); W(B.set('config/year', y)); w.remove(); });
+    },
+    switchClub: () => {
+      const w = modal('<h3>สลับชมรม</h3><div class="clubpick">' + C.clubs.filter(c => MYCLUBS.includes(c.id)).map(c => '<button class="clubbtn' + (c.id === C._club ? ' on' : '') + '" data-club="' + c.id + '"><img class="' + (c.round ? 'round' : '') + '" src="' + c.logo + '" alt=""><b>' + esc(c.name) + '</b><span>' + esc(c.full) + (c.id === C._club ? ' · กำลังใช้อยู่' : '') + '</span></button>').join('') + '</div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
+      w.addEventListener('click', e => { const b = e.target.closest('[data-club]'); if (!b) return; if (b.dataset.club === C._club) return w.remove(); try { localStorage.setItem('spw_club', b.dataset.club); } catch (er) { /* ignore */ } location.href = location.pathname + '#/home'; location.reload(); });
+    },
+    setLevels: () => {
+      if (!can.manage()) return;
+      const w = modal('<h3>ระดับฝีมือของชมรม' + esc(C.club.name) + '</h3><form class="form"><div class="muted" style="margin-bottom:8px">หนึ่งระดับต่อหนึ่งบรรทัด เรียงจากต่ำไปสูง ระบบใส่เลข Lv. นำหน้าให้เอง<br>ใส่รายละเอียดได้โดยคั่นด้วยเครื่องหมาย | เช่น <code>จางวาง | บรรเลงเพลงเถาได้ครบ</code></div><textarea class="in" id="lv" rows="10" aria-label="ระดับฝีมือ">' + esc(levels().map(l => l.name + (l.desc ? ' | ' + l.desc : '')).join('\n')) + '</textarea><div class="note warn">ถ้าลดจำนวนขั้นหรือสลับลำดับ ผลประเมินเดิมจะยังเป็นเลขระดับเดิม ควรตรวจผลประเมินของสมาชิกอีกครั้ง</div><div class="row" style="margin-top:16px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, wide: true });
+      $('form', w).addEventListener('submit', e => { e.preventDefault(); const l = $('#lv', w).value.split(/\r?\n/).map(x => x.trim()).filter(Boolean).map(x => { const i = x.indexOf('|'); const o = { name: (i < 0 ? x : x.slice(0, i)).replace(/^Lv\.?\s*[0-9]+\s*/i, '').trim() }; if (i >= 0 && x.slice(i + 1).trim()) o.desc = x.slice(i + 1).trim(); return o; }).filter(o => o.name);
+        if (l.length < 2) return toast('ต้องมีอย่างน้อย 2 ระดับ'); W(B.set('config/levels', l)); log('levels.set', '', l.length + ' ขั้น'); w.remove(); toast('บันทึกระดับฝีมือแล้ว'); });
+    },
+    migrate: async () => {
+      if (!ME.teacher) return; if (!(await M.confirmBox('ย้ายข้อมูลรุ่นก่อน', 'คัดลอกข้อมูลทั้งหมดของรุ่นก่อนเข้าชมรม' + esc(C.club.name) + ' ข้อมูลเดิมไม่ถูกลบ ใช้เวลาสักครู่ อย่าปิดหน้านี้', 'ย้ายข้อมูล'))) return;
+      const roots = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications']; let n = 0;
+      try { for (const r of roots) { toast('กำลังย้าย ' + r + ' …', 8000); const v = await B.get('/' + r); if (v !== null && v !== undefined) { await B.direct('set', '/c/' + C._club + '/' + r, v); n++; } }
+        toast('ย้ายข้อมูลแล้ว ' + n + ' หมวด กำลังโหลดใหม่', 3000); setTimeout(() => location.reload(), 1500); }
+      catch (e) { console.error(e); toast('ย้ายไม่สำเร็จ: ' + errTH(e) + ' — ข้อมูลเดิมยังอยู่ครบ ลองใหม่ได้', 7000); }
+    },
+    legacyDelete: async () => {
+      if (!ME.teacher) return; if (!(await M.confirmBox('ลบข้อมูลชุดเก่า', 'ลบข้อมูลรุ่นก่อนแยกชมรมออกจากฐานข้อมูล ข้อมูลในชมรมปัจจุบันไม่ถูกกระทบ ลบแล้วกู้คืนไม่ได้', 'ลบชุดเก่า', true))) return;
+      const upd = {}; ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications'].forEach(r => { upd['/' + r] = null; });
+      try { await B.direct('update', '', upd); D.legacy = false; lastHTML = ''; render(); toast('ลบข้อมูลชุดเก่าแล้ว'); } catch (e) { toast('ลบไม่สำเร็จ: ' + errTH(e), 5000); }
     },
     setInst: () => {
       const w = modal('<h3>รายการเครื่องดนตรี</h3><form class="form"><div class="muted" style="margin-bottom:8px">หนึ่งชนิดต่อหนึ่งบรรทัด ลำดับนี้ใช้ในฟอร์มและแผนผัง</div><textarea class="in" id="il" rows="12" aria-label="รายการเครื่องดนตรี">' + esc(instList().join('\n')) + '</textarea><div class="row" style="margin-top:16px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true });
@@ -659,7 +728,7 @@
   const DOWS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'], MONTHS_F = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   /* 'YYYY-MM-DD' → ข้อความไทย: mode 'short' = 2 ต.ค. 69 · 'full' = 2 ตุลาคม 2569 · 'dow' = วันศุกร์ที่ 2 ตุลาคม 2569 */
   function dTH(iso, mode) { if (!iso) return ''; const p = iso.split('-').map(Number); const d = new Date(p[0], p[1] - 1, p[2]); const y = p[0] + 543; return mode === 'short' ? p[2] + ' ' + M.MONTHS[p[1] - 1] + ' ' + String(y).slice(2) : (mode === 'dow' ? 'วัน' + DOWS[d.getDay()] + 'ที่ ' : '') + p[2] + ' ' + MONTHS_F[p[1] - 1] + ' ' + y; }
-  window.APP = { V, ACT, NAVS, SUBS, HOME, MANAGE, TODO, errTH, UI, PRIV, ICON, can, ic, chip, fld, opt, avatar, brand, members, cfg, year, instList, activeSids, fullName, cls, typeName, roleOf, roleName, insts, byClass, advisors, myName, by, W, log, lvOf, lvName, topLv, sesText, memberRow, pageHead, bigAv, printPhotos, route, todayISO, dTH, MONTHS_F, DOWS, ROLE_ORDER,
+  window.APP = { V, ACT, NAVS, SUBS, HOME, MANAGE, TODO, errTH, levels, sharedOf, sharedWrites, SHARED, myClubs: () => MYCLUBS.slice(), UI, PRIV, ICON, can, ic, chip, fld, opt, avatar, brand, members, cfg, year, instList, activeSids, fullName, cls, typeName, roleOf, roleName, insts, byClass, advisors, myName, by, W, log, lvOf, lvName, topLv, sesText, memberRow, pageHead, bigAv, printPhotos, route, todayISO, dTH, MONTHS_F, DOWS, ROLE_ORDER,
     get D() { return D; }, get ME() { return ME; }, get USER() { return USER; }, get STATUS() { return STATUS; },
     is: (...r) => !!ME && !ME.teacher && r.includes(ME.role), teacher: () => !!ME && ME.teacher, sid: () => ME && ME.sid,
     rerender() { lastHTML = ''; render(); } };

@@ -48,9 +48,9 @@
   /* ---------- ขึ้นปีการศึกษาใหม่ ---------- */
   A.MANAGE.push(() => '<section class="card"><div class="lb">ขึ้นปีการศึกษาใหม่</div><div class="muted" style="margin-bottom:10px">เลื่อนชั้นสมาชิก ย้าย ม.6 ไปทำเนียบศิษย์เก่า เก็บคณะกรรมการปี ' + esc(A.year()) + ' เข้าทำเนียบ แล้วเริ่มปี ' + (+A.year() + 1) + ' ข้อมูลการซ้อม กิจกรรม และบัญชีของปีเดิมยังเก็บไว้ครบ</div><button class="btn ghost" data-act="rollover">เริ่มขั้นตอนขึ้นปีการศึกษา ' + (+A.year() + 1) + '</button></section>');
   function rollover() {
-    const y = A.year(), ny = String(+y + 1), ms = A.members(), act = A.activeSids(), m6 = act.filter(s => +ms[s].grade === 6), bal = A.finSummarize ? A.finSummarize().bal : 0;
+    const y = A.year(), ny = String(+y + 1), ms = A.members(), act = A.activeSids(), m6 = act.filter(s => +ms[s].grade === 6 && String(((A.D.people || {})[s] || {}).gy || '') !== String(+A.year() + 1)), bal = A.finSummarize ? A.finSummarize().bal : 0;
     const w = modal('<h3>ขึ้นปีการศึกษา ' + ny + '</h3><div class="note warn">ทำครั้งเดียวตอนเปิดปีการศึกษาใหม่ ย้อนกลับเองไม่ได้ ควรส่งออกรายชื่อ (DOCX) เก็บไว้ก่อน</div><form class="form">' +
-      '<div class="kv"><span>สมาชิกปัจจุบัน</span><b>' + act.length + ' คน</b></div><div class="kv"><span>ม.1–ม.5 เลื่อนขึ้นหนึ่งชั้น (ห้องคงเดิม แก้ภายหลังได้)</span><b>' + (act.length - m6.length) + ' คน</b></div>' +
+      '<div class="kv"><span>สมาชิกปัจจุบัน</span><b>' + act.length + ' คน</b></div><div class="kv"><span>ม.1–ม.5 เลื่อนขึ้นหนึ่งชั้น (ห้องคงเดิม · คนที่อยู่สองชมรมเลื่อนครั้งเดียว)</span><b>' + (act.length - m6.length) + ' คน</b></div>' +
       '<label class="ck wide"><input type="checkbox" id="r-m6" checked><span>ม.6 จำนวน ' + m6.length + ' คน จบการศึกษา → ย้ายไปทำเนียบศิษย์เก่า</span></label>' +
       '<label class="ck wide"><input type="checkbox" id="r-roles" checked><span>เก็บคณะกรรมการปี ' + y + ' เข้าทำเนียบ แล้วล้างตำแหน่งเพื่อแต่งตั้งชุดใหม่</span></label>' +
       '<label class="ck wide"><input type="checkbox" id="r-bal"' + (bal > 0 ? ' checked' : ' disabled') + '><span>ยกยอดเงินคงเหลือ ' + money(bal) + ' บาท ไปเป็น “ยอดยกมา” ของปี ' + ny + '</span></label>' +
@@ -59,12 +59,14 @@
     $('form', w).addEventListener('submit', e => {
       e.preventDefault(); if ($('#r-y', w).value.trim() !== ny) return toast('พิมพ์ ' + ny + ' เพื่อยืนยัน'); if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000);
       const upd = {}, now = Date.now(), roles = {}, grad = $('#r-m6', w).checked;
+      const P = A.D.people || {};
       act.forEach(s => { const r = A.roleOf(s); if (r) roles[s] = Object.assign({ name: A.fullName(ms[s]), cls: A.cls(ms[s]) }, r);
-        if (+ms[s].grade === 6) { if (grad) { upd['members/' + s + '/status'] = 'alumni'; upd['members/' + s + '/removedReason'] = 'graduate'; upd['members/' + s + '/removedAt'] = now; upd['members/' + s + '/gradYear'] = y; } }
-        else upd['members/' + s + '/grade'] = +ms[s].grade + 1; });
+        const p = P[s] || {}; if (String(p.gy || '') === ny) return;   /* อีกชมรมเลื่อนชั้นคนนี้ไปแล้วในปีนี้ */
+        if (+ms[s].grade === 6) { if (grad) { upd['members/' + s + '/status'] = 'alumni'; upd['members/' + s + '/removedReason'] = 'graduate'; upd['members/' + s + '/removedAt'] = now; upd['members/' + s + '/gradYear'] = y; upd['/people/' + s + '/clubs/' + M.C.club.id] = null; } }
+        else { const g = +ms[s].grade + 1; upd['members/' + s + '/grade'] = g; upd['/people/' + s + '/gy'] = ny; A.sharedWrites(s, { grade: g }, upd); } });
       upd['archive/' + y] = { roles: Object.keys(roles).length ? roles : null, n: act.length, at: now };
       if ($('#r-roles', w).checked) upd['roles'] = null; else if (grad) m6.forEach(s => { upd['roles/' + s] = null; });
-      if ($('#r-bal', w).checked && bal > 0) { const rec = { kind: 'in', no: 'ร.001/' + ny, date: A.todayISO(), amount: bal, party: 'ชมรมสรรพวาทิต ปีการศึกษา ' + y, title: 'ยอดยกมาจากปีการศึกษา ' + y, cat: 'ยอดยกมา', at: now, by: A.by(), status: 'approved', approvedBy: A.myName(), approvedAt: now };
+      if ($('#r-bal', w).checked && bal > 0) { const rec = { kind: 'in', no: 'ร.001/' + ny, date: A.todayISO(), amount: bal, party: 'ชมรม' + M.C.club.name + ' ปีการศึกษา ' + y, title: 'ยอดยกมาจากปีการศึกษา ' + y, cat: 'ยอดยกมา', at: now, by: A.by(), status: 'approved', approvedBy: A.myName(), approvedAt: now };
         upd['y/' + ny + '/ledger/carry'] = rec; upd['y/' + ny + '/counters/in'] = 1; upd['y/' + ny + '/finsum'] = { bal, inSum: bal, outSum: 0, n: 1, at: now, months: { [rec.date.slice(0, 7)]: { in: bal, out: 0 } } }; }
       upd['config/year'] = ny;
       A.W(B.update('', upd)); A.log('year.rollover', '', y + ' → ' + ny); w.remove(); toast('ขึ้นปีการศึกษา ' + ny + ' แล้ว', 4000); location.hash = '#/home';

@@ -26,9 +26,9 @@
   /* ---------- ตัวหนังสือ (ใช้ทั้งหน้าผู้ปกครอง ตัวอย่าง และ PDF) ---------- */
   function letterHTML(ct) {
     const s = ct.sign;
-    return '<div class="lt-logo"><img src="icons/school-logo.png" alt="ตราโรงเรียนสรรพวิทยาคม"></div><div class="lt-title">หนังสือขออนุญาตผู้ปกครอง</div><div class="lt-sub">ชมรมสรรพวาทิต (ชมรมดนตรีไทย) โรงเรียนสรรพวิทยาคม</div>' +
+    return '<div class="lt-logo"><img src="icons/school-logo.png" alt="ตราโรงเรียนสรรพวิทยาคม"></div><div class="lt-title">หนังสือขออนุญาตผู้ปกครอง</div><div class="lt-sub">' + esc(ct.club || M.C.club.long) + '</div>' +
       '<div class="lt-r">วันที่ ' + esc(ct.issued) + '</div><div><b>เรื่อง</b> ขออนุญาตให้นักเรียนเข้าร่วมกิจกรรม</div><div><b>เรียน</b> ผู้ปกครองของ ' + esc(ct.student) + ' ชั้น ' + esc(ct.cls) + '</div>' +
-      '<p class="lt-p">ด้วยชมรมสรรพวาทิต โรงเรียนสรรพวิทยาคม จะนำนักเรียนในความปกครองของท่านเข้าร่วม <b>' + esc(ct.title) + '</b> ' + esc(ct.when) + (ct.time ? ' เวลา ' + esc(ct.time) : '') + (ct.place ? ' ณ ' + esc(ct.place) : '') + (ct.purpose ? ' เพื่อ' + esc(ct.purpose) : '') +
+      '<p class="lt-p">ด้วย' + esc(ct.club || M.C.club.long) + ' จะนำนักเรียนในความปกครองของท่านเข้าร่วม <b>' + esc(ct.title) + '</b> ' + esc(ct.when) + (ct.time ? ' เวลา ' + esc(ct.time) : '') + (ct.place ? ' ณ ' + esc(ct.place) : '') + (ct.purpose ? ' เพื่อ' + esc(ct.purpose) : '') +
       ' โดยมีครูที่ปรึกษาชมรมเป็นผู้ควบคุมดูแล จึงเรียนมาเพื่อขออนุญาต</p>' + (ct.note ? '<p class="lt-p" style="text-indent:0"><b>หมายเหตุ:</b> ' + esc(ct.note) + '</p>' : '') +
       '<div class="lt-sign">ขอแสดงความนับถือ<br><br>( ' + esc(ct.teacher || '.............................................') + ' )<br>ครูที่ปรึกษาชมรม</div>' +
       '<div class="lt-cut">ส่วนตอบรับของผู้ปกครอง</div>' +
@@ -88,13 +88,13 @@
     ctMake: d => {
       if (!canForm()) return; const e = A.D.events[d.id]; const upd = {}; let n = 0;
       A.evPeople(e).forEach(s => { if (tokenOf(s, d.id)) return; const m = A.members()[s], t = newToken(); n++;
-        const ct = { y: A.year(), eid: d.id, sid: s, student: A.fullName(m), cls: A.cls(m), title: e.title, when: A.evDate(e, 'dow'), time: A.evTime(e) || null, place: e.place || null, purpose: e.purpose || null, note: e.note || null, teacher: A.school().teacher || null, issued: A.dTH(A.todayISO(), 'full'), createdAt: Date.now() };
+        const ct = { club: M.C.club.long, cid: M.C.club.id, y: A.year(), eid: d.id, sid: s, student: A.fullName(m), cls: A.cls(m), title: e.title, when: A.evDate(e, 'dow'), time: A.evTime(e) || null, place: e.place || null, purpose: e.purpose || null, note: e.note || null, teacher: A.school().teacher || null, issued: A.dTH(A.todayISO(), 'full'), createdAt: Date.now() };
         upd['ctoken/' + t] = JSON.parse(JSON.stringify(ct)); upd[Y() + '/consents/' + s + '/' + d.id] = t; CT[t] = ct; });
       if (n) { A.W(B.update('', upd)); A.log('consent.make', '', e.title + ' ' + n + ' คน'); toast('สร้างลิงก์แล้ว ' + n + ' คน'); }
     },
     ctRefresh: d => { A.evPeople(A.D.events[d.id]).forEach(s => { const t = tokenOf(s, d.id); if (t) delete CT[t]; }); A.rerender(); toast('กำลังตรวจคำตอบล่าสุด'); },
     ctCopy: async d => { const l = linkOf(d.t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว'); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><textarea class="in" rows="3" readonly>' + esc(l) + '</textarea><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } },
-    ctShare: async d => { const l = linkOf(d.t), ct = CT[d.t] || {}; if (navigator.share) { try { await navigator.share({ title: 'ใบขออนุญาตผู้ปกครอง ชมรมสรรพวาทิต', text: 'ขออนุญาตให้ ' + (ct.student || 'นักเรียน') + ' เข้าร่วม ' + (ct.title || 'กิจกรรม'), url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.ctCopy(d); },
+    ctShare: async d => { const l = linkOf(d.t), ct = CT[d.t] || {}; if (navigator.share) { try { await navigator.share({ title: 'ใบขออนุญาตผู้ปกครอง ชมรม' + M.C.club.name + '', text: 'ขออนุญาตให้ ' + (ct.student || 'นักเรียน') + ' เข้าร่วม ' + (ct.title || 'กิจกรรม'), url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.ctCopy(d); },
     ctView: d => {
       const ct = CT[d.t]; if (!ct) return;
       const w = M.previewPages(letterPage(ct), 'ใบขออนุญาตผู้ปกครอง', '<div class="row wrap" style="margin-bottom:10px"><button class="btn sm" id="lt-pdf">บันทึกเป็น PDF</button><span class="muted" id="lt-msg"></span></div>');

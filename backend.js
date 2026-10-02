@@ -22,8 +22,14 @@
     else if (op.t === 'update') Object.keys(op.v).forEach(k => setAt(t, op.p + '/' + k, op.v[k]));
     else if (op.t === 'remove') setAt(t, op.p, null);
   }
-  const isBlob = p => /^photos\/[^/]+$|^y\/[^/]+\/attphoto\/[^/]+\/[^/]+$/.test(String(p || ''));   /* ภาพขนาดใหญ่ — โหมดสาธิตเก็บใน IndexedDB แทน localStorage */
+  const isBlob = p => /^photos\/[^/]+$|(^|\/)y\/[^/]+\/attphoto\/[^/]+\/[^/]+$/.test(String(p || ''));   /* ภาพขนาดใหญ่ — โหมดสาธิตเก็บใน IndexedDB แทน localStorage */
   const norm = p => parts(p).join('/');
+  /* ขอบเขตชมรม: path ที่ขึ้นต้นด้วยรากข้อมูลของชมรมจะถูกเติม c/{ชมรม}/ ให้อัตโนมัติ · path ที่ขึ้นต้นด้วย "/" คือระบุเต็ม ไม่เติม
+     ข้อมูลส่วนกลาง (ไม่เติม): teachers, people, privateInfo, photos, ctoken, rulesProbe */
+  const CLUB_ROOTS = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications'];
+  let scope = '';
+  const mp = p => { p = String(p == null ? '' : p); if (p.charAt(0) === '/') return norm(p); p = norm(p); if (!scope || !p) return p; return CLUB_ROOTS.includes(p.split('/')[0]) ? scope + '/' + p : p; };
+  const mv = (t, p, v) => (t === 'update' && !norm(p) && v) ? Object.keys(v).reduce((o, k) => { o[mp(k)] = v[k]; return o; }, {}) : v;
   const under = (p, base) => { p = norm(p); base = norm(base); return p === base || !p || p.startsWith(base + '/') || base.startsWith(p + '/'); };
   const opTouches = (op, base) => op.t === 'update' ? Object.keys(op.v || {}).some(k => under(norm(op.p) + '/' + k, base)) : under(op.p, base);
 
@@ -95,7 +101,7 @@
   };
 
   /* ---------- Demo implementation (localStorage + IndexedDB) ---------- */
-  const DKEY = 'spw_demo_db3', DUSER = 'spw_demo_user';
+  const DKEY = 'spw_demo_db4', DUSER = 'spw_demo_user';
   const DemoImpl = {
     name: 'demo', ls: [], authCb: null,
     tree() { try { return JSON.parse(localStorage.getItem(DKEY)) || {}; } catch (e) { return {}; } },
@@ -187,22 +193,28 @@
     t.archive = { [String(+C.club.year - 1)]: { n: 31, at: now, roles: { x1: { role: 'president', name: 'นายศิษย์เก่า ตัวอย่าง', cls: 'ม.6/1' }, x2: { role: 'vice', name: 'น.ส.รุ่นพี่ ตัวอย่าง', cls: 'ม.6/3' } } } };
     t.alumni = { al1: { name: 'นายรุ่นแรก ตัวอย่าง', gradYear: String(+C.club.year - 3), role: 'ประธานชมรม', roleYear: String(+C.club.year - 3), inst: 'ระนาดเอก', note: 'ข้อมูลตัวอย่าง', at: now } };
     t.griev = { '90011': { g1: { topic: 'เครื่องดนตรี / อุปกรณ์', text: 'สายซอด้วงตัวที่ใช้ซ้อมขาดบ่อย อยากขอเปลี่ยนสายใหม่ (ข้อความตัวอย่าง)', at: now - 9e6, status: 'new' } } };
-    t.public = { join: { open: true, year: C.club.year, inst: C.instruments } };
+    t.public = { join: { open: true, year: C.club.year, inst: C.clubs[0].instruments } };
     t.applications = { '90021': { prefix: 'ด.ญ.', first: 'ใหม่', last: 'ตัวอย่างสมัคร', grade: 1, room: 4, phone: '0800000021', parentName: 'นางผู้ปกครอง ตัวอย่าง', parentPhone: '0800000022', inst: { 'ขิม': true }, about: 'เคยเรียนขิมตอนประถม (ข้อความตัวอย่าง)', at: now - 4e6 } };
     const mon = n => { const d = new Date(now); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
     yy.behave = {}; rows.forEach((r, i) => { yy.behave[r[0]] = {}; [1, 2, 3].forEach(w => { yy.behave[r[0]][mon(w)] = Object.assign({ s: 4 - ((i + w) % 4 === 0 ? 2 : (i + w) % 3 === 0 ? 1 : 0), at: now, by: 'ครูตัวอย่าง ใจดี' }, i === 4 && w === 1 ? { note: 'มาซ้อมให้ตรงเวลามากขึ้นนะ (ข้อความตัวอย่าง)' } : {}); }); });
-    t._demo = { seededAt: now };
-    return t;
+    /* ---- จัดเข้าโครงหลายชมรม: ทะเบียนกลาง people + ข้อมูลแยกชมรม c/{id} ---- */
+    const spw = {}; ['config', 'members', 'roles', 'skills', 'history', 'y', 'polls', 'ballots', 'archive', 'alumni', 'griev', 'public', 'applications'].forEach(k => { if (t[k]) spw[k] = t[k]; });
+    const people = {}; Object.keys(t.members).forEach(s => { const m = t.members[s]; people[s] = { prefix: m.prefix, first: m.first, last: m.last, grade: m.grade, room: m.room, clubs: m.status === 'active' ? { spw: true } : {} }; });
+    const kt = { config: { year: C.year, advisors: { a1: { name: 'ครูตัวอย่าง ใจดี', kind: 'teacher', email: (C.teacherEmails[0] || 'teacher@example.com'), position: 'ครูที่ปรึกษาชมรม', order: 1 } } }, members: {}, roles: { '90002': { role: 'president' } }, public: { join: { open: true, year: C.year } } };
+    [['90031', 'นาย', 'เมือง', 'ตัวอย่างพื้นเมืองหนึ่ง', 4, 3], ['90032', 'น.ส.', 'ฟ้อน', 'ตัวอย่างพื้นเมืองสอง', 3, 5]].forEach(r => { people[r[0]] = { prefix: r[1], first: r[2], last: r[3], grade: r[4], room: r[5], clubs: {} }; });
+    ['90001', '90002', '90011', '90031', '90032'].forEach((s, i) => { const q = people[s]; kt.members[s] = { prefix: q.prefix, first: q.first, last: q.last, grade: q.grade, room: q.room, type: i < 2 ? 'regular' : 'start', status: 'active', am: false, pm: true, createdAt: now, createdBy: by }; q.clubs.kt = true; });
+    return { teachers: {}, people, privateInfo: {}, c: { spw, kt }, _demo: { seededAt: now } };
   }
   function demoChooser() {
     return new Promise(res => {
-      const t = DemoImpl.tree(); const ms = t.members || {}; const rl = t.roles || {};
+      const T = DemoImpl.tree(), cs = T.c || {}, t = cs.spw || {}; const ms = t.members || {}; const rl = t.roles || {}, kt = (cs.kt || {}).members || {};
       const rn = id => { const r = (C.roles || []).find(x => x.id === id); return r ? r.name : 'สมาชิก'; };
       const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-      const tch = Object.values((t.config || {}).advisors || {}).filter(a => a.kind === 'teacher' && a.email).map(a => ({ email: a.email, name: a.name, note: 'ครูที่ปรึกษา (สิทธิ์สูงสุด)' }));
+      const tch = Object.values((t.config || {}).advisors || {}).filter(a => a.kind === 'teacher' && a.email).map(a => ({ email: a.email, name: a.name, note: 'ครูที่ปรึกษา (ดูแลทั้งสองชมรม)' }));
       const order = ['president', 'vice', 'treasurer', 'secretary', 'rep', ''];
       const studs = Object.keys(ms).filter(s => ms[s].status === 'active').sort((a, b) => order.indexOf((rl[a] || {}).role || '') - order.indexOf((rl[b] || {}).role || '') || a.localeCompare(b))
-        .map(s => ({ email: s + '@' + C.auth.domain, name: ms[s].prefix + ms[s].first + ' ' + ms[s].last, note: rn((rl[s] || {}).role) + ((rl[s] || {}).grade ? ' ม.' + rl[s].grade : '') }));
+        .map(s => ({ email: s + '@' + C.auth.domain, name: ms[s].prefix + ms[s].first + ' ' + ms[s].last, note: rn((rl[s] || {}).role) + ((rl[s] || {}).grade ? ' ม.' + rl[s].grade : '') + (kt[s] ? ' · อยู่ทั้งสองชมรม' : ' · สรรพวาทิต') }));
+      Object.keys(kt).filter(s => !ms[s]).slice(0, 1).forEach(s => studs.splice(6, 0, { email: s + '@' + C.auth.domain, name: kt[s].prefix + kt[s].first + ' ' + kt[s].last, note: 'สมาชิก · แก้วทิพย์ชมรมเดียว' }));
       const list = tch.concat(studs.slice(0, 7));
       const w = document.createElement('div'); w.className = 'modal center';
       w.innerHTML = '<div class="modal-in"><h3>เลือกบัญชีสาธิต</h3><div class="muted" style="margin-bottom:10px">โหมดสาธิต: จำลองการล็อกอินด้วย Google แต่ละบทบาทเห็นเมนูและสิทธิ์ต่างกัน</div>' +
@@ -296,14 +308,15 @@
     onAuth: cb => impl.onAuth(cb),
     signIn: opts => impl.signIn(opts),
     signOut: () => impl.signOut(),
-    set: (p, v) => write('set', p, v),
-    update: (p, v) => write('update', p, v),
-    remove: p => write('remove', p, null),
-    get: p => impl.get(p),
+    setScope(cid) { scope = cid ? 'c/' + cid : ''; }, path: p => mp(p),
+    set: (p, v) => write('set', mp(p), v),
+    update: (p, v) => write('update', mp(p), mv('update', p, v)),
+    remove: p => write('remove', mp(p), null),
+    get: p => impl.get(mp(p)),
     /* tx: นับเลขที่เอกสารแบบ transaction · direct: เขียนตรงไม่ผ่านกล่องขาออก (ต้องออนไลน์ ไม่เก็บค้างในเครื่อง) */
-    tx: (p, fn) => impl.tx(p, fn),
-    direct: (t, p, v) => Promise.resolve(impl.raw({ t, p, v: clone(v) })),
-    on, query: (p, c, e) => impl.query(p, c, e),
+    tx: (p, fn) => impl.tx(mp(p), fn),
+    direct: (t, p, v) => Promise.resolve(impl.raw({ t, p: mp(p), v: clone(mv(t, p, v)) })),
+    on: (p, cb, err) => on(mp(p), cb, err), query: (p, c, e) => impl.query(mp(p), c, e),
     snapshot, snapshots,
     failedOps: () => IDB.all('failed'),
     pendingList: () => Array.from(pendingOps.values()),

@@ -57,7 +57,7 @@
   function docPage(t) {
     const root = document.createElement('div'), pg = document.createElement('div'); pg.className = 'rp-page fin';
     const line = (k, v) => '<div class="fn-l"><span>' + k + '</span><b>' + esc(v || '-') + '</b></div>', sg = (n, r) => '<div class="fn-sg"><div class="fn-line">ลงชื่อ</div>( ' + (n ? esc(n) : '&nbsp;'.repeat(36)) + ' )<br>' + r + '</div>';
-    pg.innerHTML = A.pageHead(KN[t.kind], 'ชมรมสรรพวาทิต (ชมรมดนตรีไทย) โรงเรียนสรรพวิทยาคม') + (t.status !== 'approved' ? '<div class="fn-wm">' + (t.status === 'void' ? 'ยกเลิก' : 'รออนุมัติ') + '</div>' : '') +
+    pg.innerHTML = A.pageHead(KN[t.kind], '' + M.C.club.long + '') + (t.status !== 'approved' ? '<div class="fn-wm">' + (t.status === 'void' ? 'ยกเลิก' : 'รออนุมัติ') + '</div>' : '') +
       '<div class="fn-top"><div>เลขที่ <b>' + esc(t.no) + '</b></div><div>วันที่ <b>' + esc(A.dTH(t.date, 'full')) + '</b></div></div>' +
       (t.kind === 'in' ? line('ได้รับเงินจาก', t.party) + line('รายการ', t.title) : line('ผู้ขอเบิก / จ่ายให้', t.party) + line('เพื่อเป็นค่า', t.title)) + line('หมวด', t.cat) + (t.note ? line('หมายเหตุ', t.note) : '') +
       '<div class="fn-amt"><span>จำนวนเงิน</span><b>' + money(t.amount) + ' บาท</b></div><div class="fn-txt">( ' + esc(M.bahtText(t.amount)) + ' )</div>' +
@@ -103,10 +103,10 @@
     finExport: () => {
       const l = txs().slice().reverse(), s = summarize(l), head = ['วันที่', 'เลขที่', 'รายการ', 'รายรับ', 'รายจ่าย', 'สถานะ'];
       const rows = l.map(t => [A.dTH(t.date, 'short'), t.no, t.title + (t.party ? ' (' + t.party + ')' : ''), t.kind === 'in' ? money(t.amount) : '', t.kind === 'out' ? money(t.amount) : '', STT[t.status][0]]).concat([['', '', 'รวมรายการที่อนุมัติแล้ว', money(s.inSum), money(s.outSum), 'คงเหลือ ' + money(s.bal)]]);
-      const sub = 'ชมรมดนตรีไทย โรงเรียนสรรพวิทยาคม · ปีการศึกษา ' + A.year(), name = 'บัญชีรายรับรายจ่าย-สรรพวาทิต-' + A.year();
+      const sub = '' + M.C.club.full + ' · ปีการศึกษา ' + A.year(), name = 'บัญชีรายรับรายจ่าย-' + M.C.club.name + '-' + A.year();
       const w = modal('<h3>ส่งออกบัญชีรายรับรายจ่าย</h3><div class="xlist"><button class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์หรือรายงาน</span></button><button class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
       w.addEventListener('click', async e => { const b = e.target.closest('[data-x]'); if (!b) return; const msg = $('#x-msg', w); msg.textContent = 'กำลังสร้างไฟล์ …';
-        try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'บัญชีรายรับรายจ่าย ชมรมสรรพวาทิต', lines: [sub.replace(/ · /g, ' ')], head, rows, widths: [12, 14, 34, 13, 13, 14], align: ['center', 'center', 'left', 'right', 'right', 'center'], footer: ['', 'ข้อมูล ณ วันที่ ' + M.thDate(Date.now())] }), name + '.docx');
+        try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'บัญชีรายรับรายจ่าย ชมรม' + M.C.club.name + '', lines: [sub.replace(/ · /g, ' ')], head, rows, widths: [12, 14, 34, 13, 13, 14], align: ['center', 'center', 'left', 'right', 'right', 'center'], footer: ['', 'ข้อมูล ณ วันที่ ' + M.thDate(Date.now())] }), name + '.docx');
           else await M.exportPDF(A.tablePages('บัญชีรายรับรายจ่าย', sub, head, rows, { widths: [12, 15, 33, 13, 13, 14], align: ['c', 'c', '', 'r', 'r', 'c'], foot: 'ข้อมูล ณ ' + M.thDate(Date.now()) + ' ·' }), name + '.pdf'); msg.textContent = 'เสร็จแล้ว'; }
         catch (er) { msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er); } });
     }

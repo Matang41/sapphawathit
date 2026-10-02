@@ -54,10 +54,10 @@
     bhExport: () => {
       const list = A.activeSids().sort(A.byClass), ms = A.members(), wk = BH.week;
       const head = ['ลำดับ', 'ชื่อ - สกุล', 'ชั้น', 'สัปดาห์นี้', 'เฉลี่ยทั้งปี', 'จำนวนสัปดาห์', 'บันทึก'], rows = list.map((s, i) => { const r = rec(s, wk), a = avgOf(s); return [String(i + 1), A.fullName(ms[s]), A.cls(ms[s]), r ? lv(r.s)[1] : '-', a.n ? a.avg.toFixed(2) : '-', String(a.n), (r && r.note) || '']; });
-      const sub = 'ชมรมดนตรีไทย โรงเรียนสรรพวิทยาคม · ปีการศึกษา ' + A.year() + ' · สัปดาห์ ' + weekTxt(wk), name = 'ประเมินพฤติกรรม-' + wk;
+      const sub = '' + M.C.club.full + ' · ปีการศึกษา ' + A.year() + ' · สัปดาห์ ' + weekTxt(wk), name = 'ประเมินพฤติกรรม-' + wk;
       const w = modal('<h3>ส่งออกสรุปการประเมินพฤติกรรม</h3><div class="xlist"><button class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์</span></button><button class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
       w.addEventListener('click', async e => { const x = e.target.closest('[data-x]'); if (!x) return; const msg = $('#x-msg', w); msg.textContent = 'กำลังสร้างไฟล์ …';
-        try { if (x.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'สรุปการประเมินพฤติกรรมรายสัปดาห์ ชมรมสรรพวาทิต', lines: [sub.replace(/ · /g, ' ')], head, rows, widths: [7, 28, 9, 13, 11, 11, 21], align: ['center', 'left', 'center', 'center', 'center', 'center', 'left'], footer: ['', 'ระดับ: ดีเยี่ยม 4 · ดี 3 · พอใช้ 2 · ควรปรับปรุง 1'] }), name + '.docx');
+        try { if (x.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'สรุปการประเมินพฤติกรรมรายสัปดาห์ ชมรม' + M.C.club.name + '', lines: [sub.replace(/ · /g, ' ')], head, rows, widths: [7, 28, 9, 13, 11, 11, 21], align: ['center', 'left', 'center', 'center', 'center', 'center', 'left'], footer: ['', 'ระดับ: ดีเยี่ยม 4 · ดี 3 · พอใช้ 2 · ควรปรับปรุง 1'] }), name + '.docx');
           else await M.exportPDF(A.tablePages('สรุปการประเมินพฤติกรรมรายสัปดาห์', sub, head, rows, { widths: [7, 28, 9, 13, 11, 11, 21], align: ['c', '', 'c', 'c', 'c', 'c', ''], foot: 'ระดับ: ดีเยี่ยม 4 · ดี 3 · พอใช้ 2 · ควรปรับปรุง 1 ·' }), name + '.pdf'); msg.textContent = 'เสร็จแล้ว'; }
         catch (er) { msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er); } });
     }

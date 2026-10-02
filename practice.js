@@ -186,10 +186,10 @@
     sumExport: () => {
       const rows = summaryRows(), lab = RANGES.find(x => x[0] === SUM.range)[1];
       const head = ['ลำดับ', 'ชื่อ - สกุล', 'ชั้น', 'มา', 'สาย', 'ลา', 'ขาด', 'มาซ้อม', 'สถานะ'], data = rows.map((x, i) => [String(i + 1), A.fullName(x.m), A.cls(x.m), String(x.c.p), String(x.c.l), String(x.c.v), String(x.c.a), x.c.pct === null ? '-' : x.c.pct + '%', flagOf(x.c)[0]]);
-      const sub = 'ชมรมดนตรีไทย โรงเรียนสรรพวิทยาคม · ปีการศึกษา ' + A.year() + ' · ' + lab, name = 'สรุปการซ้อม-' + M.safeName(lab) + '-' + A.year();
+      const sub = '' + M.C.club.full + ' · ปีการศึกษา ' + A.year() + ' · ' + lab, name = 'สรุปการซ้อม-' + M.safeName(lab) + '-' + A.year();
       const w = modal('<h3>ส่งออกรายงานการซ้อม</h3><div class="xlist"><button class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์หรือส่งต่อ</span></button><button class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
       w.addEventListener('click', async e => { const b = e.target.closest('[data-x]'); if (!b) return; const msg = $('#x-msg', w); msg.textContent = 'กำลังสร้างไฟล์ …';
-        try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'รายงานสรุปการซ้อม ชมรมสรรพวาทิต', lines: [sub.replace(/ · /g, ' ')], head, rows: data, widths: [7, 30, 9, 7, 7, 7, 7, 10, 12], align: ['center', 'left', 'center', 'center', 'center', 'center', 'center', 'center', 'center'], footer: ['', 'ข้อมูล ณ วันที่ ' + M.thDate(Date.now())] }), name + '.docx');
+        try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'รายงานสรุปการซ้อม ชมรม' + M.C.club.name + '', lines: [sub.replace(/ · /g, ' ')], head, rows: data, widths: [7, 30, 9, 7, 7, 7, 7, 10, 12], align: ['center', 'left', 'center', 'center', 'center', 'center', 'center', 'center', 'center'], footer: ['', 'ข้อมูล ณ วันที่ ' + M.thDate(Date.now())] }), name + '.docx');
           else await M.exportPDF(A.tablePages('รายงานสรุปการซ้อม', sub, head, data, { widths: [7, 30, 9, 7, 7, 7, 7, 11, 13], align: ['c', '', 'c', 'c', 'c', 'c', 'c', 'c', 'c'], foot: 'ข้อมูล ณ ' + M.thDate(Date.now()) + ' ·' }), name + '.pdf');
           msg.textContent = 'เสร็จแล้ว'; } catch (er) { msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er); } });
     }

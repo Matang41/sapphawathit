@@ -284,7 +284,7 @@
     const st = seatsOf(b), root = document.createElement('div'), pg = document.createElement('div'); pg.className = 'rp-page land';
     pg.innerHTML = A.pageHead('ผังวง: ' + b.name, [b.type, bandInfo(b)].filter(Boolean).join(' · ')) + plotHTML(b, true) +
       '<div class="rp-roster">' + st.map(s => '<span><b>' + esc(s.inst) + '</b> ' + esc(s.sid && A.members()[s.sid] ? A.fullName(A.members()[s.sid]) : s.name || '') + '</span>').join('') + '</div>' + (b.note ? '<div class="rp-s" style="margin-top:8px">หมายเหตุ: ' + esc(b.note) + '</div>' : '') +
-      '<div class="rp-foot">ชมรมสรรพวาทิต โรงเรียนสรรพวิทยาคม · ผู้บรรเลง ' + st.length + ' คน</div>';
+      '<div class="rp-foot">' + M.C.club.long + ' · ผู้บรรเลง ' + st.length + ' คน</div>';
     root.appendChild(pg); return root;
   }
 

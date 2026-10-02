@@ -8,7 +8,7 @@
   const M = window.MC, B = window.B, A = window.APP, C = M.C;
   const { $, $$, esc, toast, modal } = M;
   const canJoin = () => A.teacher() || A.is('secretary');
-  const linkOf = () => location.origin + location.pathname + '?join=1' + (B.mode === 'demo' ? '&demo=1' : '');
+  const linkOf = () => location.origin + location.pathname + '?join=1&club=' + C.club.id + (B.mode === 'demo' ? '&demo=1' : '');
   const apps = () => Object.keys(A.D.applications || {}).map(s => Object.assign({ sid: s }, A.D.applications[s])).filter(a => a.first).sort((a, b) => a.at - b.at);
   const isOpen = () => !!((A.D.pub || {}).join || {}).open;
 
@@ -33,14 +33,15 @@
     if (A.members()[a.sid]) { upd['applications/' + a.sid] = null; return false; }
     const m = { prefix: a.prefix, first: a.first, last: a.last, grade: +a.grade, room: +a.room, type: 'start', status: 'active', am: false, pm: false, createdAt: Date.now(), createdBy: A.by(), joined: 'form' };
     if (a.inst && Object.keys(a.inst).length) m.inst = a.inst;
-    upd['members/' + a.sid] = m;
+    upd['members/' + a.sid] = m; upd['/people/' + a.sid + '/clubs/' + C.club.id] = true;
+    if (!(A.D.people || {})[a.sid]) A.sharedWrites(a.sid, A.sharedOf(m), upd); else Object.assign(m, A.sharedOf(A.D.people[a.sid]));
     const p = {}; ['phone', 'parentName', 'parentPhone'].forEach(k => { if (a[k]) p[k] = a[k]; }); if (Object.keys(p).length) upd['privateInfo/' + a.sid] = p;
     upd['applications/' + a.sid] = null; return true;
   }
   Object.assign(A.ACT, {
     joinToggle: () => { if (A.teacher()) A.W(B.set('public/join', { open: !isOpen(), year: A.year(), inst: A.instList() })); },
     joinCopy: async () => { try { await navigator.clipboard.writeText(linkOf()); toast('คัดลอกลิงก์แล้ว'); } catch (e) { toast('แตะที่ช่องลิงก์ค้างไว้แล้วเลือกคัดลอก', 3500); } },
-    joinShare: async () => { try { await navigator.share({ title: 'ใบสมัครสมาชิกชมรมสรรพวาทิต', text: 'กรอกใบสมัครสมาชิกชมรมดนตรีไทย (สรรพวาทิต)', url: linkOf() }); } catch (e) { /* ยกเลิก */ } },
+    joinShare: async () => { try { await navigator.share({ title: 'ใบสมัครสมาชิกชมรม' + M.C.club.name + '', text: 'กรอกใบสมัครสมาชิก' + M.C.club.long + '', url: linkOf() }); } catch (e) { /* ยกเลิก */ } },
     joinOk: d => { if (!canJoin()) return; const a = apps().find(x => x.sid === d.sid); if (!a) return; const upd = {}; const ok = accept(a, upd); A.W(B.update('', upd)); A.log('join.accept', a.sid, a.first + ' ' + a.last); toast(ok ? 'รับ ' + a.first + ' เข้าทะเบียนแล้ว — กำหนดรอบซ้อมได้ที่หน้าสมาชิก' : 'มีในทะเบียนอยู่แล้ว ลบใบสมัครซ้ำออก', 3500); },
     joinAll: async () => { if (!canJoin()) return; const l = apps(); if (!(await M.confirmBox('รับทั้งหมด', 'รับผู้สมัคร ' + l.length + ' คนเข้าทะเบียนเป็นสมาชิกประเภท “เริ่มต้น”', 'รับทั้งหมด'))) return; const upd = {}; let n = 0; l.forEach(a => { if (accept(a, upd)) n++; }); A.W(B.update('', upd)); A.log('join.acceptAll', '', n + ' คน'); toast('รับเข้าทะเบียน ' + n + ' คนแล้ว'); },
     joinNo: async d => { if (!canJoin()) return; if (!(await M.confirmBox('ลบใบสมัคร', 'ใบสมัครนี้จะถูกลบ นักเรียนส่งใหม่ได้', 'ลบ', true))) return; A.W(B.remove('applications/' + d.sid)); }
@@ -50,16 +51,17 @@
   const prevPublic = window.APP_PUBLIC;
   window.APP_PUBLIC = async function () {
     if (new URLSearchParams(location.search).get('join') === null) return prevPublic ? prevPublic() : false;
-    const root = $('#root'); const page = h => { root.innerHTML = '<div class="pub"><div class="pub-in"><div class="pub-head"><img src="icons/logo-256.png" alt="ตราชมรมสรรพวาทิต"><div><b>ใบสมัครสมาชิกชมรมสรรพวาทิต</b><span>' + esc(C.club.full) + '</span></div></div>' + h + '</div></div>'; };
+    const root = $('#root'); B.setScope(C.club.id); document.documentElement.dataset.club = C.club.id; document.title = 'ใบสมัครสมาชิกชมรม' + C.club.name;
+    const page = h => { root.innerHTML = '<div class="pub"><div class="pub-in"><div class="pub-head"><img' + (C.club.round ? ' class="round"' : '') + ' src="' + C.club.logo + '" alt="ตราชมรม' + M.C.club.name + '"><div><b>ใบสมัครสมาชิกชมรม' + M.C.club.name + '</b><span>' + esc(C.club.full) + '</span></div></div>' + h + '</div></div>'; };
     try { await B.init(); } catch (e) { page('<p>เชื่อมต่อระบบไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วเปิดลิงก์ใหม่</p>'); return true; }
     let j = null; try { j = await B.get('public/join'); } catch (e) { j = null; }
     if (!j || !j.open) { page('<div class="note warn">ขณะนี้ยังไม่เปิดรับสมัคร กรุณาติดต่อครูที่ปรึกษาชมรม</div>'); return true; }
-    const inst = Array.isArray(j.inst) && j.inst.length ? j.inst : C.instruments, F = A.fld, O = A.opt;
+    const inst = Array.isArray(j.inst) && j.inst.length ? j.inst : (C.club.instruments || []), F = A.fld, O = A.opt;
     page('<form class="form" id="jf"><div class="muted" style="margin-bottom:10px">ปีการศึกษา ' + esc(j.year || C.club.year) + ' · กรอกข้อมูลของตัวเองให้ครบ ยังไม่ต้องแนบรูป</div>' +
       F('เลขประจำตัวนักเรียน', '<input class="in" id="j-sid" inputmode="numeric" autocomplete="off" required>', 'ใช้ผูกกับอีเมลโรงเรียน เลขประจำตัว@' + esc(C.auth.domain)) +
       '<div class="g3">' + F('คำนำหน้า', '<select class="in" id="j-prefix">' + O(C.prefixes.map(p => [p, p])) + '</select>') + F('ชื่อ', '<input class="in" id="j-first" required>') + F('นามสกุล', '<input class="in" id="j-last" required>') + '</div>' +
       '<div class="g3">' + F('ระดับชั้น', '<select class="in" id="j-grade">' + O([1, 2, 3, 4, 5, 6].map(g => [g, 'ม.' + g])) + '</select>') + F('ห้อง', '<input class="in" id="j-room" inputmode="numeric" required>') + F('เบอร์โทรนักเรียน', '<input class="in" id="j-phone" inputmode="tel">') + '</div>' +
-      '<div class="fld"><span>เครื่องดนตรีที่เล่นได้ (เลือกได้หลายอย่าง ถ้ายังเล่นไม่ได้ไม่ต้องเลือก)</span><div class="checks">' + inst.map(i => '<label class="ck"><input type="checkbox" name="inst" value="' + esc(i) + '"><span>' + esc(i) + '</span></label>').join('') + '</div></div>' +
+      (inst.length ? '<div class="fld"><span>เครื่องดนตรีที่เล่นได้ (เลือกได้หลายอย่าง ถ้ายังเล่นไม่ได้ไม่ต้องเลือก)</span><div class="checks">' + inst.map(i => '<label class="ck"><input type="checkbox" name="inst" value="' + esc(i) + '"><span>' + esc(i) + '</span></label>').join('') + '</div></div>' : '') +
       '<div class="g3">' + F('ชื่อ-สกุลผู้ปกครอง', '<input class="in" id="j-pn" required>') + F('เบอร์โทรผู้ปกครอง', '<input class="in" id="j-pp" inputmode="tel" required>') + '</div>' +
       F('ประสบการณ์ด้านดนตรี หรือสิ่งที่อยากบอกครู (ไม่บังคับ)', '<textarea class="in" id="j-about" rows="3"></textarea>') +
       '<label class="ck wide"><input type="checkbox" id="j-ok"><span>ข้าพเจ้ายินยอมให้ชมรมเก็บข้อมูลนี้เพื่อใช้ในการบริหารชมรม</span></label>' +
@@ -74,7 +76,7 @@
       const ins = {}; $$('input[name=inst]:checked').forEach(c => ins[c.value] = true); if (Object.keys(ins).length) rec.inst = ins;
       const btn = $('#jf button.block'); btn.disabled = true; btn.textContent = 'กำลังส่ง …';
       try { await B.direct('set', 'applications/' + sid, rec);
-        page('<div class="note" style="font-size:1rem"><b>ส่งใบสมัครเรียบร้อยแล้ว</b><br>' + esc(rec.prefix + rec.first + ' ' + rec.last) + ' · เลขประจำตัว ' + esc(sid) + '</div><p style="text-align:left">เมื่อครูรับเข้าทะเบียนแล้ว เข้าใช้แอปชมรมด้วยอีเมลโรงเรียน <b>' + esc(sid) + '@' + esc(C.auth.domain) + '</b></p><a class="btn block" href="' + esc(location.pathname) + '">ไปหน้าเข้าสู่ระบบ</a>'); window.scrollTo(0, 0); }
+        page('<div class="note" style="font-size:1rem"><b>ส่งใบสมัครเรียบร้อยแล้ว</b><br>' + esc(rec.prefix + rec.first + ' ' + rec.last) + ' · เลขประจำตัว ' + esc(sid) + '</div><p style="text-align:left">เมื่อครูรับเข้าทะเบียนแล้ว เข้าใช้แอปชมรมด้วยอีเมลโรงเรียน <b>' + esc(sid) + '@' + esc(C.auth.domain) + '</b></p><a class="btn block" href="' + esc(location.pathname + '?club=' + C.club.id) + '">ไปหน้าเข้าสู่ระบบ</a>'); window.scrollTo(0, 0); }
       catch (er) { btn.disabled = false; btn.textContent = 'ส่งใบสมัคร'; err('ส่งไม่สำเร็จ — เลขประจำตัวนี้อาจส่งใบสมัครไปแล้ว หรือเป็นสมาชิกอยู่แล้ว หรืออินเทอร์เน็ตขัดข้อง หากต้องการแก้ไขข้อมูลให้แจ้งครู'); }
     });
     return true;

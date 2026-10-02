@@ -5,6 +5,10 @@
 (function () {
   'use strict';
   const C = window.APP_CONFIG;
+  /* ชมรมปัจจุบัน: C.club คืนข้อมูลของชมรมที่เลือกอยู่ (ตั้งด้วย C._club) */
+  C.clubs.forEach(c => { c.school = C.school; c.year = C.year; c.long = c.long || c.full; });
+  try { C._club = new URLSearchParams(location.search).get('club') || window.CLUB_DEFAULT || localStorage.getItem('spw_club') || C.clubs[0].id; } catch (e) { C._club = C.clubs[0].id; }
+  Object.defineProperty(C, 'club', { get: () => C.clubs.find(c => c.id === C._club) || C.clubs[0] });
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
