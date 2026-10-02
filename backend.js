@@ -22,6 +22,7 @@
     else if (op.t === 'update') Object.keys(op.v).forEach(k => setAt(t, op.p + '/' + k, op.v[k]));
     else if (op.t === 'remove') setAt(t, op.p, null);
   }
+  const isBlob = p => /^photos\/[^/]+$|^y\/[^/]+\/attphoto\/[^/]+\/[^/]+$/.test(String(p || ''));   /* ภาพขนาดใหญ่ — โหมดสาธิตเก็บใน IndexedDB แทน localStorage */
   const norm = p => parts(p).join('/');
   const under = (p, base) => { p = norm(p); base = norm(base); return p === base || !p || p.startsWith(base + '/') || base.startsWith(p + '/'); };
   const opTouches = (op, base) => op.t === 'update' ? Object.keys(op.v || {}).some(k => under(norm(op.p) + '/' + k, base)) : under(op.p, base);
@@ -89,11 +90,12 @@
     raw(op) { const r = op.p ? this.db.ref(op.p) : this.db.ref(); return op.t === 'set' ? r.set(op.v) : op.t === 'update' ? r.update(op.v) : r.remove(); },
     get(p) { return this.db.ref(p).once('value').then(s => s.val()); },
     on(p, cb, err) { const r = this.db.ref(p); const h = s => cb(s.val()); r.on('value', h, e => err && err(e)); return () => r.off('value', h); },
-    query(p, child, eq) { return this.db.ref(p).orderByChild(child).equalTo(eq).once('value').then(s => s.val()); }
+    query(p, child, eq) { return this.db.ref(p).orderByChild(child).equalTo(eq).once('value').then(s => s.val()); },
+    tx(p, fn) { return this.db.ref(p).transaction(v => fn(v)).then(r => { if (!r.committed) throw new Error('transaction aborted'); return r.snapshot.val(); }); }
   };
 
   /* ---------- Demo implementation (localStorage + IndexedDB) ---------- */
-  const DKEY = 'spw_demo_db', DUSER = 'spw_demo_user';
+  const DKEY = 'spw_demo_db2', DUSER = 'spw_demo_user';
   const DemoImpl = {
     name: 'demo', ls: [], authCb: null,
     tree() { try { return JSON.parse(localStorage.getItem(DKEY)) || {}; } catch (e) { return {}; } },
@@ -111,13 +113,14 @@
     async signIn() { const u = await demoChooser(); if (!u) return; sessionStorage.setItem(DUSER, JSON.stringify(u)); this.authCb && this.authCb(u); },
     async signOut() { sessionStorage.removeItem(DUSER); this.authCb && this.authCb(null); },
     async raw(op) {
-      if (op.p && op.p.startsWith('photos/') && op.t !== 'update') { if (op.t === 'remove' || op.v == null) await IDB.del('demomedia', op.p); else await IDB.put('demomedia', { id: op.p, v: op.v }); return; }
+      if (op.p && isBlob(op.p) && op.t !== 'update') { if (op.t === 'remove' || op.v == null) await IDB.del('demomedia', op.p); else await IDB.put('demomedia', { id: op.p, v: op.v }); return; }
       const t = this.tree(); applyOp(t, op); this.save(t);
     },
-    async get(p) { if (p.startsWith('photos/') && parts(p).length === 2) { const r = await IDB.get('demomedia', p); return r ? clone(r.v) : null; } return clone(getAt(this.tree(), p)); },
+    async get(p) { if (isBlob(p)) { const r = await IDB.get('demomedia', p); return r ? clone(r.v) : null; } return clone(getAt(this.tree(), p)); },
     on(p, cb) { const l = { p, cb, last: undefined }; this.ls.push(l); this.fire(l); return () => { this.ls = this.ls.filter(x => x !== l); }; },
     emit(t) { t = t || this.tree(); this.ls.forEach(l => this.fire(l, t)); },
     fire(l, t) { t = t || this.tree(); const v = getAt(t, l.p); const s = JSON.stringify(v); if (s !== l.last) { l.last = s; setTimeout(() => l.cb(v == null ? null : JSON.parse(s)), 0); } },
+    async tx(p, fn) { const t = this.tree(); const v = fn(clone(getAt(t, p))); setAt(t, p, v); this.save(t); return clone(v); },
     async query(p, child, eq) { const v = getAt(this.tree(), p) || {}; const o = {}; Object.keys(v).forEach(k => { if (v[k] && v[k][child] === eq) o[k] = v[k]; }); return Object.keys(o).length ? o : null; }
   };
 
@@ -155,6 +158,35 @@
       r[9].forEach((n, i) => { if (r[12][i]) { t.skills[r[0]] = t.skills[r[0]] || {}; t.skills[r[0]][n] = { lv: r[12][i], at: now, by: 'ครูตัวอย่าง' }; } });
     });
     t.members['90015'] = { prefix: 'นาย', first: 'ศักดิ์', last: 'ตัวอย่างสิบห้า', grade: 6, room: 1, type: 'regular', status: 'removed', removedReason: 'resign', removedAt: now, am: false, pm: false, createdAt: now, createdBy: by };
+    /* ---- ข้อมูลสาธิตของขั้นที่ 2–7 ---- */
+    const iso = n => { const d = new Date(now + n * 864e5); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    const Y = t.y = {}; const yy = Y[C.club.year] = { att: {}, attmeta: {}, leaves: {}, leavemark: {}, events: {}, announce: {}, bands: {}, ledger: {}, counters: {}, finsum: {} };
+    t.config.school = { teacher: 'ครูตัวอย่าง ใจดี', position: 'ครู', dept: 'ศิลปะ', deputy: '', director: '' };
+    for (let d = 1; d <= 6; d++) ['am', 'pm'].forEach((ses, si) => { const date = iso(-d), n = { p: 0, l: 0, v: 0, a: 0 };
+      rows.forEach((r, i) => { if (!r[si + 7]) return; const k = (i * 7 + d * 3 + si) % 17; const v = k === 0 ? 'a' : k === 5 ? 'l' : k === 9 ? 'v' : (i === 4 && d % 2) ? 'a' : 'p'; n[v]++; (yy.att[r[0]] = yy.att[r[0]] || {})[date + '_' + ses] = v; });
+      (yy.attmeta[date] = yy.attmeta[date] || {})[ses] = { by: { id: '90001', name: 'นายกานต์ ตัวอย่างหนึ่ง' }, at: now - d * 864e5, n, confirmedBy: { id: 'teacher', name: 'ครูตัวอย่าง ใจดี', at: now - d * 864e5 } }; });
+    yy.leaves['90002'] = { l1: { date: iso(1), am: false, pm: true, why: 'ธุระของครอบครัว', detail: 'ไปงานบุญกับครอบครัว (ข้อความตัวอย่าง)', at: now - 36e5, status: 'pending', late: false } };
+    yy.leavemark[iso(1) + '_pm'] = { '90002': 'pending' };
+    const pp = {}; rows.slice(0, 10).forEach(r => pp[r[0]] = true);
+    yy.events.e1 = { title: 'บรรเลงงานตัวอย่าง (สาธิต)', kind: 'perform', date: iso(6), start: '07:30', end: '11:30', place: 'หอประชุมตัวอย่าง', purpose: 'บรรเลงดนตรีไทยในพิธีเปิดงานตัวอย่าง', people: pp, status: 'on', createdAt: now, createdBy: by };
+    yy.events.e2 = { title: 'ประชุมคณะกรรมการชมรม', kind: 'meet', date: iso(12), start: '16:00', end: '17:00', place: 'ห้องดนตรีไทย', status: 'on', createdAt: now, createdBy: by };
+    yy.events.e3 = { title: 'พิธีไหว้ครูดนตรีไทย (สาธิต)', kind: 'activity', date: iso(-20), start: '08:00', end: '12:00', place: 'ห้องดนตรีไทย', people: pp, status: 'on', createdAt: now, createdBy: by };
+    yy.announce.a1 = { title: 'นัดซ้อมรวมวงก่อนงาน', body: 'ซ้อมรวมวงวันก่อนงาน เวลา 16.00 น. ที่ห้องดนตรีไทย แต่งชุดพละ', at: now - 72e5, by: { id: '90004', name: 'น.ส.จันทร์ ตัวอย่างสี่' } };
+    const seat = (sid, inst, row, ord) => ({ sid, inst, row, ord });
+    yy.bands.b1 = { name: 'วงปี่พาทย์งานตัวอย่าง', type: 'วงปี่พาทย์', eid: 'e1', title: 'บรรเลงงานตัวอย่าง (สาธิต)', place: 'หอประชุมตัวอย่าง', date: iso(6), time: '07.30–11.30 น.', note: 'แต่งกายชุดไทย นัดพบ 06.45 น. หน้าห้องดนตรี', updatedAt: now,
+      seats: { s1: seat('90001', 'ระนาดเอก', 2, 1), s2: seat('90007', 'ระนาดทุ้ม', 2, 2), s3: seat('90003', 'ฆ้องวงใหญ่', 3, 1), s4: seat('90010', 'ปี่', 2, 3), s5: seat('90008', 'ตะโพน', 4, 1), s6: seat('90005', 'ฉิ่ง', 4, 2), s7: seat('90002', 'ซออู้', 1, 1), s8: seat('90009', 'จะเข้', 1, 2) } };
+    const tx = (kind, no, d, amount, party, title, cat, status) => Object.assign({ kind, no: (kind === 'in' ? 'ร.' : 'บ.') + no + '/' + C.club.year, date: iso(d), amount, party, title, cat, at: now + d * 864e5, by: { id: '90003', name: 'นายคีตะ ตัวอย่างสาม' }, status }, status === 'approved' ? { approvedBy: 'ครูตัวอย่าง ใจดี', approvedAt: now + d * 864e5 } : {});
+    yy.ledger = { t1: tx('in', '001', -30, 8730, 'ชมรมปีก่อนหน้า', 'ยอดยกมา (ตัวอย่าง)', 'ยอดยกมา', 'approved'), t2: tx('in', '002', -12, 3000, 'เจ้าภาพงานตัวอย่าง', 'ค่าบรรเลงงานตัวอย่าง', 'ค่าบรรเลง', 'approved'), t3: tx('in', '003', -8, 2000, 'ผู้ปกครองตัวอย่าง', 'เงินบริจาค', 'เงินบริจาค', 'approved'),
+      t4: tx('out', '001', -6, 800, 'ร้านน้ำดื่มตัวอย่าง', 'ค่าน้ำดื่มวันบรรเลง', 'อาหาร / เครื่องดื่ม', 'approved'), t5: tx('out', '002', -2, 480, 'นายคีตะ ตัวอย่างสาม', 'ซื้อสายซอและยางสน', 'อุปกรณ์ / เครื่องดนตรี', 'pending') };
+    yy.counters = { in: 3, out: 2 };
+    const fs = { bal: 12930, inSum: 13730, outSum: 800, months: {}, n: 4, at: now }; ['t1', 't2', 't3', 't4'].forEach(k => { const x = yy.ledger[k], mk = x.date.slice(0, 7); fs.months[mk] = fs.months[mk] || { in: 0, out: 0 }; fs.months[mk][x.kind] += x.amount; }); yy.finsum = fs;
+    t.polls = { p1: { title: 'เลือกเพลงโหมโรงสำหรับงานตัวอย่าง', kind: 'single', options: ['เพลงตัวอย่าง ก', 'เพลงตัวอย่าง ข', 'เพลงตัวอย่าง ค'], openBallot: true, who: 'all', status: 'open', createdAt: now - 5e6, by: 'ครูตัวอย่าง ใจดี', y: C.club.year },
+      p2: { title: 'หยั่งเสียงตำแหน่งประธานชมรม ปีการศึกษา ' + (+C.club.year + 1), kind: 'single', election: 'president', openBallot: false, who: 'notstart', status: 'open', createdAt: now - 4e6, by: 'ครูตัวอย่าง ใจดี', y: C.club.year,
+        options: ['น.ส.ขวัญ ตัวอย่างสอง · ม.5/1', 'นายคีตะ ตัวอย่างสาม · ม.4/7', 'น.ส.จันทร์ ตัวอย่างสี่ · ม.4/2', 'ไม่ประสงค์ลงคะแนน'], optSids: ['90002', '90003', '90004'] } };
+    t.ballots = { p1: { '90003': { v: 0, at: now }, '90004': { v: 1, at: now }, '90007': { v: 0, at: now } }, p2: { '90009': { v: 0, at: now } } };
+    t.archive = { [String(+C.club.year - 1)]: { n: 31, at: now, roles: { x1: { role: 'president', name: 'นายศิษย์เก่า ตัวอย่าง', cls: 'ม.6/1' }, x2: { role: 'vice', name: 'น.ส.รุ่นพี่ ตัวอย่าง', cls: 'ม.6/3' } } } };
+    t.alumni = { al1: { name: 'นายรุ่นแรก ตัวอย่าง', gradYear: String(+C.club.year - 3), role: 'ประธานชมรม', roleYear: String(+C.club.year - 3), inst: 'ระนาดเอก', note: 'ข้อมูลตัวอย่าง', at: now } };
+    t.griev = { '90011': { g1: { topic: 'เครื่องดนตรี / อุปกรณ์', text: 'สายซอด้วงตัวที่ใช้ซ้อมขาดบ่อย อยากขอเปลี่ยนสายใหม่ (ข้อความตัวอย่าง)', at: now - 9e6, status: 'new' } } };
     t._demo = { seededAt: now };
     return t;
   }
@@ -262,6 +294,9 @@
     update: (p, v) => write('update', p, v),
     remove: p => write('remove', p, null),
     get: p => impl.get(p),
+    /* tx: นับเลขที่เอกสารแบบ transaction · direct: เขียนตรงไม่ผ่านกล่องขาออก (ต้องออนไลน์ ไม่เก็บค้างในเครื่อง) */
+    tx: (p, fn) => impl.tx(p, fn),
+    direct: (t, p, v) => Promise.resolve(impl.raw({ t, p, v: clone(v) })),
     on, query: (p, c, e) => impl.query(p, c, e),
     snapshot, snapshots,
     failedOps: () => IDB.all('failed'),

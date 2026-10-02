@@ -8,11 +8,13 @@ window.APP_CONFIG = {
         ถ้ายังเว้นว่าง แอปจะทำงานใน "โหมดสาธิต" (ข้อมูลอยู่ในเบราว์เซอร์นี้เท่านั้น)
         ทดลองโดยไม่แตะข้อมูลจริงได้เสมอด้วย ?demo=1 */
   firebase: {
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",
-    projectId: "",
-    appId: ""
+    apiKey: "AIzaSyBLvy5DHuOo1bhmbklOb4B_Hocd7ziq6p4",
+    authDomain: "sapphawathit.firebaseapp.com",
+    databaseURL: "https://sapphawathit-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "sapphawathit",
+    storageBucket: "sapphawathit.firebasestorage.app",
+    messagingSenderId: "549997282142",
+    appId: "1:549997282142:web:b0283161ff316617b785cf"
   },
   /* หมายเหตุ: apiKey ของ Firebase เว็บเปิดเผยได้ ความปลอดภัยอยู่ที่ database.rules.json — ต้องเผยแพร่ Rules ก่อนใช้งานจริง */
 
@@ -29,7 +31,7 @@ window.APP_CONFIG = {
     school: "โรงเรียนสรรพวิทยาคม",
     year: "2569"
   },
-  version: "1.0 (ขั้นที่ 1)",
+  version: "2.0",
 
   /* ตำแหน่งในชมรม (ลำดับ = ลำดับในแผนผัง) */
   roles: [

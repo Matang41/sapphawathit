@@ -142,6 +142,47 @@
     ]);
   }
 
+  /* เอกสาร DOCX ทั่วไป: body = สตริง WordprocessingML (ใช้ wPara/wRun/wTable ประกอบ) */
+  function docxDoc(body, o) {
+    o = o || {}; const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'; const mar = o.margin || 1134;
+    const sect = '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="' + mar + '" w:right="' + mar + '" w:bottom="' + mar + '" w:left="' + mar + '" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
+    const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + body + sect + '</w:body></w:document>';
+    const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ' + NS + '><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="' + DFONT + '" w:hAnsi="' + DFONT + '" w:cs="' + DFONT + '" w:eastAsia="' + DFONT + '"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:val="en-US" w:bidi="th-TH"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>';
+    return zip([
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>' },
+      { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+      { name: 'word/_rels/document.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name: 'word/document.xml', data: doc }, { name: 'word/styles.xml', data: styles }
+    ]);
+  }
+  /* ตาราง: rows = [[ข้อความ,...]], ws = ความกว้างคอลัมน์ (twip), o.head = แถวแรกเป็นหัวตาราง, o.align = [..] */
+  function wTable(rows, ws, o) {
+    o = o || {}; const total = ws.reduce((a, b) => a + b, 0);
+    const bd = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(k => '<w:' + k + ' w:val="single" w:sz="4" w:space="0" w:color="000000"/>').join('');
+    return '<w:tbl><w:tblPr><w:tblW w:w="' + total + '" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>' + bd + '</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>' + ws.map(x => '<w:gridCol w:w="' + x + '"/>').join('') + '</w:tblGrid>' +
+      rows.map((r, ri) => '<w:tr>' + r.map((c, i) => '<w:tc><w:tcPr><w:tcW w:w="' + ws[i] + '" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr>' + wPara(wRun(c, { b: o.head && ri === 0, sz: o.sz }), { jc: o.head && ri === 0 ? 'center' : ((o.align || [])[i] || 'left') }) + '</w:tc>').join('') + '</w:tr>').join('') + '</w:tbl>';
+  }
+  const wBreak = () => '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+
+  /* จำนวนเงิน → ตัวอักษรไทย (บาทถ้วน / สตางค์) */
+  function bahtText(n) {
+    n = Math.round((+n || 0) * 100) / 100; if (!n) return 'ศูนย์บาทถ้วน';
+    const D = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'], U = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน'];
+    const grp = s => { let o = ''; const L = s.length; for (let i = 0; i < L; i++) { const d = +s[i], pos = L - i - 1; if (!d) continue; if (pos === 1) o += (d === 1 ? '' : d === 2 ? 'ยี่' : D[d]) + 'สิบ'; else if (pos === 0 && d === 1 && L > 1) o += 'เอ็ด'; else o += D[d] + U[pos]; } return o; };
+    const rd = s => { s = s.replace(/^0+/, ''); if (!s) return ''; if (s.length <= 6) return grp(s); return rd(s.slice(0, -6)) + 'ล้าน' + grp(s.slice(-6).replace(/^0+/, '')); };
+    const b = Math.floor(n), st = Math.round((n - b) * 100);
+    return (b ? rd(String(b)) + 'บาท' : '') + (st ? rd(String(st)) + 'สตางค์' : 'ถ้วน');
+  }
+  const money = n => (+n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  /* ย่อภาพถ่าย (ไม่ครอป) สำหรับรูปหลักฐาน */
+  function fileToImage(file, max, q) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => { let w = img.naturalWidth, h = img.naturalHeight; const k = Math.min(1, (max || 1100) / Math.max(w, h)); w = Math.round(w * k); h = Math.round(h * k); const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', q || 0.7)); };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('อ่านภาพไม่ได้')); }; img.src = url;
+    });
+  }
+
   /* ---------- ตรวจขนาดจอ/อุปกรณ์ → data-attribute บน <html> ให้ CSS จัดวางให้เหมาะ ---------- */
   (function () {
     const de = document.documentElement, ua = navigator.userAgent || '';
@@ -161,5 +202,5 @@
   const inAppBrowser = () => /Line\/|FBAN|FBAV|Instagram|Messenger/i.test(navigator.userAgent || '');
 
   window.MC = { C, $, $$, esc, uid, thDate, thNum, safeName, MONTHS, loadLibs, saveBlob, saveFiles, exportPDF, exportPNGs, previewPages,
-    toast, modal, confirmBox, fileToSquare, docxTable, zip, inAppBrowser };
+    toast, modal, confirmBox, fileToSquare, fileToImage, docxTable, docxDoc, wTable, wPara, wRun, wBreak, bahtText, money, zip, inAppBrowser };
 })();

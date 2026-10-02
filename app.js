@@ -7,7 +7,8 @@
   'use strict';
   const M = window.MC, B = window.B, C = M.C;
   const { $, $$, esc, toast, modal, thNum } = M;
-  let USER = null, ME = null, D = {}, LOADED = {}, OFFS = [], STATUS = {}, lastHTML = '', lastRoute = '';
+  let USER = null, ME = null, D = {}, LOADED = {}, OFFS = [], YOFFS = [], SIG = '', STATUS = {}, lastHTML = '', lastRoute = '';
+  const SUBS = [], HOME = [], NAVS = [];   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
 
   /* ---------- ไอคอน (เส้น) ---------- */
@@ -16,6 +17,17 @@
     chart: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
     cog: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+    grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+    cal: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+    wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M15 15h3"/>',
+    vote: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12l3 3 5-6"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    band: '<circle cx="12" cy="6" r="2.5"/><circle cx="5" cy="13" r="2.5"/><circle cx="19" cy="13" r="2.5"/><circle cx="9" cy="19" r="2"/><circle cx="15" cy="19" r="2"/>',
+    book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+    cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+    left: '<path d="M14 6l-6 6 6 6"/>', right: '<path d="M10 6l6 6-6 6"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>',
     me: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
     trash: '<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
@@ -85,7 +97,7 @@
     $('#root').innerHTML = '<div class="login"><div class="login-card">' + brand(true) + '<h1>เข้าใช้งานไม่ได้</h1><div class="note bad">' + t + '</div><button class="btn ghost block" data-act="signout">ออกจากระบบ / เปลี่ยนบัญชี</button></div></div>';
   }
   async function onAuth(u) {
-    OFFS.forEach(f => f()); OFFS = []; D = {}; LOADED = {}; USER = u; ME = null;
+    OFFS.forEach(f => f()); OFFS = []; YOFFS.forEach(f => f()); YOFFS = []; SIG = ''; D = {}; LOADED = {}; USER = u; ME = null;
     if (!u) return renderLogin(B.authError ? esc(B.authErrorText(B.authError)) : '');
     if (u.verified === false) return renderDenied('domain');
     let teacher = B.isBootTeacher(u.email); const sid = B.sidFromEmail(u.email);
@@ -103,11 +115,18 @@
   }
 
   /* ============ โครงหน้า ============ */
-  const route = () => { const h = (location.hash || '#/home').replace(/^#\/?/, '').split('/'); return { name: h[0] || 'home', arg: h[1] ? decodeURIComponent(h[1]) : '' }; };
-  function navItems() {
-    const n = [['home', 'หน้าหลัก', 'home'], ['chart', 'แผนผัง', 'chart'], ['members', 'สมาชิก', 'users']];
-    if (can.manage()) n.push(['manage', 'จัดการ', 'cog']);
-    n.push(['me', 'ฉัน', 'me']); return n;
+  const route = () => { const h = (location.hash || '#/home').replace(/^#\/?/, '').split('/'); return { name: h[0] || 'home', arg: h[1] ? decodeURIComponent(h[1]) : '', arg2: h[2] ? decodeURIComponent(h[2]) : '' }; };
+  NAVS.push({ id: 'home', label: 'หน้าหลัก', icon: 'home', tab: 1, order: 10 }, { id: 'members', label: 'สมาชิก', icon: 'users', tab: 1, order: 40, match: ['m'] },
+    { id: 'chart', label: 'แผนผัง', icon: 'chart', order: 50 }, { id: 'manage', label: 'จัดการ', icon: 'cog', order: 90, show: () => can.manage() }, { id: 'me', label: 'ฉัน', icon: 'me', order: 95 },
+    { id: 'more', label: 'เพิ่มเติม', icon: 'grid', tab: 1, tabOnly: 1, order: 99 });
+  function navItems() { return NAVS.filter(n => !n.show || n.show()).sort((a, b) => a.order - b.order); }
+  /* สมัครรับข้อมูลรายปี/ตามบทบาทของโมดูลต่าง ๆ — สมัครใหม่เมื่อปีการศึกษาหรือตำแหน่งของผู้ใช้เปลี่ยน */
+  function resub() {
+    YOFFS.forEach(f => f()); YOFFS = [];
+    SUBS.forEach(sb => {
+      const p = sb.path(year()); D[sb.key] = {}; if (!p) return;
+      YOFFS.push(B.on(p, v => { D[sb.key] = sb.norm ? sb.norm(v || {}) : (v || {}); render(); }, e => { console.warn('read ' + p, e && e.code); }));
+    });
   }
   function syncBadge() {
     if (STATUS.failed) return '<button class="sync bad" data-act="retry">ส่งไม่สำเร็จ ' + STATUS.failed + ' · ลองใหม่</button>';
@@ -115,18 +134,18 @@
     if (STATUS.online === false) return '<span class="sync pend">ออฟไลน์</span>';
     return '<span class="sync ok">บันทึกแล้ว</span>';
   }
-  function shell(r, title, body) {
-    const cur = r.name === 'm' ? 'members' : r.name;
-    const nav = navItems();
+  function shell(r, title, body, back) {
+    const nav = navItems(); const cur = (nav.find(n => n.id === r.name || (n.match || []).includes(r.name)) || {}).id || 'more';
+    const side = nav.filter(n => !n.tabOnly), tabs = nav.filter(n => n.tab);
     return '<div class="app">' +
       '<aside class="side"><div class="side-brand">' + brand() + '<div><div class="side-name">' + esc(C.club.name) + '</div><div class="side-sub">' + (ME.teacher ? 'ครูที่ปรึกษา' : esc(roleName(roleOf(ME.sid)) || 'สมาชิก')) + '</div></div></div>' +
-      nav.map(n => '<a class="side-link' + (cur === n[0] ? ' on' : '') + '" href="#/' + n[0] + '">' + ic(n[2]) + n[1] + '</a>').join('') +
+      '<div class="side-nav">' + side.map(n => '<a class="side-link' + (cur === n.id ? ' on' : '') + '" href="#/' + n.id + '">' + ic(n.icon) + n.label + (n.badge && n.badge() ? '<span class="bdg">' + n.badge() + '</span>' : '') + '</a>').join('') + '</div>' +
       '<div class="grow"></div><div class="side-foot"><img src="icons/school-logo.png" alt="ตราโรงเรียนสรรพวิทยาคม"><div>' + esc(C.club.school) + '<br>ปีการศึกษา ' + esc(year()) + '</div></div></aside>' +
-      '<div class="main"><header class="topbar">' + (r.name === 'm' ? '<a class="tb-back" href="#/members" aria-label="กลับ">' + ic('back') + '</a>' : '<span class="tb-logo">' + brand() + '</span>') +
+      '<div class="main"><header class="topbar">' + (back ? '<a class="tb-back" href="' + back + '" aria-label="กลับ">' + ic('back') + '</a>' : '<span class="tb-logo">' + brand() + '</span>') +
       '<h1>' + esc(title) + '</h1>' + syncBadge() + '</header>' +
       (B.mode === 'demo' ? '<div class="demo-bar">โหมดสาธิต · ข้อมูลสมมติ เก็บในเบราว์เซอร์นี้เท่านั้น</div>' : '') +
       '<main class="page">' + body + '</main></div>' +
-      '<nav class="tabbar" aria-label="เมนูหลัก">' + nav.map(n => '<a class="' + (cur === n[0] ? 'on' : '') + '" href="#/' + n[0] + '">' + ic(n[2], 24) + '<span>' + n[1] + '</span></a>').join('') + '</nav></div>';
+      '<nav class="tabbar" aria-label="เมนูหลัก">' + tabs.map(n => '<a class="' + ((n.id === 'more' ? !tabs.some(t => t.id === cur) || cur === 'more' : cur === n.id) ? 'on' : '') + '" href="#/' + n.id + '">' + ic(n.icon, 24) + '<span>' + n.label + '</span></a>').join('') + '</nav></div>';
   }
   function render() {
     if (!ME) return;
@@ -134,10 +153,11 @@
     if (!ME.teacher && (!members()[ME.sid] || members()[ME.sid].status !== 'active')) { OFFS.forEach(f => f()); OFFS = []; return renderDenied('nomember', ME.sid); }
     refreshMe();
     const r = route(); const key = r.name + '/' + r.arg;
-    const V = { home: viewHome, chart: viewChart, members: viewMembers, m: viewMember, manage: viewManage, me: viewMe };
+    const sig = year() + '|' + (ME.teacher ? 'T' : ME.sid + ':' + ME.role + ':' + ME.roleGrade);
+    if (sig !== SIG) { SIG = sig; resub(); }
     if (!V[r.name] || (r.name === 'manage' && !can.manage())) { location.hash = '#/home'; return; }
-    const out = V[r.name](r.arg); if (!out) return;
-    const html = shell(r, out.title, out.body);
+    const out = V[r.name](r.arg, r); if (!out) return;
+    const html = shell(r, out.title, out.body, out.back);
     if (html === lastHTML) return;
     const keep = document.activeElement && document.activeElement.id === 'q';
     $('#root').innerHTML = html; lastHTML = html;
@@ -181,6 +201,7 @@
       '<div class="tile"><div class="lb">กำหนดซ้อมเช้า</div><div class="num">' + act.filter(s => ms[s].am).length + '</div><div class="muted">คน</div></div>' +
       '<div class="tile"><div class="lb">กำหนดซ้อมเย็น</div><div class="num">' + act.filter(s => ms[s].pm).length + '</div><div class="muted">คน</div></div>' +
       (ME.teacher ? '<a class="tile dark" href="#/members"><div class="lb">รอประเมินฝีมือ</div><div class="num">' + unassessed + '</div><div class="muted">คน</div></a>' : '<a class="tile dark" href="#/chart"><div class="lb">ที่ปรึกษาชมรม</div><div class="num">' + advisors().length + '</div><div class="muted">ท่าน</div></a>') + '</div>';
+    HOME.slice().sort((x, y) => x.order - y.order).forEach(h => { try { b += h.html() || ''; } catch (e) { console.error(e); } });
     if (can.edit()) b += '<section class="card"><div class="lb">ทางลัด</div><div class="row wrap">' +
       '<button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / รายชื่อ</button></div></section>';
     const noSes = act.filter(s => !ms[s].am && !ms[s].pm);
@@ -249,7 +270,7 @@
     b += '<section class="card"><div class="lb">รอบซ้อมประจำ</div>' + (can.manage() && !gone ? '<div class="row">' + sesToggle(sid, m) + '<span class="muted">' + esc(sesText(m)) + '</span></div>' : '<div>' + esc(sesText(m)) + '</div>') + '</section>';
     b += '<section class="card"><div class="lb">เครื่องดนตรีและระดับฝีมือ' + (can.manage() ? '' : ' (ครูเป็นผู้ประเมิน)') + '</div>' + (insts(m).length ? insts(m).map(i => skillLine(sid, i, can.manage() && !gone)).join('') : '<div class="muted">ยังไม่ได้ระบุเครื่องดนตรี' + (can.edit() ? ' — กด “แก้ไขข้อมูล” เพื่อเลือก' : '') + '</div>') + '</section>';
     if (can.priv(sid)) b += '<section class="card"><div class="lb">ข้อมูลติดต่อ (เห็นเฉพาะเจ้าตัว ครู เลขานุการ และกรรมการชั้นเดียวกัน)</div><div id="priv" data-sid="' + esc(sid) + '">' + privHTML(sid) + '</div></section>';
-    return { title: m.first || 'สมาชิก', body: b };
+    return { title: m.first || 'สมาชิก', body: b, back: '#/members' };
   }
   const PRIV = {};
   function privHTML(sid) {
@@ -281,6 +302,7 @@
     b += '<section class="card"><div class="lb">ตั้งค่า</div><div class="kv"><span>ปีการศึกษาปัจจุบัน</span><b>' + esc(year()) + '</b><button class="btn sm ghost" data-act="setYear">แก้ไข</button></div><div class="kv"><span>รายการเครื่องดนตรี</span><b>' + instList().length + ' ชนิด</b><button class="btn sm ghost" data-act="setInst">แก้ไข</button></div></section>';
     b += '<section class="card"><div class="lb">สมาชิกที่นำออกแล้ว / ศิษย์เก่า (' + gone.length + ')</div>' + (gone.map(s => '<div class="mrow"><a class="mrow-main" href="#/m/' + esc(s) + '">' + avatar(ms[s]) + '<span class="grow"><b>' + esc(fullName(ms[s])) + '</b><span class="muted">' + esc(s + ' · ' + ((C.removeReasons.find(x => x.id === ms[s].removedReason) || {}).name || 'นำออก') + ' · ' + M.thDate(ms[s].removedAt)) + '</span></span></a>' +
       '<span class="mrow-act"><button class="btn sm ghost" data-act="restore" data-sid="' + esc(s) + '">กู้คืน</button>' + (ms[s].removedReason === 'mistake' ? '<button class="btn sm ghost danger" data-act="purge" data-sid="' + esc(s) + '">ลบถาวร</button>' : '') + '</span></div>').join('') || '<div class="muted">ไม่มี</div>') + '</section>';
+    MANAGE.forEach(f => { try { b += f() || ''; } catch (e) { console.error(e); } });
     if (B.mode === 'demo') b += '<section class="card"><div class="lb">โหมดสาธิต</div><div class="muted" style="margin-bottom:10px">ล้างแล้วเริ่มข้อมูลสมมติชุดใหม่ ไม่กระทบข้อมูลจริง</div><button class="btn ghost danger" data-act="resetDemo">ล้างข้อมูลสาธิต</button></section>';
     return { title: 'จัดการชมรม', body: b };
   }
@@ -517,6 +539,13 @@
     });
   }
 
+  function viewMore() {
+    const l = navItems().filter(n => !n.tab);
+    return { title: 'เพิ่มเติม', body: '<div class="morelist">' + l.map(n => '<a class="more-i" href="#/' + n.id + '">' + ic(n.icon, 26) + '<span>' + n.label + '</span>' + (n.badge && n.badge() ? '<i class="bdg">' + n.badge() + '</i>' : '') + '</a>').join('') + '</div>' };
+  }
+  const V = { home: viewHome, chart: viewChart, members: viewMembers, m: viewMember, manage: viewManage, me: viewMe, more: viewMore };
+  const MANAGE = [];   /* การ์ดเพิ่มในหน้าจัดการ */
+
   /* ============ ตารางการทำงานของปุ่ม ============ */
   const ACT = {
     signin: async () => { try { B.authError = null; await B.signIn({}); } catch (e) { renderLogin(esc(B.authErrorText(e))); } },
@@ -567,10 +596,20 @@
   /* ---------- เริ่มทำงาน ---------- */
   window.addEventListener('hashchange', () => { if (ME) render(); });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => { });
-  (async function boot() {
+  async function boot() {
+    if (window.APP_PUBLIC && (await window.APP_PUBLIC())) return;   /* หน้าสาธารณะ (ผู้ปกครองเซ็นใบอนุญาต) ไม่ต้องล็อกอิน */
     try { await B.init(); } catch (er) { $('#root').innerHTML = '<div class="card" style="margin:20px">เชื่อมต่อระบบไม่สำเร็จ: ' + esc(er.message) + '<br>ตรวจอินเทอร์เน็ต แล้วลองเปิดใหม่</div>'; return; }
     B.onStatus(s => { const ch = s.pending !== STATUS.pending || s.failed !== STATUS.failed || s.online !== STATUS.online; STATUS = s; if (ch && ME) render(); });
     B.onAuth(u => { onAuth(u); });
-  })();
+  }
+  document.addEventListener('DOMContentLoaded', boot);
+  const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const DOWS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'], MONTHS_F = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  /* 'YYYY-MM-DD' → ข้อความไทย: mode 'short' = 2 ต.ค. 69 · 'full' = 2 ตุลาคม 2569 · 'dow' = วันศุกร์ที่ 2 ตุลาคม 2569 */
+  function dTH(iso, mode) { if (!iso) return ''; const p = iso.split('-').map(Number); const d = new Date(p[0], p[1] - 1, p[2]); const y = p[0] + 543; return mode === 'short' ? p[2] + ' ' + M.MONTHS[p[1] - 1] + ' ' + String(y).slice(2) : (mode === 'dow' ? 'วัน' + DOWS[d.getDay()] + 'ที่ ' : '') + p[2] + ' ' + MONTHS_F[p[1] - 1] + ' ' + y; }
+  window.APP = { V, ACT, NAVS, SUBS, HOME, MANAGE, UI, PRIV, ICON, can, ic, chip, fld, opt, avatar, brand, members, cfg, year, instList, activeSids, fullName, cls, typeName, roleOf, roleName, insts, byClass, advisors, myName, by, W, log, lvOf, lvName, topLv, sesText, memberRow, pageHead, bigAv, printPhotos, route, todayISO, dTH, MONTHS_F, DOWS, ROLE_ORDER,
+    get D() { return D; }, get ME() { return ME; }, get USER() { return USER; }, get STATUS() { return STATUS; },
+    is: (...r) => !!ME && !ME.teacher && r.includes(ME.role), teacher: () => !!ME && ME.teacher, sid: () => ME && ME.sid,
+    rerender() { lastHTML = ''; render(); } };
   window.__D = () => D; window.__ME = () => ME;
 })();
