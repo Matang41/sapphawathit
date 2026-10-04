@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 4;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 5;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {

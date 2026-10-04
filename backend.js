@@ -22,11 +22,11 @@
     else if (op.t === 'update') Object.keys(op.v).forEach(k => setAt(t, op.p + '/' + k, op.v[k]));
     else if (op.t === 'remove') setAt(t, op.p, null);
   }
-  const isBlob = p => /^photos\/[^/]+$|(^|\/)y\/[^/]+\/attphoto\/[^/]+\/[^/]+$/.test(String(p || ''));   /* ภาพขนาดใหญ่ — โหมดสาธิตเก็บใน IndexedDB แทน localStorage */
+  const isBlob = p => /^photos\/[^/]+$|(^|\/)y\/[^/]+\/attphoto\/[^/]+\/[^/]+$|(^|\/)libfiles\/[^/]+$/.test(String(p || ''));   /* ภาพขนาดใหญ่ — โหมดสาธิตเก็บใน IndexedDB แทน localStorage */
   const norm = p => parts(p).join('/');
   /* ขอบเขตชมรม: path ที่ขึ้นต้นด้วยรากข้อมูลของชมรมจะถูกเติม c/{ชมรม}/ ให้อัตโนมัติ · path ที่ขึ้นต้นด้วย "/" คือระบุเต็ม ไม่เติม
      ข้อมูลส่วนกลาง (ไม่เติม): teachers, people, privateInfo, photos, ctoken, rulesProbe */
-  const CLUB_ROOTS = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications'];
+  const CLUB_ROOTS = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications', 'awards', 'certs', 'certidx', 'library', 'libfiles'];
   let scope = '';
   const mp = p => { p = String(p == null ? '' : p); if (p.charAt(0) === '/') return norm(p); p = norm(p); if (!scope || !p) return p; return CLUB_ROOTS.includes(p.split('/')[0]) ? scope + '/' + p : p; };
   const mv = (t, p, v) => (t === 'update' && !norm(p) && v) ? Object.keys(v).reduce((o, k) => { o[mp(k)] = v[k]; return o; }, {}) : v;
@@ -198,7 +198,9 @@
     const mon = n => { const d = new Date(now); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 7 * n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
     yy.behave = {}; rows.forEach((r, i) => { yy.behave[r[0]] = {}; [1, 2, 3].forEach(w => { yy.behave[r[0]][mon(w)] = Object.assign({ s: 4 - ((i + w) % 4 === 0 ? 2 : (i + w) % 3 === 0 ? 1 : 0), at: now, by: 'ครูตัวอย่าง ใจดี' }, i === 4 && w === 1 ? { note: 'มาซ้อมให้ตรงเวลามากขึ้นนะ (ข้อความตัวอย่าง)' } : {}); }); });
     /* ---- จัดเข้าโครงหลายชมรม: ทะเบียนกลาง people + ข้อมูลแยกชมรม c/{id} ---- */
-    const spw = {}; ['config', 'members', 'roles', 'skills', 'history', 'y', 'polls', 'ballots', 'archive', 'alumni', 'griev', 'public', 'applications'].forEach(k => { if (t[k]) spw[k] = t[k]; });
+    t.awards = { w1: { title: 'สมาชิกดีเด่นประจำชมรม', body: 'ที่มาซ้อมสม่ำเสมอและช่วยเหลือเพื่อนสมาชิก (ข้อมูลตัวอย่าง)', rcp: { '90002': 'น.ส.ขวัญ ตัวอย่างสอง' }, pinned: true, at: now - 3e6, by: 'ครูตัวอย่าง ใจดี', y: C.club.year } };
+    t.library = { l1: { title: 'ตัวอย่างลิงก์สื่อการเรียนรู้', cat: 'ทฤษฎีดนตรี', desc: 'ข้อมูลตัวอย่าง', kind: 'link', url: 'https://example.com', at: now - 2e6, by: 'ครูตัวอย่าง ใจดี' } };
+    const spw = {}; ['config', 'members', 'roles', 'skills', 'history', 'y', 'polls', 'ballots', 'archive', 'alumni', 'griev', 'public', 'applications', 'awards', 'library'].forEach(k => { if (t[k]) spw[k] = t[k]; });
     const people = {}; Object.keys(t.members).forEach(s => { const m = t.members[s]; people[s] = { prefix: m.prefix, first: m.first, last: m.last, grade: m.grade, room: m.room, clubs: m.status === 'active' ? { spw: true } : {} }; });
     const kt = { config: { year: C.year, advisors: { a1: { name: 'ครูตัวอย่าง ใจดี', kind: 'teacher', email: (C.teacherEmails[0] || 'teacher@example.com'), position: 'ครูที่ปรึกษาชมรม', order: 1 } } }, members: {}, roles: { '90002': { role: 'president' } }, public: { join: { open: true, year: C.year } } };
     [['90031', 'นาย', 'เมือง', 'ตัวอย่างพื้นเมืองหนึ่ง', 4, 3], ['90032', 'น.ส.', 'ฟ้อน', 'ตัวอย่างพื้นเมืองสอง', 3, 5]].forEach(r => { people[r[0]] = { prefix: r[1], first: r[2], last: r[3], grade: r[4], room: r[5], clubs: {} }; });
