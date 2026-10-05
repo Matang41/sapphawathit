@@ -26,7 +26,7 @@
   const norm = p => parts(p).join('/');
   /* ขอบเขตชมรม: path ที่ขึ้นต้นด้วยรากข้อมูลของชมรมจะถูกเติม c/{ชมรม}/ ให้อัตโนมัติ · path ที่ขึ้นต้นด้วย "/" คือระบุเต็ม ไม่เติม
      ข้อมูลส่วนกลาง (ไม่เติม): teachers, people, privateInfo, photos, ctoken, rulesProbe */
-  const CLUB_ROOTS = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications', 'awards', 'certs', 'certidx', 'library', 'libfiles'];
+  const CLUB_ROOTS = ['config', 'members', 'roles', 'skills', 'history', 'actions', 'y', 'polls', 'ballots', 'griev', 'alumni', 'archive', 'public', 'applications', 'awards', 'certs', 'certidx', 'library', 'libfiles', 'gtok', 'sigs'];
   let scope = '';
   const mp = p => { p = String(p == null ? '' : p); if (p.charAt(0) === '/') return norm(p); p = norm(p); if (!scope || !p) return p; return CLUB_ROOTS.includes(p.split('/')[0]) ? scope + '/' + p : p; };
   const mv = (t, p, v) => (t === 'update' && !norm(p) && v) ? Object.keys(v).reduce((o, k) => { o[mp(k)] = v[k]; return o; }, {}) : v;

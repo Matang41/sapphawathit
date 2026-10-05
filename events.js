@@ -13,7 +13,8 @@
   const canPost = () => A.teacher() || !!A.ME.role;
   const canForm = () => A.teacher() || A.is('secretary');
   const EV = { tab: 'up', month: A.todayISO().slice(0, 7) };
-  A.EVHOOKS = [];   /* โมดูลอื่นเพิ่มการ์ดในหน้ากิจกรรม (เช่น ใบขออนุญาตผู้ปกครอง) */
+  A.EVHOOKS = [];
+  let F12SIG = false; const sigTag = () => { const g = A.mySigRec && A.mySigRec(); return g && F12SIG ? '<img class="f-sig" src="' + g.img + '" alt="">' : ''; };   /* โมดูลอื่นเพิ่มการ์ดในหน้ากิจกรรม (เช่น ใบขออนุญาตผู้ปกครอง) */
 
   A.SUBS.push(
     { key: 'events', path: y => 'y/' + y + '/events' },
@@ -146,7 +147,7 @@
       '<p class="f-p">ด้วยข้าพเจ้า ' + u(D.S.teacher) + ' ตำแหน่ง ' + u(D.S.position) + ' กลุ่มสาระการเรียนรู้ ' + u(D.S.dept) + ' จะต้องนำนักเรียนจำนวน ' + u(String(D.ps.length)) + ' คน ไป ณ ' + u(D.place) + ' เพื่อ ' + u(D.purpose) +
       ' ในวันที่ ' + u(D.d1[0]) + ' เดือน ' + u(D.d1[1]) + ' พ.ศ. ' + u(D.d1[2]) + ' ถึง วันที่ ' + u(D.d2[0]) + ' เดือน ' + u(D.d2[1]) + ' พ.ศ. ' + u(D.d2[2]) + ' ระหว่างเวลา ' + u(D.t1) + ' น. ถึง เวลา ' + u(D.t2) + ' น.</p>' +
       '<table class="f-tb">' + thead + '<tbody>' + rows(0, 15, true) + '</tbody></table>' +
-      '<div class="f-sign r">ลงชื่อ..............................................................ครูผู้ควบคุม<br>( ' + esc(D.S.teacher || '.............................................') + ' )</div>' +
+      '<div class=\"f-sign r\">' + sigTag() + 'ลงชื่อ..............................................................ครูผู้ควบคุม<br>( ' + esc(D.S.teacher || '.............................................') + ' )</div>' +
       '<div style="margin-top:6px">เรียนท่านผู้อำนวยการโรงเรียน<div class="f-dots"></div></div>' +
       '<div class="f-sign r">ลงชื่อ......................................................................<br>( ' + esc(D.S.deputy || '.............................................') + ' )<br>รองผู้อำนวยการฝ่ายบริหารวิชาการ</div>' +
       '<div class="f-boxes"><span class="f-box"></span> อนุญาต <span class="f-box" style="margin-left:40px"></span> ไม่อนุญาต</div>' +
@@ -184,10 +185,10 @@
       '<div class="g3">' + fld('ครูผู้ควบคุม', '<input class="in" id="f-t" value="' + esc(S.teacher) + '">') + fld('ตำแหน่ง', '<input class="in" id="f-p" value="' + esc(S.position) + '">') + fld('กลุ่มสาระการเรียนรู้', '<input class="in" id="f-d" value="' + esc(S.dept) + '">') + '</div>' +
       '<div class="g3">' + fld('รองผู้อำนวยการฝ่ายบริหารวิชาการ', '<input class="in" id="f-dep" value="' + esc(S.deputy) + '" placeholder="ชื่อ-สกุล">') + fld('ผู้อำนวยการโรงเรียน', '<input class="in" id="f-dir" value="' + esc(S.director) + '" placeholder="ชื่อ-สกุล">') + '</div>' +
       '<div class="muted">ชื่อครูและผู้บริหารจะถูกจำไว้ใช้ครั้งต่อไป ลายเซ็นเว้นว่างไว้ให้เซ็นด้วยปากกา</div>' + (n ? '' : '<div class="note warn">กิจกรรมนี้ยังไม่ได้เลือกผู้เข้าร่วม</div>') +
-      '<div class="xlist" style="margin-top:12px"><button type="button" class="xbtn" data-x="view"><b>ดูตัวอย่าง</b><span>แสดงบนหน้าจอ</span></button><button type="button" class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์</span></button><button type="button" class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word (ฟอนต์ TH SarabunPSK)</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button type="button" class="btn ghost block" data-close style="margin-top:12px">ปิด</button></form>', { sticky: true, wide: true });
+      (A.mySigRec && A.mySigRec() ? '<label class="ck wide"><input type="checkbox" id="f-sig"><span>ใส่ลายเซ็นครูผู้ควบคุม (PDF / ตัวอย่าง)</span></label>' : '') + '<div class="xlist" style="margin-top:12px"><button type="button" class="xbtn" data-x="view"><b>ดูตัวอย่าง</b><span>แสดงบนหน้าจอ</span></button><button type="button" class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์</span></button><button type="button" class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word (ฟอนต์ TH SarabunPSK)</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button type="button" class="btn ghost block" data-close style="margin-top:12px">ปิด</button></form>', { sticky: true, wide: true });
     w.addEventListener('click', async x => {
       const b = x.target.closest('[data-x]'); if (!b) return; const v = id => $(id, w).value.trim(), msg = $('#x-msg', w), req = v('#f-req') || A.todayISO();
-      const ns = { teacher: v('#f-t'), position: v('#f-p'), dept: v('#f-d'), deputy: v('#f-dep'), director: v('#f-dir') };
+      F12SIG = !!($('#f-sig', w) && $('#f-sig', w).checked); const ns = { teacher: v('#f-t'), position: v('#f-p'), dept: v('#f-d'), deputy: v('#f-dep'), director: v('#f-dir') };
       if (JSON.stringify(ns) !== JSON.stringify(school())) { if (A.teacher()) A.W(B.set('config/school', ns)); (A.cfg().school = ns); }
       const name = 'วก12-' + M.safeName(e.title) + '-' + e.date; msg.textContent = 'กำลังสร้าง …';
       try {

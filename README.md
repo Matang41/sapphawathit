@@ -159,3 +159,12 @@ PWA แบบ static ไม่มี build step (HTML + CSS + Vanilla JS) โค
 
 ข้อมูลใหม่ในฐานข้อมูล (ใต้ `c/{ชมรม}/`): `awards` · `certs` (ครูเท่านั้น) · `certidx/{sid}` (สำเนาเกียรติบัตรให้เจ้าตัวอ่าน) · `library` · `libfiles` · `config/libCats` · `config/manual` · `y/{ปี}/traits/{sid}` · `y/{ปี}/certno`
 
+## รุ่น 3.2 — ระบบประเมินรวม ข้อมูลชมรม โหมดผู้ปกครอง ลายเซ็นครู
+
+**อัปเดตจากรุ่น 3.1:** อัปไฟล์ทั้งหมด (รวม `icons/rules-poster.jpg`) แล้ววาง `database.rules.json` ใหม่ที่ Firebase Console › Rules › Publish (`rulesProbe` v6 / `RULES_V = 6`)
+
+- **ประเมินรวม** (`behave.js`): แท็บ รายสัปดาห์ · คุณลักษณะ · สรุปรายคน ระดับ 4 ขั้น หมวดแก้ได้ที่ `config.js` › `traitGroups` สัดส่วนที่ `behaveWeights` · ความตั้งใจ 1–3 ให้ในหน้า “การซ้อม” (`y/{ปี}/focus`)
+- **ข้อมูลชมรม** (`clubinfo.js`): เนื้อหาตั้งต้นที่ `config.js` › `clubInfo` ครูเพิ่ม MOU/กฎในแอปได้ (เก็บที่ `public/info`) สมาชิกกดยอมรับ (`y/{ปี}/acks/{sid}/rules-{ver}`) ใบสมัครผ่านลิงก์ต้องกดยอมรับ (เก็บที่ `applications/{sid}/accept` → `members/{sid}/accept`)
+- **โหมดผู้ปกครอง** (`guardian.js`): ลิงก์ `?g=รหัส` ข้อมูลสำเนาที่ `pview/{รหัส}` รหัสต่อนักเรียนที่ `gtok/{sid}`
+- **ส่งออกรายชื่อ** (`report.js`) · **ลายเซ็นครู** (`signature.js`, เก็บที่ `sigs/{emailKey}`)
+

@@ -140,6 +140,16 @@
        "$sid": {
         ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
        }
+      },
+      "focus": {
+       ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('c').child($cid).child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('c').child($cid).child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))",
+       "$sid": {
+        ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+        ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (root.child('c').child($cid).child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'president' || root.child('c').child($cid).child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).child('role').val() == 'vice'))",
+        "$key": {
+         ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3"
+        }
+       }
       }
      }
     },
@@ -197,6 +207,17 @@
      "$sid": {
       ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
      }
+    },
+    "gtok": {
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+     }
+    },
+    "sigs": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+     "$k": {
+      ".validate": "newData.hasChild('img') && newData.child('img').isString() && newData.child('img').val().length < 80000"
+     }
     }
    }
   },
@@ -249,7 +270,7 @@
    }
   },
   "rulesProbe": {
-   "v5": {
+   "v6": {
     ".read": true
    }
   },
@@ -308,6 +329,13 @@
   "applications": {
    ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true))",
    ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true))"
+  },
+  "pview": {
+   "$t": {
+    ".read": true,
+    ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+    ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)"
+   }
   }
  }
 }

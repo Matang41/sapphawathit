@@ -25,13 +25,13 @@
       (open ? '' : '<div class="note warn">ตอนนี้ปิดรับสมัคร นักเรียนที่เปิดลิงก์จะเห็นว่าปิดรับ' + (A.teacher() ? '' : ' (ครูเป็นผู้เปิด)') + '</div>') + '</section>';
     b += '<section class="card"><div class="row" style="margin-bottom:6px"><div class="lb grow" style="margin:0">ใบสมัครที่รอรับเข้าทะเบียน (' + l.length + ')</div>' + (l.length > 1 ? '<button class="btn sm" data-act="joinAll">รับทั้งหมด</button>' : '') + '</div>' +
       (l.map(a => '<div class="li"><div class="row"><div class="grow"><b>' + esc((a.prefix || '') + a.first + ' ' + a.last) + '</b><div class="muted">' + esc('เลขประจำตัว ' + a.sid + ' · ม.' + a.grade + '/' + a.room + (a.inst ? ' · ' + Object.keys(a.inst).join(', ') : '') + ' · ส่งเมื่อ ' + M.thDate(a.at)) + '</div>' +
-        '<div class="muted">' + esc(['โทร ' + (a.phone || '-'), 'ผู้ปกครอง ' + (a.parentName || '-') + ' ' + (a.parentPhone || '')].join(' · ')) + '</div>' + (a.about ? '<div style="margin-top:4px;white-space:pre-line">' + esc(a.about) + '</div>' : '') + (A.members()[a.sid] ? '<div class="note bad">เลขประจำตัวนี้มีในทะเบียนแล้ว</div>' : '') + '</div></div>' +
+        '<div class="muted">' + esc(['โทร ' + (a.phone || '-'), 'ผู้ปกครอง ' + (a.parentName || '-') + ' ' + (a.parentPhone || '')].join(' · ')) + '</div>' + (a.about ? '<div style="margin-top:4px;white-space:pre-line">' + esc(a.about) + '</div>' : '') + (a.accept ? '<div class="muted">ยอมรับข้อตกลงชมรมแล้วตอนสมัคร</div>' : '') + (A.members()[a.sid] ? '<div class="note bad">เลขประจำตัวนี้มีในทะเบียนแล้ว</div>' : '') + '</div></div>' +
         '<div class="row" style="margin-top:8px"><button class="btn gold grow" data-act="joinOk" data-sid="' + esc(a.sid) + '">รับเข้าทะเบียน</button><button class="btn ghost grow danger" data-act="joinNo" data-sid="' + esc(a.sid) + '">ไม่รับ / ลบใบสมัคร</button></div></div>').join('') || '<div class="muted">ยังไม่มีใบสมัครใหม่</div>') + '</section>';
     return { title: 'ใบสมัครสมาชิก', body: b };
   };
   function accept(a, upd) {
     if (A.members()[a.sid]) { upd['applications/' + a.sid] = null; return false; }
-    const m = { prefix: a.prefix, first: a.first, last: a.last, grade: +a.grade, room: +a.room, type: 'start', status: 'active', am: false, pm: false, createdAt: Date.now(), createdBy: A.by(), joined: 'form' };
+    const m = { prefix: a.prefix, first: a.first, last: a.last, grade: +a.grade, room: +a.room, type: 'start', status: 'active', am: false, pm: false, createdAt: Date.now(), createdBy: A.by(), joined: 'form' }; if (a.accept) m.accept = a.accept;
     if (a.inst && Object.keys(a.inst).length) m.inst = a.inst;
     upd['members/' + a.sid] = m; upd['/people/' + a.sid + '/clubs/' + C.club.id] = true;
     if (!(A.D.people || {})[a.sid]) A.sharedWrites(a.sid, A.sharedOf(m), upd); else Object.assign(m, A.sharedOf(A.D.people[a.sid]));
@@ -56,6 +56,7 @@
     try { await B.init(); } catch (e) { page('<p>เชื่อมต่อระบบไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วเปิดลิงก์ใหม่</p>'); return true; }
     let j = null; try { j = await B.get('public/join'); } catch (e) { j = null; }
     if (!j || !j.open) { page('<div class="note warn">ขณะนี้ยังไม่เปิดรับสมัคร กรุณาติดต่อครูที่ปรึกษาชมรม</div>'); return true; }
+    let CI = { secs: [], ver: '1', poster: '' }; try { CI = await A.clubInfoLoad(); } catch (e) { /* ignore */ }
     const inst = Array.isArray(j.inst) && j.inst.length ? j.inst : (C.club.instruments || []), F = A.fld, O = A.opt;
     page('<form class="form" id="jf"><div class="muted" style="margin-bottom:10px">ปีการศึกษา ' + esc(j.year || C.club.year) + ' · กรอกข้อมูลของตัวเองให้ครบ ยังไม่ต้องแนบรูป</div>' +
       F('เลขประจำตัวนักเรียน', '<input class="in" id="j-sid" inputmode="numeric" autocomplete="off" required>', 'ใช้ผูกกับอีเมลโรงเรียน เลขประจำตัว@' + esc(C.auth.domain)) +
@@ -64,14 +65,14 @@
       (inst.length ? '<div class="fld"><span>เครื่องดนตรีที่เล่นได้ (เลือกได้หลายอย่าง ถ้ายังเล่นไม่ได้ไม่ต้องเลือก)</span><div class="checks">' + inst.map(i => '<label class="ck"><input type="checkbox" name="inst" value="' + esc(i) + '"><span>' + esc(i) + '</span></label>').join('') + '</div></div>' : '') +
       '<div class="g3">' + F('ชื่อ-สกุลผู้ปกครอง', '<input class="in" id="j-pn" required>') + F('เบอร์โทรผู้ปกครอง', '<input class="in" id="j-pp" inputmode="tel" required>') + '</div>' +
       F('ประสบการณ์ด้านดนตรี หรือสิ่งที่อยากบอกครู (ไม่บังคับ)', '<textarea class="in" id="j-about" rows="3"></textarea>') +
-      '<label class="ck wide"><input type="checkbox" id="j-ok"><span>ข้าพเจ้ายินยอมให้ชมรมเก็บข้อมูลนี้เพื่อใช้ในการบริหารชมรม</span></label>' +
+      (CI.secs.length ? '<div class="lb" style="margin-top:12px">ข้อตกลงและกฎระเบียบชมรม (กรุณาอ่านให้ครบ)</div><div class="rulebox">' + A.clubInfoHTML(CI.secs, CI.poster) + '</div><label class="ck wide"><input type="checkbox" id="j-rule"><span>ข้าพเจ้า (และผู้ปกครอง) ได้อ่านและยอมรับข้อตกลง กฎระเบียบ และบทลงโทษของชมรมทุกข้อ</span></label>' : '') + '<label class="ck wide"><input type="checkbox" id="j-ok"><span>ข้าพเจ้ายินยอมให้ชมรมเก็บข้อมูลนี้เพื่อใช้ในการบริหารชมรม</span></label>' +
       '<div class="note bad" id="j-err" hidden></div><button class="btn gold block lg">ส่งใบสมัคร</button></form>');
     $('#jf').addEventListener('submit', async e => {
       e.preventDefault(); const v = id => $(id).value.trim(), err = t => { const el = $('#j-err'); el.textContent = t; el.hidden = false; el.scrollIntoView({ block: 'center' }); };
       const sid = v('#j-sid'); if (!new RegExp(C.auth.sidPattern).test(sid)) return err('เลขประจำตัวต้องเป็นตัวเลข 4–8 หลัก');
       if (!v('#j-first') || !v('#j-last')) return err('กรอกชื่อและนามสกุล'); if (!/^[0-9]{1,2}$/.test(v('#j-room'))) return err('ห้องต้องเป็นตัวเลข');
-      if (v('#j-pn').length < 3 || !/^[0-9+\- ]{9,15}$/.test(v('#j-pp'))) return err('กรอกชื่อและเบอร์โทรผู้ปกครองให้ถูกต้อง'); if (!$('#j-ok').checked) return err('กรุณาติ๊กยินยอมให้เก็บข้อมูล');
-      const rec = { prefix: v('#j-prefix'), first: v('#j-first'), last: v('#j-last'), grade: +v('#j-grade'), room: +v('#j-room'), parentName: v('#j-pn'), parentPhone: v('#j-pp'), at: Date.now() };
+      if (v('#j-pn').length < 3 || !/^[0-9+\- ]{9,15}$/.test(v('#j-pp'))) return err('กรอกชื่อและเบอร์โทรผู้ปกครองให้ถูกต้อง'); if (!$('#j-ok').checked) return err('กรุณาติ๊กยินยอมให้เก็บข้อมูล'); if (CI.secs.length && !$('#j-rule').checked) return err('ต้องกดยอมรับข้อตกลงและกฎระเบียบชมรมก่อนส่งใบสมัคร');
+      const rec = { prefix: v('#j-prefix'), first: v('#j-first'), last: v('#j-last'), grade: +v('#j-grade'), room: +v('#j-room'), parentName: v('#j-pn'), parentPhone: v('#j-pp'), at: Date.now() }; if (CI.secs.length) rec.accept = { at: Date.now(), ver: CI.ver };
       if (v('#j-phone')) rec.phone = v('#j-phone'); if (v('#j-about')) rec.about = v('#j-about').slice(0, 1000);
       const ins = {}; $$('input[name=inst]:checked').forEach(c => ins[c.value] = true); if (Object.keys(ins).length) rec.inst = ins;
       const btn = $('#jf button.block'); btn.disabled = true; btn.textContent = 'กำลังส่ง …';

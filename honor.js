@@ -15,20 +15,14 @@
     cert: '<rect x="3" y="4" width="18" height="13" rx="1.5"/><path d="M7 8h10M7 11h6"/><path d="M15 17l-1 4 2-1 2 1-1-4"/>'
   });
   const Y = () => 'y/' + A.year(), T = () => A.teacher();
-  const TRAITS = () => C.traits || [], PRESETS = () => C.awardPresets || [];
-  /* ระดับคุณลักษณะ: 3 ดีเยี่ยม · 2 ดี · 1 ผ่าน · 0 ไม่ผ่าน */
-  const TL = [[3, 'ดีเยี่ยม', 'ok'], [2, 'ดี', 'blue'], [1, 'ผ่าน', 'gold'], [0, 'ไม่ผ่าน', 'bad']];
-  const lvl = n => TL.find(x => x[0] === n) || ['', '-', 'line'];
-  const gradeOf = a => a >= 2.5 ? TL[0] : a >= 1.5 ? TL[1] : a >= 1 ? TL[2] : TL[3];
+  const PRESETS = () => C.awardPresets || [];
 
   A.SUBS.push(
     { key: 'awards', path: () => 'awards' },
     { key: 'certs', path: () => A.teacher() ? 'certs' : null },
-    { key: 'certidx', path: () => A.sid() ? 'certidx/' + A.sid() : null, norm: v => ({ [A.sid()]: v }) },
-    { key: 'traits', path: y => A.teacher() ? 'y/' + y + '/traits' : (A.sid() ? 'y/' + y + '/traits/' + A.sid() : null), norm: v => A.teacher() ? v : { [A.sid()]: v } }
+    { key: 'certidx', path: () => A.sid() ? 'certidx/' + A.sid() : null, norm: v => ({ [A.sid()]: v }) }
   );
   A.NAVS.push({ id: 'honor', label: 'เกียรติยศและรางวัล', icon: 'trophy', order: 27 },
-    { id: 'traits', label: 'คุณลักษณะอันพึงประสงค์', icon: 'star', order: 28, show: () => A.teacher() },
     { id: 'certs', label: 'ทะเบียนเกียรติบัตร', icon: 'cert', order: 29, show: () => A.teacher() });
 
   /* ---------- ข้อมูล ---------- */
@@ -37,44 +31,7 @@
   const certList = () => Object.keys(A.D.certs || {}).map(id => Object.assign({ id }, A.D.certs[id])).filter(c => c.no).sort((a, b) => b.at - a.at);
   const myCerts = () => { const o = (A.D.certidx || {})[A.sid()] || {}; return Object.keys(o).map(id => Object.assign({ id }, o[id])).filter(c => c.no && c.status !== 'void').sort((a, b) => b.at - a.at); };
   const findCert = id => ((A.D.certs || {})[id] && Object.assign({ id }, A.D.certs[id])) || (((A.D.certidx || {})[A.sid()] || {})[id] && Object.assign({ id }, A.D.certidx[A.sid()][id])) || null;
-  const tRec = sid => (A.D.traits || {})[sid] || null;
-  const tScore = sid => { const s = (tRec(sid) || {}).s || {}, ks = TRAITS().filter(t => s[t.id] !== undefined && s[t.id] !== null), n = ks.length, sum = ks.reduce((a, t) => a + s[t.id], 0), avg = n ? sum / n : 0; return { n, sum, avg, grade: n ? gradeOf(avg) : null }; };
   function ranking() { const c = {}; awards().filter(a => a.y === A.year()).forEach(a => Object.keys(a.rcp || {}).forEach(s => { if (A.members()[s]) c[s] = (c[s] || 0) + 1; })); return Object.keys(c).map(s => ({ sid: s, n: c[s] })).sort((x, y) => y.n - x.n); }
-
-  /* ---------- ข้อมูลประกอบ + ค่าแนะนำจากระบบที่มีอยู่ ---------- */
-  function basis(sid) {
-    const att = (A.D.att || {})[sid] || {}; let p = 0, l = 0, v = 0, a = 0;
-    Object.keys(att).forEach(k => { const x = att[k]; if (x === 'p') p++; else if (x === 'l') l++; else if (x === 'v') v++; else if (x === 'a') a++; });
-    const n = p + l + v + a, pct = n ? Math.round((p + l) / n * 100) : null;
-    const bh = (A.D.behave || {})[sid] || {}, bk = Object.keys(bh).filter(k => bh[k] && bh[k].s), bavg = bk.length ? bk.reduce((s, k) => s + bh[k].s, 0) / bk.length : null;
-    const evs = Object.keys(A.D.events || {}).filter(e => { const x = A.D.events[e]; return x && x.status !== 'cancelled' && (x.people || {})[sid] && (x.dateEnd || x.date) <= A.todayISO(); }).length;
-    return { pct, n, bavg, bn: bk.length, top: A.topLv(sid), N: Math.max(1, A.levels().length), evs, role: A.roleOf(sid) };
-  }
-  function suggest(sid) {
-    const b = basis(sid), s = {};
-    if (b.bavg !== null) s.t2 = b.bavg >= 3.5 ? 3 : b.bavg >= 2.5 ? 2 : b.bavg >= 1.5 ? 1 : 0;
-    if (b.pct !== null) s.t3 = b.pct >= 90 ? 3 : b.pct >= 75 ? 2 : b.pct >= 60 ? 1 : 0;
-    if (b.top > 0) { const r = b.top / b.N; s.t4 = r >= 0.5 ? 3 : r >= 0.25 ? 2 : 1; }
-    const m = [s.t3, s.t4].filter(x => x !== undefined); if (m.length) s.t6 = Math.round(m.reduce((x, y) => x + y, 0) / m.length);
-    const pts = b.evs + (b.role ? 2 : 0); if (b.evs || b.role || Object.keys(A.D.events || {}).length) s.t8 = pts >= 4 ? 3 : pts >= 2 ? 2 : pts >= 1 ? 1 : 0;
-    return s;
-  }
-  function srcText(t, b) {
-    if (t === 't2') return b.bavg !== null ? 'พฤติกรรมเฉลี่ย ' + b.bavg.toFixed(2) + ' / 4 (' + b.bn + ' สัปดาห์)' : 'ยังไม่มีผลประเมินพฤติกรรมรายสัปดาห์';
-    if (t === 't3') return b.pct !== null ? 'มาซ้อม ' + b.pct + '% (จาก ' + b.n + ' ครั้งที่ถูกเช็ก)' : 'ยังไม่มีข้อมูลการเช็กซ้อม';
-    if (t === 't4') return b.top ? 'ระดับฝีมือสูงสุด ' + A.lvName(b.top) + ' (จาก ' + b.N + ' ขั้น)' : 'ยังไม่ได้ประเมินระดับฝีมือ';
-    if (t === 't6') return 'คำนวณจากการมาซ้อมและการพัฒนาฝีมือ';
-    if (t === 't8') return 'ร่วมกิจกรรมแล้ว ' + b.evs + ' ครั้ง' + (b.role ? ' · ดำรงตำแหน่ง' + A.roleName(b.role) : '');
-    return '';
-  }
-  const CRIT = [
-    ['ข้อ 2 ซื่อสัตย์สุจริต', 'ค่าเฉลี่ยผลประเมินพฤติกรรมรายสัปดาห์ (เมนูประเมินพฤติกรรม)', 'เฉลี่ย ≥3.5 ดีเยี่ยม · ≥2.5 ดี · ≥1.5 ผ่าน · ต่ำกว่านั้นไม่ผ่าน'],
-    ['ข้อ 3 มีวินัย', 'ร้อยละการมาซ้อม = (มา + สาย) ÷ รอบที่ถูกเช็ก', '≥90% ดีเยี่ยม · ≥75% ดี · ≥60% ผ่าน · ต่ำกว่านั้นไม่ผ่าน'],
-    ['ข้อ 4 ใฝ่เรียนรู้', 'ระดับฝีมือสูงสุดเทียบกับจำนวนขั้นทั้งหมด', '≥ครึ่งหนึ่งของขั้น ดีเยี่ยม · ≥หนึ่งในสี่ ดี · ประเมินแล้ว ผ่าน'],
-    ['ข้อ 6 มุ่งมั่นในการทำงาน', 'ค่าเฉลี่ยของระดับข้อ 3 และข้อ 4', 'ปัดเป็นระดับที่ใกล้ที่สุด'],
-    ['ข้อ 8 มีจิตสาธารณะ', 'จำนวนกิจกรรมที่เข้าร่วมแล้ว + ตำแหน่งกรรมการ (นับเป็น 2)', '≥4 ดีเยี่ยม · ≥2 ดี · ≥1 ผ่าน · 0 ไม่ผ่าน'],
-    ['ข้อ 1, 5, 7', 'ครูพิจารณาเอง (ไม่มีค่าแนะนำจากระบบ)', '']
-  ];
 
   /* ============ การ์ดประกาศยกย่อง + หน้าหลัก ============ */
   function awardCard(a, mini) {
@@ -95,20 +52,12 @@
   } });
 
   /* ============ หน้า เกียรติยศและรางวัล ============ */
-  function traitsMine() {
-    const sid = A.sid(), r = tRec(sid), sc = tScore(sid);
-    if (!r || !sc.n) return '<section class="card"><div class="lb">คุณลักษณะอันพึงประสงค์ ปีการศึกษา ' + esc(A.year()) + '</div><div class="muted">ครูยังไม่ได้ประเมินในปีการศึกษานี้</div></section>';
-    return '<section class="card"><div class="row"><div class="lb grow" style="margin:0 0 8px">คุณลักษณะอันพึงประสงค์ ปีการศึกษา ' + esc(A.year()) + '</div>' + chip('สรุป: ' + sc.grade[1], sc.grade[2]) + '</div>' +
-      TRAITS().map(t => { const v = (r.s || {})[t.id]; return '<div class="kv"><span>' + esc(t.name) + '</span>' + (v === undefined || v === null ? '<span class="muted">ยังไม่ประเมิน</span>' : chip(lvl(v)[1], lvl(v)[2])) + '</div>'; }).join('') +
-      '<div class="muted" style="margin-top:8px">คะแนนเฉลี่ย ' + sc.avg.toFixed(2) + ' / 3 (ประเมินแล้ว ' + sc.n + ' จาก ' + TRAITS().length + ' ข้อ)</div>' + (r.note ? '<div class="note">ครู: ' + esc(r.note) + '</div>' : '') + '</section>';
-  }
   A.V.honor = function () {
     const sid = A.sid(), ms = A.members(); let b = '';
-    if (T()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn gold" data-act="awNew">' + ic('trophy', 18) + 'ให้รางวัล / ออกเกียรติบัตร</button><a class="btn ghost" href="#/certs">ทะเบียนเกียรติบัตร</a><a class="btn ghost" href="#/traits">ประเมินคุณลักษณะ</a></div>';
+    if (T()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn gold" data-act="awNew">' + ic('trophy', 18) + 'ให้รางวัล / ออกเกียรติบัตร</button><a class="btn ghost" href="#/certs">ทะเบียนเกียรติบัตร</a><a class="btn ghost" href="#/behave">ประเมินพฤติกรรม / คุณลักษณะ</a></div>';
     if (sid) {
       const mc = myCerts();
       b += '<section class="card"><div class="lb">เกียรติบัตรของฉัน (' + mc.length + ')</div>' + (mc.map(c => '<div class="li"><div class="row"><div class="grow"><b>' + esc(c.title) + '</b><div class="muted">' + esc('เลขที่ ' + c.no + ' · ' + A.dTH(c.date, 'short')) + '</div></div><button class="btn sm" data-act="certOpen" data-id="' + esc(c.id) + '">ดู / บันทึก PDF</button></div></div>').join('') || '<div class="muted">ยังไม่มีเกียรติบัตร</div>') + '</section>';
-      b += traitsMine();
     }
     const rk = ranking();
     if (rk.length) b += '<section class="card"><div class="lb">ทำเนียบเกียรติยศ ปีการศึกษา ' + esc(A.year()) + ' (จำนวนรางวัลที่ได้รับ)</div>' + rk.slice(0, 10).map((t, i) => '<a class="hof-i wide" href="#/m/' + esc(t.sid) + '"><span class="rk">' + (i + 1) + '</span>' + avatar(ms[t.sid]) + '<span class="grow"><b>' + esc(A.fullName(ms[t.sid])) + '</b><span class="muted">' + esc(A.cls(ms[t.sid])) + '</span></span><b>' + t.n + '</b></a>').join('') + '</section>';
@@ -117,39 +66,11 @@
     return { title: 'เกียรติยศและรางวัล', body: b };
   };
 
-  /* ============ คุณลักษณะอันพึงประสงค์ (ครู) ============ */
-  A.TODO.push(() => { if (!T()) return null; const act = A.activeSids(); const n = act.filter(s => tScore(s).n < TRAITS().length).length; return act.length && n ? { n, label: 'สมาชิกที่ยังประเมินคุณลักษณะไม่ครบ', href: '#/traits' } : null; });
-  function traitDetail(sid) {
-    const m = A.members()[sid], b = basis(sid), sg = suggest(sid), r = tRec(sid) || {}, cur = r.s || {}, sc = tScore(sid);
-    let h = '<section class="card hero"><div class="row">' + avatar(m, 'xl ring') + '<div class="grow"><div class="hero-name">' + esc(A.fullName(m)) + '</div><div class="hero-sub">' + esc(A.cls(m) + ' · ปีการศึกษา ' + A.year()) + '</div></div></div><div class="row wrap" style="margin-top:12px;gap:8px">' + (sc.n ? chip('เฉลี่ย ' + sc.avg.toFixed(2) + ' · ' + sc.grade[1], 'gold') : chip('ยังไม่ประเมิน', 'dark')) + chip('ประเมินแล้ว ' + sc.n + '/' + TRAITS().length, 'dark') + '</div></section>' +
-      '<div class="row wrap" style="margin-bottom:14px"><button class="btn gold" data-act="trFill" data-sid="' + esc(sid) + '">ใช้ค่าแนะนำ (เฉพาะข้อที่ยังว่าง)</button><button class="btn ghost" data-act="trNote" data-sid="' + esc(sid) + '">บันทึกถึงนักเรียน</button><button class="btn ghost" data-act="awNew" data-sid="' + esc(sid) + '">ให้รางวัลคนนี้</button></div>' +
-      '<section class="card"><div class="lb">ข้อมูลจากระบบที่มีอยู่</div><div class="kv"><span>การมาซ้อม</span><b>' + (b.pct === null ? 'ยังไม่มีข้อมูล' : b.pct + '% (' + b.n + ' ครั้ง)') + '</b></div><div class="kv"><span>พฤติกรรมรายสัปดาห์</span><b>' + (b.bavg === null ? 'ยังไม่มีข้อมูล' : b.bavg.toFixed(2) + ' / 4 (' + b.bn + ' สัปดาห์)') + '</b></div><div class="kv"><span>ระดับฝีมือสูงสุด</span><b>' + (b.top ? esc(A.lvName(b.top)) : 'ยังไม่ประเมิน') + '</b></div><div class="kv"><span>กิจกรรมที่เข้าร่วมแล้ว</span><b>' + b.evs + ' ครั้ง</b></div><div class="kv"><span>ตำแหน่งในชมรม</span><b>' + esc(A.roleName(b.role) || 'สมาชิก') + '</b></div></section>' +
-      '<section class="card"><div class="lb">ประเมินรายข้อ (แตะเลือก แตะซ้ำเพื่อยกเลิก)</div>' + TRAITS().map((t, i) => '<div class="trw"><div class="row"><b class="grow">' + (i + 1) + '. ' + esc(t.name) + '</b>' + (sg[t.id] !== undefined ? '<span class="chip line">ระบบแนะนำ: ' + lvl(sg[t.id])[1] + '</span>' : '') + '</div>' + (t.desc ? '<div class="muted">' + esc(t.desc) + '</div>' : '') + (srcText(t.id, b) ? '<div class="muted">ข้อมูลประกอบ: ' + esc(srcText(t.id, b)) + '</div>' : '') +
-        '<div class="bh-b">' + TL.map(x => '<button class="stb ' + (cur[t.id] === x[0] ? x[2] : 'off') + '" aria-pressed="' + (cur[t.id] === x[0]) + '" data-act="trSet" data-sid="' + esc(sid) + '" data-t="' + t.id + '" data-v="' + x[0] + '">' + x[1] + '</button>').join('') + '</div></div>').join('') +
-      '<div class="muted" style="margin-top:8px">สรุปผล: เฉลี่ย ≥2.5 ดีเยี่ยม · ≥1.5 ดี · ≥1 ผ่าน · ต่ำกว่า 1 ไม่ผ่าน</div>' + (r.note ? '<div class="note">บันทึกถึงนักเรียน: ' + esc(r.note) + '</div>' : '') + '</section>';
-    return { title: 'ประเมินคุณลักษณะ', body: h, back: '#/traits' };
-  }
-  A.V.traits = function (sid) {
-    if (!T()) { location.hash = '#/home'; return null; }
-    const ms = A.members(); if (sid && ms[sid]) return traitDetail(sid);
-    const list = A.activeSids().sort(A.byClass), N = TRAITS().length, done = list.filter(s => tScore(s).n === N).length;
-    let b = '<section class="card"><div class="lb">คุณลักษณะอันพึงประสงค์ 8 ประการ · ปีการศึกษา ' + esc(A.year()) + '</div><div class="muted">ประเมินครบ ' + done + ' / ' + list.length + ' คน · ระบบดึงข้อมูลจากการซ้อม พฤติกรรมรายสัปดาห์ ระดับฝีมือ และกิจกรรม มาเป็นค่าแนะนำ ครูเป็นผู้ตัดสินขั้นสุดท้าย</div>' +
-      '<div class="row wrap" style="margin-top:12px"><button class="btn gold" data-act="trFillAll">ใช้ค่าแนะนำกับทุกคนที่ยังว่าง</button><button class="btn ghost" data-act="trExport">' + ic('down', 18) + 'ส่งออกสรุป</button></div>' +
-      '<details class="yr" style="margin-top:10px"><summary>เกณฑ์ที่ระบบใช้แนะนำ</summary>' + CRIT.map(c => '<div class="li"><b>' + esc(c[0]) + '</b><div class="muted">' + esc(c[1]) + '</div>' + (c[2] ? '<div class="muted">' + esc(c[2]) + '</div>' : '') + '</div>').join('') + '</details></section>';
-    b += '<section class="card">' + (list.map(s => { const sc = tScore(s); return '<a class="mrow" style="text-decoration:none;color:inherit" href="#/traits/' + esc(s) + '"><span class="mrow-main">' + avatar(ms[s]) + '<span class="grow"><b>' + esc(A.fullName(ms[s])) + '</b><span class="muted">' + esc(A.cls(ms[s])) + ' · ประเมินแล้ว ' + sc.n + '/' + N + '</span></span></span><span class="mrow-tags">' + (sc.n ? chip(sc.avg.toFixed(2) + ' ' + sc.grade[1], sc.grade[2]) : chip('ยังไม่ประเมิน', 'line')) + '</span></a>'; }).join('') || '<div class="empty">ยังไม่มีสมาชิก</div>') + '</section>';
-    return { title: 'คุณลักษณะอันพึงประสงค์', body: b };
-  };
-  function fillTraits(sids) {
-    const upd = {}, now = Date.now(); let n = 0;
-    sids.forEach(s => { const sg = suggest(s), cur = (tRec(s) || {}).s || {}; let any = false; Object.keys(sg).forEach(t => { if (cur[t] === undefined || cur[t] === null) { upd[Y() + '/traits/' + s + '/s/' + t] = sg[t]; any = true; } }); if (any) { upd[Y() + '/traits/' + s + '/at'] = now; upd[Y() + '/traits/' + s + '/by'] = A.myName(); n++; } });
-    if (Object.keys(upd).length) A.W(B.update('', upd)); return n;
-  }
-
   /* ============ เกียรติบัตร ============ */
   function certPage(c) {
     const club = C.clubs.find(x => x.id === c.club) || C.club, pg = document.createElement('div'); pg.className = 'rp-page land cert';
-    const sg = (c.signers || []).map(s => '<div class="ct-sg"><div class="ct-sl"></div>( ' + (s.name ? esc(s.name) : '&nbsp;'.repeat(30)) + ' )<br>' + esc(s.pos || '') + '</div>').join('');
-    pg.innerHTML = '<div class="ct-fr"><div class="ct-fr2"><div class="ct-top"><img' + (club.round ? ' class="rd"' : '') + ' src="' + esc(club.logo) + '" alt=""><div class="ct-top-c"><div class="ct-h">เกียรติบัตร</div><div class="ct-club">' + esc(club.long || club.full) + '</div></div><img class="sch" src="icons/school-logo.png" alt=""></div>' +
+    const sg = (c.signers || []).map(s => '<div class="ct-sg"><div class="ct-sl">' + ((A.D.sigs || {})[s.sk] && A.D.sigs[s.sk].img ? '<img src="' + A.D.sigs[s.sk].img + '" alt="">' : '') + '</div>( ' + (s.name ? esc(s.name) : '&nbsp;'.repeat(30)) + ' )<br>' + esc(s.pos || '') + '</div>').join('');
+    pg.innerHTML = '<div class="ct-fr"><div class="ct-fr2"><div class="ct-top"><img class="ct-logo' + (club.round ? ' rd' : '') + '" src="' + esc(club.logo) + '" alt=""><div class="ct-h">เกียรติบัตร</div><div class="ct-club">' + esc(club.long || club.full) + '</div></div>' +
       '<div class="ct-l">ขอมอบเกียรติบัตรฉบับนี้ให้แก่</div><div class="ct-n">' + esc(c.name) + '</div>' + (c.cls ? '<div class="ct-cls">ชั้น ' + esc(c.cls) + '</div>' : '') +
       '<div class="ct-l">ได้รับการยกย่อง</div><div class="ct-title">' + esc(c.title) + '</div>' + (c.detail ? '<div class="ct-d">' + esc(c.detail) + '</div>' : '') +
       '<div class="ct-date">ให้ไว้ ณ วันที่ ' + esc(A.dTH(c.date, 'full')) + '</div>' + (sg ? '<div class="ct-sgs">' + sg + '</div>' : '') + '<div class="ct-no">เลขที่ ' + esc(c.no) + '</div></div></div>' + (c.status === 'void' ? '<div class="fn-wm">ยกเลิก</div>' : '');
@@ -181,7 +102,7 @@
       fld('เลือกรายการที่ให้', '<select class="in" id="ar-pre">' + opt([['', '— พิมพ์เอง —']].concat(PRESETS().map(p => [p.id, p.title]))) + '</select>') +
       fld('ชื่อรายการ / สิ่งที่ยกย่อง', '<input class="in" id="ar-t" required>') + fld('รายละเอียด (ข้อความใต้ชื่อรายการ ใช้ทั้งในประกาศและเกียรติบัตร)', '<textarea class="in" id="ar-d" rows="3"></textarea>') +
       '<div class="g3">' + fld('วันที่', '<input class="in" type="date" id="ar-date" value="' + A.todayISO() + '">') + '</div>' +
-      '<div class="lb" style="margin-top:6px">ผู้ลงนามในเกียรติบัตร (เว้นชื่อว่างไว้เพื่อเซ็นด้วยปากกา)</div><div class="g3">' + fld('ผู้ลงนาม 1', '<input class="in" id="s1n" value="' + esc(A.myName()) + '">') + fld('ตำแหน่ง', '<input class="in" id="s1p" value="ครูที่ปรึกษาชมรม">') + '</div><div class="g3">' + fld('ผู้ลงนาม 2', '<input class="in" id="s2n" value="' + esc(S.director || '') + '">') + fld('ตำแหน่ง', '<input class="in" id="s2p" value="ผู้อำนวยการโรงเรียนสรรพวิทยาคม">') + '</div>' +
+      '<div class="lb" style="margin-top:6px">ผู้ลงนามในเกียรติบัตร (เว้นชื่อว่างไว้เพื่อเซ็นด้วยปากกา)</div><div class="g3">' + fld('ผู้ลงนาม 1', '<input class="in" id="s1n" value="' + esc(A.myName()) + '">') + fld('ตำแหน่ง', '<input class="in" id="s1p" value="ครูที่ปรึกษาชมรม">') + '</div>' + (A.mySigRec && A.mySigRec() ? '<label class="ck wide"><input type="checkbox" id="s1s" checked><span>ใส่ลายเซ็นของฉันเป็นผู้ลงนาม 1</span></label>' : '<div class="muted">ยังไม่ได้เพิ่มลายเซ็น (ตั้งค่าที่ จัดการ › ลายเซ็นครู)</div>') + '<div class="g3">' + fld('ผู้ลงนาม 2', '<input class="in" id="s2n" value="' + esc(S.director || '') + '">') + fld('ตำแหน่ง', '<input class="in" id="s2p" value="ผู้อำนวยการโรงเรียนสรรพวิทยาคม">') + '</div>' +
       '<label class="ck wide"><input type="checkbox" id="ar-ann" checked><span>ประกาศยกย่องที่หน้าหลัก</span></label><label class="ck wide"><input type="checkbox" id="ar-pin"><span>ปักหมุดประกาศไว้บนสุด</span></label><label class="ck wide"><input type="checkbox" id="ar-cert" checked><span>ออกเกียรติบัตรในนามชมรม' + esc(C.club.name) + ' (ออกเลขที่อัตโนมัติ ต้องออนไลน์)</span></label>' +
       '<div class="note bad" id="ar-err" hidden></div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { sticky: true, wide: true });
     const cnt = () => { $('#ar-n', w).textContent = 'เลือก ' + $$('input[name=ar]:checked', w).length + ' คน'; }; cnt();
@@ -193,7 +114,7 @@
       const sel = $$('input[name=ar]:checked', w).map(c => c.value), ext = v('#ar-ext').split(/\r?\n/).map(s => s.trim()).filter(Boolean), title = v('#ar-t'), cert = $('#ar-cert', w).checked, ann = $('#ar-ann', w).checked;
       if (!title) return err('กรอกชื่อรายการ'); if (!sel.length && !ext.length) return err('เลือกผู้รับอย่างน้อย 1 คน'); if (!cert && !ann) return err('เลือกอย่างน้อยหนึ่งอย่าง: ประกาศ หรือ เกียรติบัตร');
       const rcps = sel.map(s => ({ sid: s, name: A.fullName(ms[s]), cls: A.cls(ms[s]) })).concat(ext.map(n => ({ name: n }))), now = Date.now(), date = v('#ar-date') || A.todayISO(), detail = v('#ar-d') || null, upd = {}, list = [], btn = $('button.grow:not(.ghost)', w);
-      const signers = [{ name: v('#s1n'), pos: v('#s1p') }, { name: v('#s2n'), pos: v('#s2p') }].filter(s => s.name || s.pos);
+      const signers = [{ name: v('#s1n'), pos: v('#s1p'), sk: ($('#s1s', w) && $('#s1s', w).checked) ? A.mySigKey() : null }, { name: v('#s2n'), pos: v('#s2p') }].filter(s => s.name || s.pos);
       let first = 0;
       if (cert) {
         if (A.STATUS.online === false) return err('ต้องออนไลน์จึงจะออกเลขที่เกียรติบัตรได้ (เพื่อไม่ให้เลขที่ซ้ำ)');
@@ -230,22 +151,6 @@
     awPin: d => { if (T()) A.W(B.update('awards/' + d.id, { pinned: (A.D.awards[d.id] || {}).pinned ? null : true })); },
     awDel: async d => { if (!T()) return; if (!(await M.confirmBox('ลบประกาศยกย่อง', 'ประกาศจะหายจากหน้าหลัก เกียรติบัตรที่ออกแล้วยังอยู่ในทะเบียน', 'ลบ', true))) return; A.W(B.remove('awards/' + d.id)); },
     certOpen: d => { const c = findCert(d.id); if (c) openCerts([c]); },
-    trSet: d => { if (!T()) return; const cur = ((tRec(d.sid) || {}).s || {})[d.t], v = +d.v, base = Y() + '/traits/' + d.sid, upd = {}; upd[base + '/s/' + d.t] = cur === v ? null : v; upd[base + '/at'] = Date.now(); upd[base + '/by'] = A.myName(); A.W(B.update('', upd)); },
-    trFill: d => { if (!T()) return; const n = fillTraits([d.sid]); toast(n ? 'ใส่ค่าแนะนำแล้ว ตรวจและแก้ได้' : 'ไม่มีข้อที่ใส่ค่าแนะนำได้เพิ่ม'); },
-    trFillAll: async d => { if (!T()) return; const l = A.activeSids().filter(s => Object.keys(suggest(s)).some(t => ((tRec(s) || {}).s || {})[t] === undefined)); if (!l.length) return toast('ไม่มีข้อที่ใส่ค่าแนะนำได้เพิ่ม');
-      if (!(await M.confirmBox('ใช้ค่าแนะนำ', 'ใส่ค่าแนะนำของระบบให้สมาชิก ' + l.length + ' คน เฉพาะข้อที่ยังว่าง (ไม่ทับที่ครูประเมินแล้ว) แก้รายคนได้ภายหลัง', 'ใส่ค่าแนะนำ'))) return; fillTraits(l); toast('ใส่ค่าแนะนำแล้ว'); },
-    trNote: d => { if (!T()) return; const m = A.members()[d.sid], r = tRec(d.sid) || {};
-      const w = modal('<h3>บันทึกถึงนักเรียน</h3><div class="muted" style="margin-bottom:8px">' + esc(A.fullName(m)) + '</div><form class="form">' + fld('ข้อความ (นักเรียนคนนี้เห็นในหน้าเกียรติยศ)', '<textarea class="in" id="tn" rows="4">' + esc(r.note || '') + '</textarea>') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
-      $('form', w).addEventListener('submit', e => { e.preventDefault(); const base = Y() + '/traits/' + d.sid; A.W(B.update('', { [base + '/note']: $('#tn', w).value.trim() || null, [base + '/at']: Date.now(), [base + '/by']: A.myName() })); w.remove(); toast('บันทึกแล้ว'); }); },
-    trExport: () => {
-      const list = A.activeSids().sort(A.byClass), ms = A.members(), TR = TRAITS(), head = ['ลำดับ', 'ชื่อ - สกุล', 'ชั้น'].concat(TR.map((t, i) => String(i + 1)), ['เฉลี่ย', 'สรุป']);
-      const rows = list.map((s, i) => { const sc = tScore(s), cur = (tRec(s) || {}).s || {}; return [String(i + 1), A.fullName(ms[s]), A.cls(ms[s])].concat(TR.map(t => cur[t.id] === undefined || cur[t.id] === null ? '-' : String(cur[t.id])), [sc.n ? sc.avg.toFixed(2) : '-', sc.n ? sc.grade[1] : '-']); });
-      const legend = TR.map((t, i) => (i + 1) + ' ' + t.name).join(' · '), lv = 'ระดับ 3 ดีเยี่ยม · 2 ดี · 1 ผ่าน · 0 ไม่ผ่าน', sub = C.club.full + ' · ปีการศึกษา ' + A.year(), name = 'คุณลักษณะอันพึงประสงค์-' + M.safeName(C.club.name) + '-' + A.year(), widths = [5, 24, 7].concat(TR.map(() => 5), [7, 9]), align = ['c', '', 'c'].concat(TR.map(() => 'c'), ['c', 'c']);
-      const w = modal('<h3>ส่งออกสรุปคุณลักษณะอันพึงประสงค์</h3><div class="xlist"><button class="xbtn" data-x="pdf"><b>PDF</b><span>สำหรับพิมพ์</span></button><button class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
-      w.addEventListener('click', async e => { const b = e.target.closest('[data-x]'); if (!b) return; const msg = $('#x-msg', w); msg.textContent = 'กำลังสร้างไฟล์ …';
-        try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title: 'สรุปผลการประเมินคุณลักษณะอันพึงประสงค์ ชมรม' + C.club.name, lines: [sub.replace(/ · /g, ' ')], head, rows, widths, align: align.map(a => a === 'c' ? 'center' : 'left'), footer: ['', legend, lv] }), name + '.docx');
-          else await M.exportPDF(A.tablePages('สรุปผลการประเมินคุณลักษณะอันพึงประสงค์', sub, head, rows, { widths, align, per: 24, after: '<div class="rp-s" style="margin-top:8px">' + esc(legend) + '<br>' + esc(lv) + '</div>', foot: 'ข้อมูล ณ ' + M.thDate(Date.now()) + ' ·' }), name + '.pdf'); msg.textContent = 'เสร็จแล้ว'; } catch (er) { msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er); } });
-    },
     certExport: () => {
       const l = crFiltered().slice().reverse(), head = ['เลขที่', 'วันที่', 'ผู้รับ', 'รายการ', 'ผู้บันทึก', 'สถานะ'], rows = l.map(c => [c.no, A.dTH(c.date, 'short'), c.name + (c.cls ? ' (' + c.cls + ')' : ''), c.title, c.by || '', c.status === 'void' ? 'ยกเลิก' : 'ใช้ได้']);
       const sub = C.club.full + ' · ' + (CR.y === 'all' ? 'ทุกปีการศึกษา' : 'ปีการศึกษา ' + (CR.y === 'cur' ? A.year() : CR.y)), name = 'ทะเบียนเกียรติบัตร-' + M.safeName(C.club.name) + '-' + (CR.y === 'cur' ? A.year() : CR.y);

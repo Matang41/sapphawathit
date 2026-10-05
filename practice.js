@@ -12,13 +12,14 @@
   const SES = { am: 'เช้า', pm: 'เย็น' };
   const WHY = ['ป่วย', 'ธุระของครอบครัว', 'กิจกรรมของโรงเรียน', 'อื่น ๆ'];
   const ACTS = ['บันทึกการตักเตือน', 'นัดพบสมาชิก', 'แจ้งผู้ปกครอง', 'ปรับรอบซ้อม', 'ปรับประเภทสมาชิก', 'อื่น ๆ'];
-  const CHK = { date: A.todayISO(), ses: new Date().getHours() < 12 ? 'am' : 'pm', marks: {}, photo: null };
+  const CHK = { date: A.todayISO(), ses: new Date().getHours() < 12 ? 'am' : 'pm', marks: {}, focus: {}, photo: null };
   const SUM = { range: 'term' };
 
   A.SUBS.push(
     { key: 'attmeta', path: y => 'y/' + y + '/attmeta' },
     { key: 'leavemark', path: y => 'y/' + y + '/leavemark' },
     { key: 'att', path: y => checker() ? 'y/' + y + '/att' : 'y/' + y + '/att/' + A.sid(), norm: v => checker() ? v : { [A.sid()]: v } },
+    { key: 'focus', path: y => checker() ? 'y/' + y + '/focus' : 'y/' + y + '/focus/' + A.sid(), norm: v => checker() ? v : { [A.sid()]: v } },
     { key: 'leaves', path: y => A.teacher() ? 'y/' + y + '/leaves' : 'y/' + y + '/leaves/' + A.sid(), norm: v => A.teacher() ? v : { [A.sid()]: v } }
   );
   const pendingLeaves = () => { const o = []; const L = A.D.leaves || {}; Object.keys(L).forEach(s => Object.keys(L[s] || {}).forEach(id => { if (L[s][id].status === 'pending') o.push(Object.assign({ sid: s, id }, L[s][id])); })); return o.sort((a, b) => a.at - b.at); };
@@ -34,6 +35,11 @@
     return Array.from(set).sort(A.byClass);
   }
   const markOf = (sid, d, s) => CHK.marks[sid] || saved(sid, d, s) || (lmark(d, s, sid) === 'ack' || lmark(d, s, sid) === 'pending' ? 'v' : 'p');
+
+  /* ความตั้งใจ 1–3 (ผู้เช็กให้ ใช้คำนวณคะแนนพฤติกรรม) */
+  const savedFocus = (sid, d, s) => (((A.D.focus || {})[sid] || {})[key(d, s)]) || 0;
+  const focusOf = (sid, d, s) => CHK.focus[sid] !== undefined ? CHK.focus[sid] : savedFocus(sid, d, s);
+  const focusBtns = (sid, d, s, v) => (v !== 'p' && v !== 'l') ? '' : '<span class="fcs" role="group" aria-label="ความตั้งใจ">' + [1, 2, 3].map(n => '<button class="fc' + (focusOf(sid, d, s) === n ? ' on' : '') + '" aria-pressed="' + (focusOf(sid, d, s) === n) + '" data-act="ckFocus" data-sid="' + esc(sid) + '" data-v="' + n + '">' + n + '</button>').join('') + '</span>';
 
   /* ---------- ตารางรายงานแบบหน้า A4 (ใช้ร่วมกับโมดูลอื่น) ---------- */
   A.tablePages = function (title, sub, head, rows, o) {
@@ -84,17 +90,18 @@
   function checkCard() {
     const d = CHK.date, s = CHK.ses, mt = meta(d, s), list = roster(d, s); const me = A.by().id;
     const n = { p: 0, l: 0, v: 0, a: 0 }; list.forEach(x => n[markOf(x, d, s)]++);
-    const dirty = Object.keys(CHK.marks).length || CHK.photo;
+    const dirty = Object.keys(CHK.marks).length || Object.keys(CHK.focus).length || CHK.photo;
     let h = '<section class="card"><div class="lb">เช็กการซ้อม</div><div class="row wrap"><input class="in sm" type="date" data-ck="date" value="' + esc(d) + '" max="' + A.todayISO() + '" aria-label="วันที่">' +
       '<div class="seg" role="group" aria-label="รอบซ้อม">' + ['am', 'pm'].map(k => '<button class="' + (s === k ? 'on' : '') + '" aria-pressed="' + (s === k) + '" data-act="ckSes" data-k="' + k + '">ช่วง' + SES[k] + '</button>').join('') + '</div></div>' +
       '<div class="muted" style="margin:10px 0">' + esc(A.dTH(d, 'dow')) + ' · ' + (mt ? 'เช็กแล้วโดย ' + esc(mt.by.name) + (mt.confirmedBy ? ' · ยืนยันโดย ' + esc(mt.confirmedBy.name) : mt.by.id !== 'teacher' ? ' · รอผู้เช็กอีกคนหรือครูยืนยัน' : '') : 'ยังไม่ได้เช็ก') + '</div>';
     if (mt && !mt.confirmedBy && mt.by.id !== 'teacher' && mt.by.id !== me) h += '<button class="btn gold sm" data-act="ckConfirm" style="margin-bottom:10px">ยืนยันการเช็กชื่อรอบนี้</button>';
     h += '<div class="row wrap" style="margin-bottom:6px"><label class="btn ghost">' + ic('cam', 18) + (CHK.photo ? 'เลือกรูปใหม่' : mt && mt.hasPhoto ? 'เปลี่ยนรูปหลักฐาน' : 'ถ่ายรูปหลักฐาน') + '<input type="file" accept="image/*" capture="environment" data-ck="photo" hidden></label>' +
       (CHK.photo ? '<img class="thumb" src="' + CHK.photo + '" alt="รูปหลักฐานที่เลือก">' : mt && mt.hasPhoto ? '<button class="btn ghost" data-act="ckPhoto" data-d="' + esc(d) + '" data-s="' + s + '">ดูรูปหลักฐาน</button>' : '<span class="muted">ยังไม่มีรูปของรอบนี้</span>') + '</div>';
+    h += '<div class="row wrap" style="margin-top:10px"><span class="muted grow">ความตั้งใจ (แตะ 1–3 ข้างชื่อ): 1 ควรปรับปรุง · 2 ปกติ · 3 ตั้งใจมาก — มีผลต่อคะแนนพฤติกรรม</span><button class="btn ghost sm" data-act="ckFocusAll">ให้ 2 ทุกคนที่ยังไม่ให้</button></div>';
     h += '<div class="row" style="justify-content:space-between;margin-top:10px"><span class="lb" style="margin:0">ผู้ที่ครูกำหนดให้ซ้อมรอบ' + SES[s] + ' (แตะเพื่อเปลี่ยนสถานะ)</span><span class="muted">มา ' + (n.p + n.l) + '/' + list.length + '</span></div>';
     h += list.map(x => { const m = A.members()[x], v = markOf(x, d, s), lm = lmark(d, s, x);
       return '<div class="mrow"><span class="mrow-main">' + avatar(m) + '<span class="grow"><b>' + esc(A.fullName(m)) + '</b><span class="muted">' + esc(A.cls(m) + (A.insts(m).length ? ' · ' + A.insts(m).join(', ') : '')) + (lm ? ' · ใบลา' + (lm === 'pending' ? 'รอรับทราบ' : lm === 'ack' ? 'รับทราบแล้ว' : 'ไม่อนุญาต') : '') + '</span></span></span>' +
-        '<button class="stb ' + ST[v][1] + '" data-act="ckMark" data-sid="' + esc(x) + '" aria-label="สถานะของ ' + esc(m.first) + ': ' + ST[v][0] + '">' + ST[v][0] + '</button></div>'; }).join('') || '<div class="empty">ยังไม่มีสมาชิกที่กำหนดรอบ' + SES[s] + ' — ครูกำหนดได้ที่หน้าสมาชิก</div>';
+        '<button class="stb ' + ST[v][1] + '" data-act="ckMark" data-sid="' + esc(x) + '" aria-label="สถานะของ ' + esc(m.first) + ': ' + ST[v][0] + '">' + ST[v][0] + '</button>' + focusBtns(x, d, s, v) + '</div>'; }).join('') || '<div class="empty">ยังไม่มีสมาชิกที่กำหนดรอบ' + SES[s] + ' — ครูกำหนดได้ที่หน้าสมาชิก</div>';
     if (list.length) h += '<button class="btn block" data-act="ckSave" style="margin-top:12px">' + (mt && !dirty ? 'บันทึกอีกครั้ง' : 'บันทึกการเช็กชื่อ') + '</button>';
     return h + '</section>';
   }
@@ -137,14 +144,16 @@
 
   /* ============ การทำงาน ============ */
   Object.assign(A.ACT, {
-    ckSes: d => { CHK.ses = d.k; CHK.marks = {}; CHK.photo = null; A.rerender(); },
+    ckFocus: d => { if (!checker()) return; const cur = focusOf(d.sid, CHK.date, CHK.ses), v = +d.v; CHK.focus[d.sid] = cur === v ? 0 : v; A.rerender(); },
+    ckFocusAll: () => { if (!checker()) return; roster(CHK.date, CHK.ses).forEach(x => { const v = markOf(x, CHK.date, CHK.ses); if ((v === 'p' || v === 'l') && !focusOf(x, CHK.date, CHK.ses)) CHK.focus[x] = 2; }); A.rerender(); },
+    ckSes: d => { CHK.ses = d.k; CHK.marks = {}; CHK.focus = {}; CHK.photo = null; A.rerender(); },
     ckMark: d => { if (!checker()) return; const v = markOf(d.sid, CHK.date, CHK.ses); CHK.marks[d.sid] = ORDER[(ORDER.indexOf(v) + 1) % 4]; A.rerender(); },
     ckSave: () => {
       if (!checker()) return; const d = CHK.date, s = CHK.ses, list = roster(d, s), upd = {}, n = { p: 0, l: 0, v: 0, a: 0 }, old = meta(d, s);
-      list.forEach(x => { const v = markOf(x, d, s); n[v]++; upd[Y() + '/att/' + x + '/' + key(d, s)] = v; });
+      list.forEach(x => { const v = markOf(x, d, s); n[v]++; upd[Y() + '/att/' + x + '/' + key(d, s)] = v; const fv = (v === 'p' || v === 'l') ? focusOf(x, d, s) : 0; upd[Y() + '/focus/' + x + '/' + key(d, s)] = fv || null; });
       upd[Y() + '/attmeta/' + d + '/' + s] = { by: A.by(), at: Date.now(), n, hasPhoto: !!(CHK.photo || (old && old.hasPhoto)) };
       A.W(B.update('', upd)); if (CHK.photo) A.W(B.set(Y() + '/attphoto/' + d + '/' + s, CHK.photo));
-      CHK.marks = {}; CHK.photo = null; toast('บันทึกการเช็กชื่อแล้ว'); A.rerender();
+      CHK.marks = {}; CHK.focus = {}; CHK.photo = null; toast('บันทึกการเช็กชื่อแล้ว'); A.rerender();
     },
     ckConfirm: () => { if (!checker()) return; A.W(B.set(Y() + '/attmeta/' + CHK.date + '/' + CHK.ses + '/confirmedBy', Object.assign({ at: Date.now() }, A.by()))); toast('ยืนยันแล้ว'); },
     ckPhoto: async d => {
@@ -196,7 +205,7 @@
   });
   document.addEventListener('change', async e => {
     const k = e.target.dataset && e.target.dataset.ck;
-    if (k === 'date') { CHK.date = e.target.value || A.todayISO(); CHK.marks = {}; CHK.photo = null; A.rerender(); }
+    if (k === 'date') { CHK.date = e.target.value || A.todayISO(); CHK.marks = {}; CHK.focus = {}; CHK.photo = null; A.rerender(); }
     else if (k === 'photo') { const f = e.target.files[0]; if (!f) return; try { CHK.photo = await M.fileToImage(f, 900, 0.62); A.rerender(); } catch (er) { toast(er.message); } }
     else if (e.target.dataset && e.target.dataset.sum) { SUM.range = e.target.value; A.rerender(); }
   });

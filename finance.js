@@ -56,12 +56,12 @@
   /* ---------- เอกสาร A4 ---------- */
   function docPage(t) {
     const root = document.createElement('div'), pg = document.createElement('div'); pg.className = 'rp-page fin';
-    const line = (k, v) => '<div class="fn-l"><span>' + k + '</span><b>' + esc(v || '-') + '</b></div>', sg = (n, r) => '<div class="fn-sg"><div class="fn-line">ลงชื่อ</div>( ' + (n ? esc(n) : '&nbsp;'.repeat(36)) + ' )<br>' + r + '</div>';
-    pg.innerHTML = A.pageHead(KN[t.kind], '' + M.C.club.long + '') + (t.status !== 'approved' ? '<div class="fn-wm">' + (t.status === 'void' ? 'ยกเลิก' : 'รออนุมัติ') + '</div>' : '') +
+    const line = (k, v) => '<div class="fn-l"><span>' + k + '</span><b>' + esc(v || '-') + '</b></div>', sg = (n, r, sig) => '<div class="fn-sg"><div class="fn-line">ลงชื่อ' + (sig ? '<img class="fn-sig" src="' + sig + '" alt="">' : '') + '</div>( ' + (n ? esc(n) : '&nbsp;'.repeat(36)) + ' )<br>' + r + '</div>';
+    const apSig = t.status === 'approved' && A.sigByName ? A.sigByName(t.approvedBy) : ''; pg.innerHTML = A.pageHead(KN[t.kind], '' + M.C.club.long + '') + (t.status !== 'approved' ? '<div class="fn-wm">' + (t.status === 'void' ? 'ยกเลิก' : 'รออนุมัติ') + '</div>' : '') +
       '<div class="fn-top"><div>เลขที่ <b>' + esc(t.no) + '</b></div><div>วันที่ <b>' + esc(A.dTH(t.date, 'full')) + '</b></div></div>' +
       (t.kind === 'in' ? line('ได้รับเงินจาก', t.party) + line('รายการ', t.title) : line('ผู้ขอเบิก / จ่ายให้', t.party) + line('เพื่อเป็นค่า', t.title)) + line('หมวด', t.cat) + (t.note ? line('หมายเหตุ', t.note) : '') +
       '<div class="fn-amt"><span>จำนวนเงิน</span><b>' + money(t.amount) + ' บาท</b></div><div class="fn-txt">( ' + esc(M.bahtText(t.amount)) + ' )</div>' +
-      '<div class="fn-sgs">' + (t.kind === 'in' ? sg((t.by || {}).name, 'ผู้รับเงิน / ผู้บันทึก') + sg(t.approvedBy, 'ครูที่ปรึกษาชมรม ผู้อนุมัติ') : sg(t.party, 'ผู้ขอเบิก / ผู้รับเงิน') + sg((t.by || {}).name, 'ผู้จ่ายเงิน / ผู้บันทึก') + sg(t.approvedBy, 'ครูที่ปรึกษาชมรม ผู้อนุมัติ')) + '</div>' +
+      '<div class="fn-sgs">' + (t.kind === 'in' ? sg((t.by || {}).name, 'ผู้รับเงิน / ผู้บันทึก') + sg(t.approvedBy, 'ครูที่ปรึกษาชมรม ผู้อนุมัติ', apSig) : sg(t.party, 'ผู้ขอเบิก / ผู้รับเงิน') + sg((t.by || {}).name, 'ผู้จ่ายเงิน / ผู้บันทึก') + sg(t.approvedBy, 'ครูที่ปรึกษาชมรม ผู้อนุมัติ', apSig)) + '</div>' +
       '<div class="rp-foot">บันทึกในระบบเมื่อ ' + esc(M.thDate(t.at)) + (t.approvedAt ? ' · อนุมัติเมื่อ ' + esc(M.thDate(t.approvedAt)) : '') + (t.status === 'void' ? ' · ยกเลิก: ' + esc(t.voidReason || '') : '') + '</div>';
     root.appendChild(pg); return root;
   }

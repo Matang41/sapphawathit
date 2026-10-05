@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 5;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 6;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -253,7 +253,7 @@
       (ME.teacher ? '<a class="tile dark" href="#/members"><div class="lb">รอประเมินฝีมือ</div><div class="num">' + unassessed + '</div><div class="muted">คน</div></a>' : '<a class="tile dark" href="#/chart"><div class="lb">ที่ปรึกษาชมรม</div><div class="num">' + advisors().length + '</div><div class="muted">ท่าน</div></a>') + '</div>';
     HOME.slice().sort((x, y) => x.order - y.order).forEach(h => { try { b += h.html() || ''; } catch (e) { console.error(e); } });
     if (can.edit()) b += '<section class="card"><div class="lb">ทางลัด</div><div class="row wrap">' +
-      '<button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / รายชื่อ</button></div></section>';
+      '<button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / รายชื่อ</button><button class="btn ghost" data-act="rosterExport">' + ic('down', 18) + 'รายงานรายชื่อสมาชิก (DOC/PDF)</button></div></section>';
     const noSes = act.filter(s => !ms[s].am && !ms[s].pm);
     if (ME.teacher && noSes.length) b += '<section class="card"><div class="lb">ยังไม่กำหนดรอบซ้อม ' + noSes.length + ' คน</div>' + noSes.sort(byClass).slice(0, 5).map(memberRow).join('') + '</section>';
     /* แถบ “ต้องดำเนินการ” สีทองเด่นบนสุด: งานค้าง โหวตที่เปิดอยู่ กิจกรรมที่ใกล้ถึง — โมดูลต่าง ๆ ลงทะเบียนผ่าน APP.TODO */
@@ -305,7 +305,7 @@
   function viewMembers() {
     const sel = (k, opts) => '<select class="in sm" data-filter="' + k + '" aria-label="' + esc(opts[0][1]) + '">' + opts.map(o => '<option value="' + o[0] + '"' + (String(UI[k]) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
     let b = '';
-    if (can.edit()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><a class="btn ghost" href="#/join">' + ic('doc', 18) + 'ใบสมัครผ่านลิงก์</a>' + (can.exp() ? '<button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออก</button>' : '') + '</div>';
+    if (can.edit()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="addMember">' + ic('plus', 18) + 'เพิ่มสมาชิก</button><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><a class="btn ghost" href="#/join">' + ic('doc', 18) + 'ใบสมัครผ่านลิงก์</a>' + (can.exp() ? '<button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด</button>' : '') + (can.exp() ? '<button class="btn ghost" data-act="rosterExport">' + ic('down', 18) + 'ส่งออกรายชื่อ (DOC/PDF)</button>' : '') + '</div>';
     b += '<section class="card"><div class="filters"><input id="q" class="in" type="search" placeholder="ค้นหาชื่อ เลขประจำตัว เครื่องดนตรี" value="' + esc(UI.q) + '" aria-label="ค้นหาสมาชิก">' +
       sel('type', [['', 'ทุกประเภท']].concat(C.memberTypes.map(t => [t.id, t.name]))) +
       sel('ses', [['', 'ทุกรอบซ้อม'], ['am', 'ซ้อมเช้า'], ['pm', 'ซ้อมเย็น']]) +
