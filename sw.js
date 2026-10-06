@@ -1,6 +1,6 @@
 /* Service worker: ให้แอปเปิดได้แม้ไม่มีสัญญาณ
    ★ ทุกครั้งที่ออกรุ่นใหม่ ให้เปลี่ยนเลขใน CACHE (เช่น spw-v2) เพื่อให้เครื่องผู้ใช้โหลดไฟล์ใหม่ */
-const CACHE = 'spw-v7';
+const CACHE = 'spw-v8';
 const SHELL = ['./', 'index.html', 'style.css', 'config.js', 'core.js', 'backend.js', 'app.js', 'practice.js', 'behave.js', 'join.js', 'events.js', 'consent.js', 'finance.js', 'vote.js', 'alumni.js', 'registry.js', 'honor.js', 'library.js', 'games.js', 'about.js', 'clubinfo.js', 'report.js', 'guardian.js', 'signature.js', 'icons/rules-poster.jpg', 'kaewthip.html', 'manifest.webmanifest', 'manifest-kt.webmanifest', 'icons/kt-logo-256.png', 'icons/kt-logo-1024.jpg', 'icons/kt-icon-192.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png', 'icons/logo-256.png', 'icons/logo-1024.jpg', 'icons/school-logo.png'];
 const CDN = ['cdnjs.cloudflare.com', 'www.gstatic.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -21,9 +21,6 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); return res; })));
     return;
   }
-  // ไฟล์ของแอป: stale-while-revalidate (ได้ของเร็ว + อัปเดตรอบถัดไป)
-  e.respondWith(caches.open(CACHE).then(c => c.match(req, { ignoreSearch: true }).then(hit => {
-    const net = fetch(req).then(res => { if (res && res.ok) c.put(req, res.clone()); return res; }).catch(() => hit);
-    return hit || net;
-  })));
+  // ไฟล์ของแอป: network-first (ได้รุ่นใหม่ทันทีเมื่อออนไลน์ · ออฟไลน์ใช้ของที่แคชไว้)
+  e.respondWith(caches.open(CACHE).then(c => fetch(req, { cache: 'no-cache' }).then(res => { if (res && res.ok) c.put(req, res.clone()); return res; }).catch(() => c.match(req, { ignoreSearch: true }))));
 });
