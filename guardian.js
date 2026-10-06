@@ -53,9 +53,18 @@
   A.HOME.push({ order: 96, html: () => { const sid = A.sid(), tk = sid && toks()[sid]; return tk && !T() ? '<section class="card"><div class="lb">ลิงก์สำหรับผู้ปกครอง</div><div class="muted" style="margin-bottom:8px">ส่งให้ผู้ปกครองเปิดดู การมาซ้อม พฤติกรรม และรางวัลของคุณ โดยไม่ต้องล็อกอิน</div><div class="row wrap"><button class="btn sm" data-act="gdShare" data-t="' + esc(tk) + '" data-sid="' + esc(sid) + '">ส่งลิงก์ให้ผู้ปกครอง</button><button class="btn ghost sm" data-act="gdCopy" data-t="' + esc(tk) + '">คัดลอกลิงก์</button></div></section>' : ''; } });
 
   Object.assign(A.ACT, {
-    gdMake: () => { if (!T()) return; const t = toks(), upd = {}; let n = 0; A.activeSids().forEach(s => { if (t[s]) return; const tk = newToken(); upd['gtok/' + s] = tk; const sn = snap(s); sn.at = Date.now(); upd['/pview/' + tk] = sn; SENT[tk] = JSON.stringify(snap(s)); n++; }); if (n) { A.W(B.update('', upd)); toast('สร้างลิงก์ ' + n + ' คนแล้ว'); } },
-    gdOne: d => { if (!T()) return; const tk = newToken(), sn = snap(d.sid); sn.at = Date.now(); SENT[tk] = JSON.stringify(snap(d.sid)); A.W(B.update('', { ['gtok/' + d.sid]: tk, ['/pview/' + tk]: sn })); toast('สร้างลิงก์แล้ว'); },
-    gdSync: () => { if (!T()) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000); toast('อัปเดตข้อมูลผู้ปกครอง ' + syncAll(true) + ' คนแล้ว'); },
+    gdMake: async () => { try {
+      if (!T()) return; if (!A.assess) return toast('ไฟล์ behave.js ยังเป็นรุ่นเก่า — อัปโหลด behave.js รุ่น 3.2 แล้วเปิดแอปใหม่', 8000); if (A.STATUS.online === false) return toast('ต้องออนไลน์จึงจะสร้างลิงก์ได้', 4000);
+      const t = toks(), upd = {}, made = {}; let n = 0; A.activeSids().forEach(s => { if (t[s]) return; const tk = newToken(), sn = snap(s); upd['gtok/' + s] = tk; sn.at = Date.now(); upd['/pview/' + tk] = sn; made[tk] = JSON.stringify(snap(s)); n++; });
+      if (!n) return toast('ทุกคนมีลิงก์แล้ว (ถ้ายังไม่เห็นปุ่มคัดลอก ให้รีเฟรชหน้า)', 4000);
+      toast('กำลังสร้างลิงก์ ' + n + ' คน …', 6000);
+      await B.update('', upd); Object.assign(SENT, made); toast('สร้างลิงก์ ' + n + ' คนแล้ว', 3500); A.rerender();
+    } catch (e) { console.error(e); toast('สร้างลิงก์ไม่สำเร็จ: ' + (A.errTH(e) || e.message) + ' — ตรวจว่าวาง database.rules.json รุ่นล่าสุดใน Firebase แล้ว', 9000); } },
+    gdOne: async d => { try {
+      if (!T()) return; if (!A.assess) return toast('ไฟล์ behave.js ยังเป็นรุ่นเก่า — อัปโหลด behave.js รุ่น 3.2', 8000); if (A.STATUS.online === false) return toast('ต้องออนไลน์จึงจะสร้างลิงก์ได้', 4000);
+      const tk = newToken(), sn = snap(d.sid); sn.at = Date.now(); await B.update('', { ['gtok/' + d.sid]: tk, ['/pview/' + tk]: sn }); SENT[tk] = JSON.stringify(snap(d.sid)); toast('สร้างลิงก์แล้ว'); A.rerender();
+    } catch (e) { console.error(e); toast('สร้างลิงก์ไม่สำเร็จ: ' + (A.errTH(e) || e.message) + ' — ตรวจว่าวาง database.rules.json รุ่นล่าสุดใน Firebase แล้ว', 9000); } },
+    gdSync: async () => { try { if (!T()) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000); const n = syncAll(true); toast(n ? 'อัปเดตข้อมูลผู้ปกครอง ' + n + ' คนแล้ว' : 'ยังไม่มีลิงก์ให้อัปเดต'); } catch (e) { console.error(e); toast('อัปเดตไม่สำเร็จ: ' + (e.message || e), 7000); } },
     gdCopy: async d => { const l = linkOf(d.t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว'); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><textarea class="in" rows="3" readonly>' + esc(l) + '</textarea><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } },
     gdShare: async d => { const l = linkOf(d.t), m = A.members()[d.sid]; if (navigator.share) { try { await navigator.share({ title: 'ข้อมูลของ ' + (m ? m.first : 'นักเรียน') + ' ชมรม' + C.club.name, text: 'ดูการมาซ้อม พฤติกรรม และรางวัลของ ' + (m ? A.fullName(m) : 'นักเรียน') + ' (ชมรม' + C.club.name + ')', url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.gdCopy(d); },
     gdRevoke: async d => { if (!T()) return; const tk = toks()[d.sid]; if (!tk || !(await M.confirmBox('ยกเลิกลิงก์ผู้ปกครอง', 'ลิงก์เดิมจะเปิดไม่ได้อีก (สร้างลิงก์ใหม่ได้ภายหลัง)', 'ยกเลิกลิงก์', true))) return; delete SENT[tk]; A.W(B.update('', { ['gtok/' + d.sid]: null, ['/pview/' + tk]: null })); }
