@@ -3,6 +3,9 @@
    หน้าที่: อ่านคิว c/{ชมรม}/pushq ในฐานข้อมูล → เลือกผู้รับ → ส่งผ่าน Firebase Cloud Messaging → ลบคิว
             และเตือนล่วงหน้าหนึ่งวันก่อนกิจกรรม (ทุกวัน 17.00 น.)
 
+   หน้าที่เพิ่มในรุ่น 3.5: กล่องแจ้งเตือนในแอป · เตือนซ้ำคนที่ยังไม่ทำ · สรุปรายสัปดาห์ถึงครู · สำรองฐานข้อมูลลง Google Drive ทุกคืน
+   ★ อัปเดตจากรุ่นก่อน: วางไฟล์นี้ทับของเดิม › เรียกใช้ setup อีกครั้ง (จะถามสิทธิ์ Google Drive) › ทำให้ใช้งานได้ › จัดการ › แก้ไข › เวอร์ชันใหม่
+
    ติดตั้ง (ครั้งเดียว):
    1) script.google.com › โปรเจ็กต์ใหม่ › วางไฟล์นี้ทั้งหมดแทน Code.gs
    2) Firebase Console › Project settings › Service accounts › Generate new private key (ได้ไฟล์ .json)
@@ -30,7 +33,10 @@ function setup() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('run').timeBased().everyMinutes(5).create();
   ScriptApp.newTrigger('remind').timeBased().atHour(17).everyDays(1).inTimezone(TZ).create();
-  token_(); console.log('พร้อมใช้งาน: ตั้งเวลาอ่านคิวทุก 5 นาที และเตือนก่อนกิจกรรมทุกวัน 17.00 น.');
+  ScriptApp.newTrigger('weekly').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(17).inTimezone(TZ).create();
+  ScriptApp.newTrigger('backup').timeBased().atHour(2).everyDays(1).inTimezone(TZ).create();
+  DriveApp.getRootFolder();   // ขอสิทธิ์ Google Drive สำหรับไฟล์สำรอง
+  token_(); console.log('พร้อมใช้งาน: อ่านคิวทุก 5 นาที · เตือนรายวัน 17.00 น. · สรุปรายสัปดาห์วันศุกร์ 17.00 น. · สำรองลง Google Drive ทุกคืน 02.00 น.');
 }
 
 /* ---------- สิทธิ์เข้าถึง ---------- */
@@ -49,7 +55,7 @@ function token_() {
 function db_(method, path, body) {
   const opt = { method: method, headers: { Authorization: 'Bearer ' + token_() }, muteHttpExceptions: true };
   if (body !== undefined) { opt.contentType = 'application/json'; opt.payload = JSON.stringify(body); }
-  const res = UrlFetchApp.fetch(DB + '/' + path + '.json', opt);
+  const q = path.indexOf('?'), res = UrlFetchApp.fetch(DB + '/' + (q < 0 ? path : path.slice(0, q)) + '.json' + (q < 0 ? '' : path.slice(q)), opt);
   if (res.getResponseCode() >= 300) throw new Error('DB ' + method + ' ' + path + ' → ' + res.getResponseCode() + ' ' + res.getContentText().slice(0, 200));
   return JSON.parse(res.getContentText());
 }
@@ -63,11 +69,11 @@ function ctx_(cid) {
   const name = sid => { const m = members[sid]; return m ? (m.prefix || '') + (m.first || '') + ' ' + (m.last || '') : 'สมาชิก'; };
   const active = () => Object.keys(members).filter(s => members[s] && members[s].status === 'active');
   /* token ของนักเรียน (ข้ามคนที่ปิดหมวดนั้น) */
-  const stu = (sids, group) => { const out = []; sids.forEach(s => { const p = people[s]; if (!p || !p.fcm || !members[s] || members[s].status !== 'active') return; if (group && p.poff && p.poff[group]) return;
-    Object.keys(p.fcm).forEach(k => out.push({ t: p.fcm[k].t, path: 'people/' + s + '/fcm/' + k })); }); return out; };
-  const tea = group => { const out = []; Object.keys(tkeys).forEach(k => { const p = tpush[k]; if (!p || !p.fcm) return; if (group && p.off && p.off[group]) return;
-    Object.keys(p.fcm).forEach(h => out.push({ t: p.fcm[h].t, path: 'tpush/' + k + '/fcm/' + h })); }); return out; };
-  return { cid: cid, members: members, name: name, active: active, stu: stu, tea: tea };
+  const stu = (sids, group) => { const out = []; sids.forEach(s => { const p = people[s] || {}; if (!members[s] || members[s].status !== 'active') return; if (group && p.poff && p.poff[group]) return;
+    out.push({ box: 'inbox/' + s }); Object.keys(p.fcm || {}).forEach(k => out.push({ t: p.fcm[k].t, path: 'people/' + s + '/fcm/' + k })); }); return out; };
+  const tea = group => { const out = []; Object.keys(tkeys).forEach(k => { const p = tpush[k] || {}; if (group && p.off && p.off[group]) return; out.push({ box: 'tinbox/' + k });
+    Object.keys(p.fcm || {}).forEach(h => out.push({ t: p.fcm[h].t, path: 'tpush/' + k + '/fcm/' + h })); }); return out; };
+  return { cid: cid, members: members, people: people, name: name, active: active, stu: stu, tea: tea };
 }
 
 /* ---------- อ่านคิวแล้วส่ง ---------- */
@@ -114,6 +120,10 @@ function handle_(cx, id, it) {
 
 /* ---------- ส่งผ่าน FCM (HTTP v1) ---------- */
 function send_(list, msg) {
+  /* กล่องแจ้งเตือนในแอป (เก็บย้อนหลัง แม้เครื่องไม่เด้ง) */
+  const boxes = {}, bid = 'n' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36), hash = (String(msg.url || '').match(/#\/.*$/) || [''])[0], cid = (String(msg.url || '').match(/club=([a-z0-9]+)/) || [])[1] || null;
+  list.forEach(x => { if (x.box) boxes[x.box + '/' + bid] = { t: msg.title, b: msg.body || null, u: hash || null, c: cid, at: Date.now() }; });
+  if (Object.keys(boxes).length) { try { db_('patch', '', boxes); } catch (e) { console.warn('inbox', e); } }
   const seen = {}; list = list.filter(x => x.t && !seen[x.t] && (seen[x.t] = 1)); if (!list.length) return 0;
   const tok = token_(), url = 'https://fcm.googleapis.com/v1/projects/' + PROJECT + '/messages:send'; let ok = 0;
   for (let i = 0; i < list.length; i += 40) {
@@ -130,12 +140,69 @@ function remind() {
   const tm = Utilities.formatDate(new Date(Date.now() + 24 * 3600 * 1000), TZ, 'yyyy-MM-dd'); let n = 0;
   Object.keys(CLUBS).forEach(cid => {
     const year = db_('get', 'c/' + cid + '/config/year') || DEFAULT_YEAR, evs = db_('get', 'c/' + cid + '/y/' + year + '/events') || {};
-    const due = Object.keys(evs).filter(id => evs[id] && evs[id].date === tm && evs[id].status !== 'cancelled'); if (!due.length) return;
+    const due = Object.keys(evs).filter(id => evs[id] && evs[id].date === tm && evs[id].status !== 'cancelled');
     const cx = ctx_(cid);
     due.forEach(id => { const e = evs[id], sids = e.people ? Object.keys(e.people) : cx.active();
       n += send_(cx.stu(sids, 'ev'), { title: 'พรุ่งนี้: ' + e.title, body: [e.start ? 'เวลา ' + e.start + (e.end ? '–' + e.end : '') : '', e.place ? 'ณ ' + e.place : ''].filter(String).join(' ') || CLUBS[cid], url: PAGE[cid] + '#/ev/' + id, tag: 'rem-' + id }); });
+    try { n += nudge_(cid, cx, year); } catch (e) { console.error('nudge', cid, e); }
   });
   console.log('remind sent ' + n); return n;
+}
+
+/* ---------- เตือนซ้ำคนที่ยังไม่ทำ (เรียกจาก remind ทุกวัน) ---------- */
+function nudge_(cid, cx, year) {
+  const now = Date.now(), DAY = 24 * 3600 * 1000, act = cx.active(), base = 'c/' + cid + '/', todo = {};   // sid → [ข้อความ]
+  const add = (s, t) => { (todo[s] = todo[s] || []).push(t); };
+  /* โหวตที่เปิดมาเกิน 1 วันและยังไม่ลงคะแนน */
+  const polls = db_('get', base + 'polls') || {};
+  Object.keys(polls).forEach(pid => { const p = polls[pid]; if (!p || p.status !== 'open' || (p.who && p.who !== 'all') || now - (p.createdAt || 0) < DAY || now - (p.createdAt || 0) > 14 * DAY) return;
+    const b = db_('get', base + 'ballots/' + pid + '?shallow=true') || {}; act.forEach(s => { if (!b[s]) add(s, 'ยังไม่ได้โหวต: ' + p.title); }); });
+  /* ประกาศอายุ 1–7 วันที่ยังไม่กดรับทราบ */
+  const ann = db_('get', base + 'y/' + year + '/announce') || {}, acks = db_('get', base + 'y/' + year + '/acks') || {};
+  Object.keys(ann).forEach(aid => { const a = ann[aid]; if (!a || !a.title || now - (a.at || 0) < DAY || now - (a.at || 0) > 7 * DAY) return;
+    act.forEach(s => { if (a.grade && +cx.members[s].grade !== +a.grade) return; if ((a.by || {}).id === s) return; if (!(acks[s] || {})[aid]) add(s, 'ยังไม่ได้รับทราบประกาศ: ' + a.title); }); });
+  /* ใบขออนุญาตของกิจกรรมใน 3 วันข้างหน้าที่ผู้ปกครองยังไม่เซ็น */
+  const evs = db_('get', base + 'y/' + year + '/events') || {}, cons = db_('get', base + 'y/' + year + '/consents') || {};
+  const d0 = Utilities.formatDate(new Date(now), TZ, 'yyyy-MM-dd'), d3 = Utilities.formatDate(new Date(now + 3 * DAY), TZ, 'yyyy-MM-dd');
+  Object.keys(cons).forEach(s => { if (!cx.members[s] || cx.members[s].status !== 'active') return; Object.keys(cons[s] || {}).forEach(eid => { const e = evs[eid]; if (!e || e.status === 'cancelled' || !(e.date >= d0 && e.date <= d3)) return;
+    const sign = db_('get', 'ctoken/' + encodeURIComponent(cons[s][eid]) + '/sign?shallow=true'); if (!sign) add(s, 'ผู้ปกครองยังไม่ตอบใบขออนุญาต: ' + e.title); }); });
+  let n = 0;
+  Object.keys(todo).forEach(s => { const l = todo[s]; n += send_(cx.stu([s], 'own'), { title: 'มี ' + l.length + ' เรื่องรอคุณอยู่ · ' + CLUBS[cid], body: l.slice(0, 3).join(' · ') + (l.length > 3 ? ' และอื่น ๆ' : ''), url: PAGE[cid] + '#/home', tag: 'nudge' }); });
+  return n;
+}
+
+/* ---------- สรุปรายสัปดาห์ถึงครู (เย็นวันศุกร์) ---------- */
+function weekly() {
+  let n = 0; const now = Date.now(), DAY = 24 * 3600 * 1000, days = {}; for (let i = 0; i < 7; i++) days[Utilities.formatDate(new Date(now - i * DAY), TZ, 'yyyy-MM-dd')] = 1;
+  Object.keys(CLUBS).forEach(cid => { try {
+    const cx = ctx_(cid), base = 'c/' + cid + '/', year = db_('get', base + 'config/year') || DEFAULT_YEAR, Y = base + 'y/' + year + '/';
+    const att = db_('get', Y + 'att') || {}, c = { p: 0, l: 0, v: 0, a: 0 }, abs = [];
+    Object.keys(att).forEach(s => { let a = 0; Object.keys(att[s] || {}).forEach(k => { if (!days[k.slice(0, 10)]) return; const v = att[s][k]; if (c[v] !== undefined) c[v]++; if (v === 'a') a++; }); if (a >= 2 && cx.members[s]) abs.push([a, cx.members[s].first]); });
+    const tot = c.p + c.l + c.v + c.a, leaves = db_('get', Y + 'leaves') || {}, led = db_('get', Y + 'ledger') || {}, apps = db_('get', base + 'applications?shallow=true') || {};
+    let pl = 0; Object.keys(leaves).forEach(s => Object.keys(leaves[s] || {}).forEach(k => { if (leaves[s][k].status === 'pending') pl++; }));
+    const pt = Object.keys(led).filter(k => led[k] && led[k].status === 'pending').length, pa = Object.keys(apps).length;
+    abs.sort((a, b) => b[0] - a[0]);
+    const parts = [tot ? 'มาซ้อม ' + Math.round((c.p + c.l) / tot * 100) + '% (ขาด ' + c.a + ' ลา ' + c.v + ' ครั้ง)' : 'สัปดาห์นี้ยังไม่มีการเช็กชื่อ'];
+    if (abs.length) parts.push('ขาดบ่อย: ' + abs.slice(0, 4).map(x => x[1] + ' ' + x[0]).join(', '));
+    const pend = []; if (pl) pend.push('ใบลา ' + pl); if (pt) pend.push('รายการเงิน ' + pt); if (pa) pend.push('ใบสมัคร ' + pa); if (pend.length) parts.push('รอครู: ' + pend.join(' · '));
+    n += send_(cx.tea('weekly'), { title: 'สรุปสัปดาห์นี้ · ' + CLUBS[cid], body: parts.join(' | '), url: PAGE[cid] + '#/practice', tag: 'weekly' });
+  } catch (e) { console.error('weekly', cid, e); } });
+  console.log('weekly sent ' + n); return n;
+}
+
+/* ---------- สำรองฐานข้อมูลลง Google Drive (ทุกคืน) ---------- */
+const BACKUP_FOLDER = 'สำรองฐานข้อมูลชมรม', BACKUP_KEEP_DAYS = 30;
+function backup() {
+  const res = UrlFetchApp.fetch(DB + '/.json', { headers: { Authorization: 'Bearer ' + token_() }, muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) throw new Error('อ่านฐานข้อมูลไม่สำเร็จ ' + res.getResponseCode());
+  const blob = res.getBlob(), bytes = blob.getBytes().length, name = 'sapphawathit-' + Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd') + '.json';
+  const it = DriveApp.getFoldersByName(BACKUP_FOLDER), folder = it.hasNext() ? it.next() : DriveApp.createFolder(BACKUP_FOLDER);
+  const same = folder.getFilesByName(name + '.gz'); while (same.hasNext()) same.next().setTrashed(true);
+  folder.createFile(Utilities.gzip(blob, name + '.gz'));
+  const cut = Date.now() - BACKUP_KEEP_DAYS * 24 * 3600 * 1000, fs = folder.getFiles();
+  while (fs.hasNext()) { const f = fs.next(); if (/^sapphawathit-.*\.json\.gz$/.test(f.getName()) && f.getDateCreated().getTime() < cut) f.setTrashed(true); }
+  db_('put', 'backup/last', { at: Date.now(), bytes: bytes, file: name + '.gz' });
+  console.log('สำรองแล้ว ' + name + '.gz · ' + Math.round(bytes / 1024) + ' KB'); return bytes;
 }
 
 /* ---------- ทดสอบ ---------- */

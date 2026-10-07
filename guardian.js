@@ -12,6 +12,9 @@
   const newToken = () => { const a = new Uint8Array(18); crypto.getRandomValues(a); return Array.from(a).map(x => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join(''); };
   const linkOf = t => location.origin + location.pathname + '?g=' + t + (B.mode === 'demo' ? '&demo=1' : '');
   const toks = () => A.D.gtok || {};
+  /* รุ่น 3.5: เก็บที่ pview/{รหัส}/{เลขประจำตัว} — ต้องรู้ทั้งรหัสในลิงก์และเลขประจำตัวจึงอ่านได้ · หมดอายุสิ้นปีการศึกษา (30 เม.ย.) */
+  const expAt = () => new Date(+A.year() - 543 + 1, 3, 30, 23, 59).getTime();
+  const wrap = (sid, s) => { s.exp = expAt(); return { [sid]: s }; };
 
   A.SUBS.push({ key: 'gtok', path: () => A.teacher() ? 'gtok' : (A.sid() ? 'gtok/' + A.sid() : null), norm: v => A.teacher() ? v : { [A.sid()]: v } });
   A.NAVS.push({ id: 'guardian', label: 'โหมดผู้ปกครอง', icon: 'me', order: 44, show: () => A.teacher() });
@@ -33,7 +36,7 @@
     if (!T()) return 0; const t = toks(), upd = {}; let n = 0;
     Object.keys(t).forEach(sid => { const tk = t[sid], m = A.members()[sid]; if (!tk) return;
       if (m && m.status !== 'active') { upd['/pview/' + tk] = null; upd['gtok/' + sid] = null; n++; return; }   /* สมาชิกที่ถูกนำออก: ยกเลิกลิงก์อัตโนมัติ */
-      if (!m) return; const s = snap(sid), j = JSON.stringify(s); if (!force && SENT[tk] === j) return; SENT[tk] = j; s.at = Date.now(); upd['/pview/' + tk] = s; n++; });
+      if (!m) return; const s = snap(sid), j = JSON.stringify(s); if (!force && SENT[tk] === j) return; SENT[tk] = j; s.at = Date.now(); upd['/pview/' + tk] = wrap(sid, s); n++; });
     if (n) A.W(B.update('', upd)); return n;
   }
   setInterval(() => { if (T() && A.STATUS.online !== false && Object.keys(toks()).length) syncAll(false); }, 120000);
@@ -43,7 +46,7 @@
     if (!T()) { location.hash = '#/home'; return null; }
     const list = A.activeSids().sort(A.byClass), ms = A.members(), t = toks(), has = list.filter(s => t[s]).length;
     let b = '<section class="card"><div class="lb">โหมดผู้ปกครอง · ดูข้อมูลของลูกโดยไม่ต้องล็อกอิน</div><div class="muted">สร้างลิงก์เฉพาะนักเรียนแต่ละคน ส่งให้ผู้ปกครองทาง LINE ผู้ปกครองจะเห็น การมาซ้อม ระดับ/คะแนนพฤติกรรม รางวัลและเกียรติบัตร (ไม่เห็นเบอร์โทรหรือข้อความจากครู) ข้อมูลอัปเดตให้อัตโนมัติขณะครูเปิดแอป หรือกด “อัปเดตตอนนี้”</div>' +
-      '<div class="note warn">ใครมีลิงก์ก็เปิดดูได้ จึงควรส่งให้ผู้ปกครองโดยตรงเท่านั้น หากหลุดให้กด “ยกเลิก” แล้วสร้างลิงก์ใหม่ สมาชิกที่ถูกนำออกจากชมรมจะถูกยกเลิกลิงก์อัตโนมัติ</div>' +
+      '<div class="note warn">ผู้เปิดลิงก์ต้องกรอกเลขประจำตัวนักเรียนให้ตรงจึงจะเห็นข้อมูล และลิงก์หมดอายุสิ้นปีการศึกษา (30 เม.ย.) ควรส่งให้ผู้ปกครองโดยตรงเท่านั้น หากหลุดให้กด “ยกเลิก” แล้วสร้างลิงก์ใหม่ สมาชิกที่ถูกนำออกจากชมรมจะถูกยกเลิกลิงก์อัตโนมัติ</div>' +
       '<div class="row wrap"><button class="btn gold" data-act="gdMake">สร้างลิงก์ให้ทุกคนที่ยังไม่มี (' + (list.length - has) + ')</button><button class="btn ghost" data-act="gdSync">อัปเดตข้อมูลตอนนี้</button></div><div class="muted" style="margin-top:8px">มีลิงก์แล้ว ' + has + ' / ' + list.length + ' คน</div></section>';
     b += '<section class="card">' + (list.map(s => '<div class="mrow"><span class="mrow-main">' + A.avatar(ms[s]) + '<span class="grow"><b>' + esc(A.fullName(ms[s])) + '</b><span class="muted">' + esc(A.cls(ms[s])) + '</span></span></span><span class="mrow-act">' +
       (t[s] ? '<button class="btn ghost sm" data-act="gdCopy" data-t="' + esc(t[s]) + '">คัดลอก</button><button class="btn ghost sm" data-act="gdShare" data-t="' + esc(t[s]) + '" data-sid="' + esc(s) + '">ส่ง</button><button class="btn ghost sm danger" data-act="gdRevoke" data-sid="' + esc(s) + '">ยกเลิก</button>' : '<button class="btn sm" data-act="gdOne" data-sid="' + esc(s) + '">สร้างลิงก์</button>') + '</span></div>').join('') || '<div class="empty">ยังไม่มีสมาชิก</div>') + '</section>';
@@ -55,18 +58,18 @@
   Object.assign(A.ACT, {
     gdMake: async () => { try {
       if (!T()) return; if (!A.assess) return toast('ไฟล์ behave.js ยังเป็นรุ่นเก่า — อัปโหลด behave.js รุ่น 3.2 แล้วเปิดแอปใหม่', 8000); if (A.STATUS.online === false) return toast('ต้องออนไลน์จึงจะสร้างลิงก์ได้', 4000);
-      const t = toks(), upd = {}, made = {}; let n = 0; A.activeSids().forEach(s => { if (t[s]) return; const tk = newToken(), sn = snap(s); upd['gtok/' + s] = tk; sn.at = Date.now(); upd['/pview/' + tk] = sn; made[tk] = JSON.stringify(snap(s)); n++; });
+      const t = toks(), upd = {}, made = {}; let n = 0; A.activeSids().forEach(s => { if (t[s]) return; const tk = newToken(), sn = snap(s); upd['gtok/' + s] = tk; sn.at = Date.now(); upd['/pview/' + tk] = wrap(s, sn); made[tk] = JSON.stringify(snap(s)); n++; });
       if (!n) return toast('ทุกคนมีลิงก์แล้ว (ถ้ายังไม่เห็นปุ่มคัดลอก ให้รีเฟรชหน้า)', 4000);
       toast('กำลังสร้างลิงก์ ' + n + ' คน …', 6000);
       await B.update('', upd); Object.assign(SENT, made); toast('สร้างลิงก์ ' + n + ' คนแล้ว', 3500); A.rerender();
     } catch (e) { console.error(e); toast('สร้างลิงก์ไม่สำเร็จ: ' + (A.errTH(e) || e.message) + ' — ตรวจว่าวาง database.rules.json รุ่นล่าสุดใน Firebase แล้ว', 9000); } },
     gdOne: async d => { try {
       if (!T()) return; if (!A.assess) return toast('ไฟล์ behave.js ยังเป็นรุ่นเก่า — อัปโหลด behave.js รุ่น 3.2', 8000); if (A.STATUS.online === false) return toast('ต้องออนไลน์จึงจะสร้างลิงก์ได้', 4000);
-      const tk = newToken(), sn = snap(d.sid); sn.at = Date.now(); await B.update('', { ['gtok/' + d.sid]: tk, ['/pview/' + tk]: sn }); SENT[tk] = JSON.stringify(snap(d.sid)); toast('สร้างลิงก์แล้ว'); A.rerender();
+      const tk = newToken(), sn = snap(d.sid); sn.at = Date.now(); await B.update('', { ['gtok/' + d.sid]: tk, ['/pview/' + tk]: wrap(d.sid, sn) }); SENT[tk] = JSON.stringify(snap(d.sid)); toast('สร้างลิงก์แล้ว'); A.rerender();
     } catch (e) { console.error(e); toast('สร้างลิงก์ไม่สำเร็จ: ' + (A.errTH(e) || e.message) + ' — ตรวจว่าวาง database.rules.json รุ่นล่าสุดใน Firebase แล้ว', 9000); } },
     gdSync: async () => { try { if (!T()) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000); const n = syncAll(true); toast(n ? 'อัปเดตข้อมูลผู้ปกครอง ' + n + ' คนแล้ว' : 'ยังไม่มีลิงก์ให้อัปเดต'); } catch (e) { console.error(e); toast('อัปเดตไม่สำเร็จ: ' + (e.message || e), 7000); } },
     gdCopy: async d => { const l = linkOf(d.t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว'); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><textarea class="in" rows="3" readonly>' + esc(l) + '</textarea><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } },
-    gdShare: async d => { const l = linkOf(d.t), m = A.members()[d.sid]; if (navigator.share) { try { await navigator.share({ title: 'ข้อมูลของ ' + (m ? m.first : 'นักเรียน') + ' ชมรม' + C.club.name, text: 'ดูการมาซ้อม พฤติกรรม และรางวัลของ ' + (m ? A.fullName(m) : 'นักเรียน') + ' (ชมรม' + C.club.name + ')', url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.gdCopy(d); },
+    gdShare: async d => { const l = linkOf(d.t), m = A.members()[d.sid]; if (navigator.share) { try { await navigator.share({ title: 'ข้อมูลของ ' + (m ? m.first : 'นักเรียน') + ' ชมรม' + C.club.name, text: 'ดูการมาซ้อม พฤติกรรม และรางวัลของ ' + (m ? A.fullName(m) : 'นักเรียน') + ' (ชมรม' + C.club.name + ') — เปิดลิงก์แล้วกรอกเลขประจำตัวนักเรียน', url: l }); return; } catch (e) { if (e && e.name === 'AbortError') return; } } A.ACT.gdCopy(d); },
     gdRevoke: async d => { if (!T()) return; const tk = toks()[d.sid]; if (!tk || !(await M.confirmBox('ยกเลิกลิงก์ผู้ปกครอง', 'ลิงก์เดิมจะเปิดไม่ได้อีก (สร้างลิงก์ใหม่ได้ภายหลัง)', 'ยกเลิกลิงก์', true))) return; delete SENT[tk]; A.W(B.update('', { ['gtok/' + d.sid]: null, ['/pview/' + tk]: null })); }
   });
 
@@ -77,8 +80,17 @@
     const root = $('#root'), page = h => { root.innerHTML = '<div class="pub"><div class="pub-in">' + h + '</div></div>'; };
     if (!/^[a-z0-9]{12,40}$/.test(t)) { page('<h1>ลิงก์ไม่ถูกต้อง</h1>'); return true; }
     try { await B.init(); } catch (e) { page('<h1>เชื่อมต่อระบบไม่สำเร็จ</h1><p>ตรวจอินเทอร์เน็ตแล้วเปิดลิงก์ใหม่</p>'); return true; }
-    let s = null; try { s = await B.get('pview/' + t); } catch (e) { s = null; }
-    if (!s) { page('<h1>ไม่พบข้อมูล</h1><p>ลิงก์อาจถูกยกเลิกแล้ว หรือครูยังไม่ได้อัปเดตข้อมูล กรุณาติดต่อครูที่ปรึกษาชมรม</p>'); return true; }
+    const GK = 'spw_g_' + t; let s = null, sid0 = ''; try { sid0 = localStorage.getItem(GK) || ''; } catch (e) { /* ignore */ }
+    const load = async sid => { try { return await B.get('pview/' + t + '/' + sid); } catch (e) { return null; } };
+    if (/^[0-9]{4,8}$/.test(sid0)) s = await load(sid0);
+    if (!s) s = await new Promise(res => {
+      page('<h1>ข้อมูลนักเรียนสำหรับผู้ปกครอง</h1><p>กรอกเลขประจำตัวนักเรียนเพื่อยืนยันก่อนเปิดดู</p><form class="form" id="g-f"><input class="in" id="g-sid" inputmode="numeric" autocomplete="off" placeholder="เลขประจำตัวนักเรียน" aria-label="เลขประจำตัวนักเรียน" required><div class="note bad" id="g-e" hidden></div><button class="btn gold block lg" style="margin-top:12px">เปิดดูข้อมูล</button></form>');
+      let tries = 0;
+      $('#g-f').addEventListener('submit', async e => { e.preventDefault(); const v = $('#g-sid').value.trim(), er = $('#g-e'), btn = $('#g-f button'); if (!/^[0-9]{4,8}$/.test(v)) { er.textContent = 'เลขประจำตัวเป็นตัวเลข 4–8 หลัก'; er.hidden = false; return; }
+        btn.disabled = true; await new Promise(r => setTimeout(r, Math.min(8000, 600 * Math.pow(2, tries))));   /* หน่วงเพิ่มขึ้นทุกครั้งที่กรอกผิด */
+        const x = await load(v); btn.disabled = false;
+        if (x) { try { localStorage.setItem(GK, v); } catch (e2) { /* ignore */ } res(x); } else { tries++; er.textContent = 'เลขประจำตัวไม่ตรงกับลิงก์นี้ หรือลิงก์หมดอายุ/ถูกยกเลิกแล้ว — หากแน่ใจว่ากรอกถูก กรุณาติดต่อครูที่ปรึกษาชมรม'; er.hidden = false; } });
+    });
     document.documentElement.dataset.club = s.cid; document.title = 'ข้อมูลของ ' + s.name; B.setScope(s.cid);
     const LV = { ok: 'ok', blue: 'blue', gold: 'gold', bad: 'bad' }, ST = { p: ['มา', 'ok'], l: ['สาย', 'gold'], v: ['ลา', 'blue'], a: ['ขาด', 'bad'] }, SES = { am: 'เช้า', pm: 'เย็น' }, a = s.att || {}, lvN = n => (A.assess.lv(n) || [0, '-', 'line']);
     let h = '<div class="pub-head"><img' + (s.round ? ' class="round"' : '') + ' src="' + esc(s.logo) + '" alt=""><div><b>' + esc(s.name) + '</b><span>' + esc(s.cls + ' · ' + s.club) + '</span></div></div>' +

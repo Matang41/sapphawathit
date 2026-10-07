@@ -285,7 +285,7 @@
    }
   },
   "rulesProbe": {
-   "v8": {
+   "v9": {
     ".read": true
    }
   },
@@ -347,9 +347,12 @@
   },
   "pview": {
    "$t": {
-    ".read": true,
+    ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
-    ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)"
+    ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)",
+    "$sid": {
+     ".read": "data.child('exp').val() > now"
+    }
    }
   },
   "tpush": {
@@ -357,6 +360,21 @@
     ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key",
     ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key && (auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
    }
+  },
+  "inbox": {
+   "$sid": {
+    ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+    ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+   }
+  },
+  "tinbox": {
+   "$key": {
+    ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key",
+    ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key"
+   }
+  },
+  "backup": {
+   ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
   }
  }
 }

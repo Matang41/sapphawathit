@@ -1,119 +1,101 @@
 /* ============================================================
-   extras.js — ตราสัญลักษณ์ · แผนที่ลงพื้นที่ · ห้องฟัง/เกมหูทิพย์
-   ใช้ร่วมกันทั้งหน้านักเรียนและหน้าครู · © 2569 พัฒนาโดย นนทพัทธ์ วงค์มูล
+   extras.js — รุ่น 3.5: แถบแจ้งรุ่นใหม่ · สำรองข้อมูล · พื้นที่ฐานข้อมูล · กล่องแจ้งเตือน
+   ข้อมูล: inbox/{sid}/{id} และ tinbox/{อีเมลครู}/{id} = { t, b, u, c, at } (ตัวส่ง push-relay.gs เป็นผู้เขียน)
+           backup/last = { at, bytes, file } (ตัวส่งเขียนหลังสำรองลง Google Drive ทุกคืน)
    ============================================================ */
 (function () {
   'use strict';
-  const M = window.MC, C = M.C;
-  const { esc, listOf, mediaIds, mediaType, commObj, inComm, short, thDate, thDateTime } = M;
+  const M = window.MC, B = window.B, A = window.APP, C = M.C;
+  const { $, esc, toast } = M; const { ic } = A;
+  const T = () => !!(A.teacher && A.teacher()), signed = () => T() || !!A.sid();
+  const mb = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  const bytes = v => { try { return new Blob([JSON.stringify(v === undefined ? null : v)]).size; } catch (e) { return 0; } };
 
-  /* ============ 1) ตราสัญลักษณ์ (Badges) ============ */
-  const BADGES = [
-    { id: 'first', icon: '👣', name: 'ก้าวแรก', desc: 'สร้างรายการแรกของตัวเอง', scope: 'me' },
-    { id: 'notes', icon: '📝', name: 'นักบันทึกภาคสนาม', desc: 'บันทึกภาคสนาม 3 รายการ', scope: 'me', need: 3 },
-    { id: 'inter', icon: '🎤', name: 'นักสัมภาษณ์', desc: 'สัมภาษณ์ผู้ให้ข้อมูลที่ยินยอมแล้ว 1 คน', scope: 'me' },
-    { id: 'media', icon: '📷', name: 'ช่างภาพสนาม', desc: 'แนบภาพ/เสียง 5 ไฟล์', scope: 'me', need: 5 },
-    { id: 'gps', icon: '📍', name: 'นักสำรวจ', desc: 'บันทึกพร้อมพิกัด GPS 3 รายการ', scope: 'me', need: 3 },
-    { id: 'ear', icon: '🎼', name: 'หูทิพย์', desc: 'วิเคราะห์องค์ประกอบดนตรี 2 รายการ', scope: 'me', need: 2 },
-    { id: 'reflect', icon: '💭', name: 'นักสะท้อนคิด', desc: 'เขียนสะท้อนคิดครบ', scope: 'me' },
-    { id: 'peer', icon: '🤝', name: 'เพื่อนร่วมทีมที่ดี', desc: 'ประเมินเพื่อนครบทุกคน', scope: 'me' },
-    { id: 'multi', icon: '🌏', name: 'พหุวัฒนธรรม', desc: 'กลุ่มเก็บข้อมูลได้ 3 ชุมชนขึ้นไป', scope: 'group', need: 3 },
-    { id: 'discover', icon: '🧭', name: 'นักค้นพบ', desc: 'กลุ่มพบดนตรี/ชุมชนนอกรายการ', scope: 'group' },
-    { id: 'team', icon: '🫂', name: 'ทีมเวิร์ก', desc: 'สมาชิกทุกคนมีผลงานของตัวเอง', scope: 'group' },
-    { id: 'all', icon: '🏆', name: 'ครบทุกงาน', desc: 'กลุ่มทำงานครบทุกชิ้น', scope: 'group' }
-  ];
-  function badges(G, members, sid, personal) {
-    const recs = []; M.LIST_KINDS.forEach(k => listOf(G, k).forEach(r => recs.push(Object.assign({ _k: k }, r))));
-    const byMe = recs.filter(r => r.createdBy && r.createdBy.sid === sid);
-    const hist = Object.values((G && G.history) || {});
-    const mediaMe = hist.filter(h => h.act === 'media' && h.by && h.by.sid === sid).length;
-    const p = personal || {}; const rf = p.reflection || {};
-    const sy = M.synth(G, members); const others = (members || []).filter(m => m.sid !== sid);
-    const val = {
-      first: byMe.length, notes: byMe.filter(r => r._k === 'notes').length, inter: byMe.filter(r => r._k === 'interviews' && r.consent).length,
-      media: mediaMe, gps: byMe.filter(r => r.gps && r.gps.lat != null).length, ear: byMe.filter(r => r._k === 'analyses').length,
-      reflect: (rf.learned && rf.mywork) ? 1 : 0, peer: others.length && others.every(m => p.peer && p.peer[m.sid] && p.peer[m.sid].score) ? 1 : 0,
-      multi: sy.coverage.filter(x => !x.c.custom || x.c.name).length, discover: recs.some(r => r.community === 'other' && r.communityOther) ? 1 : 0,
-      team: (members || []).length && (members || []).every(m => recs.some(r => r.createdBy && r.createdBy.sid === m.sid)) ? 1 : 0,
-      all: C.tasks.filter(t => t.scope === 'group').every(t => M.taskProgress(t, G, null).done) ? 1 : 0
-    };
-    return BADGES.map(b => { const need = b.need || 1, v = val[b.id] || 0; return Object.assign({}, b, { got: v >= need, v: Math.min(v, need), need }); });
+  /* ---------- 1) แถบ “มีรุ่นใหม่” ---------- */
+  let newVer = '';
+  async function checkVer() {
+    if (newVer || location.protocol === 'file:' || navigator.onLine === false) return;
+    try { const r = await fetch('config.js?vchk=' + Date.now(), { cache: 'no-store' }); if (!r.ok) return; const m = (await r.text()).match(/version:\s*"([^"]+)"/);
+      if (m && m[1] !== C.version) { newVer = m[1]; showBar(); } } catch (e) { /* ออฟไลน์ */ }
   }
-  function badgesHTML(list, compact) {
-    if (compact) return list.filter(b => b.got).map(b => '<span class="bdg-mini" title="' + esc(b.name + ' — ' + b.desc) + '">' + b.icon + '</span>').join('') || '<span class="muted">—</span>';
-    return '<div class="bdg-grid">' + list.map(b => '<div class="bdg' + (b.got ? ' got' : '') + '" title="' + esc(b.desc) + '"><span>' + b.icon + '</span><b>' + esc(b.name) + '</b><small>' + (b.got ? 'ได้แล้ว ✓' : esc(b.desc) + (b.need > 1 ? ' (' + b.v + '/' + b.need + ')' : '')) + '</small></div>').join('') + '</div>';
+  function showBar() {
+    if ($('#upd-bar')) return; const d = document.createElement('button'); d.id = 'upd-bar'; d.type = 'button';
+    d.innerHTML = ic('down', 18) + '<span>มีรุ่นใหม่ ' + esc(newVer) + ' — แตะเพื่ออัปเดต</span>'; document.body.appendChild(d);
+    d.addEventListener('click', async () => { d.disabled = true; d.lastChild.textContent = 'กำลังอัปเดต …';
+      try { if (window.caches) { const ks = await caches.keys(); await Promise.all(ks.filter(k => /^spw-/.test(k)).map(k => caches.delete(k))); }
+        if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.update().catch(() => { }))); } } catch (e) { /* ignore */ }
+      location.reload(); });
   }
+  setTimeout(checkVer, 8000); setInterval(checkVer, 20 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVer(); });
 
-  /* ============ 2) แผนที่ลงพื้นที่ ============ */
-  function pointsFrom(G, gname) {
-    const pts = []; M.LIST_KINDS.forEach(k => listOf(G, k).forEach(r => { if (r.gps && r.gps.lat != null) { const c = commObj(r) || {}; const s = M.FORMS[k].summary(r);
-      pts.push({ lat: +r.gps.lat, lng: +r.gps.lng, color: c.color || '#6d28d9', emoji: c.emoji || '🎶', comm: c.name || '', title: s.t, sub: [gname, thDate(r.date), r.place, r.createdBy ? 'โดย ' + short(r.createdBy.name) : ''].filter(Boolean).join(' · '), kind: M.FORMS[k].title }); } }));
-    return pts;
-  }
-  function legendHTML(pts) {
-    const m = {}; pts.forEach(p => { m[p.comm] = m[p.comm] || { color: p.color, emoji: p.emoji, n: 0 }; m[p.comm].n++; });
-    return '<div class="map-legend">' + Object.keys(m).map(k => '<span><i style="background:' + m[k].color + '"></i>' + m[k].emoji + ' ' + esc(k) + ' (' + m[k].n + ')</span>').join('') + '</div>';
-  }
-  function svgFallback(el, pts) {
-    if (!pts.length) { el.innerHTML = '<div class="empty">ยังไม่มีพิกัด GPS — กด “📍 ใช้ตำแหน่งปัจจุบัน” ตอนบันทึกภาคสนาม</div>'; return; }
-    const lats = pts.map(p => p.lat), lngs = pts.map(p => p.lng); let a = Math.min(...lats), b = Math.max(...lats), c = Math.min(...lngs), d = Math.max(...lngs);
-    const pad = Math.max(0.002, (b - a) * 0.15, (d - c) * 0.15); a -= pad; b += pad; c -= pad; d += pad; const W = 600, H = 420;
-    const X = lng => (lng - c) / (d - c) * W, Y = lat => H - (lat - a) / (b - a) * H;
-    el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="map-svg"><rect width="' + W + '" height="' + H + '" fill="#f6f3fc"/>' + [1, 2, 3].map(i => '<line x1="0" x2="' + W + '" y1="' + H * i / 4 + '" y2="' + H * i / 4 + '" stroke="#e7e0f1"/><line y1="0" y2="' + H + '" x1="' + W * i / 4 + '" x2="' + W * i / 4 + '" stroke="#e7e0f1"/>').join('') +
-      pts.map(p => '<g><circle cx="' + X(p.lng).toFixed(1) + '" cy="' + Y(p.lat).toFixed(1) + '" r="9" fill="' + p.color + '" stroke="#fff" stroke-width="2.5"><title>' + esc(p.title + ' — ' + p.sub) + '</title></circle></g>').join('') + '</svg><div class="hint">โหมดแผนที่อย่างง่าย (ไม่มีอินเทอร์เน็ต) — แตะจุดเพื่อดูชื่อ</div>';
-  }
-  async function renderMap(el, pts) {
-    if (!el) return;
-    try {
-      await M.loadLibs('leaflet'); if (!window.L) throw new Error('no leaflet');
-      el.innerHTML = ''; const map = L.map(el, { scrollWheelZoom: false });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
-      if (!pts.length) { map.setView([16.7131, 98.5714], 12); return; } // อ.แม่สอด
-      const ms = pts.map(p => L.circleMarker([p.lat, p.lng], { radius: 9, color: '#fff', weight: 2.5, fillColor: p.color, fillOpacity: .95 }).addTo(map)
-        .bindPopup('<b>' + p.emoji + ' ' + esc(p.title) + '</b><br>' + esc(p.comm) + ' · ' + esc(p.kind) + '<br><small>' + esc(p.sub) + '</small><br><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=' + p.lat + ',' + p.lng + '">เปิดใน Google Maps</a>'));
-      map.fitBounds(L.featureGroup(ms).getBounds().pad(0.25), { maxZoom: 15 });
-      setTimeout(() => map.invalidateSize(), 200);
-    } catch (e) { svgFallback(el, pts); }
-  }
+  /* ---------- 2) กล่องแจ้งเตือน ---------- */
+  const SEEN = 'spw_inbox_seen';
+  const seenAt = () => { try { return +localStorage.getItem(SEEN) || 0; } catch (e) { return 0; } };
+  const ibPath = () => T() ? '/tinbox/' + B.emailKey(A.ME.email) : (A.sid() ? '/inbox/' + A.sid() : null);
+  const items = () => { const d = A.D.inbox || {}; return Object.keys(d).map(k => Object.assign({ id: k }, d[k])).filter(x => x && x.t && (!x.c || x.c === C.club.id)).sort((a, b) => (b.at || 0) - (a.at || 0)); };
+  const unread = () => { const s = seenAt(); return items().filter(x => (x.at || 0) > s).length; };
+  A.SUBS.push({ key: 'inbox', path: () => B.mode === 'demo' ? null : ibPath() });
+  A.NAVS.push({ id: 'inbox', label: 'กล่องแจ้งเตือน', icon: 'bell', order: 11, badge: unread });
+  A.V.inbox = function () {
+    const l = items(), s = seenAt();
+    let b = '<section class="card"><div class="row"><div class="grow"><div class="lb" style="margin:0">การแจ้งเตือนย้อนหลัง</div><div class="muted">เก็บ 60 รายการล่าสุด แม้เครื่องจะไม่เด้งก็ดูได้ที่นี่</div></div>' + (l.length ? '<button class="btn ghost sm" data-act="ibClear">ล้างทั้งหมด</button>' : '') + '</div></section>';
+    b += '<section class="card">' + (l.map(x => '<a class="li ib' + ((x.at || 0) > s ? ' new' : '') + '" href="' + esc(/^#\//.test(x.u || '') ? x.u : '#/inbox') + '"><div class="row"><b class="grow">' + esc(x.t) + '</b><span class="muted">' + esc(M.thDate(x.at)) + ' ' + esc(new Date(x.at).toTimeString().slice(0, 5)) + '</span></div>' + (x.b ? '<div class="muted">' + esc(x.b) + '</div>' : '') + '</a>').join('') || '<div class="empty">ยังไม่มีการแจ้งเตือน' + (B.mode === 'demo' ? ' (โหมดสาธิตไม่ส่งแจ้งเตือน)' : '') + '</div>') + '</section>';
+    setTimeout(() => { const top = (l[0] || {}).at || 0; if (top > s) { try { localStorage.setItem(SEEN, String(top)); } catch (e) { /* ignore */ } } }, 1500);
+    return { title: 'กล่องแจ้งเตือน', body: b };
+  };
+  A.ACT.ibClear = async () => { const p = ibPath(); if (!p || !(await M.confirmBox('ล้างกล่องแจ้งเตือน', 'ลบรายการย้อนหลังทั้งหมดของบัญชีนี้', 'ล้าง', true))) return; A.W(B.remove(p)); };
+  /* ตัดให้เหลือ 60 รายการ (ทำครั้งเดียวต่อการเปิดแอป) */
+  let trimmed = false;
+  setInterval(() => { if (trimmed || !signed() || B.mode === 'demo') return; const d = A.D.inbox || {}, ks = Object.keys(d); if (!ks.length) return; trimmed = true;
+    if (ks.length > 60) { const upd = {}, p = ibPath(); ks.sort((a, b) => (d[b].at || 0) - (d[a].at || 0)).slice(60).forEach(k => { upd[p + '/' + k] = null; }); B.update('', upd).catch(() => { }); } }, 9000);
 
-  /* ============ 3) ห้องฟัง / เกมหูทิพย์ ============ */
-  /* items: [{id, gid, rec, kind, comm, label, by}] — ต้องโหลดไฟล์เสียงผ่าน getMedia(gid,id) */
-  function audioCandidates(G, gid, gname) {
-    const out = []; M.LIST_KINDS.forEach(k => listOf(G, k).forEach(r => mediaIds(r).forEach(id => { const t = mediaType(r, id); if (t && t !== 'audio') return;
-      const c = commObj(r) || {}; out.push({ id, gid, kind: k, known: t === 'audio', comm: c.name || 'ไม่ระบุ', color: c.color || '#6d28d9', emoji: c.emoji || '🎶', label: M.FORMS[k].summary(r).t, by: r.createdBy ? short(r.createdBy.name) : '', group: gname || '' }); })));
-    return out;
-  }
-  async function resolveAudio(cands, getMedia, cache) {
-    const res = [];
-    for (const a of cands) { const key = a.gid + '/' + a.id; let m = cache[key]; if (!m) { m = await getMedia(a.gid, a.id); if (m) cache[key] = m; } if (m && m.type === 'audio' && m.d) res.push(Object.assign({ d: m.d }, a)); }
-    return res;
-  }
-  function listenHTML(items, opts) {
-    opts = opts || {}; if (!items.length) return '<div class="empty"><div class="big">🎧</div>ยังไม่มีไฟล์เสียง — อัดเสียงในบันทึกภาคสนาม/วิเคราะห์ดนตรี (ขออนุญาตผู้ให้ข้อมูลก่อน)</div>';
-    const by = {}; items.forEach((a, i) => { (by[a.comm] = by[a.comm] || []).push(Object.assign({ i }, a)); });
-    const opt = items.map((a, i) => '<option value="' + i + '">' + esc(a.emoji + ' ' + a.comm + ' · ' + a.label + (a.group ? ' · ' + a.group : '')) + '</option>').join('');
-    return '<div class="card"><div class="card-title">🆚 ฟังเปรียบเทียบ A/B</div><div class="ab"><div><label>A</label><select data-ab="a">' + opt + '</select><audio controls preload="none" data-abp="a" src="' + items[0].d + '"></audio></div><div><label>B</label><select data-ab="b">' + opt.replace('value="' + Math.min(1, items.length - 1) + '"', 'value="' + Math.min(1, items.length - 1) + '" selected') + '</select><audio controls preload="none" data-abp="b" src="' + items[Math.min(1, items.length - 1)].d + '"></audio></div></div>' +
-      '<div class="hint" style="margin-top:6px">ฟังแล้วเปรียบเทียบ: สีสันเสียง · ระบบเสียง/ทำนอง · จังหวะและความเร็ว · การบรรเลงร่วม · อารมณ์ของเพลง — เหมือนหรือต่างกันอย่างไร เพราะอะไร</div></div>' +
-      '<div class="card gold"><div class="card-title">🎯 เกมหูทิพย์</div><div class="muted">ฟังเสียงปริศนา แล้วทายว่าเป็นดนตรีของชุมชนใด</div><div id="quiz"><button class="btn gold" data-quiz="start">▶ เริ่มเกม</button></div></div>' +
-      Object.keys(by).map(k => '<div class="card"><div class="card-title">' + by[k][0].emoji + ' ' + esc(k) + ' <span class="muted">(' + by[k].length + ')</span></div>' + by[k].map(a => '<div class="lrow"><div class="grow"><b>' + esc(a.label) + '</b><div class="muted" style="font-size:.78rem">' + esc([a.group, a.by ? 'อัดโดย ' + a.by : ''].filter(Boolean).join(' · ')) + '</div></div><audio controls preload="none" src="' + a.d + '"></audio></div>').join('') + '</div>').join('');
-  }
-  function bindListen(root, items) {
-    if (!root || !items.length) return;
-    root.addEventListener('change', e => { const s = e.target.closest('[data-ab]'); if (!s) return; const p = root.querySelector('[data-abp="' + s.dataset.ab + '"]'); p.src = items[+s.value].d; });
-    let q = { n: 0, ok: 0, cur: null }; const comms = Array.from(new Set(items.map(a => a.comm)));
-    root.addEventListener('click', e => {
-      const b = e.target.closest('[data-quiz]'); if (!b) return; const box = root.querySelector('#quiz');
-      if (b.dataset.quiz === 'start' || b.dataset.quiz === 'next') {
-        if (comms.length < 2) { box.innerHTML = '<div class="tip">ต้องมีเสียงอย่างน้อย 2 ชุมชนจึงจะเล่นเกมได้</div>'; return; }
-        q.cur = items[Math.floor(Math.random() * items.length)];
-        const ch = comms.slice().sort(() => Math.random() - .5).slice(0, 4); if (!ch.includes(q.cur.comm)) ch[0] = q.cur.comm; ch.sort(() => Math.random() - .5);
-        box.innerHTML = '<div class="quiz-score">ข้อที่ ' + (q.n + 1) + ' · ถูก ' + q.ok + '</div><audio controls autoplay src="' + q.cur.d + '"></audio><div class="chips" style="margin-top:8px">' + ch.map(c => '<button data-quiz="ans" data-c="' + esc(c) + '">' + esc(c) + '</button>').join('') + '</div>';
-      } else if (b.dataset.quiz === 'ans' && q.cur) {
-        q.n++; const right = b.dataset.c === q.cur.comm; if (right) q.ok++;
-        box.innerHTML = '<div class="quiz-score">' + (right ? '🎉 ถูกต้อง!' : '😅 ยังไม่ใช่') + ' คำตอบคือ <b>' + esc(q.cur.emoji + ' ' + q.cur.comm) + '</b> — ' + esc(q.cur.label) + '</div><div class="muted">คะแนน ' + q.ok + '/' + q.n + '</div><button class="btn gold" style="margin-top:8px" data-quiz="next">ข้อต่อไป ›</button>'; q.cur = null;
-      }
-    });
-  }
-
-  window.EXTRAS = { BADGES, badges, badgesHTML, pointsFrom, legendHTML, renderMap, audioCandidates, resolveAudio, listenHTML, bindListen };
+  /* ---------- 3) สำรองข้อมูล + พื้นที่ฐานข้อมูล (ครู · หน้าจัดการ) ---------- */
+  const ST = { last: undefined, usage: null, busy: '' };
+  function loadLast() { if (ST.last !== undefined || B.mode === 'demo') return; ST.last = null; B.get('/backup/last').then(v => { ST.last = v || false; A.rerender(); }).catch(() => { ST.last = false; }); }
+  A.MANAGE.push(() => {
+    if (!T()) return ''; loadLast(); const l = ST.last, old = l && l.at && Date.now() - l.at > 3 * 86400000;
+    let b = '<section class="card"><div class="lb">สำรองข้อมูล</div><div class="kv"><span>สำรองอัตโนมัติลง Google Drive ครั้งล่าสุด</span><b>' + (l && l.at ? esc(M.thDate(l.at)) + ' ' + new Date(l.at).toTimeString().slice(0, 5) + ' น. · ' + mb(l.bytes || 0) : (l === null ? 'กำลังตรวจ…' : 'ยังไม่เคยสำรอง')) + '</b></div>' +
+      (l === false || old ? '<div class="note warn">' + (old ? 'ไม่มีการสำรองอัตโนมัติเกิน 3 วัน' : 'ยังไม่มีการสำรองอัตโนมัติ') + ' — ตรวจว่าได้วาง tools/push-relay.gs รุ่นล่าสุดใน Apps Script และเรียกใช้ฟังก์ชัน setup แล้ว</div>' : '') +
+      '<div class="muted" style="margin:8px 0">ไฟล์สำรองอยู่ในโฟลเดอร์ “สำรองฐานข้อมูลชมรม” ใน Google Drive ของครู เก็บย้อนหลัง 30 วัน · ควรดาวน์โหลดเก็บเองก่อนขึ้นปีการศึกษาใหม่ทุกครั้ง</div>' +
+      '<button class="btn" data-act="bkDown"' + (ST.busy ? ' disabled' : '') + '>' + ic('down', 18) + (ST.busy === 'bk' ? 'กำลังรวบรวมข้อมูล …' : 'ดาวน์โหลดไฟล์สำรองตอนนี้') + '</button></section>';
+    b += '<section class="card"><div class="lb">พื้นที่ฐานข้อมูล (แผนฟรีจำกัด 1 GB)</div>';
+    if (ST.usage) { const u = ST.usage, pct = Math.min(100, u.total / 1073741824 * 100);
+      b += '<div class="kv"><span>ใช้อยู่ทั้งระบบโดยประมาณ</span><b>' + mb(u.total) + ' · ' + pct.toFixed(1) + '%</b></div><div class="lvbar"><i style="width:' + Math.max(1, pct) + '%"></i></div>' +
+        u.rows.map(r => '<div class="kv"><span>' + esc(r[0]) + '</span><b>' + mb(r[1]) + '</b></div>').join('') +
+        (u.old.length ? '<div class="lb" style="margin-top:12px">รูปหลักฐานการซ้อมของปีก่อน (ลบได้เพื่อคืนพื้นที่)</div>' + u.old.map(o => '<div class="kv"><span>ปีการศึกษา ' + esc(o.y) + ' · ' + mb(o.n) + '</span><button class="btn ghost sm danger" data-act="stDel" data-y="' + esc(o.y) + '">ลบรูปของปีนี้</button></div>').join('') : '') +
+        '<div class="muted" style="margin-top:8px">คำนวณจากชมรม' + esc(C.club.name) + 'และข้อมูลกลาง เมื่อ ' + new Date(u.at).toTimeString().slice(0, 5) + ' น.</div>';
+    } else b += '<div class="muted" style="margin-bottom:10px">รูปสมาชิกและรูปหลักฐานการซ้อมใช้พื้นที่มากที่สุด กดคำนวณเพื่อดูว่าใช้ไปเท่าไร (ต้องดาวน์โหลดข้อมูลทั้งชมรม ควรใช้ Wi-Fi)</div>';
+    b += '<button class="btn ghost" data-act="stCalc"' + (ST.busy ? ' disabled' : '') + ' style="margin-top:8px">' + (ST.busy === 'st' ? 'กำลังคำนวณ …' : ST.usage ? 'คำนวณใหม่' : 'คำนวณการใช้พื้นที่') + '</button></section>';
+    return b;
+  });
+  const busy = v => { ST.busy = v; A.rerender(); };
+  Object.assign(A.ACT, {
+    bkDown: async () => {
+      if (!T() || ST.busy) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000); busy('bk');
+      try { const out = { app: 'sapphawathit', version: C.version, at: new Date().toISOString(), c: {} };
+        for (const cid of A.myClubs()) out.c[cid] = await B.get('/c/' + cid);
+        for (const k of ['people', 'privateInfo', 'photos', 'teachers']) { try { out[k] = await B.get('/' + k); } catch (e) { out[k] = null; } }
+        const d = new Date(), name = 'สำรองชมรม-' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.json';
+        await M.saveBlob(new Blob([JSON.stringify(out)], { type: 'application/json' }), name); A.log('backup.download', '', name); toast('บันทึกไฟล์สำรองแล้ว เก็บไว้ในที่ปลอดภัย (มีข้อมูลส่วนตัวของนักเรียน)', 6000); }
+      catch (e) { console.error(e); toast('สำรองไม่สำเร็จ: ' + A.errTH(e), 6000); }
+      busy('');
+    },
+    stCalc: async () => {
+      if (!T() || ST.busy) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์', 3000); busy('st');
+      try { const cur = String(A.year()), club = (await B.get('/c/' + C.club.id)) || {}, rows = [], old = []; let total = 0, mph = 0, att = 0;
+        Object.keys(club.members || {}).forEach(s => { mph += bytes((club.members[s] || {}).photo || ''); });
+        Object.keys(club.y || {}).forEach(y => { const n = bytes((club.y[y] || {}).attphoto); att += n; if (y !== cur && n > 2000) old.push({ y, n }); });
+        const all = bytes(club); total += all; rows.push(['รูปหลักฐานการซ้อม (ทุกปี)', att], ['รูปประจำตัวในทะเบียนชมรม', mph], ['ข้อมูลอื่นของชมรม' + C.club.name, Math.max(0, all - att - mph)]);
+        for (const k of [['people', 'ทะเบียนกลาง (รวมรูป)'], ['photos', 'รูปความละเอียดสูงสำหรับพิมพ์'], ['privateInfo', 'ข้อมูลติดต่อ']]) { let n = 0; try { n = bytes(await B.get('/' + k[0])); } catch (e) { n = 0; } total += n; rows.push([k[1], n]); }
+        ST.usage = { total, rows, old: old.sort((a, b) => a.y.localeCompare(b.y)), at: Date.now() }; }
+      catch (e) { console.error(e); toast('คำนวณไม่สำเร็จ: ' + A.errTH(e), 6000); }
+      busy('');
+    },
+    stDel: async d => {
+      if (!T() || !/^25[0-9]{2}$/.test(d.y) || d.y === String(A.year())) return;
+      if (!(await M.confirmBox('ลบรูปหลักฐานการซ้อม ปี ' + d.y, 'ลบเฉพาะรูปถ่ายหลักฐานของปีการศึกษา ' + esc(d.y) + ' ผลการเช็กชื่อยังอยู่ครบ ลบแล้วกู้คืนไม่ได้ (ยกเว้นจากไฟล์สำรอง)', 'ลบรูป', true))) return;
+      try { await B.direct('remove', 'y/' + d.y + '/attphoto'); A.log('storage.delPhotos', '', 'ปี ' + d.y); toast('ลบรูปของปี ' + d.y + ' แล้ว'); ST.usage = null; A.rerender(); } catch (e) { toast('ลบไม่สำเร็จ: ' + A.errTH(e), 5000); }
+    }
+  });
 })();

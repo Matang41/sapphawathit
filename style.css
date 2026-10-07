@@ -407,3 +407,16 @@ b.hot { color: var(--bad); font-weight: 600; }
 .ct-h { font-size: 46px; line-height: 1.2; } .ct-club { font-size: 18px; }
 .ct-l { margin-top: 8px; font-size: 19px; } .ct-n { font-size: 40px; } .ct-title { font-size: 28px; } .ct-d { font-size: 19px; } .ct-date { font-size: 18px; margin-top: 8px; } .ct-sl { height: 40px; }
 
+
+/* ===== v3.5 ===== */
+#upd-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav) + 18px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--gold); color: var(--deep); font-weight: 600; font-size: .92rem; box-shadow: 0 6px 20px rgba(0,0,0,.28); max-width: calc(100vw - 32px); }
+@media (min-width: 900px) { #upd-bar { bottom: 24px; } }
+a.li.ib { display: block; text-decoration: none; color: inherit; } a.li.ib.new b::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-d); margin-right: 8px; vertical-align: middle; }
+.side-foot::after { content: 'พัฒนาโดย นายนนทพัทธ์ วงค์มูล © 2026'; flex-basis: 100%; font-size: .68rem; opacity: .75; margin-top: 6px; }
+.side-foot { flex-wrap: wrap; }
+.login::after, .pub::after { content: 'พัฒนาโดย นายนนทพัทธ์ วงค์มูล © 2026'; display: block; text-align: center; font-size: .75rem; opacity: .7; padding: 18px 12px 10px; }
+.login::after { position: absolute; left: 0; right: 0; bottom: 6px; color: var(--on-dark); }
+.rp-page.mn { padding: 40px 48px; } .mn-b { font-size: 15.5px; line-height: 1.5; }
+.mn-s { margin-bottom: 14px; } .mn-s h4 { margin: 0 0 6px; padding: 6px 12px; background: var(--plum); color: var(--gold); border-radius: 8px; font-family: 'Noto Serif Thai', 'Sarabun', serif; font-size: 17px; font-weight: 600; }
+.mn-s p { margin: 0 0 3px; padding-left: 14px; } .mn-s p.b { padding-left: 28px; text-indent: -14px; } .mn-s p.i { padding-left: 34px; color: var(--mut); } .mn-s p.h { font-weight: 700; color: var(--deep); margin-top: 4px; } .mn-s .gap { height: 7px; }
+.login { position: relative; }
