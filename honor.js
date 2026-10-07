@@ -125,7 +125,7 @@
       if (ann) { const r = {}; sel.forEach(s => { r[s] = A.fullName(ms[s]); }); upd['awards/' + awId] = { title, body: detail, rcp: sel.length ? r : null, ext: ext.length ? ext : null, pinned: $('#ar-pin', w).checked || null, at: now, by: A.myName(), y: A.year(), cert: cert || null }; }
       if (cert) rcps.forEach((p, i) => { const id = B.uid() + i, rec = { no: 'ก.' + String(first + i).padStart(3, '0') + '/' + A.year(), name: p.name, cls: p.cls || null, sid: p.sid || null, title, detail, date, signers, club: C.club.id, y: A.year(), status: 'ok', at: now, by: A.myName(), awardId: ann ? awId : null };
         upd['certs/' + id] = rec; if (p.sid) upd['certidx/' + p.sid + '/' + id] = rec; list.push(Object.assign({ id }, rec)); });
-      A.W(B.update('', JSON.parse(JSON.stringify(upd)))); A.log('award.give', '', title + ' · ' + rcps.length + ' คน'); w.remove(); toast('บันทึกแล้ว' + (cert ? ' ออกเกียรติบัตร ' + list.length + ' ใบ' : ''));
+      A.W(B.update('', JSON.parse(JSON.stringify(upd)))); { const to = rcps.map(p => p.sid).filter(Boolean); if (to.length) window.PUSH && PUSH.notify('cert', { to, title: cert ? 'คุณได้รับเกียรติบัตร' : 'คุณได้รับการยกย่อง', body: title, url: '#/honor' }); } A.log('award.give', '', title + ' · ' + rcps.length + ' คน'); w.remove(); toast('บันทึกแล้ว' + (cert ? ' ออกเกียรติบัตร ' + list.length + ' ใบ' : ''));
       if (cert) openCerts(list);
     });
   }

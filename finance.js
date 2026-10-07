@@ -84,7 +84,7 @@
           const n = await B.tx(Y() + '/counters/' + k, c => (c || 0) + 1), id = B.uid(), T = A.teacher();
           const rec = { kind: k, no: (k === 'in' ? 'ร.' : 'บ.') + String(n).padStart(3, '0') + '/' + A.year(), date: v('#t-date'), amount: a, party: v('#t-party'), title: v('#t-title'), cat: v('#t-cat'), at: Date.now(), by: A.by(), status: T ? 'approved' : 'pending' };
           if (v('#t-note')) rec.note = v('#t-note'); if (T) { rec.approvedBy = A.myName(); rec.approvedAt = Date.now(); }
-          await B.direct('set', Y() + '/ledger/' + id, rec); if (T) publish(Object.assign({ id }, rec));
+          await B.direct('set', Y() + '/ledger/' + id, rec); if (T) publish(Object.assign({ id }, rec)); else window.PUSH && PUSH.notify('tx', { ref: rec.no });
           A.log('fin.new', '', rec.no + ' ' + money(a)); w.remove(); toast('ออก' + KN[k] + ' เลขที่ ' + rec.no + ' แล้ว'); A.ACT.txOpen({ id }, null, Object.assign({ id }, rec));
         } catch (er) { console.error(er); btn.disabled = false; err('บันทึกไม่สำเร็จ: ' + ((er && (er.code || er.message)) || er)); }
       });

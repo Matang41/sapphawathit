@@ -153,7 +153,7 @@
       list.forEach(x => { const v = markOf(x, d, s); n[v]++; upd[Y() + '/att/' + x + '/' + key(d, s)] = v; const fv = (v === 'p' || v === 'l') ? focusOf(x, d, s) : 0; upd[Y() + '/focus/' + x + '/' + key(d, s)] = fv || null; });
       upd[Y() + '/attmeta/' + d + '/' + s] = { by: A.by(), at: Date.now(), n, hasPhoto: !!(CHK.photo || (old && old.hasPhoto)) };
       A.W(B.update('', upd)); if (CHK.photo) A.W(B.set(Y() + '/attphoto/' + d + '/' + s, CHK.photo));
-      CHK.marks = {}; CHK.focus = {}; CHK.photo = null; toast('บันทึกการเช็กชื่อแล้ว'); A.rerender();
+      CHK.marks = {}; CHK.focus = {}; CHK.photo = null; toast('บันทึกการเช็กชื่อแล้ว'); if (!A.teacher()) window.PUSH && PUSH.notify('att', { ref: A.dTH(d, 'short') + ' ช่วง' + SES[s] }); A.rerender();
     },
     ckConfirm: () => { if (!checker()) return; A.W(B.set(Y() + '/attmeta/' + CHK.date + '/' + CHK.ses + '/confirmedBy', Object.assign({ at: Date.now() }, A.by()))); toast('ยืนยันแล้ว'); },
     ckPhoto: async d => {
@@ -172,14 +172,14 @@
         if (!date) return err('เลือกวันที่'); if (!am && !pm) return err('เลือกรอบที่ลาอย่างน้อยหนึ่งรอบ'); if ((am && lmark(date, 'am', sid)) || (pm && lmark(date, 'pm', sid))) return err('มีใบลาของวันและรอบนี้อยู่แล้ว'); if (detail.length < 3) return err('กรอกรายละเอียด');
         const id = B.uid(), upd = {}; upd[Y() + '/leaves/' + sid + '/' + id] = { date, am, pm, why: $('#l-why', w).value, detail, at: Date.now(), status: 'pending', late: date < A.todayISO() };
         if (am) upd[Y() + '/leavemark/' + key(date, 'am') + '/' + sid] = 'pending'; if (pm) upd[Y() + '/leavemark/' + key(date, 'pm') + '/' + sid] = 'pending';
-        A.W(B.update('', upd)); w.remove(); toast('ส่งใบลาแล้ว รอครูรับทราบ');
+        A.W(B.update('', upd)); window.PUSH && PUSH.notify('leave', { ref: id }); w.remove(); toast('ส่งใบลาแล้ว รอครูรับทราบ');
       });
     },
     leaveAck: d => {
       if (!A.teacher()) return; const l = ((A.D.leaves || {})[d.sid] || {})[d.id]; if (!l) return; const upd = {}, base = Y() + '/leaves/' + d.sid + '/' + d.id + '/';
       upd[base + 'status'] = d.v; upd[base + 'ackBy'] = A.myName(); upd[base + 'ackAt'] = Date.now();
       ['am', 'pm'].forEach(s => { if (!l[s]) return; upd[Y() + '/leavemark/' + key(l.date, s) + '/' + d.sid] = d.v; if (d.v === 'ack') upd[Y() + '/att/' + d.sid + '/' + key(l.date, s)] = 'v'; });
-      A.W(B.update('', upd)); toast(d.v === 'ack' ? 'รับทราบแล้ว บันทึกเป็น “ลา” ในการเช็กชื่อ' : 'บันทึกว่าไม่อนุญาต');
+      A.W(B.update('', upd)); window.PUSH && PUSH.notify('leaveok', { to: d.sid, title: d.v === 'ack' ? 'ครูรับทราบใบลาแล้ว' : 'ใบลาไม่ได้รับอนุญาต', body: 'ใบลาวันที่ ' + A.dTH(l.date, 'short'), url: '#/practice' }); toast(d.v === 'ack' ? 'รับทราบแล้ว บันทึกเป็น “ลา” ในการเช็กชื่อ' : 'บันทึกว่าไม่อนุญาต');
     },
     attRule: () => {
       const r = rule(); const w = modal('<h3>เกณฑ์เฝ้าระวัง</h3><form class="form"><div class="g3">' + fld('ขาดตั้งแต่ (ครั้ง)', '<input class="in" id="r-a" inputmode="numeric" value="' + r.absent + '">') + fld('ลาตั้งแต่ (ครั้ง)', '<input class="in" id="r-l" inputmode="numeric" value="' + r.leave + '">') + '</div><div class="muted">นับตามช่วงเวลาที่เลือกในตารางสรุป</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true });

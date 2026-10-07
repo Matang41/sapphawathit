@@ -90,7 +90,7 @@
       A.evPeople(e).forEach(s => { if (tokenOf(s, d.id)) return; const m = A.members()[s], t = newToken(); n++;
         const ct = { club: M.C.club.long, cid: M.C.club.id, y: A.year(), eid: d.id, sid: s, student: A.fullName(m), cls: A.cls(m), title: e.title, when: A.evDate(e, 'dow'), time: A.evTime(e) || null, place: e.place || null, purpose: e.purpose || null, note: e.note || null, teacher: A.school().teacher || null, issued: A.dTH(A.todayISO(), 'full'), createdAt: Date.now() };
         upd['ctoken/' + t] = JSON.parse(JSON.stringify(ct)); upd[Y() + '/consents/' + s + '/' + d.id] = t; CT[t] = ct; });
-      if (n) { A.W(B.update('', upd)); A.log('consent.make', '', e.title + ' ' + n + ' คน'); toast('สร้างลิงก์แล้ว ' + n + ' คน'); }
+      if (n) { A.W(B.update('', upd)); window.PUSH && PUSH.notify('ctreq', { to: A.evPeople(e), title: 'มีใบขออนุญาตผู้ปกครอง', body: e.title + ' — เปิดแอปเพื่อส่งลิงก์ให้ผู้ปกครองเซ็น', url: '#/consent' }); A.log('consent.make', '', e.title + ' ' + n + ' คน'); toast('สร้างลิงก์แล้ว ' + n + ' คน'); }
     },
     ctRefresh: d => { A.evPeople(A.D.events[d.id]).forEach(s => { const t = tokenOf(s, d.id); if (t) delete CT[t]; }); A.rerender(); toast('กำลังตรวจคำตอบล่าสุด'); },
     ctCopy: async d => { const l = linkOf(d.t); try { await navigator.clipboard.writeText(l); toast('คัดลอกลิงก์แล้ว'); } catch (e) { modal('<h3>ลิงก์สำหรับผู้ปกครอง</h3><textarea class="in" rows="3" readonly>' + esc(l) + '</textarea><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true }); } },
@@ -136,7 +136,7 @@
       const name = $('#p-n').value.trim(), phone = $('#p-p').value.trim(); if (name.length < 4) return err('กรอกชื่อ-สกุลผู้ปกครอง'); if (!/^[0-9+\- ]{9,15}$/.test(phone)) return err('กรอกเบอร์โทรให้ถูกต้อง'); if (drawn < 8) return err('กรุณาเซ็นชื่อในกรอบ');
       const sign = { name, relation: $('#p-r').value, phone, allow: $('input[name=al]:checked').value === '1', sig: cv.toDataURL('image/png'), at: Date.now() };
       const btn = $('#pf button.block'); btn.disabled = true; btn.textContent = 'กำลังส่ง …';
-      try { await B.direct('set', 'ctoken/' + t + '/sign', sign); ct.sign = sign; done(); window.scrollTo(0, 0); }
+      try { await B.direct('set', 'ctoken/' + t + '/sign', sign); if (window.PUSH && ct.cid) PUSH.raw(ct.cid, 'ct-' + t, { k: 'ct', ref: t }); ct.sign = sign; done(); window.scrollTo(0, 0); }
       catch (er) { btn.disabled = false; btn.textContent = 'ส่งคำตอบ'; err('ส่งไม่สำเร็จ — ลิงก์นี้อาจถูกใช้ตอบไปแล้ว หรืออินเทอร์เน็ตขัดข้อง'); }
     });
     return true;

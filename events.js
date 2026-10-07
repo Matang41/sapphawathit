@@ -124,7 +124,7 @@
       if (!v('#e-title') || !v('#e-date')) return err('กรอกชื่อกิจกรรมและวันที่'); if (v('#e-end') && v('#e-end') < v('#e-date')) return err('วันสิ้นสุดต้องไม่ก่อนวันเริ่ม');
       const pp = {}; $$('input[name=pp]:checked', w).forEach(c => pp[c.value] = true);
       const rec = { title: v('#e-title'), kind: v('#e-kind'), date: v('#e-date'), dateEnd: v('#e-end') || null, start: v('#e-start') || null, end: v('#e-stop') || null, place: v('#e-place') || null, purpose: v('#e-purpose') || null, note: v('#e-note') || null, people: Object.keys(pp).length ? pp : null, updatedAt: Date.now(), updatedBy: A.by() };
-      if (eid) A.W(B.update(Y() + '/events/' + eid, rec)); else { const id = B.uid(); A.W(B.set(Y() + '/events/' + id, Object.assign({ status: 'on', createdAt: Date.now(), createdBy: A.by() }, JSON.parse(JSON.stringify(rec))))); location.hash = '#/ev/' + id; }
+      if (eid) A.W(B.update(Y() + '/events/' + eid, rec)); else { const id = B.uid(); A.W(B.set(Y() + '/events/' + id, Object.assign({ status: 'on', createdAt: Date.now(), createdBy: A.by() }, JSON.parse(JSON.stringify(rec))))); window.PUSH && PUSH.notify('ev', { title: 'กิจกรรมใหม่: ' + rec.title, body: A.dTH(rec.date, 'short') + (rec.start ? ' เวลา ' + rec.start : '') + (rec.place ? ' ณ ' + rec.place : ''), url: '#/ev/' + id, to: rec.people ? Object.keys(rec.people) : null }); location.hash = '#/ev/' + id; }
       A.log(eid ? 'event.edit' : 'event.add', '', rec.title); w.remove(); toast('บันทึกแล้ว');
     });
   }
@@ -301,7 +301,7 @@
       if (!canPost()) return; const rep = A.is('rep');
       const w = modal('<h3>ประกาศงาน</h3><form class="form">' + fld('หัวข้อ', '<input class="in" id="n-t" required>') + fld('รายละเอียด', '<textarea class="in" id="n-b" rows="4"></textarea>') +
         fld('ถึง', rep ? '<input class="in" value="สมาชิก ม.' + A.ME.roleGrade + '" disabled>' : '<select class="in" id="n-g">' + opt([[0, 'สมาชิกทุกคน']].concat([1, 2, 3, 4, 5, 6].map(g => [g, 'เฉพาะ ม.' + g]))) + '</select>') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">ประกาศ</button></div></form>', { center: true, sticky: true });
-      $('form', w).addEventListener('submit', x => { x.preventDefault(); const t = $('#n-t', w).value.trim(); if (!t) return; A.W(B.set(Y() + '/announce/' + B.uid(), { title: t, body: $('#n-b', w).value.trim() || null, grade: rep ? +A.ME.roleGrade : (+$('#n-g', w).value || null), at: Date.now(), by: A.by() })); w.remove(); toast('ประกาศแล้ว'); EV.tab = 'news'; });
+      $('form', w).addEventListener('submit', x => { x.preventDefault(); const t = $('#n-t', w).value.trim(); if (!t) return; A.W(B.set(Y() + '/announce/' + B.uid(), { title: t, body: $('#n-b', w).value.trim() || null, grade: rep ? +A.ME.roleGrade : (+$('#n-g', w).value || null), at: Date.now(), by: A.by() })); window.PUSH && PUSH.notify('ann', { title: 'ประกาศ: ' + t, body: $('#n-b', w).value.trim(), url: '#/events', grade: rep ? +A.ME.roleGrade : (+$('#n-g', w).value || null) }); w.remove(); toast('ประกาศแล้ว'); EV.tab = 'news'; });
     },
     annAck: d => { if (A.sid()) A.W(B.set(Y() + '/acks/' + A.sid() + '/' + d.id, Date.now())); },
     annWho: d => { const a = (A.D.announce || {})[d.id]; if (!a) return; const t = annTargets(a), yes = t.filter(s => acked(d.id, s)), no = t.filter(s => !acked(d.id, s)); const nm = l => l.sort(A.byClass).map(s => esc(A.fullName(A.members()[s]) + ' (' + A.cls(A.members()[s]) + ')')).join('<br>') || '-';

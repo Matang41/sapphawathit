@@ -218,6 +218,12 @@
      "$k": {
       ".validate": "newData.hasChild('img') && newData.child('img').isString() && newData.child('img').val().length < 80000"
      }
+    },
+    "pushq": {
+     "$id": {
+      ".write": "!data.exists() && newData.exists() && ((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && newData.child('by').val() == auth.token.email.replace('@sappha.ac.th', '') && (newData.child('k').val() == 'leave' || newData.child('k').val() == 'griev')) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && newData.child('by').val() == auth.token.email.replace('@sappha.ac.th', '') && root.child('c').child($cid).child('roles').child(auth.token.email.replace('@sappha.ac.th', '')).exists() && (newData.child('k').val() == 'att' || newData.child('k').val() == 'tx' || newData.child('k').val() == 'ann' || newData.child('k').val() == 'ev')) || (newData.child('k').val() == 'join' && $id == 'join-' + newData.child('ref').val() && root.child('c').child($cid).child('applications').child(newData.child('ref').val()).exists()) || (newData.child('k').val() == 'ct' && $id == 'ct-' + newData.child('ref').val() && root.child('ctoken').child(newData.child('ref').val()).child('sign').exists() && root.child('ctoken').child(newData.child('ref').val()).child('cid').val() == $cid))",
+      ".validate": "newData.hasChildren(['k', 'at']) && newData.child('k').isString() && newData.child('k').val().length < 12 && newData.child('at').isNumber() && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 120)) && (!newData.child('body').exists() || (newData.child('body').isString() && newData.child('body').val().length <= 400)) && (!newData.child('ref').exists() || (newData.child('ref').isString() && newData.child('ref').val().length <= 80)) && (!newData.child('to').exists() || (newData.child('to').isString() && newData.child('to').val().length <= 4000))"
+     }
     }
    }
   },
@@ -244,6 +250,9 @@
      "$k": {
       ".validate": "newData.hasChildren(['t','at']) && newData.child('t').isString() && newData.child('t').val().length < 400"
      }
+    },
+    "poff": {
+     ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
     }
    }
   },
@@ -276,7 +285,7 @@
    }
   },
   "rulesProbe": {
-   "v7": {
+   "v8": {
     ".read": true
    }
   },
@@ -341,6 +350,12 @@
     ".read": true,
     ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
     ".validate": "$t.matches(/^[a-z0-9]{12,40}$/)"
+   }
+  },
+  "tpush": {
+   "$key": {
+    ".read": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key",
+    ".write": "auth != null && auth.token.email_verified == true && auth.token.email.toLowerCase().replace('.', ',') == $key && (auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))"
    }
   }
  }

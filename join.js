@@ -76,7 +76,7 @@
       if (v('#j-phone')) rec.phone = v('#j-phone'); if (v('#j-about')) rec.about = v('#j-about').slice(0, 1000);
       const ins = {}; $$('input[name=inst]:checked').forEach(c => ins[c.value] = true); if (Object.keys(ins).length) rec.inst = ins;
       const btn = $('#jf button.block'); btn.disabled = true; btn.textContent = 'กำลังส่ง …';
-      try { await B.direct('set', 'applications/' + sid, rec);
+      try { await B.direct('set', 'applications/' + sid, rec); if (window.PUSH) PUSH.raw(C.club.id, 'join-' + sid, { k: 'join', ref: sid });
         page('<div class="note" style="font-size:1rem"><b>ส่งใบสมัครเรียบร้อยแล้ว</b><br>' + esc(rec.prefix + rec.first + ' ' + rec.last) + ' · เลขประจำตัว ' + esc(sid) + '</div><p style="text-align:left">เมื่อครูรับเข้าทะเบียนแล้ว เข้าใช้แอปชมรมด้วยอีเมลโรงเรียน <b>' + esc(sid) + '@' + esc(C.auth.domain) + '</b></p><a class="btn block" href="' + esc(location.pathname + '?club=' + C.club.id) + '">ไปหน้าเข้าสู่ระบบ</a>'); window.scrollTo(0, 0); }
       catch (er) { btn.disabled = false; btn.textContent = 'ส่งใบสมัคร'; err('ส่งไม่สำเร็จ — เลขประจำตัวนี้อาจส่งใบสมัครไปแล้ว หรือเป็นสมาชิกอยู่แล้ว หรืออินเทอร์เน็ตขัดข้อง หากต้องการแก้ไขข้อมูลให้แจ้งครู'); }
     });

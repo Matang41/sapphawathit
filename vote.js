@@ -82,7 +82,7 @@
       const rec = { title: v('#p-title'), desc: v('#p-desc') || null, who: v('#p-who'), status: 'open', createdAt: Date.now(), by: A.myName(), y: A.year() }; if (!rec.title) return err('กรอกหัวข้อ');
       if (el) { const cd = $$('input[name=cd]:checked', w).map(c => c.value); if (cd.length < 2) return err('เลือกผู้ได้รับการเสนอชื่ออย่างน้อย 2 คน'); rec.election = v('#p-pos'); rec.kind = 'single'; rec.openBallot = false; rec.options = cd.map(s => A.fullName(ms[s]) + ' · ' + A.cls(ms[s])).concat(['ไม่ประสงค์ลงคะแนน']); rec.optSids = cd; }
       else { rec.kind = v('#p-kind'); rec.openBallot = $('#p-open', w).checked; if (rec.kind !== 'yesno') { rec.options = Array.from(new Set(v('#p-opts').split(/\r?\n/).map(s => s.trim()).filter(Boolean))); if (rec.options.length < 2) return err('ใส่ตัวเลือกอย่างน้อย 2 ข้อ'); } }
-      A.W(B.set('polls/' + B.uid(), JSON.parse(JSON.stringify(rec)))); A.log('poll.new', '', rec.title); w.remove(); toast('เปิดรับคะแนนแล้ว');
+      A.W(B.set('polls/' + B.uid(), JSON.parse(JSON.stringify(rec)))); A.log('poll.new', '', rec.title); window.PUSH && PUSH.notify('poll', { title: 'เปิดโหวต: ' + rec.title, body: 'เข้าแอปเพื่อลงคะแนน', url: '#/vote' }); w.remove(); toast('เปิดรับคะแนนแล้ว');
     });
   }
   document.addEventListener('submit', async e => {
@@ -135,7 +135,7 @@
       const sid = A.sid(); if (!sid) return; if (A.STATUS.online === false) return toast('ต้องออนไลน์จึงจะส่งเรื่องได้', 3500);
       const w = modal('<h3>เขียนเรื่องร้องทุกข์</h3><form class="form">' + fld('เรื่องเกี่ยวกับ', '<select class="in" id="g-t">' + opt(TOPICS.map(x => [x, x])) + '</select>') + fld('รายละเอียด', '<textarea class="in" id="g-x" rows="6" required></textarea>', 'ส่งในชื่อของคุณ เพื่อให้ครูติดตามและตอบกลับได้') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">ส่งถึงครู</button></div></form>', { center: true, sticky: true });
       $('form', w).addEventListener('submit', async e => { e.preventDefault(); const x = $('#g-x', w).value.trim(); if (x.length < 5) return toast('กรอกรายละเอียด'); const id = B.uid(), rec = { topic: $('#g-t', w).value, text: x, at: Date.now(), status: 'new' };
-        try { await B.direct('set', 'griev/' + sid + '/' + id, rec); if (G.data) { G.data[sid] = G.data[sid] || {}; G.data[sid][id] = rec; } w.remove(); toast('ส่งถึงครูแล้ว'); A.rerender(); } catch (er) { toast('ส่งไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่', 4000); } });
+        try { await B.direct('set', 'griev/' + sid + '/' + id, rec); window.PUSH && PUSH.notify('griev', { ref: id }); if (G.data) { G.data[sid] = G.data[sid] || {}; G.data[sid][id] = rec; } w.remove(); toast('ส่งถึงครูแล้ว'); A.rerender(); } catch (er) { toast('ส่งไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่', 4000); } });
     },
     gReply: d => {
       if (!A.teacher()) return; const g = ((G.data || {})[d.sid] || {})[d.id]; if (!g) return;

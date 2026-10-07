@@ -38,8 +38,8 @@ window.APP_CONFIG = {
       levels: ["ระดับ 1", "ระดับ 2", "ระดับ 3", "ระดับ 4", "ระดับ 5"],
       instruments: [] }
   ],
-  version: "3.3",
-  versionDate: "2026-10-06",
+  version: "3.4",
+  versionDate: "2026-10-07",
 
   /* ตำแหน่งในชมรม (ลำดับ = ลำดับในแผนผัง) */
   roles: [
@@ -101,7 +101,9 @@ window.APP_CONFIG = {
 
   /* สัดส่วนคะแนนพฤติกรรมรวม: ครูประเมินรายสัปดาห์ : ความตั้งใจที่ผู้เช็กการซ้อมให้ (1–3) */
   /* ★ Web Push: Firebase Console › Project settings › Cloud Messaging › Web Push certificates › Generate key pair → คัดลอก “Key pair” มาวาง */
-  vapidKey: "",
+  vapidKey: "BNe2nkkdDOpC5l8RzS0Bztxt8QqluoijT3DA5ngD3ziKDlpQzfjbRYMywkVBb4tqoxSajQXT_zQlWm5w0UCXAPA",
+  /* ★ ตัวส่งแจ้งเตือน: URL เว็บแอปของ Google Apps Script (tools/push-relay.gs) ลงท้ายด้วย /exec — เว้นว่าง = ยังไม่ส่งออก */
+  pushRelay: "https://script.google.com/macros/s/AKfycbxCOSBRu63tLaTKWQG9iIc6ReboCTs5EORzU1RUihZYXpQ0E5f490E3Wce3ykcbRed0/exec",
 
   behaveWeights: { teacher: 0.7, focus: 0.3 },
 
@@ -147,6 +149,12 @@ window.APP_CONFIG = {
 
   /* รายการอัปเดต (ใหม่สุดอยู่บนสุด) — แก้ version / versionDate ด้านบนให้ตรงกันทุกครั้งที่ออกรุ่น */
   changelog: [
+    { v: "3.4", date: "2026-10-07", title: "การแจ้งเตือนสองทาง", items: [
+      "ครูเปิดรับแจ้งเตือนได้: ใบลาใหม่ ร้องทุกข์ ใบสมัคร รายการเงินรออนุมัติ เช็กชื่อเสร็จ ผู้ปกครองตอบใบขออนุญาต",
+      "นักเรียนได้รับแจ้งเตือนอัตโนมัติ: ประกาศ กิจกรรมใหม่ เปิดโหวต ผลใบลา ใบขออนุญาต รางวัล และเตือนหนึ่งวันก่อนกิจกรรม",
+      "ครูส่งข้อความแจ้งเตือนถึงสมาชิกได้จากหน้าหลัก และทุกคนเลือกเรื่องที่ต้องการรับได้",
+      "ตัวส่งทำงานบน Google Apps Script (ฟรี) — ดู README หัวข้อการแจ้งเตือนสองทาง"
+    ] },
     { v: "3.3", date: "2026-10-06", title: "การแจ้งเตือน (Web Push)", items: [
       "นักเรียนเปิดรับแจ้งเตือนบนมือถือได้ (Android และ iPhone ที่เพิ่มไปยังหน้าจอโฮม) ผ่าน Firebase Cloud Messaging",
       "ครูส่งแจ้งเตือนได้ด้วยสคริปต์ tools/send-push.js"
