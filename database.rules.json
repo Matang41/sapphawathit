@@ -238,6 +238,12 @@
     "photo": {
      ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
      ".validate": "newData.isString() && newData.val().length < 40000"
+    },
+    "fcm": {
+     ".write": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+     "$k": {
+      ".validate": "newData.hasChildren(['t','at']) && newData.child('t').isString() && newData.child('t').val().length < 400"
+     }
     }
    }
   },
@@ -270,7 +276,7 @@
    }
   },
   "rulesProbe": {
-   "v6": {
+   "v7": {
     ".read": true
    }
   },

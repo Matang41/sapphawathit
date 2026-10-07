@@ -168,3 +168,9 @@ PWA แบบ static ไม่มี build step (HTML + CSS + Vanilla JS) โค
 - **โหมดผู้ปกครอง** (`guardian.js`): ลิงก์ `?g=รหัส` ข้อมูลสำเนาที่ `pview/{รหัส}` รหัสต่อนักเรียนที่ `gtok/{sid}`
 - **ส่งออกรายชื่อ** (`report.js`) · **ลายเซ็นครู** (`signature.js`, เก็บที่ `sigs/{emailKey}`)
 
+## รุ่น 3.3 — แจ้งเตือน Web Push (FCM)
+
+- ไฟล์ใหม่: `firebase-messaging-sw.js` (ไว้โฟลเดอร์เดียวกับ `index.html`) · `push.js` · `tools/send-push.js` (รันบนคอมพิวเตอร์ครู ห้ามอัปขึ้นเว็บ)
+- ตั้งค่า: `config.js` › `vapidKey` · วาง `database.rules.json` ใหม่ (v7) · token เก็บที่ `people/{sid}/fcm/{hash}`
+- iPhone/iPad ต้อง iOS 16.4+ และเพิ่มไปยังหน้าจอโฮมก่อน ปุ่มเปิดแจ้งเตือนต้องกดโดยนักเรียนเอง
+
