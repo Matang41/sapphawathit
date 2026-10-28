@@ -102,10 +102,10 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
     <div class="barNo" id="barNo">กดเริ่มเพื่อฟังจังหวะ</div>
     <div class="bpmRow">
       <button class="rb" id="bpmDn" aria-label="ช้าลง">−</button>
-      <div><div class="bpm" id="bpmV">120</div><div class="bpmU">ตัวโน้ต / นาที</div></div>
+      <div><div class="bpm" id="bpmV">120</div><div class="bpmU">ตัวโน้ต / นาที</div><div class="bpmU" id="thaiT"></div></div>
       <button class="rb" id="bpmUp" aria-label="เร็วขึ้น">+</button>
     </div>
-    <input type="range" id="bpmR" min="30" max="260" step="1">
+    <input type="range" id="bpmR" min="30" max="480" step="1">
     <div class="info" id="chingInfo"></div>
     <button class="playBtn" id="play">▶ เริ่ม</button>
   </div>
@@ -142,7 +142,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
   <!-- ===== เร่งจังหวะ ===== -->
   <div class="sec">
     <div class="lb">ฝึกเร่งความเร็ว <span class="r"><button class="sw" id="rampSw"></button></span></div>
-    <div class="row" style="font-size:14px;gap:6px;flex-wrap:wrap">เพิ่มทีละ <input type="number" id="rampBy" min="1" max="30" style="width:70px;padding:6px 8px"> ทุก <input type="number" id="rampEv" min="1" max="64" style="width:70px;padding:6px 8px"> ห้อง จนถึง <input type="number" id="rampTo" min="30" max="260" style="width:80px;padding:6px 8px"></div>
+    <div class="row" style="font-size:14px;gap:6px;flex-wrap:wrap">เพิ่มทีละ <input type="number" id="rampBy" min="1" max="30" style="width:70px;padding:6px 8px"> ทุก <input type="number" id="rampEv" min="1" max="64" style="width:70px;padding:6px 8px"> ห้อง จนถึง <input type="number" id="rampTo" min="30" max="480" style="width:80px;padding:6px 8px"></div>
     <div class="help">ซ้อมจากช้าแล้วค่อย ๆ เร็วขึ้นเอง เหมาะกับการซ้อมเพลงให้ได้ความเร็วจริง · กดหยุดแล้วความเร็วจะกลับไปที่ค่าเริ่ม</div>
   </div>
 
@@ -297,12 +297,13 @@ function renderNota(bar,pos){
 
 /* ---------- ควบคุม ---------- */
 function uiBpm(){$("#bpmV").textContent=S.bpm;$("#bpmR").value=S.bpm;const multi=CUR&&!CUR.single,ev=RATE[S.rate].ev;
-  $("#chingInfo").textContent=(multi?"เถา: ฉิ่งเปลี่ยนอัตราตามช่วง":"ฉิ่ง–ฉับ "+Math.round(S.bpm/ev*10)/10+" ครั้ง/นาที")+" · ห้องละ "+(Math.round(240/S.bpm*100)/100)+" วินาที";save()}
-function setBpm(v){S.bpm=Math.max(30,Math.min(260,Math.round(v)));uiBpm()}
+  uiThai();$("#chingInfo").textContent=(multi?"เถา: ฉิ่งเปลี่ยนอัตราตามช่วง":"ฉิ่ง–ฉับ "+Math.round(S.bpm/ev*10)/10+" ครั้ง/นาที")+" · ห้องละ "+(Math.round(240/S.bpm*100)/100)+" วินาที";save()}
+function uiThai(){$("#thaiT").textContent="เทียบจังหวะดนตรีไทย ≈ "+Math.round(S.bpm/2)+(S.bpm>260?" · ช่วงฝึกไล่นิ้ว":"")}
+function setBpm(v){S.bpm=Math.max(30,Math.min(480,Math.round(v)));uiBpm()}
 $("#bpmR").addEventListener("input",e=>setBpm(+e.target.value));
 let hold=null;
 [["#bpmDn",-1],["#bpmUp",1]].forEach(([id,d])=>{const b=$(id);
-  b.addEventListener("pointerdown",e=>{e.preventDefault();setBpm(S.bpm+d);let n=0;hold=setInterval(()=>{n++;setBpm(S.bpm+d*(n>10?5:1))},n>10?80:180)});
+  b.addEventListener("pointerdown",e=>{e.preventDefault();setBpm(S.bpm+d);let n=0;hold=setInterval(()=>{n++;setBpm(S.bpm+d*(n>20?10:n>10?5:1))},120)});
   ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(hold)))});
 let taps=[];
 $("#tapBtn").addEventListener("click",()=>{const t=performance.now();taps=taps.filter(x=>t-x<2500);taps.push(t);
@@ -367,7 +368,7 @@ document.querySelectorAll(".mix input").forEach(r=>r.addEventListener("input",()
 
 function uiRamp(){$("#rampSw").classList.toggle("on",S.ramp.on);$("#rampBy").value=S.ramp.by;$("#rampEv").value=S.ramp.ev;$("#rampTo").value=S.ramp.to}
 $("#rampSw").addEventListener("click",()=>{S.ramp.on=!S.ramp.on;uiRamp();save();toast(S.ramp.on?"เปิดการเร่งความเร็ว":"ปิดการเร่งความเร็ว")});
-[["#rampBy","by",1,30],["#rampEv","ev",1,64],["#rampTo","to",30,260]].forEach(([id,k,a,b])=>$(id).addEventListener("change",e=>{S.ramp[k]=Math.max(a,Math.min(b,+e.target.value||a));uiRamp();save()}));
+[["#rampBy","by",1,30],["#rampEv","ev",1,64],["#rampTo","to",30,480]].forEach(([id,k,a,b])=>$(id).addEventListener("change",e=>{S.ramp[k]=Math.max(a,Math.min(b,+e.target.value||a));uiRamp();save()}));
 
 /* ---------- บันทึก ---------- */
 function current(name){const o={id:String(Date.now()),name,bpm:S.bpm,rate:S.rate,mix:Object.assign({},S.mix),at:Date.now()};
