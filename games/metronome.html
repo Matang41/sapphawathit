@@ -98,6 +98,9 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
 .kc .km.n0{color:var(--m1)}.kc .km.n1{color:var(--m2)}.kc .kf.n2{color:var(--f1)}.kc .kf.n3{color:var(--f2)}
 .kc .kch{font-family:Mitr;font-size:calc(var(--kf,30px)*.45);height:1.4em;line-height:1.4em;color:transparent;position:relative;z-index:1}
 .kc .kch.c1{color:var(--gold)}.kc .kch.c2{color:#ff9fc5}
+.kph{position:absolute;left:0;top:0;width:4px;border-radius:3px;background:#fff;box-shadow:0 0 14px 4px rgba(255,236,170,.85);z-index:4;opacity:0;pointer-events:none;will-change:transform}
+.kc.hit{animation:khit .22s ease-out}
+@keyframes khit{0%{background:rgba(255,246,213,.75)}100%{background:rgba(242,193,78,.18)}}
 .kc .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(255,246,213,.10),rgba(255,227,154,.32));z-index:0}
 .kc.past{opacity:.38}
 .kc.cur{background:rgba(242,193,78,.18);transform:scale(1.06);box-shadow:0 0 0 2px var(--cream),0 0 26px rgba(255,214,102,.55)}
@@ -167,6 +170,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
       <button class="sw" data-m="drumF"></button><label>กลองตัวเมีย <small style="color:var(--f1)">ทั่ม จ๊ะ · ซ้าย</small></label><input type="range" min="0" max="100" data-v="drumF">
       <button class="sw" data-m="click"></button><label>เสียงเคาะทุกตัว</label><input type="range" min="0" max="100" data-v="click">
     </div>
+    <div class="help" style="margin-top:10px">ชดเชยความหน่วงลำโพง <button class="btn sec sm latb" data-d="-10">−</button> <b class="latV">0</b> ms <button class="btn sec sm latb" data-d="10">+</button> · ถ้าภาพนำเสียง (มักเกิดกับลำโพงบลูทูธ ราว 150–250 ms) ให้เพิ่มจนภาพตรงเสียง ค่านี้ใช้ร่วมกับเกมกลองแขก</div>
     <div class="help">ปิดลูกใดลูกหนึ่งเพื่อฟังทางของอีกลูกให้ชัด หรือปิดลูกที่ตัวเองตี แล้วซ้อมตีคู่กับเครื่อง · ตัวผู้ดังทางขวา ตัวเมียดังทางซ้าย (ตามที่นั่งในวง)</div>
   </div>
 
@@ -200,7 +204,8 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
     <div class="kname"><b id="kName"></b><span id="kMeta"></span></div>
     <button class="kb" id="kFull" title="เต็มจอ">⛶ เต็มจอ</button>
   </div>
-  <div class="kmain">
+  <div class="kmain" id="kmain">
+    <div class="kph" id="kPh"></div>
     <div class="kcount" id="kCount"></div>
     <div class="kline" id="kLine"></div>
     <div class="kline next" id="kNext"></div>
@@ -209,6 +214,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
     <div class="kgrp"><button class="rb" id="kDn">−</button><div class="kbpm"><b id="kBpm"></b><span id="kThai"></span></div><button class="rb" id="kUp">+</button></div>
     <button class="kplay" id="kPlay">▶ เริ่ม</button>
     <div class="kgrp col"><span>เสียงกลองนำ</span><div class="seg" id="kGuide"><button data-g="none">ปิด</button><button data-g="M">ตัวผู้</button><button data-g="F">ตัวเมีย</button><button data-g="both">ทั้งคู่</button></div></div>
+    <div class="kgrp col"><span>ชดเชยความหน่วงลำโพง</span><div class="kgrp"><button class="kb latb" data-d="-10">−</button><b class="latV">0</b> ms<button class="kb latb" data-d="10">+</button></div></div>
     <div class="kgrp col"><span>ไฮไลต์แถว</span><div class="seg" id="kFocus"><button data-f="both">ทั้งคู่</button><button data-f="M">ตัวผู้</button><button data-f="F">ตัวเมีย</button></div></div>
   </div>
 </div>
@@ -295,6 +301,10 @@ function click(acc,t){osc(bus.click,"square",acc?1500:1000,0,acc?.12:.07,.03,t,.
 let CUR=null,TL=[];
 let run=false,timer=null,nextT=0,slot=0,vq=[],raf=0,wake=null;
 function slotDur(){return 60/S.bpm}
+/* เสียงออกจากลำโพงช้ากว่าเวลาที่สั่งเสมอ (บลูทูธช้ามาก) ภาพจึงต้องเลื่อนตามเวลาที่หูได้ยินจริง */
+const LATKEY="sapphawathit_audio_lat";
+function userLat(){try{return +(localStorage.getItem(LATKEY)||0)}catch(e){return 0}}
+function visNow(){return AC.currentTime-Math.max(0,(AC.outputLatency||0)+(AC.baseLatency||0)+userLat()/1000)}
 function schedule(){
   while(nextT<AC.currentTime+.15){
     if(slot<0){ // นับเข้า (โหมดคาราโอเกะ) — ฉิ่งต่อเนื่องกับช่วงแรก ยังไม่มีกลอง
@@ -329,7 +339,7 @@ $("#play").addEventListener("click",()=>run?stop():start());
 /* ---------- ภาพ ---------- */
 function buildDots(){$("#dots").innerHTML=[0,1,2,3].map(()=>'<i></i>').join("")}
 function vis(){
-  if(!run)return;const now=AC.currentTime;let cur=null;
+  if(!run)return;const now=visNow();let cur=null;
   while(vq.length&&vq[0].t<=now)cur=vq.shift();
   if(cur){K.cur=cur;if(K.open)kOnSlot(cur)}
   if(K.open)kFrame(now);
@@ -471,31 +481,46 @@ function kLayout(){
   const kw=Math.max(28,Math.min(150,Math.floor(Math.min(avail/(K.per*4),H*.22))));
   const el=$("#kara");el.style.setProperty("--kw",kw+"px");el.style.setProperty("--kf",Math.round(kw*.42)+"px");
 }
-function kLineHTML(L){
+function kLineHTML(L,main){
   const per=K.per*4,from=L*per;let h="";
   for(let b=0;b<K.per;b++){const st=from+b*4;if(st>=TL.length)break;h+='<div class="kbar">';
     for(let j=0;j<4;j++){const i=st+j,sl=TL[i];if(!sl){h+='<div class="kc"></div>';continue}
       const m=sl.l.filter(x=>x<2),f=sl.l.filter(x=>x>=2);
-      h+='<div class="kc" data-i="'+i+'"><i class="fill"></i><div class="km'+(m.length?" n"+m[0]:"")+'">'+(m.length?SYM[m[0]]:"·")+'</div><div class="kf'+(f.length?" n"+f[0]:"")+'">'+(f.length?SYM[f[0]]:"·")+'</div><div class="kch c'+sl.ch+'">'+(sl.ch===1?"ฉิ่ง":sl.ch===2?"ฉับ":"·")+'</div></div>'}
+      h+='<div class="kc'+(sl.l.length?" has":"")+'"'+(main?' data-i="'+i+'"':'')+'><div class="km'+(m.length?" n"+m[0]:"")+'">'+(m.length?SYM[m[0]]:"·")+'</div><div class="kf'+(f.length?" n"+f[0]:"")+'">'+(f.length?SYM[f[0]]:"·")+'</div><div class="kch c'+sl.ch+'">'+(sl.ch===1?"ฉิ่ง":sl.ch===2?"ฉับ":"·")+'</div></div>'}
     h+='</div>'}
   return h;
 }
+function kMeasure(){
+  const box=$("#kmain").getBoundingClientRect();
+  K.rects=K.cells.map(c=>{const r=c.getBoundingClientRect();return {cx:r.left+r.width/2-box.left,top:r.top-box.top,h:r.height,w:r.width}});
+}
 function kRender(L){
   const lines=Math.ceil(TL.length/(K.per*4));L=((L%lines)+lines)%lines;K.line=L;
-  $("#kLine").innerHTML=kLineHTML(L);$("#kNext").innerHTML=lines>1?kLineHTML((L+1)%lines):"";
-  K.cells=[...document.querySelectorAll("#kLine .kc[data-i]")];
+  $("#kLine").innerHTML=kLineHTML(L,true);$("#kNext").innerHTML=lines>1?kLineHTML((L+1)%lines,false):"";
+  K.cells=[...document.querySelectorAll("#kLine .kc[data-i]")];K.first=K.cells.length?+K.cells[0].dataset.i:0;kMeasure();
 }
 function kOnSlot(cur){
   const k=cur&&!cur.count?cur.k:0,L=Math.floor(k/(K.per*4));
   if(L!==K.line)kRender(L);
-  K.cells.forEach(c=>{const i=+c.dataset.i;c.classList.toggle("past",!!cur&&!cur.count&&i<k);c.classList.toggle("cur",!!cur&&!cur.count&&i===k);const f=c.firstChild;if(f)f.style.width=(!!cur&&!cur.count&&i<k)?"100%":"0"});
+  K.cells.forEach(c=>{const i=+c.dataset.i,live=!!cur&&!cur.count;c.classList.toggle("past",live&&i<k);
+    const on=live&&i===k;if(on&&!c.classList.contains("cur")){c.classList.remove("hit");void c.offsetWidth;c.classList.add("hit")}c.classList.toggle("cur",on)});
   $("#kCount").textContent=cur&&cur.count?(TH[Math.ceil(-cur.slot/2)]||""):"";
   const sl=cur&&!cur.count?TL[k]:TL[0];
   $("#kMeta").textContent=NT.RATE[sl?sl.rate:S.rate].n+(cur&&!cur.count?" · หน้าทับห้อง "+(Math.floor(k/4)+1)+"/"+(TL.length/4):" · "+(TL.length/4)+" ห้อง");
 }
+/* หัวเล่นวิ่งต่อเนื่อง: ถึงกึ่งกลางช่องพอดีกับจังหวะที่เสียงออก */
 function kFrame(now){
-  const cur=K.cur;if(!cur||cur.count)return;const c=K.cells.find(x=>+x.dataset.i===cur.k);if(!c)return;
-  const p=Math.max(0,Math.min(1,(now-cur.t)/slotDur()));c.firstChild.style.width=(p*100)+"%";
+  const ph=$("#kPh"),cur=K.cur;if(!K.rects||!K.rects.length){ph.style.opacity=0;return}
+  let x,r;
+  if(!cur||cur.count){ // ระหว่างนับเข้า: เลื่อนเข้าหาช่องแรกในห้องสุดท้ายของการนับ
+    r=K.rects[0];const left=r.cx-r.w*4;let p=0;if(cur&&cur.count){p=Math.max(0,((cur.slot+(now-cur.t)/slotDur())+4)/4);p=Math.min(1,p)}
+    x=left+(r.cx-left)*p;ph.style.opacity=cur?1:.0;
+  }else{
+    const i=cur.k-K.first;r=K.rects[i];if(!r){ph.style.opacity=0;return}
+    const frac=Math.max(0,Math.min(1,(now-cur.t)/slotDur())),nx=K.rects[i+1]?K.rects[i+1].cx:r.cx+r.w+3;
+    x=r.cx+(nx-r.cx)*frac;ph.style.opacity=1;
+  }
+  ph.style.transform="translateX("+(x-2)+"px)";ph.style.top=(r.top-6)+"px";ph.style.height=(r.h+12)+"px";
 }
 function kStopped(){K.cur=null;$("#kCount").textContent="";K.line=-1;kOnSlot(null)}
 function kPlayUI(){const b=$("#kPlay");if(!b)return;b.textContent=run?"■ หยุด":"▶ เริ่ม";b.classList.toggle("on",run)}
@@ -507,7 +532,7 @@ function kFocus(fv){S.kFocus=fv;const el=$("#kara");el.classList.toggle("fM",fv=
 function kOpen(){
   if(run)stop();K.open=true;K.prevMix={drumM:S.mix.drumM,drumF:S.mix.drumF};
   $("#kara").classList.remove("hidden");document.body.style.overflow="hidden";
-  $("#kName").textContent=CUR?CUR.name:"";kLayout();K.line=-1;kOnSlot(null);kBpmUI();kPlayUI();
+  $("#kName").textContent=CUR?CUR.name:"";kLayout();K.line=-1;kOnSlot(null);kBpmUI();kPlayUI();latUI();setTimeout(()=>kMeasure(),60);
   kGuide(S.kGuide||"none");kFocus(S.kFocus||"both");
 }
 function kClose(){
@@ -524,11 +549,13 @@ document.querySelectorAll("#kFocus button").forEach(b=>b.addEventListener("click
 let kHold=null;[["#kDn",-1],["#kUp",1]].forEach(([id,d])=>{const b=$(id);
   b.addEventListener("pointerdown",e=>{e.preventDefault();setBpm(S.bpm+d);let n=0;kHold=setInterval(()=>{n++;setBpm(S.bpm+d*(n>20?10:n>10?5:1))},120)});
   ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(kHold)))});
-window.addEventListener("resize",()=>{if(K.open){kLayout();K.line=-1;kOnSlot(K.cur)}});
+window.addEventListener("resize",()=>{if(K.open){kLayout();K.line=-1;kOnSlot(K.cur);setTimeout(()=>kMeasure(),50)}});
 document.addEventListener("keydown",e=>{if(!K.open)return;if(e.code==="Space"){e.preventDefault();run?stop():start()}else if(e.key==="Escape")kClose();else if(e.key==="ArrowUp")setBpm(S.bpm+2);else if(e.key==="ArrowDown")setBpm(S.bpm-2)});
 
+function latUI(){document.querySelectorAll(".latV").forEach(e=>e.textContent=userLat())}
+document.querySelectorAll(".latb").forEach(b=>b.addEventListener("click",()=>{const v=Math.max(0,Math.min(500,userLat()+(+b.dataset.d)));try{localStorage.setItem(LATKEY,v)}catch(e){}latUI()}));
 /* ---------- เริ่ม ---------- */
-buildDots();uiMix();uiRamp();renderLists();renderPatSel();rebuild();loadClub();
+buildDots();latUI();uiMix();uiRamp();renderLists();renderPatSel();rebuild();loadClub();
 })();
 </script>
 </body>

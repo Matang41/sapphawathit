@@ -52,6 +52,7 @@ button{font:inherit;color:inherit}
 .sy i{font-style:normal;font-family:Mitr;color:#2b1628;border-radius:99px;padding:1px 9px;font-size:14px}
 .l0{background:var(--m1)}.l1{background:var(--m2)}.l2{background:var(--f1)}.l3{background:var(--f2)}
 .kb{font-size:12px;color:var(--muted);margin-top:8px}
+.latb{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:8px;width:30px;height:26px;cursor:pointer;color:var(--cream)}
 .kb code{background:rgba(255,255,255,.12);border-radius:5px;padding:0 5px;color:var(--cream)}
 select,input[type=text],textarea{width:100%;font:inherit;font-size:16px;color:var(--cream);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
 select option{color:#222}
@@ -159,6 +160,7 @@ details textarea{margin-top:8px;min-height:70px;font-family:Mitr;letter-spacing:
       <div class="drum"><b style="color:var(--f1)">ตัวเมีย · เสียงต่ำ</b>
         <div class="s"><span class="sy"><i class="l2">ทั่ม</i>หน้ารุ่ย</span><span class="sy"><i class="l3">จ๊ะ</i>หน้าต่าน</span></div></div>
     </div>
+    <div class="kb" id="latRow">ตีแล้วโดนตัดสินว่า “ช้า” ตลอด หรือภาพไม่ตรงเสียง (เช่น ใช้ลำโพงบลูทูธ) ปรับความหน่วงลำโพงได้: <button class="latb" data-d="-10">−</button> <b id="latV">0</b> ms <button class="latb" data-d="10">+</button></div>
     <div class="kb">แตะช่องของเสียงนั้นเมื่อวงกลมตกถึงหน้ากลอง · ใช้คีย์บอร์ด <code>D</code> <code>F</code> <code>J</code> <code>K</code> ได้</div>
   </div>
 
@@ -435,7 +437,7 @@ function begin(cfg){
   const stats=fields.map(()=>newStats());
   notes.forEach(n=>{if(!n.auto)stats[n.f].n++});
   G={cfg,fields,notes,evs,stats,t0,u,TL,total,free,end:free?Infinity:t0+total*u+1.2,
-     L:Math.max(1.3,u*6),lastBar:null,raf:0,lastPush:0,done:false};
+     L:Math.max(1.3,u*6),lastBar:null,lat:audioLat(),raf:0,lastPush:0,done:false};
   $("#pName").textContent=free?"ตีอิสระ":(cfg.mode==="demo"?"ฟังตัวอย่าง · ":"")+cfg.pat.name+" · "+SPEEDS[sel.spd].n;
   $("#mate").innerHTML="";
   show("#play");
@@ -453,8 +455,12 @@ function resize(){
 }
 window.addEventListener("resize",()=>{resize()});
 
+/* ความหน่วงของลำโพง: เสียงออกจากลำโพงช้ากว่าเวลาที่สั่ง (บลูทูธช้ามาก) ภาพและการตัดสินจึงต้องเลื่อนตาม */
+const LATKEY="sapphawathit_audio_lat";
+function userLat(){try{return +(localStorage.getItem(LATKEY)||0)}catch(e){return 0}}
+function audioLat(){return Math.max(0,(AC&&AC.outputLatency||0)+(AC&&AC.baseLatency||0)+userLat()/1000)}
 function tap(fi,lane){
-  if(!G)return;const now=AC.currentTime,f=G.fields[fi];
+  if(!G)return;const now=AC.currentTime-G.lat,f=G.fields[fi];
   drum(lane);f.pads[lane]=now;
   if(G.free||G.cfg.mode==="demo")return;
   let best=null,bd=9;
@@ -470,11 +476,11 @@ function judge(n,j,now){
 }
 function loop(){
   if(!G||G.done)return;
-  const now=AC.currentTime,{u,t0}=G;
+  const rnow=AC.currentTime,now=rnow-G.lat,{u,t0}=G;   // rnow = เวลาเสียง (ใช้ตั้งเวลา) · now = เวลาที่หูได้ยิน (ใช้วาดภาพและตัดสิน)
   // ตั้งเวลาเสียงล่วงหน้าเล็กน้อย
-  for(const e of G.evs)if(!e.sched&&e.t<now+.12){e.sched=true;if(e.t>now-.05){ching(e.open,e.t);setTimeout(()=>flashChing(),Math.max(0,(e.t-now)*1000))}}
+  for(const e of G.evs)if(!e.sched&&e.t<rnow+.12){e.sched=true;if(e.t>rnow-.05){ching(e.open,e.t);setTimeout(()=>flashChing(),Math.max(0,(e.t-rnow+G.lat)*1000))}}
   for(const n of G.notes){
-    if(n.auto&&!n.sched&&n.t<now+.12){n.sched=true;if(n.t>now-.05){drum(n.lane,n.t,.9);const fi=G.fields.findIndex(f=>f.lanes.includes(n.lane));if(fi>=0)setTimeout(()=>{if(G)G.fields[fi].pads[n.lane]=AC.currentTime},Math.max(0,(n.t-now)*1000))}}
+    if(n.auto&&!n.sched&&n.t<rnow+.12){n.sched=true;if(n.t>rnow-.05){drum(n.lane,n.t,.9);const fi=G.fields.findIndex(f=>f.lanes.includes(n.lane));if(fi>=0)setTimeout(()=>{if(G)G.fields[fi].pads[n.lane]=AC.currentTime-G.lat},Math.max(0,(n.t-rnow+G.lat)*1000))}}
     if(!n.auto&&!n.j&&now>n.t+WIN.ok)judge(n,"miss",now);
   }
   // แถบโน้ต
@@ -743,6 +749,8 @@ function renderDuo2Result(){
   if(NET.role==="B"&&v.state==="wait"&&both){/* ยังอยู่หน้าผล รอรอบใหม่ */}
 }
 
+function latUI(){$("#latV").textContent=userLat()}
+document.querySelectorAll(".latb").forEach(b=>b.addEventListener("click",()=>{const v=Math.max(0,Math.min(500,userLat()+(+b.dataset.d)));try{localStorage.setItem(LATKEY,v)}catch(e){}latUI()}));latUI();
 renderPicker();
 try{if(/[?&]debug=1/.test(location.search))window.__KK=()=>({G,AC})}catch(e){}
 })();
