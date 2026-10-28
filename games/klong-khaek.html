@@ -307,17 +307,27 @@ function noise(fType,freq,q,amp,dur,t){
   g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+dur+.05);
 }
+/* เสียงกลองแขก — สังเคราะห์แบบโมดัล ปรับค่าความถี่ ความดัง และการเสียงหายจากการวิเคราะห์เสียงตีจริงแต่ละเสียง
+   p:[ความถี่ตอนตี, ความถี่ตอนท้าย, ความดัง, เวลาเสียงหาย(วิ)] · n:[ความถี่เสียงกระทบ, ความกว้าง Q, ความดัง, ระยะ] · g:ระดับรวม */
+const DR=[
+  {p:[[262,258,1,.20],[330,326,.22,.22],[441,436,.06,.16],[598,590,.03,.08]],n:[1800,1.1,.35,.035],g:.5},              // ติง
+  {p:[[456,450,1,.085],[786,780,.32,.07],[1022,1015,.08,.07],[1259,1259,.04,.05],[1431,1431,.02,.04],[2164,2164,.015,.03]],n:[1500,.9,.55,.05],g:.55}, // โจ๊ะ
+  {p:[[140,104,1,.17],[200,170,.15,.10],[377,377,.05,.28]],n:[1700,1,.35,.035],g:.75},                               // ทั่ม
+  {p:[[431,433,1,.17],[301,294,.5,.085],[665,676,.42,.13],[1012,1012,.1,.1],[875,875,.07,.055],[1324,1324,.03,.05],[1636,1636,.035,.05]],n:[900,1,.45,.07],g:.42} // จ๊ะ
+];
+function drumTo(out,l,t,v){
+  const d=DR[l];if(!d)return;v=(v==null?1:v)*d.g;
+  d.p.forEach(([f0,f1,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";
+    o.frequency.setValueAtTime(f0,t);if(f1!==f0)o.frequency.setTargetAtTime(f1,t,.06);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.002);g.gain.setTargetAtTime(0,t+.002,tau);
+    o.connect(g);g.connect(out);o.start(t);o.stop(t+.002+tau*7)});
+  const [c,q,a,dur]=d.n,s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();
+  s.buffer=noiseBuf;fl.type="bandpass";fl.frequency.value=c;fl.Q.value=q;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v*1.6,t+.001);g.gain.setTargetAtTime(0,t+.001,dur/2.3);
+  s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur*4);
+}
 function drum(lane,when,vol){
-  if(!audio())return;const t=Math.max(when||0,AC.currentTime),v=vol==null?1:vol;
-  if(lane===0){ // ติง — ตัวผู้ หน้ารุ่ย เปิด กังวาน
-    osc("sine",360,300,.55*v,.45,t);osc("sine",720,640,.12*v,.18,t);noise("bandpass",2600,1.2,.18*v,.03,t);
-  }else if(lane===1){ // โจ๊ะ — ตัวผู้ หน้าต่าน สั้น แห้ง
-    noise("bandpass",3000,1.6,.55*v,.07,t);osc("triangle",620,480,.2*v,.06,t);
-  }else if(lane===2){ // ทั่ม — ตัวเมีย หน้ารุ่ย ต่ำ ทุ้ม
-    osc("sine",165,120,.75*v,.55,t);osc("sine",330,250,.12*v,.2,t);noise("lowpass",900,.7,.2*v,.04,t);
-  }else{ // จ๊ะ — ตัวเมีย หน้าต่าน
-    noise("bandpass",1900,1.4,.5*v,.08,t);osc("triangle",440,330,.18*v,.07,t);
-  }
+  if(!audio())return;drumTo(master,lane,Math.max(when||0,AC.currentTime),vol);
 }
 function ching(open,when){
   if(!audio())return;const t=Math.max(when,AC.currentTime);
