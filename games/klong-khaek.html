@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#4a2944">
+<title>กลองแขกคู่ขวัญ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#5a3452; --bg2:#2b1628; --gold:#f2c14e; --gold2:#ffe39a; --cream:#fff6e0;
+  --muted:#d9c3d4; --card:rgba(255,255,255,.07); --line:rgba(242,193,78,.35);
+  --m1:#f2c14e; --m2:#ffa45c; --f1:#ef86b8; --f2:#a98bff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);
+  background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2);
+  user-select:none;-webkit-user-select:none;overflow-x:hidden;-webkit-touch-callout:none}
+h1,h2,h3{font-family:"Mitr","Sarabun",sans-serif;font-weight:500}
+.wrap{max-width:520px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px 22px;min-height:100%;display:flex;flex-direction:column}
+.hidden{display:none!important}
+button{font:inherit;color:inherit}
+.credit{margin-top:auto;padding-top:20px;text-align:center;font-size:12px;color:rgba(217,195,212,.7)}
+
+/* teacher */
+.kru{border-radius:50%;flex:none;cursor:pointer}
+.kru img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;border:3px solid var(--gold);box-shadow:0 0 0 3px rgba(242,193,78,.25),0 6px 16px rgba(0,0,0,.45)}
+.kru.happy{animation:hop .5s}
+@keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-10px) scale(1.05)}}
+.bubble{background:var(--cream);color:#3b2205;border-radius:14px;padding:8px 12px;font-family:Mitr;font-size:14px;line-height:1.4;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.bubble.left::before{content:"";position:absolute;width:12px;height:12px;background:var(--cream);transform:rotate(45deg);left:-5px;top:50%;margin-top:-6px}
+.bubble.pop{animation:pop .25s}
+@keyframes pop{0%{transform:scale(.8)}70%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+/* menu */
+.title{text-align:center;margin:8px 0 2px}
+.badge{display:inline-block;font-size:12px;color:var(--gold);border:1px solid var(--line);border-radius:99px;padding:3px 12px;margin-bottom:8px}
+.title h1{margin:0;font-size:36px;line-height:1.1;color:var(--gold);text-shadow:0 2px 0 #7a4b10,0 6px 18px rgba(0,0,0,.4)}
+.title p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.host{display:flex;align-items:center;gap:14px;margin:14px 0 6px}
+.host .kru{width:76px;height:76px}
+.host .bubble{flex:1}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+.sec>.lb{font-family:Mitr;color:var(--gold);font-size:15px;margin-bottom:8px}
+.drums{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.drum{border-radius:12px;padding:8px 10px;background:rgba(0,0,0,.18)}
+.drum b{font-family:Mitr;font-weight:500;display:block;font-size:15px}
+.drum .s{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.sy{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.sy i{font-style:normal;font-family:Mitr;color:#2b1628;border-radius:99px;padding:1px 9px;font-size:14px}
+.l0{background:var(--m1)}.l1{background:var(--m2)}.l2{background:var(--f1)}.l3{background:var(--f2)}
+.kb{font-size:12px;color:var(--muted);margin-top:8px}
+.kb code{background:rgba(255,255,255,.12);border-radius:5px;padding:0 5px;color:var(--cream)}
+select,input[type=text],textarea{width:100%;font:inherit;font-size:16px;color:var(--cream);background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+select option{color:#222}
+.seg{display:flex;gap:6px;margin-top:8px}
+.seg button{flex:1;border:1px solid var(--line);background:none;border-radius:10px;padding:8px 0;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.patinfo{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+.best{color:var(--gold2)}
+.modes{display:grid;gap:10px;margin-top:12px}
+.mode{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:linear-gradient(135deg,rgba(242,193,78,.18),rgba(242,193,78,.04));border:1px solid var(--line);border-radius:16px;padding:13px 16px;transition:transform .1s}
+.mode:active{transform:scale(.98)}
+.mode .ico{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:22px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.mode .t{font-family:Mitr;font-size:18px;color:var(--gold2)}
+.mode .d{font-size:13px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ghost{border:1px dashed var(--line);background:none;border-radius:14px;padding:11px;cursor:pointer;color:var(--gold2)}
+details summary{cursor:pointer;color:var(--gold2);font-family:Mitr;font-size:15px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details textarea{margin-top:8px;min-height:70px;font-family:Mitr;letter-spacing:1px}
+.err{color:#ff9fb3;font-size:13px;min-height:18px;margin-top:4px}
+
+/* buttons */
+.btn{display:block;width:100%;margin-top:10px;border:none;border-radius:14px;padding:13px;font-family:Mitr;font-size:17px;cursor:pointer}
+.btn.pri{background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 4px 0 #8a5d1a}
+.btn.pri:active{transform:translateY(2px);box-shadow:0 2px 0 #8a5d1a}
+.btn.pri:disabled{opacity:.45;box-shadow:none}
+.btn.sec2{background:var(--card);color:var(--cream);border:1px solid var(--line)}
+.back{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:14px;cursor:pointer}
+
+/* lobby */
+.code{font-family:Mitr;font-size:56px;letter-spacing:12px;text-align:center;color:var(--gold);margin:6px 0;text-shadow:0 2px 0 #7a4b10}
+.players{display:grid;gap:8px;margin-top:8px}
+.pl{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.2);border-radius:12px;padding:10px 12px}
+.pl .tag{font-family:Mitr;font-size:13px;border-radius:99px;padding:2px 10px;color:#2b1628}
+.pl .nm{flex:1}
+.pl.wait{opacity:.55}
+.muted{color:var(--muted);font-size:14px}
+.center{text-align:center}
+#codeIn{text-align:center;font-family:Mitr;font-size:30px;letter-spacing:10px}
+
+/* play */
+#play{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg2)}
+.pbar{display:flex;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 10px 6px}
+.pbar .nm{flex:1;text-align:center;font-family:Mitr;font-size:14px;color:var(--gold2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog{height:4px;background:rgba(255,255,255,.1);margin:0 10px;border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--gold)}
+.mate{font-size:13px;color:var(--muted);min-width:70px;text-align:right}
+.mate b{color:var(--gold2);font-family:Mitr}
+.band{display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 8px}
+.nota{display:flex;gap:4px;align-items:center}
+.nota .bar{display:flex;gap:2px;padding:3px;border-radius:9px;background:rgba(255,255,255,.06)}
+.nota .bar.next{opacity:.45}
+.nota span{width:38px;height:30px;display:grid;place-items:center;border-radius:7px;font-family:Mitr;font-size:13px;color:var(--muted);background:rgba(0,0,0,.2)}
+.nota span.cur{outline:2px solid var(--cream);color:#fff}
+.nota span.n0{color:var(--m1)}.nota span.n1{color:var(--m2)}.nota span.n2{color:var(--f1)}.nota span.n3{color:var(--f2)}
+.ching{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:Mitr;font-size:12px;color:#3b2205;background:rgba(242,193,78,.25);transition:background .1s,transform .1s}
+.ching.on{background:var(--gold);transform:scale(1.15)}
+.fields{flex:1;display:flex;flex-direction:column;gap:4px;padding:0 6px max(6px,env(safe-area-inset-bottom));min-height:0}
+.fields canvas{flex:1;width:100%;min-height:0;display:block;border-radius:14px;touch-action:none}
+.fields canvas.rot{transform:rotate(180deg)}
+.fields .band{order:0}
+
+/* results */
+.overlay{position:fixed;inset:0;background:rgba(20,8,18,.75);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;z-index:10;overflow:auto}
+.panel{width:100%;max-width:420px;background:linear-gradient(160deg,#5e3757,#2f1830);border:1px solid var(--line);border-radius:22px;padding:20px 18px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.panel .kru{width:84px;height:84px;margin:0 auto 8px}
+.panel .bubble{margin:0 auto 10px;max-width:300px}
+.panel h2{margin:0;color:var(--gold);font-size:24px}
+.res{display:grid;gap:10px;margin-top:12px}
+.res.two{grid-template-columns:1fr 1fr}
+.rc{background:rgba(0,0,0,.22);border-radius:14px;padding:10px 8px}
+.rc .who{font-family:Mitr;font-size:14px;color:var(--gold2)}
+.rc .acc{font-family:Mitr;font-size:34px;line-height:1.1}
+.rc .rk{display:inline-block;margin:4px 0;padding:3px 10px;border-radius:99px;border:1px solid var(--gold);color:var(--gold2);font-family:Mitr;font-size:13px}
+.rc .st{font-size:12px;color:var(--muted);line-height:1.6}
+.harm{margin-top:10px;font-family:Mitr;color:#8ff0b8}
+</style>
+</head>
+<body>
+
+<!-- ================= MENU ================= -->
+<div id="menu" class="wrap">
+  <div class="title">
+    <span class="badge">ชมรมดนตรีไทย สรรพวาทิต</span>
+    <h1>กลองแขกคู่ขวัญ</h1>
+    <p>ฝึกตีกลองแขก ตัวผู้–ตัวเมีย ให้ขัดกันลงจังหวะฉิ่ง</p>
+  </div>
+  <div class="host">
+    <div class="kru" id="mKru"><img src="data:image/jpeg;base64,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" alt="ครู"></div>
+    <div class="bubble left" id="mBubble">กลองแขกต้องตีเป็นคู่นะคนขยัน ชวนเพื่อนมาตีด้วยกันสิ!</div>
+  </div>
+
+  <div class="sec">
+    <div class="lb">เสียงกลองแขก</div>
+    <div class="drums">
+      <div class="drum"><b style="color:var(--m1)">ตัวผู้ · เสียงสูง</b>
+        <div class="s"><span class="sy"><i class="l0">ติง</i>หน้ารุ่ย</span><span class="sy"><i class="l1">โจ๊ะ</i>หน้าต่าน</span></div></div>
+      <div class="drum"><b style="color:var(--f1)">ตัวเมีย · เสียงต่ำ</b>
+        <div class="s"><span class="sy"><i class="l2">ทั่ม</i>หน้ารุ่ย</span><span class="sy"><i class="l3">จ๊ะ</i>หน้าต่าน</span></div></div>
+    </div>
+    <div class="kb">แตะช่องของเสียงนั้นเมื่อวงกลมตกถึงหน้ากลอง · ใช้คีย์บอร์ด <code>D</code> <code>F</code> <code>J</code> <code>K</code> ได้</div>
+  </div>
+
+  <div class="sec" id="picker">
+    <div class="lb">บทฝึก</div>
+    <select id="patSel"></select>
+    <div class="seg" id="spdSeg"><button data-s="0">ช้า</button><button data-s="1">ปานกลาง</button><button data-s="2">เร็ว</button></div>
+    <div class="patinfo" id="patInfo"></div>
+  </div>
+
+  <div class="modes">
+    <button class="mode" data-go="solo"><span class="ico">🥁</span><span><div class="t">เล่นคนเดียว</div><div class="d">ตีทั้งตัวผู้และตัวเมีย 4 เสียง</div></span></button>
+    <button class="mode" data-go="duo1"><span class="ico">👥</span><span><div class="t">สองคน เครื่องเดียว</div><div class="d">วางเครื่องกลางโต๊ะ นั่งหันหน้าเข้าหากัน คนละลูก</div></span></button>
+    <button class="mode" data-go="duo2"><span class="ico">📲</span><span><div class="t">สองคน สองเครื่อง</div><div class="d">สร้างห้อง แล้วให้เพื่อนใส่รหัส ตีพร้อมกันคนละเครื่อง</div></span></button>
+  </div>
+  <div class="row2">
+    <button class="ghost" data-go="demo">👂 ฟังตัวอย่าง</button>
+    <button class="ghost" data-go="free">🎵 ตีอิสระ</button>
+  </div>
+
+  <div class="sec">
+    <details id="customBox">
+      <summary>✍️ แต่งหน้าทับเอง (สำหรับครู)</summary>
+      <div class="patinfo">พิมพ์ห้องละ 4 ตัว เว้นวรรคระหว่างห้อง · <b>ต</b>=ติง <b>โ</b>=โจ๊ะ <b>ท</b>=ทั่ม <b>จ</b>=จ๊ะ <b>-</b>=เว้น<br>เช่น <code>---ต ---ท -ต-ท -ตทท</code> · ใช้อัตราสองชั้น (ฉิ่ง–ฉับ ท้ายห้อง)<br>ถ้าอยากเลือกอัตราจังหวะและบันทึกไว้ใช้ซ้ำ ใช้ “เครื่องกำกับจังหวะ” ในเมนูเกม หน้าทับที่บันทึกจะมาโผล่ในรายการบทฝึกนี้ด้วย</div>
+      <textarea id="customIn" placeholder="---ต ---ท -ต-ท -ตทท"></textarea>
+      <div class="err" id="customErr"></div>
+      <button class="btn sec2" id="customUse">ใช้หน้าทับนี้</button>
+    </details>
+  </div>
+  <div class="credit">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+
+<!-- ================= LOBBY (2 devices) ================= -->
+<div id="lobby" class="wrap hidden">
+  <div><button class="back" id="lobbyBack">‹ ออก</button></div>
+  <div id="lbNoFb" class="sec center hidden">
+    <h3 style="margin:4px 0;color:var(--gold)">ต้องเปิดจากในแอป</h3>
+    <div class="muted">โหมดสองเครื่องใช้ฐานข้อมูลของแอปสรรพวาทิต ให้เปิดเกมจากเมนู “เกม” ในแอป และล็อกอินด้วยอีเมลโรงเรียนก่อน</div>
+  </div>
+  <div id="lbStart" class="hidden">
+    <div class="sec center">
+      <div class="lb">สร้างห้องใหม่</div>
+      <div class="muted">ได้รหัส 4 ตัว ให้เพื่อนใส่รหัสในเครื่องของเขา</div>
+      <button class="btn pri" id="mkRoom">สร้างห้อง</button>
+    </div>
+    <div class="sec center">
+      <div class="lb">เข้าห้องของเพื่อน</div>
+      <input type="text" id="codeIn" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+      <div class="err" id="joinErr"></div>
+      <button class="btn sec2" id="joinRoom">เข้าห้อง</button>
+    </div>
+  </div>
+  <div id="lbRoom" class="hidden">
+    <div class="sec center">
+      <div class="muted">รหัสห้อง</div>
+      <div class="code" id="roomCode">----</div>
+      <div class="muted" id="roomHint"></div>
+      <div class="players" id="players"></div>
+      <div id="hostDrum" class="hidden">
+        <div class="seg" id="drumSeg"><button data-d="M">ฉันตีตัวผู้</button><button data-d="F">ฉันตีตัวเมีย</button></div>
+      </div>
+    </div>
+    <div id="lbPickHost"></div>
+    <div class="sec hidden" id="lbPickGuest"><div class="lb">บทฝึกที่หัวหน้าห้องเลือก</div><div id="guestPat" class="muted"></div></div>
+    <button class="btn pri hidden" id="goBtn" disabled>เริ่มตีพร้อมกัน</button>
+    <div class="muted center hidden" id="waitHost" style="margin-top:12px">รอหัวหน้าห้องกดเริ่ม…</div>
+  </div>
+  <div class="credit">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+
+<!-- ================= PLAY ================= -->
+<div id="play" class="hidden">
+  <div class="pbar">
+    <button class="back" id="playBack">‹ หยุด</button>
+    <div class="nm" id="pName"></div>
+    <div class="mate" id="mate"></div>
+  </div>
+  <div class="prog"><i id="progI"></i></div>
+  <div class="fields" id="fields"></div>
+</div>
+
+<div id="over" class="overlay hidden"><div class="panel" id="panel"></div></div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ===================== ข้อมูลเสียงและบทฝึก ===================== */
+const SYM=["ติง","โจ๊ะ","ทั่ม","จ๊ะ"];
+const FACE=["หน้ารุ่ย","หน้าต่าน","หน้ารุ่ย","หน้าต่าน"];
+const DRUM=["ตัวผู้","ตัวผู้","ตัวเมีย","ตัวเมีย"];
+const COL=["#f2c14e","#ffa45c","#ef86b8","#a98bff"];
+const TOK={"ต":0,"โ":1,"ท":2,"จ":3,"-":null};
+const KEYS={d:0,f:1,j:2,k:3};
+const SPEEDS=[{n:"ช้า",u:.34},{n:"ปานกลาง",u:.26},{n:"เร็ว",u:.2}];
+/* บทฝึก — ห้องละ 4 ตัว (ต=ติง โ=โจ๊ะ ท=ทั่ม จ=จ๊ะ -=เว้น) · ครูแก้/เพิ่มได้ที่นี่ */
+const PATTERNS=[
+  {id:"p1",name:"แบบฝึก ๑ · ติง–ทั่ม ตอบกัน",str:"---ต ---ท ---ต ---ท",rounds:4,tip:"ตัวผู้ตีติง ตัวเมียรับด้วยทั่ม ฟังฉิ่งให้ดี ตีตรงตัวท้ายห้อง"},
+  {id:"p2",name:"แบบฝึก ๒ · ถามตอบถี่ขึ้น",str:"-ต-ท -ต-ท -ต-ท -ตทท",rounds:3,tip:"ตีสลับทีละลูก ห้องสุดท้ายตัวเมียตีทั่มสองครั้ง"},
+  {id:"p3",name:"แบบฝึก ๓ · เพิ่มหน้าต่าน",str:"-โ-ต -จ-ท -โ-ต -จ-ท",rounds:3,tip:"หน้าต่านเสียงแห้ง สั้น ตีเบา ๆ ก่อนเสียงหน้ารุ่ย"},
+  {id:"p4",name:"แบบฝึก ๔ · ขัดกันทุกตัว",str:"-ต-จ -ท-โ -ต-จ -ทจท",rounds:3,tip:"สองลูกตีขัดกันจนฟังเป็นเสียงเดียวต่อเนื่อง หัวใจของกลองแขก"},
+  {id:"p5",name:"แบบฝึก ๕ · ยาวแปดห้อง",str:"---ต ---ท -ต-ท -ตทท -โ-ต -จ-ท -โตจ -ท-ท",rounds:2,tip:"รวมทุกเสียง จำทางให้ได้ทั้งแปดห้อง"}
+];
+function parsePat(str){
+  const bars=String(str||"").trim().split(/\s+/).filter(Boolean);
+  if(!bars.length)return {err:"ยังไม่ได้พิมพ์หน้าทับ"};
+  const out=[];
+  for(let i=0;i<bars.length;i++){
+    const ch=Array.from(bars[i]);
+    if(ch.length!==4)return {err:"ห้องที่ "+(i+1)+" มี "+ch.length+" ตัว (ต้องมี 4 ตัว)"};
+    for(const c of ch){if(!(c in TOK))return {err:"ห้องที่ "+(i+1)+" มีตัว “"+c+"” ที่ใช้ไม่ได้"};out.push(TOK[c])}
+  }
+  if(out.every(x=>x===null))return {err:"ต้องมีเสียงกลองอย่างน้อย 1 ตัว"};
+  if(bars.length>64)return {err:"ยาวเกิน 64 ห้อง"};
+  return {slots:out,bars:bars.length};
+}
+
+/* ===================== ที่เก็บ (ปลอดภัย) ===================== */
+const LS="sapphawathit_klongkhaek_";
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(LS+k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(LS+k,JSON.stringify(v))}catch(e){}};
+
+let playerName="";
+try{playerName=(new URLSearchParams(location.search).get("name")||"").trim().slice(0,30)}catch(e){}
+
+/* ===================== เสียง ===================== */
+let AC=null,master=null,noiseBuf=null;
+function audio(){
+  if(!AC){
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    AC=new C();master=AC.createGain();master.gain.value=.8;
+    const comp=AC.createDynamicsCompressor();master.connect(comp);comp.connect(AC.destination);
+    noiseBuf=AC.createBuffer(1,AC.sampleRate*.5,AC.sampleRate);
+    const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  }
+  if(AC.state==="suspended")AC.resume();
+  return AC;
+}
+function unlock(){if(!audio())return;const b=AC.createBuffer(1,1,22050),s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start(0)}
+function osc(type,f0,f1,amp,dur,t,att){
+  const o=AC.createOscillator(),g=AC.createGain();o.type=type;
+  o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur*.6);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+(att||.003));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.05);
+}
+function noise(fType,freq,q,amp,dur,t){
+  const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
+  s.buffer=noiseBuf;f.type=fType;f.frequency.value=freq;f.Q.value=q;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+dur+.05);
+}
+function drum(lane,when,vol){
+  if(!audio())return;const t=Math.max(when||0,AC.currentTime),v=vol==null?1:vol;
+  if(lane===0){ // ติง — ตัวผู้ หน้ารุ่ย เปิด กังวาน
+    osc("sine",360,300,.55*v,.45,t);osc("sine",720,640,.12*v,.18,t);noise("bandpass",2600,1.2,.18*v,.03,t);
+  }else if(lane===1){ // โจ๊ะ — ตัวผู้ หน้าต่าน สั้น แห้ง
+    noise("bandpass",3000,1.6,.55*v,.07,t);osc("triangle",620,480,.2*v,.06,t);
+  }else if(lane===2){ // ทั่ม — ตัวเมีย หน้ารุ่ย ต่ำ ทุ้ม
+    osc("sine",165,120,.75*v,.55,t);osc("sine",330,250,.12*v,.2,t);noise("lowpass",900,.7,.2*v,.04,t);
+  }else{ // จ๊ะ — ตัวเมีย หน้าต่าน
+    noise("bandpass",1900,1.4,.5*v,.08,t);osc("triangle",440,330,.18*v,.07,t);
+  }
+}
+function ching(open,when){
+  if(!audio())return;const t=Math.max(when,AC.currentTime);
+  if(open){[2093,3150,4750,6130].forEach((f,i)=>osc("sine",f,0,.07/(i+1),1.1,t,.001))}
+  else{noise("highpass",5200,.8,.28,.06,t);osc("sine",3150,0,.04,.07,t)}
+}
+function chime(){if(!audio())return;const t=AC.currentTime;[0,2,0,2].forEach((l,i)=>drum(l,t+i*.11,.6))}
+
+/* ===================== ครู ===================== */
+const SAY={
+  poke:["แตะหน้าครูทำไม 😆","ไปตีกลองสิ!","ฟังฉิ่งเป็นหลักนะ","กลองแขกต้องตีให้ขัดกันพอดี","หล่อไหมล่ะ 😎","ชวนเพื่อนมาตีคู่กัน!"],
+  rank:{"ครูกลองแขก":"มือนิ่งมาก! มาตีกลองแขกในวงได้เลย","มือกลองประจำวง":"จังหวะแน่นแล้ว อีกนิดเดียวจะเป๊ะ","มือกลองฝึกหัด":"เริ่มจับจังหวะได้แล้ว ซ้อมต่ออีกหน่อยนะ","ศิษย์หัดตี":"ลองฟังตัวอย่างก่อน แล้วตีตามฉิ่งนะคนขยัน","ลองใหม่อีกครั้ง":"ไม่เป็นไร ลองโหมดช้าก่อนนะ"},
+  duo:["ตีขัดกันได้กลมกลืนมาก!","คู่นี้ซ้อมด้วยกันบ่อย ๆ นะ","กลองแขกต้องใจตรงกันแบบนี้แหละ"]
+};
+const RANKS=[[95,"ครูกลองแขก"],[85,"มือกลองประจำวง"],[70,"มือกลองฝึกหัด"],[50,"ศิษย์หัดตี"],[0,"ลองใหม่อีกครั้ง"]];
+const rankOf=a=>{for(const [m,n] of RANKS)if(a>=m)return n;return RANKS[RANKS.length-1][1]};
+function say(t){const b=$("#mBubble");b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop")}
+$("#mKru").addEventListener("click",()=>{say(pick(SAY.poke));const k=$("#mKru");k.classList.remove("happy");void k.offsetWidth;k.classList.add("happy");drum(0);setTimeout(()=>drum(2),160)});
+
+/* ===================== ตัวเลือกบทฝึก ===================== */
+let sel={pat:lsGet("pat","p1"),spd:lsGet("spd",0),custom:lsGet("custom","")};
+/* หน้าทับที่บันทึกจากเครื่องกำกับจังหวะ (ในเครื่องนี้ และที่ครูแชร์ให้ทั้งชมรม) */
+const PRESET_KEY="sapphawathit_tap_presets";
+function localPresets(){try{return JSON.parse(localStorage.getItem(PRESET_KEY)||"[]")||[]}catch(e){return []}}
+let clubPresets=[];
+try{const f=(window.parent!==window&&window.parent.firebase);if(f&&f.apps&&f.apps.length&&f.auth().currentUser)f.database().ref("tapPresets").once("value").then(s=>{const v=s.val()||{};clubPresets=Object.keys(v).map(k=>Object.assign({id:k},v[k])).filter(p=>p&&p.str&&!parsePat(p.str).err);renderPicker()}).catch(()=>{})}catch(e){}
+function allPats(){const l=PATTERNS.slice();
+  clubPresets.forEach(p=>l.push({id:"c_"+p.id,name:"🏫 "+p.name,str:p.str,rate:p.rate,rounds:Math.max(1,Math.min(4,Math.ceil(16/parsePat(p.str).bars))),tip:"หน้าทับที่ครูแชร์ให้ทั้งชมรม"}));
+  localPresets().forEach(p=>{if(p&&p.str&&!parsePat(p.str).err)l.push({id:"s_"+p.id,name:"💾 "+p.name,str:p.str,rate:p.rate,rounds:Math.max(1,Math.min(4,Math.ceil(16/parsePat(p.str).bars))),tip:"หน้าทับที่บันทึกไว้ในเครื่องกำกับจังหวะ"})});
+  if(sel.custom)l.push({id:"custom",name:"หน้าทับของครู",str:sel.custom,rounds:2,tip:"หน้าทับที่ครูแต่งเอง"});return l}
+function curPat(){const l=allPats();return l.find(p=>p.id===sel.pat)||l[0]}
+function bestKey(){return "best_"+curPat().id+"_"+sel.spd}
+function renderPicker(){
+  const s=$("#patSel");s.innerHTML=allPats().map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");s.value=curPat().id;
+  document.querySelectorAll("#spdSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.s===sel.spd));
+  const p=curPat(),pp=parsePat(p.str),b=lsGet(bestKey(),null);
+  $("#patInfo").innerHTML=esc(p.tip)+'<br>'+pp.bars+' ห้อง × '+p.rounds+' รอบ'+(b?' · <span class="best">สถิติคนเดียว '+b.acc+'% ('+esc(b.rank)+')</span>':'');
+}
+$("#patSel").addEventListener("change",e=>{sel.pat=e.target.value;lsSet("pat",sel.pat);renderPicker();pushRoomSettings()});
+document.querySelectorAll("#spdSeg button").forEach(b=>b.addEventListener("click",()=>{sel.spd=+b.dataset.s;lsSet("spd",sel.spd);renderPicker();pushRoomSettings()}));
+$("#customIn").value=sel.custom;
+$("#customUse").addEventListener("click",()=>{
+  const v=$("#customIn").value.trim().replace(/\s+/g," "),p=parsePat(v);
+  if(p.err){$("#customErr").textContent=p.err;return}
+  $("#customErr").textContent="";sel.custom=v;sel.pat="custom";lsSet("custom",v);lsSet("pat","custom");renderPicker();pushRoomSettings();
+  say("ได้หน้าทับใหม่แล้ว ลองฟังตัวอย่างดูก่อนนะ");window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* ===================== หน้าจอ ===================== */
+function show(id){["#menu","#lobby","#play"].forEach(s=>$(s).classList.toggle("hidden",s!==id));if(id!=="#play")$("#over").classList.add("hidden")}
+
+/* ===================== เครื่องยนต์จังหวะ ===================== */
+const WIN={perf:.07,good:.13,ok:.2};
+const JTXT={perf:["แม่น!","#8ff0b8"],good:["ดี","#ffe39a"],ok:["พอได้","#ffc28a"],miss:["พลาด","#ff8fa6"]};
+let G=null;
+
+function makeCanvas(rot){const c=document.createElement("canvas");if(rot)c.classList.add("rot");return c}
+function newStats(){return {sc:0,combo:0,max:0,perf:0,good:0,ok:0,miss:0,n:0}}
+function accOf(s){if(!s.n)return 0;return Math.round((s.perf*100+s.good*70+s.ok*40)/s.n)}
+
+/* cfg: {mode, pat:{name,str,rounds}, unit, fields:[{lanes,player,rot,label}], t0?, auto:boolean} */
+function begin(cfg){
+  stop();audio();$("#over").classList.add("hidden");
+  const fieldsEl=$("#fields");fieldsEl.innerHTML="";
+  const band=document.createElement("div");band.className="band";
+  band.innerHTML='<div class="ching" id="ching">ฉิ่ง</div><div class="nota" id="nota"></div>';
+  const fields=cfg.fields.map(f=>Object.assign({},f,{cv:makeCanvas(f.rot),pads:{},pop:null}));
+  // วางสนาม: ถ้ามีสนามกลับหัว ให้ไว้บนสุด แล้วแถบโน้ตอยู่ตรงกลาง
+  fields.forEach((f,i)=>{if(i===fields.length-1)fieldsEl.appendChild(band);fieldsEl.appendChild(f.cv)});
+  if(fields.length===1){fieldsEl.insertBefore(band,fields[0].cv)}
+  const P=parsePat(cfg.pat.str),u=cfg.unit,free=cfg.mode==="free";
+  const lead=8*u; // นับเข้า 2 ห้อง
+  const t0=cfg.t0!=null?cfg.t0:AC.currentTime+lead+.5;
+  const notes=[],evs=[];
+  const owner=l=>{for(let i=0;i<fields.length;i++)if(fields[i].lanes.includes(l))return i;return -1};
+  let total=0;
+  if(!free){
+    const per=P.slots.length;
+    for(let r=0;r<cfg.pat.rounds;r++)for(let k=0;k<per;k++){
+      const l=P.slots[k],t=t0+(r*per+k)*u;
+      if(l!==null){const fi=owner(l);notes.push({t,lane:l,f:fi,auto:cfg.auto||fi<0,j:null,sched:false})}
+    }
+    total=cfg.pat.rounds*per;
+    // ฉิ่ง/ฉับ ตามอัตราจังหวะ: ชั้นเดียว=ทุก 2 ตัว · สองชั้น=ท้ายทุกห้อง · สามชั้น=ทุก 2 ห้อง (สลับ ฉิ่ง–ฉับ) รวมช่วงนับเข้า
+    const ev={1:2,2:4,3:8}[cfg.pat.rate||2]||4;
+    for(let b=-Math.floor(8/ev);b<total/ev;b++)evs.push({t:t0+(b*ev+ev-1)*u,open:((b%2)+2)%2===0,sched:false});
+  }
+  const stats=fields.map(()=>newStats());
+  notes.forEach(n=>{if(!n.auto)stats[n.f].n++});
+  G={cfg,fields,notes,evs,stats,t0,u,P,total,free,end:free?Infinity:t0+total*u+1.2,
+     L:Math.max(1.3,u*6),lastBar:null,raf:0,lastPush:0,done:false};
+  $("#pName").textContent=free?"ตีอิสระ":(cfg.mode==="demo"?"ฟังตัวอย่าง · ":"")+cfg.pat.name+" · "+SPEEDS[sel.spd].n;
+  $("#mate").innerHTML="";
+  show("#play");
+  fields.forEach((f,fi)=>{
+    f.cv.addEventListener("pointerdown",e=>{e.preventDefault();const r=f.cv.getBoundingClientRect();let x=(e.clientX-r.left)/r.width;if(f.rot)x=1-x;
+      const li=Math.max(0,Math.min(f.lanes.length-1,Math.floor(x*f.lanes.length)));tap(fi,f.lanes[li])});
+  });
+  resize();
+  G.raf=requestAnimationFrame(loop);
+}
+function stop(){if(G){cancelAnimationFrame(G.raf);G.done=true}G=null}
+function resize(){
+  if(!G)return;const dpr=Math.min(2,window.devicePixelRatio||1);
+  G.fields.forEach(f=>{const r=f.cv.getBoundingClientRect();f.W=r.width;f.H=r.height;f.cv.width=Math.round(r.width*dpr);f.cv.height=Math.round(r.height*dpr);f.ctx=f.cv.getContext("2d");f.ctx.setTransform(dpr,0,0,dpr,0,0)});
+}
+window.addEventListener("resize",()=>{resize()});
+
+function tap(fi,lane){
+  if(!G)return;const now=AC.currentTime,f=G.fields[fi];
+  drum(lane);f.pads[lane]=now;
+  if(G.free||G.cfg.mode==="demo")return;
+  let best=null,bd=9;
+  for(const n of G.notes){if(n.j||n.auto||n.f!==fi||n.lane!==lane)continue;const d=Math.abs(n.t-now);if(d<bd){bd=d;best=n}}
+  if(!best||bd>WIN.ok)return;
+  judge(best,bd<=WIN.perf?"perf":bd<=WIN.good?"good":"ok",now);
+}
+function judge(n,j,now){
+  n.j=j;const s=G.stats[n.f],f=G.fields[n.f];
+  if(j==="miss"){s.miss++;s.combo=0}
+  else{s[j]++;s.combo++;s.max=Math.max(s.max,s.combo);s.sc+=({perf:100,good:70,ok:40}[j])*(1+Math.min(s.combo,50)/50)}
+  f.pop={j,at:now};
+}
+function loop(){
+  if(!G||G.done)return;
+  const now=AC.currentTime,{u,t0}=G;
+  // ตั้งเวลาเสียงล่วงหน้าเล็กน้อย
+  for(const e of G.evs)if(!e.sched&&e.t<now+.12){e.sched=true;if(e.t>now-.05){ching(e.open,e.t);setTimeout(()=>flashChing(),Math.max(0,(e.t-now)*1000))}}
+  for(const n of G.notes){
+    if(n.auto&&!n.sched&&n.t<now+.12){n.sched=true;if(n.t>now-.05){drum(n.lane,n.t,.9);const fi=G.fields.findIndex(f=>f.lanes.includes(n.lane));if(fi>=0)setTimeout(()=>{if(G)G.fields[fi].pads[n.lane]=AC.currentTime},Math.max(0,(n.t-now)*1000))}}
+    if(!n.auto&&!n.j&&now>n.t+WIN.ok)judge(n,"miss",now);
+  }
+  // แถบโน้ต
+  if(!G.free)updateNota(now);
+  // ความคืบหน้า
+  if(!G.free)$("#progI").style.width=Math.max(0,Math.min(100,(now-t0)/(G.total*u)*100))+"%";
+  G.fields.forEach((f,i)=>draw(f,i,now));
+  if(G.cfg.mode==="duo2"&&now-G.lastPush>.7){G.lastPush=now;netPush(false)}
+  if(now>G.end){finish();return}
+  G.raf=requestAnimationFrame(loop);
+}
+function flashChing(){const c=$("#ching");if(!c)return;c.classList.add("on");setTimeout(()=>c.classList.remove("on"),140)}
+function updateNota(now){
+  const slot=Math.floor((now-G.t0)/G.u+.5),per=G.P.slots.length,bars=G.P.bars;
+  const s=Math.max(0,slot),bar=Math.floor(s/4)%bars,key=bar+":"+(slot<0?"pre":s%4);
+  if(key===G.lastBar)return;G.lastBar=key;
+  const mk=(b,cur)=>{let h='<div class="bar'+(cur?"":" next")+'">';for(let k=0;k<4;k++){const l=G.P.slots[(b*4+k)%per];h+='<span class="'+(l===null?"":"n"+l)+(cur&&slot>=0&&k===s%4?" cur":"")+'">'+(l===null?"–":SYM[l])+'</span>'}return h+'</div>'};
+  const el=$("#nota");if(el)el.innerHTML=mk(bar,true)+mk((bar+1)%bars,false);
+}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function draw(f,fi,now){
+  const c=f.ctx;if(!c)return;const W=f.W,H=f.H,nL=f.lanes.length,lw=W/nL,hitY=H*.8;
+  c.clearRect(0,0,W,H);
+  rr(c,0,0,W,H,14);c.save();c.clip();
+  c.fillStyle="#2a1527";c.fillRect(0,0,W,H);
+  f.lanes.forEach((l,i)=>{
+    const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,COL[l]+"33");
+    c.fillStyle=g;c.fillRect(i*lw,0,lw,H);
+    if(i){c.fillStyle="rgba(255,255,255,.06)";c.fillRect(i*lw-1,0,2,H)}
+  });
+  // เส้นตี
+  c.fillStyle="rgba(255,246,224,.25)";c.fillRect(0,hitY-1,W,2);
+  const R=Math.min(lw*.36,H*.11,46);
+  // หน้ากลอง
+  f.lanes.forEach((l,i)=>{
+    const x=i*lw+lw/2,fl=f.pads[l]!=null&&now-f.pads[l]<.13;
+    c.beginPath();c.arc(x,hitY,R*(fl?1.12:1),0,Math.PI*2);
+    const g=c.createRadialGradient(x-R*.3,hitY-R*.3,R*.1,x,hitY,R);
+    g.addColorStop(0,fl?"#fff":"#f5e7cf");g.addColorStop(1,fl?COL[l]:"#b9a083");c.fillStyle=g;c.fill();
+    c.lineWidth=Math.max(3,R*.14);c.strokeStyle=COL[l];c.stroke();
+    if(fl){c.beginPath();c.arc(x,hitY,R*1.45,0,Math.PI*2);c.strokeStyle=COL[l]+"88";c.lineWidth=3;c.stroke()}
+    c.fillStyle="#3b2205";c.font="500 "+Math.round(R*.5)+"px Mitr,Sarabun,sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillText(SYM[l],x,hitY+1);
+    c.fillStyle="rgba(255,246,224,.7)";c.font=Math.round(Math.min(13,lw*.12))+"px Sarabun,sans-serif";
+    c.fillText(DRUM[l]+" · "+FACE[l],x,Math.min(H-10,hitY+R+16));
+  });
+  // โน้ต
+  if(!G.free){
+    const L=G.L,r=R*.78;
+    for(const n of G.notes){
+      if(!f.lanes.includes(n.lane))continue;const dt=n.t-now;if(dt>L||dt<-.3)continue;
+      if(n.j&&n.j!=="miss")continue;
+      const i=f.lanes.indexOf(n.lane),x=i*lw+lw/2,y=hitY-dt/L*hitY;
+      c.globalAlpha=n.j==="miss"?.25:1;
+      c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=COL[n.lane];c.fill();
+      c.lineWidth=3;c.strokeStyle="rgba(255,255,255,.75)";c.stroke();
+      c.fillStyle="#2b1628";c.font="600 "+Math.round(r*.62)+"px Mitr,Sarabun,sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillText(SYM[n.lane],x,y+1);
+      c.globalAlpha=1;
+    }
+  }
+  // HUD
+  const s=G.stats[fi];c.textBaseline="top";
+  if(!G.free&&G.cfg.mode!=="demo"){
+    c.fillStyle="#ffe39a";c.font="500 16px Mitr,sans-serif";c.textAlign="left";c.fillText(Math.round(s.sc)+" คะแนน",12,10);
+    c.textAlign="right";c.fillStyle="rgba(255,246,224,.75)";c.font="14px Sarabun,sans-serif";c.fillText(f.label||"",W-12,12);
+    if(s.combo>=3){c.textAlign="center";c.fillStyle="#fff6e0";c.font="600 "+Math.round(Math.min(34,H*.08))+"px Mitr,sans-serif";c.fillText(s.combo+" ต่อเนื่อง",W/2,H*.12)}
+  }else if(f.label){c.textAlign="right";c.fillStyle="rgba(255,246,224,.75)";c.font="14px Sarabun,sans-serif";c.fillText(f.label,W-12,12)}
+  // นับเข้า
+  if(!G.free&&now<G.t0){
+    const k=Math.ceil((G.t0-now)/(2*G.u));c.textAlign="center";c.textBaseline="middle";
+    c.fillStyle="rgba(255,227,154,.95)";c.font="600 "+Math.round(Math.min(90,H*.22))+"px Mitr,sans-serif";
+    c.fillText(k>4?"เตรียม":["๑","๒","๓","๔"][k-1]||"",W/2,H*.42);
+  }
+  // คำตัดสิน
+  if(f.pop&&now-f.pop.at<.55){
+    const a=1-(now-f.pop.at)/.55,[t,col]=JTXT[f.pop.j];c.globalAlpha=a;c.fillStyle=col;c.textAlign="center";c.textBaseline="middle";
+    c.font="600 "+Math.round(Math.min(40,H*.09))+"px Mitr,sans-serif";c.fillText(t,W/2,H*.4-(1-a)*20);c.globalAlpha=1;
+  }
+  c.restore();
+}
+window.addEventListener("keydown",e=>{
+  if(!G||e.repeat)return;const l=KEYS[e.key.toLowerCase()];if(l==null)return;
+  const fi=G.fields.findIndex(f=>f.lanes.includes(l));if(fi>=0){e.preventDefault();tap(fi,l)}
+});
+
+/* ===================== เริ่มโหมดต่าง ๆ ===================== */
+function patCfg(){const p=curPat();return {name:p.name,str:p.str,rounds:p.rounds,id:p.id,rate:p.rate||2}}
+function startMode(m){
+  unlock();
+  const pat=patCfg(),unit=SPEEDS[sel.spd].u,me=playerName||"ผู้เล่น";
+  if(m==="solo")begin({mode:m,pat,unit,fields:[{lanes:[0,1,2,3],label:me}]});
+  else if(m==="demo")begin({mode:m,pat,unit,auto:true,fields:[{lanes:[0,1,2,3],label:"ครูตีให้ฟัง"}]});
+  else if(m==="free")begin({mode:m,pat,unit,fields:[{lanes:[0,1,2,3],label:"ตีอิสระ"}]});
+  else if(m==="duo1")begin({mode:m,pat,unit,fields:[{lanes:[2,3],rot:true,label:"ผู้เล่น 2 · ตัวเมีย"},{lanes:[0,1],label:"ผู้เล่น 1 · ตัวผู้"}]});
+  else if(m==="duo2")openLobby();
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>startMode(b.dataset.go)));
+$("#playBack").addEventListener("click",()=>{const m=G&&G.cfg.mode;stop();if(m==="duo2"){show("#lobby");netState("wait")}else show("#menu")});
+
+/* ===================== ผลลัพธ์ ===================== */
+function finish(){
+  const g=G;stop();const m=g.cfg.mode;
+  const res=g.fields.map((f,i)=>{const s=g.stats[i],acc=accOf(s);return {label:f.label,acc,rank:rankOf(acc),s}});
+  let face='<div class="kru happy"><img src="'+$("#mKru img").src+'" alt="ครู"></div>',body="",bubble="";
+  const card=(r,who)=>'<div class="rc"><div class="who">'+esc(who)+'</div><div class="acc">'+r.acc+'%</div><div class="rk">'+esc(r.rank)+'</div><div class="st">แม่น '+r.s.perf+' · ดี '+r.s.good+' · พอได้ '+r.s.ok+' · พลาด '+r.s.miss+'<br>ต่อเนื่องสูงสุด '+r.s.max+' · '+Math.round(r.s.sc)+' คะแนน</div></div>';
+  if(m==="demo"){bubble="ฟังแล้วใช่ไหม ทีนี้ลองตีเองเลย!";body='<h2>ฟังตัวอย่างจบแล้ว</h2>'}
+  else if(m==="solo"){
+    const r=res[0],k=bestKey(),b=lsGet(k,null),isNew=!b||r.acc>b.acc;if(isNew)lsSet(k,{acc:r.acc,rank:r.rank});
+    bubble=(isNew&&b?"ทำสถิติใหม่ด้วย! ":"")+SAY.rank[r.rank];
+    body='<h2>จบเพลง</h2><div class="res">'+card(r,playerName||"ผลของคุณ")+'</div>';
+    post({mode:m,acc:r.acc,score:Math.round(r.s.sc),rank:r.rank});
+  }else if(m==="duo1"){
+    const a=res[1],b=res[0],h=Math.round((a.acc+b.acc)/2);
+    bubble=h>=85?pick(SAY.duo):SAY.rank[rankOf(h)];
+    body='<h2>จบเพลง</h2><div class="res two">'+card(a,"ผู้เล่น 1 · ตัวผู้")+card(b,"ผู้เล่น 2 · ตัวเมีย")+'</div><div class="harm">ความกลมกลืนของคู่ '+h+'% · '+esc(rankOf(h))+'</div>';
+    post({mode:m,acc:h});
+  }else if(m==="duo2"){
+    const r=res[0];NET.myFinal={acc:r.acc,sc:Math.round(r.s.sc),rank:r.rank,perf:r.s.perf,good:r.s.good,ok:r.s.ok,miss:r.s.miss,max:r.s.max};
+    netPush(true);G2.lastRes={r};renderDuo2Result();post({mode:m,acc:r.acc,score:Math.round(r.s.sc),rank:r.rank});return;
+  }
+  if(m!=="demo"&&m!=="free")chime();
+  $("#panel").innerHTML=face+'<div class="bubble">'+esc(bubble)+'</div>'+body+
+    (m==="demo"?'<button class="btn pri" data-r="solo">ตีเองคนเดียว</button><button class="btn sec2" data-r="duo1">ตีคู่กับเพื่อน</button>':'<button class="btn pri" data-r="'+m+'">เล่นอีกครั้ง</button>')+
+    '<button class="btn sec2" data-r="menu">กลับเมนู</button>';
+  $("#over").classList.remove("hidden");
+  $("#panel").querySelectorAll("[data-r]").forEach(b=>b.addEventListener("click",()=>{$("#over").classList.add("hidden");b.dataset.r==="menu"?(show("#menu"),renderPicker()):startMode(b.dataset.r)}));
+}
+function post(d){try{if(window.parent!==window)window.parent.postMessage(Object.assign({source:"sapphawathit-game",game:"klong-khaek",pattern:curPat().id,speed:sel.spd},d),"*")}catch(e){}}
+
+/* ===================== สองเครื่อง (ใช้ Firebase ของแอป) ===================== */
+const NET={fb:null,db:null,off:0,ref:null,code:null,role:null,room:null,myFinal:null,startedAt:0,unsub:null};
+const G2={lastRes:null};
+function getFb(){
+  try{
+    const p=window.parent!==window&&window.parent;
+    if(window.__KK_FB||(p&&p.__KK_FB))return window.__KK_FB||p.__KK_FB; // ใช้ทดสอบ
+    const f=p&&p.firebase;
+    if(f&&f.apps&&f.apps.length&&f.auth().currentUser)return f;
+  }catch(e){}
+  return null;
+}
+function myId(){if(!NET.uid){try{NET.uid=NET.fb.auth().currentUser.uid}catch(e){NET.uid="x"+Math.random()}}return NET.uid}
+function openLobby(){
+  NET.fb=getFb();show("#lobby");
+  $("#lbNoFb").classList.toggle("hidden",!!NET.fb);$("#lbStart").classList.toggle("hidden",!NET.fb||!!NET.code);$("#lbRoom").classList.toggle("hidden",!NET.code);
+  if(!NET.fb)return;
+  NET.db=NET.fb.database();
+  NET.db.ref(".info/serverTimeOffset").on("value",s=>{NET.off=s.val()||0});
+  if(NET.code)renderLobby();
+}
+const serverNow=()=>Date.now()+NET.off;
+function roomData(){const p=patCfg();return {pat:{id:p.id,name:p.name,str:p.str,rounds:p.rounds,rate:p.rate||2},spd:sel.spd}}
+$("#mkRoom").addEventListener("click",async()=>{
+  unlock();const btn=$("#mkRoom");btn.disabled=true;
+  try{
+    for(let i=0;i<8;i++){
+      const code=String(1000+Math.floor(Math.random()*9000)),ref=NET.db.ref("gameRooms/"+code);
+      const r=await ref.transaction(cur=>{
+        if(cur&&cur.at&&serverNow()-cur.at<3*3600e3)return; // ห้องยังใช้อยู่
+        return Object.assign({at:serverNow(),state:"wait",startAt:0,hostDrum:"M",A:{name:playerName||"หัวหน้าห้อง",uid:myId()}},roomData());
+      });
+      if(r.committed){enterRoom(code,"A");ref.onDisconnect().remove();return}
+    }
+    alert("สร้างห้องไม่สำเร็จ ลองใหม่อีกครั้ง");
+  }catch(e){console.error(e);$("#joinErr").textContent="สร้างห้องไม่สำเร็จ: "+(e.code||e.message)}
+  finally{btn.disabled=false}
+});
+$("#codeIn").addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,4)});
+$("#joinRoom").addEventListener("click",async()=>{
+  unlock();const code=$("#codeIn").value,err=$("#joinErr");err.textContent="";
+  if(!/^\d{4}$/.test(code)){err.textContent="ใส่รหัส 4 ตัวเลข";return}
+  try{
+    const ref=NET.db.ref("gameRooms/"+code);let why="";
+    const r=await ref.transaction(cur=>{
+      if(!cur||!cur.A){why="ไม่พบห้องนี้";return}
+      if(cur.B&&cur.B.uid!==myId()){why="ห้องนี้มีคนครบสองคนแล้ว";return}
+      cur.B={name:playerName||"เพื่อน",uid:myId()};return cur;
+    });
+    if(!r.committed){err.textContent=why||"เข้าห้องไม่สำเร็จ";return}
+    enterRoom(code,"B");ref.child("B").onDisconnect().remove();
+  }catch(e){console.error(e);err.textContent="เข้าห้องไม่สำเร็จ: "+(e.code||e.message)}
+});
+function enterRoom(code,role){
+  NET.code=code;NET.role=role;NET.ref=NET.db.ref("gameRooms/"+code);NET.startedAt=0;
+  $("#lbStart").classList.add("hidden");$("#lbRoom").classList.remove("hidden");
+  const h=role==="A";$("#hostDrum").classList.toggle("hidden",!h);$("#goBtn").classList.toggle("hidden",!h);$("#waitHost").classList.toggle("hidden",h);
+  $("#lbPickGuest").classList.toggle("hidden",h);
+  if(h)$("#lbPickHost").appendChild($("#picker"));
+  const cb=s=>onRoom(s.val());NET.ref.on("value",cb);NET.unsub=()=>NET.ref.off("value",cb);
+}
+function leaveRoom(){
+  if(!NET.ref)return;
+  try{NET.unsub&&NET.unsub();if(NET.role==="A"){NET.ref.onDisconnect().cancel();NET.ref.remove()}else{NET.ref.child("B").onDisconnect().cancel();NET.ref.child("B").remove()}}catch(e){}
+  NET.ref=null;NET.code=null;NET.role=null;NET.room=null;
+  $("#menu").insertBefore($("#picker"),$("#menu .modes"));
+}
+$("#lobbyBack").addEventListener("click",()=>{leaveRoom();show("#menu");renderPicker()});
+document.querySelectorAll("#drumSeg button").forEach(b=>b.addEventListener("click",()=>{if(NET.ref&&NET.role==="A")NET.ref.update({hostDrum:b.dataset.d})}));
+function pushRoomSettings(){if(NET.ref&&NET.role==="A"&&NET.room&&NET.room.state==="wait")NET.ref.update(roomData())}
+function myLanes(v){const hd=v.hostDrum||"M",mine=NET.role==="A"?hd:(hd==="M"?"F":"M");return mine==="M"?[0,1]:[2,3]}
+function onRoom(v){
+  const prev=NET.room;NET.room=v;
+  if(!v||(NET.role==="B"&&(!v.B||v.B.uid!==myId()))){
+    if(NET.ref){const wasHost=NET.role==="A";NET.ref.off();NET.ref=null;NET.code=null;stop();$("#menu").insertBefore($("#picker"),$("#menu .modes"));show("#menu");renderPicker();if(!wasHost)say("หัวหน้าห้องปิดห้องแล้วนะ")}
+    return;
+  }
+  if(!$("#lobby").classList.contains("hidden"))renderLobby();
+  // เริ่มเล่นพร้อมกัน
+  if(v.state==="go"&&v.startAt&&v.startAt!==NET.startedAt){
+    NET.startedAt=v.startAt;NET.myFinal=null;G2.lastRes=null;G2.bub=null;
+    audio();const unit=SPEEDS[v.spd]?SPEEDS[v.spd].u:.3;sel.spd=v.spd;
+    const t0=AC.currentTime+(v.startAt-serverNow())/1000;
+    const lanes=myLanes(v),mine=lanes[0]===0?"ตัวผู้":"ตัวเมีย";
+    begin({mode:"duo2",pat:v.pat,unit,t0,fields:[{lanes,label:(playerName||"ฉัน")+" · "+mine}]});
+  }
+  // คะแนนเพื่อนระหว่างเล่น
+  const other=NET.role==="A"?"B":"A",ps=(v.p||{})[other];
+  if(G&&G.cfg.mode==="duo2")$("#mate").innerHTML=ps?esc((v[other]||{}).name||"เพื่อน")+' <b>'+(ps.acc||0)+'%</b>':"";
+  if(v.state==="wait"&&prev&&prev.state==="go"&&G2.lastRes){G2.lastRes=null;G2.bub=null;$("#over").classList.add("hidden");show("#lobby");renderLobby();return}
+  if(G2.lastRes)renderDuo2Result();
+}
+function renderLobby(){
+  const v=NET.room;if(!v)return;
+  $("#roomCode").textContent=NET.code;
+  $("#roomHint").textContent=NET.role==="A"?"ให้เพื่อนเปิดเกมนี้ เลือก “สองคน สองเครื่อง” แล้วใส่รหัสนี้":"เข้าห้องแล้ว";
+  const hd=v.hostDrum||"M",tag=d=>d==="M"?'<span class="tag l0">ตัวผู้</span>':'<span class="tag l2">ตัวเมีย</span>';
+  $("#players").innerHTML='<div class="pl">'+tag(hd)+'<span class="nm">'+esc(v.A.name)+' (หัวหน้าห้อง)</span>'+(NET.role==="A"?"✓ คุณ":"")+'</div>'+
+    (v.B?'<div class="pl">'+tag(hd==="M"?"F":"M")+'<span class="nm">'+esc(v.B.name)+'</span>'+(NET.role==="B"?"✓ คุณ":"")+'</div>':'<div class="pl wait">'+tag(hd==="M"?"F":"M")+'<span class="nm">รอเพื่อนเข้าห้อง…</span></div>');
+  document.querySelectorAll("#drumSeg button").forEach(b=>b.classList.toggle("on",b.dataset.d===hd));
+  $("#guestPat").textContent=(v.pat?v.pat.name:"")+" · "+(SPEEDS[v.spd]?SPEEDS[v.spd].n:"");
+  $("#goBtn").disabled=!v.B;
+}
+$("#goBtn").addEventListener("click",()=>{
+  if(!NET.ref||!NET.room||!NET.room.B)return;unlock();
+  const unit=SPEEDS[sel.spd].u;
+  NET.ref.update(Object.assign(roomData(),{state:"go",startAt:Math.round(serverNow()+8*unit*1000+1800),p:null}));
+});
+function netPush(done){
+  if(!NET.ref||!G&&!done)return;
+  const s=done?NET.myFinal:(()=>{const st=G.stats[0];return {acc:accOf(st),sc:Math.round(st.sc)}})();
+  try{NET.ref.child("p/"+NET.role).set(Object.assign({},s,{done:!!done}))}catch(e){}
+}
+function netState(st){if(NET.ref&&NET.role==="A")NET.ref.update({state:st})}
+function renderDuo2Result(){
+  const v=NET.room||{},other=NET.role==="A"?"B":"A",ps=(v.p||{})[other],me=NET.myFinal;if(!me)return;
+  const oname=(v[other]||{}).name||"เพื่อน",myD=myLanes(v)[0]===0?"ตัวผู้":"ตัวเมีย",oD=myD==="ตัวผู้"?"ตัวเมีย":"ตัวผู้";
+  const card=(n,r,d)=>'<div class="rc"><div class="who">'+esc(n)+' · '+d+'</div>'+(r?'<div class="acc">'+r.acc+'%</div><div class="rk">'+esc(rankOf(r.acc))+'</div>'+(r.perf!=null?'<div class="st">แม่น '+r.perf+' · ดี '+r.good+' · พอได้ '+r.ok+' · พลาด '+r.miss+'<br>'+r.sc+' คะแนน</div>':'<div class="st">'+(r.sc||0)+' คะแนน</div>'):'<div class="st" style="margin-top:14px">รอผลของเพื่อน…</div>')+'</div>';
+  const both=ps&&ps.done,h=both?Math.round((me.acc+ps.acc)/2):null;
+  if(both&&!G2.bub)G2.bub=h>=85?pick(SAY.duo):SAY.rank[rankOf(h)];const bubble=both?G2.bub:"เก่งมาก! รอดูผลของเพื่อนแป๊บนึงนะ";
+  $("#panel").innerHTML='<div class="kru happy"><img src="'+$("#mKru img").src+'" alt="ครู"></div><div class="bubble">'+esc(bubble)+'</div><h2>จบเพลง</h2><div class="res two">'+card(playerName||"คุณ",me,myD)+card(oname,both?ps:null,oD)+'</div>'+
+    (both?'<div class="harm">ความกลมกลืนของคู่ '+h+'% · '+esc(rankOf(h))+'</div>':'')+
+    (NET.role==="A"?'<button class="btn pri" id="d2again">กลับห้อง เล่นอีกรอบ</button>':'<div class="muted" style="margin-top:12px">รอหัวหน้าห้องเริ่มรอบใหม่ได้เลย</div>')+
+    '<button class="btn sec2" id="d2leave">ออกจากห้อง</button>';
+  $("#over").classList.remove("hidden");
+  const a=$("#d2again");if(a)a.onclick=()=>{G2.lastRes=null;$("#over").classList.add("hidden");netState("wait");show("#lobby");renderLobby()};
+  $("#d2leave").onclick=()=>{G2.lastRes=null;leaveRoom();show("#menu");renderPicker()};
+  if(NET.role==="B"&&v.state==="wait"&&both){/* ยังอยู่หน้าผล รอรอบใหม่ */}
+}
+
+renderPicker();
+try{if(/[?&]debug=1/.test(location.search))window.__KK=()=>({G,AC})}catch(e){}
+})();
+</script>
+</body>
+</html>

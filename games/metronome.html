@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#4a2944">
+<title>เครื่องกำกับจังหวะ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--gold2:#ffe39a;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35);
+  --m1:#f2c14e;--m2:#ffa45c;--f1:#ef86b8;--f2:#a98bff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2);-webkit-user-select:none;user-select:none}
+button,select,input,textarea{font:inherit;color:inherit}
+.wrap{max-width:520px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px 24px}
+.hidden{display:none!important}
+.title{text-align:center}
+.badge{display:inline-block;font-size:12px;color:var(--gold);border:1px solid var(--line);border-radius:99px;padding:3px 12px;margin-bottom:6px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:30px;color:var(--gold);text-shadow:0 2px 0 #7a4b10}
+.sub{color:var(--muted);font-size:14px;margin-top:2px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+.lb{font-family:Mitr;color:var(--gold);font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.lb .r{margin-left:auto;font-family:Sarabun;font-size:13px;color:var(--muted)}
+
+/* stage */
+.stage{margin-top:12px;border-radius:22px;padding:16px 14px 14px;background:linear-gradient(160deg,rgba(94,55,87,.9),rgba(43,22,40,.95));border:1px solid var(--line);text-align:center;position:relative;overflow:hidden}
+.chingBig{width:120px;height:120px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-family:Mitr;font-size:30px;color:#3b2205;
+  background:radial-gradient(circle at 35% 30%,#fff1c2,#d9a640 55%,#8a5d1a);box-shadow:0 8px 20px rgba(0,0,0,.45);transition:transform .08s,box-shadow .12s}
+.chingBig.hit{transform:scale(1.12);box-shadow:0 0 0 6px rgba(255,246,213,.6),0 0 40px 14px rgba(255,214,102,.7)}
+.chingBig.chab{box-shadow:0 0 0 6px rgba(239,134,184,.6),0 0 34px 10px rgba(239,134,184,.55)}
+.bpmRow{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.bpm{font-family:Mitr;font-size:54px;line-height:1;color:var(--gold);min-width:110px}
+.bpmU{font-size:12px;color:var(--muted)}
+.rb{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:22px;cursor:pointer}
+input[type=range]{width:100%;accent-color:#f2c14e;margin:10px 0 2px}
+.info{font-size:13px;color:var(--muted)}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.dots i{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .06s}
+.dots i.on{background:var(--cream)}
+.dots i.ch.on{background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.dots i.cb.on{background:var(--f1);box-shadow:0 0 10px var(--f1)}
+.nota{display:flex;justify-content:center;gap:4px;margin-top:10px;min-height:32px}
+.nota span{width:46px;height:32px;display:grid;place-items:center;border-radius:8px;font-family:Mitr;font-size:14px;color:var(--muted);background:rgba(0,0,0,.25)}
+.nota span.cur{outline:2px solid var(--cream);color:#fff}
+.n0{color:var(--m1)!important}.n1{color:var(--m2)!important}.n2{color:var(--f1)!important}.n3{color:var(--f2)!important}
+.barNo{font-size:13px;color:var(--muted);margin-top:6px}
+.playBtn{display:block;width:100%;margin-top:14px;border:none;border-radius:16px;padding:15px;font-family:Mitr;font-size:20px;cursor:pointer;background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 4px 0 #8a5d1a}
+.playBtn.on{background:linear-gradient(180deg,#ff9fb3,#d9587a);color:#fff;box-shadow:0 4px 0 #7a2340}
+.row{display:flex;gap:8px;align-items:center}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;border:1px solid var(--line);background:none;border-radius:10px;padding:9px 0;cursor:pointer;color:var(--muted);font-size:14px}
+.seg button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.tap{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:9px 14px;cursor:pointer;font-family:Mitr;color:var(--gold2)}
+select,input[type=text],input[type=number],textarea{width:100%;font-size:16px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none;color:var(--cream)}
+select option{color:#222}
+textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
+.mix{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center}
+.mix label{font-size:14px}
+.mix input[type=range]{margin:0}
+.sw{width:44px;height:26px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;cursor:pointer;border:none;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:var(--gold)}.sw.on::after{left:21px}
+.help{font-size:13px;color:var(--muted);line-height:1.55;margin-top:6px}
+.help b{color:var(--cream)}
+.err{color:#ff9fb3;font-size:13px;min-height:18px;margin-top:4px}
+.btn{border:none;border-radius:12px;padding:10px 14px;font-family:Mitr;font-size:15px;cursor:pointer}
+.btn.pri{background:var(--gold);color:#3b2205}
+.btn.sec{background:rgba(255,255,255,.1);border:1px solid var(--line);color:var(--cream)}
+.btn.sm{padding:6px 10px;font-size:13px;border-radius:9px}
+.plist{display:grid;gap:8px}
+.pi{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border-radius:12px;padding:9px 10px}
+.pi .nm{flex:1;min-width:0}
+.pi .nm b{font-family:Mitr;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pi .nm span{font-size:12px;color:var(--muted)}
+.empty{font-size:13px;color:var(--muted);text-align:center;padding:6px}
+.credit{padding-top:22px;text-align:center;font-size:12px;color:rgba(217,195,212,.7)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--cream);color:#3b2205;font-family:Mitr;padding:9px 16px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">
+    <span class="badge">ชมรมดนตรีไทย สรรพวาทิต</span>
+    <h1>เครื่องกำกับจังหวะ</h1>
+    <div class="sub">เมโทรนอมดนตรีไทย · ฉิ่ง ฉับ และหน้าทับกลองแขก · ต่อลำโพงใช้ซ้อมทั้งวงได้</div>
+  </div>
+
+  <!-- ===== หน้าปัด ===== -->
+  <div class="stage">
+    <div class="chingBig" id="chingBig">ฉิ่ง</div>
+    <div class="dots" id="dots"></div>
+    <div class="nota" id="nota"></div>
+    <div class="barNo" id="barNo">กดเริ่มเพื่อฟังจังหวะ</div>
+    <div class="bpmRow">
+      <button class="rb" id="bpmDn" aria-label="ช้าลง">−</button>
+      <div><div class="bpm" id="bpmV">120</div><div class="bpmU">ตัวโน้ต / นาที</div></div>
+      <button class="rb" id="bpmUp" aria-label="เร็วขึ้น">+</button>
+    </div>
+    <input type="range" id="bpmR" min="30" max="260" step="1">
+    <div class="info" id="chingInfo"></div>
+    <button class="playBtn" id="play">▶ เริ่ม</button>
+  </div>
+
+  <!-- ===== อัตราจังหวะ ===== -->
+  <div class="sec">
+    <div class="lb">อัตราจังหวะ <span class="r"><button class="tap" id="tapBtn">แตะตามจังหวะ</button></span></div>
+    <div class="seg" id="rateSeg"><button data-r="3">สามชั้น</button><button data-r="2">สองชั้น</button><button data-r="1">ชั้นเดียว</button></div>
+    <div class="help" id="rateHelp"></div>
+  </div>
+
+  <!-- ===== หน้าทับ ===== -->
+  <div class="sec">
+    <div class="lb">หน้าทับกลองแขก</div>
+    <select id="patSel"></select>
+    <div class="help">ห้องละ 4 ตัว เว้นวรรคระหว่างห้อง · <b>ต</b>=ติง <b>โ</b>=โจ๊ะ (ตัวผู้) · <b>ท</b>=ทั่ม <b>จ</b>=จ๊ะ (ตัวเมีย) · <b>-</b>=เว้น · ปล่อยว่าง = ฉิ่งอย่างเดียว</div>
+    <textarea id="patIn" placeholder="เช่น ---ต ---ท -ต-ท -ตทท"></textarea>
+    <div class="err" id="patErr"></div>
+  </div>
+
+  <!-- ===== เสียง ===== -->
+  <div class="sec">
+    <div class="lb">เสียงที่เปิด</div>
+    <div class="mix">
+      <button class="sw" data-m="ching"></button><label>ฉิ่ง–ฉับ</label><input type="range" min="0" max="100" data-v="ching">
+      <button class="sw" data-m="drum"></button><label>กลองแขก</label><input type="range" min="0" max="100" data-v="drum">
+      <button class="sw" data-m="click"></button><label>เสียงเคาะทุกตัว</label><input type="range" min="0" max="100" data-v="click">
+    </div>
+  </div>
+
+  <!-- ===== เร่งจังหวะ ===== -->
+  <div class="sec">
+    <div class="lb">ฝึกเร่งความเร็ว <span class="r"><button class="sw" id="rampSw"></button></span></div>
+    <div class="row" style="font-size:14px;gap:6px;flex-wrap:wrap">เพิ่มทีละ <input type="number" id="rampBy" min="1" max="30" style="width:70px;padding:6px 8px"> ทุก <input type="number" id="rampEv" min="1" max="64" style="width:70px;padding:6px 8px"> ห้อง จนถึง <input type="number" id="rampTo" min="30" max="260" style="width:80px;padding:6px 8px"></div>
+    <div class="help">ซ้อมจากช้าแล้วค่อย ๆ เร็วขึ้นเอง เหมาะกับการซ้อมเพลงให้ได้ความเร็วจริง · กดหยุดแล้วความเร็วจะกลับไปที่ค่าเริ่ม</div>
+  </div>
+
+  <!-- ===== บันทึก ===== -->
+  <div class="sec">
+    <div class="lb">บันทึกหน้าทับและจังหวะ</div>
+    <div class="row"><input type="text" id="saveName" placeholder="ตั้งชื่อ เช่น ปรบไก่ สองชั้น ช้า" maxlength="40"><button class="btn pri" id="saveBtn" style="flex:none">บันทึก</button></div>
+    <div class="help">บันทึกทั้งหน้าทับ อัตราจังหวะ ความเร็ว และเสียงที่เปิดไว้ · หน้าทับที่บันทึกจะไปอยู่ในเกม “กลองแขกคู่ขวัญ” ด้วย</div>
+    <div class="lb" style="margin-top:12px;font-size:14px">ในเครื่องนี้</div>
+    <div class="plist" id="localList"></div>
+    <div id="clubWrap" class="hidden">
+      <div class="lb" style="margin-top:12px;font-size:14px">🏫 ที่ครูแชร์ให้ทั้งชมรม</div>
+      <div class="plist" id="clubList"></div>
+    </div>
+  </div>
+  <div class="credit">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SYM=["ติง","โจ๊ะ","ทั่ม","จ๊ะ"];
+const TOK={"ต":0,"โ":1,"ท":2,"จ":3,"-":null};
+const RATE={1:{n:"ชั้นเดียว",ev:2,help:"ฉิ่ง–ฉับ สลับกันทุก 2 ตัวโน้ต (ครึ่งห้อง) จังหวะกระชับ"},2:{n:"สองชั้น",ev:4,help:"ฉิ่ง–ฉับ ตกตัวท้ายของทุกห้อง สลับกันห้องละครั้ง"},3:{n:"สามชั้น",ev:8,help:"ฉิ่ง–ฉับ ตกทุก 2 ห้อง จังหวะยืด ช้า สง่า"}};
+const BUILTIN=[
+  {id:"b0",name:"ฉิ่งอย่างเดียว",str:""},
+  {id:"b1",name:"แบบฝึก ๑ · ติง–ทั่ม ตอบกัน",str:"---ต ---ท ---ต ---ท"},
+  {id:"b2",name:"แบบฝึก ๒ · ถามตอบถี่ขึ้น",str:"-ต-ท -ต-ท -ต-ท -ตทท"},
+  {id:"b3",name:"แบบฝึก ๓ · เพิ่มหน้าต่าน",str:"-โ-ต -จ-ท -โ-ต -จ-ท"},
+  {id:"b4",name:"แบบฝึก ๔ · ขัดกันทุกตัว",str:"-ต-จ -ท-โ -ต-จ -ทจท"},
+  {id:"b5",name:"แบบฝึก ๕ · ยาวแปดห้อง",str:"---ต ---ท -ต-ท -ตทท -โ-ต -จ-ท -โตจ -ท-ท"}
+];
+function parsePat(str){
+  str=String(str||"").trim();if(!str)return {slots:[null,null,null,null],bars:1,empty:true};
+  const bars=str.split(/\s+/),out=[];
+  if(bars.length>64)return {err:"ยาวเกิน 64 ห้อง"};
+  for(let i=0;i<bars.length;i++){const ch=Array.from(bars[i]);if(ch.length!==4)return {err:"ห้องที่ "+(i+1)+" มี "+ch.length+" ตัว (ต้องมี 4 ตัว)"};
+    for(const c of ch){if(!(c in TOK))return {err:"ห้องที่ "+(i+1)+" มีตัว “"+c+"” ที่ใช้ไม่ได้"};out.push(TOK[c])}}
+  return {slots:out,bars:bars.length};
+}
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("show"),2200)}
+
+/* ---------- สถานะ (จำไว้ในเครื่อง) ---------- */
+const SKEY="sapphawathit_metronome_state",PKEY="sapphawathit_tap_presets";
+const DEF={bpm:120,rate:2,pat:"",patSel:"b0",mix:{ching:true,drum:true,click:false},vol:{ching:80,drum:80,click:45},ramp:{on:false,by:4,ev:4,to:180}};
+let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(SKEY)||"{}"));S.mix=Object.assign({},DEF.mix,S.mix);S.vol=Object.assign({},DEF.vol,S.vol);S.ramp=Object.assign({},DEF.ramp,S.ramp)}catch(e){S=JSON.parse(JSON.stringify(DEF))}
+const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}};
+const getLocal=()=>{try{return JSON.parse(localStorage.getItem(PKEY)||"[]")||[]}catch(e){return []}};
+const setLocal=l=>{try{localStorage.setItem(PKEY,JSON.stringify(l))}catch(e){toast("บันทึกในเครื่องนี้ไม่ได้")}};
+
+/* ---------- เสียง ---------- */
+let AC=null,master=null,noiseBuf=null,bus={};
+function audio(){
+  if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();
+    master=AC.createGain();master.gain.value=.9;const comp=AC.createDynamicsCompressor();master.connect(comp);comp.connect(AC.destination);
+    ["ching","drum","click"].forEach(k=>{bus[k]=AC.createGain();bus[k].connect(master)});applyVol();
+    noiseBuf=AC.createBuffer(1,AC.sampleRate*.5,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+  if(AC.state==="suspended")AC.resume();return AC;
+}
+function applyVol(){if(!AC)return;["ching","drum","click"].forEach(k=>bus[k].gain.value=S.mix[k]?Math.pow(S.vol[k]/100,1.5)*1.4:0)}
+function osc(out,type,f0,f1,amp,dur,t,att){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur*.6);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+(att||.003));g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+.05)}
+function noise(out,ft,f,q,amp,dur,t){const s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;fl.type=ft;fl.frequency.value=f;fl.Q.value=q;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur+.05)}
+function drum(l,t){const o=bus.drum;
+  if(l===0){osc(o,"sine",360,300,.55,.45,t);osc(o,"sine",720,640,.12,.18,t);noise(o,"bandpass",2600,1.2,.18,.03,t)}
+  else if(l===1){noise(o,"bandpass",3000,1.6,.55,.07,t);osc(o,"triangle",620,480,.2,.06,t)}
+  else if(l===2){osc(o,"sine",165,120,.75,.55,t);osc(o,"sine",330,250,.12,.2,t);noise(o,"lowpass",900,.7,.2,.04,t)}
+  else{noise(o,"bandpass",1900,1.4,.5,.08,t);osc(o,"triangle",440,330,.18,.07,t)}}
+function ching(open,t){const o=bus.ching;
+  if(open)[2093,3150,4750,6130].forEach((f,i)=>osc(o,"sine",f,0,.09/(i+1),1.2,t,.001));
+  else{noise(o,"highpass",5200,.8,.34,.06,t);osc(o,"sine",3150,0,.05,.07,t)}}
+function click(acc,t){osc(bus.click,"square",acc?1500:1000,0,acc?.12:.07,.03,t,.001)}
+
+/* ---------- ตัวตั้งเวลา (เดินแม่นแม้หน้าจอกระตุก) ---------- */
+let P=parsePat(S.pat);if(P.err)P=parsePat("");
+let run=false,timer=null,nextT=0,slot=0,vq=[],raf=0,wake=null;
+function slotDur(){return 60/S.bpm}
+function schedule(){
+  while(nextT<AC.currentTime+.15){
+    const per=P.slots.length,k=slot%per,ev=RATE[S.rate].ev,l=P.slots[k];
+    if(l!=null)drum(l,nextT);
+    const isCh=(slot%ev)===ev-1,open=Math.floor(slot/ev)%2===0;
+    if(isCh)ching(open,nextT);
+    click(slot%4===0,nextT);
+    vq.push({t:nextT,slot,k,isCh,open});
+    // เร่งจังหวะอัตโนมัติ: ทุก N ห้อง
+    if(S.ramp.on&&slot>0&&(slot+1)%(4*Math.max(1,S.ramp.ev))===0&&S.bpm<S.ramp.to){S.bpm=Math.min(S.ramp.to,S.bpm+Math.max(1,S.ramp.by));uiBpm()}
+    nextT+=slotDur();slot++;
+  }
+}
+function start(){
+  if(!audio())return toast("เครื่องนี้เล่นเสียงไม่ได้");
+  const b=AC.createBuffer(1,1,22050),s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start(0);
+  run=true;slot=0;vq=[];S.rampFrom=S.bpm;nextT=AC.currentTime+.12;schedule();timer=setInterval(schedule,25);raf=requestAnimationFrame(vis);
+  $("#play").textContent="■ หยุด";$("#play").classList.add("on");
+  try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
+}
+function stop(){
+  run=false;clearInterval(timer);if(S.ramp.on&&S.rampFrom){S.bpm=S.rampFrom;uiBpm()}cancelAnimationFrame(raf);$("#play").textContent="▶ เริ่ม";$("#play").classList.remove("on");
+  try{wake&&wake.release()}catch(e){}wake=null;$("#barNo").textContent="หยุดแล้ว";
+  document.querySelectorAll("#dots i").forEach(i=>i.classList.remove("on"));
+}
+document.addEventListener("visibilitychange",()=>{if(run&&document.visibilityState==="visible"&&navigator.wakeLock){navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}});
+$("#play").addEventListener("click",()=>run?stop():start());
+
+/* ---------- ภาพ ---------- */
+function buildDots(){$("#dots").innerHTML=[0,1,2,3].map(()=>'<i></i>').join("")}
+function vis(){
+  if(!run)return;const now=AC.currentTime;let cur=null;
+  while(vq.length&&vq[0].t<=now)cur=vq.shift();
+  if(cur){
+    const ds=document.querySelectorAll("#dots i"),pos=cur.slot%4;
+    ds.forEach((d,i)=>{d.classList.toggle("on",i===pos);d.classList.toggle("ch",i===pos&&cur.isCh&&cur.open);d.classList.toggle("cb",i===pos&&cur.isCh&&!cur.open)});
+    if(cur.isCh){const c=$("#chingBig");c.textContent=cur.open?"ฉิ่ง":"ฉับ";c.classList.remove("hit","chab");void c.offsetWidth;c.classList.add(cur.open?"hit":"chab");setTimeout(()=>c.classList.remove("hit","chab"),130)}
+    const bar=Math.floor(cur.k/4);renderNota(bar,cur.k%4);
+    $("#barNo").textContent="ห้องที่ "+(Math.floor(cur.slot/4)+1)+(P.empty?"":" · หน้าทับห้อง "+(bar+1)+"/"+P.bars);
+  }
+  raf=requestAnimationFrame(vis);
+}
+function renderNota(bar,pos){
+  if(P.empty){$("#nota").innerHTML="";return}
+  let h="";for(let k=0;k<4;k++){const l=P.slots[bar*4+k];h+='<span class="'+(l==null?"":"n"+l)+(k===pos?" cur":"")+'">'+(l==null?"–":SYM[l])+'</span>'}
+  $("#nota").innerHTML=h;
+}
+
+/* ---------- ควบคุม ---------- */
+function uiBpm(){$("#bpmV").textContent=S.bpm;$("#bpmR").value=S.bpm;const ev=RATE[S.rate].ev;$("#chingInfo").textContent="ฉิ่ง–ฉับ "+Math.round(S.bpm/ev*10)/10+" ครั้ง/นาที · ห้องละ "+(Math.round(240/S.bpm*100)/100)+" วินาที";save()}
+function setBpm(v){S.bpm=Math.max(30,Math.min(260,Math.round(v)));uiBpm()}
+$("#bpmR").addEventListener("input",e=>setBpm(+e.target.value));
+let hold=null;
+[["#bpmDn",-1],["#bpmUp",1]].forEach(([id,d])=>{const b=$(id);
+  b.addEventListener("pointerdown",e=>{e.preventDefault();setBpm(S.bpm+d);let n=0;hold=setInterval(()=>{n++;setBpm(S.bpm+d*(n>10?5:1))},n>10?80:180)});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(hold)))});
+let taps=[];
+$("#tapBtn").addEventListener("click",()=>{const t=performance.now();taps=taps.filter(x=>t-x<2500);taps.push(t);
+  if(taps.length>=3){const d=(taps[taps.length-1]-taps[0])/(taps.length-1);setBpm(60000/d);toast("ได้ "+S.bpm+" ตัวโน้ต/นาที")}else toast("แตะต่อไปอีก "+(3-taps.length)+" ครั้ง")});
+function uiRate(){document.querySelectorAll("#rateSeg button").forEach(b=>b.classList.toggle("on",+b.dataset.r===S.rate));$("#rateHelp").textContent=RATE[S.rate].help;uiBpm()}
+document.querySelectorAll("#rateSeg button").forEach(b=>b.addEventListener("click",()=>{S.rate=+b.dataset.r;uiRate();save()}));
+
+function allPresets(){return BUILTIN.map(p=>Object.assign({src:"b"},p)).concat(getLocal().map(p=>Object.assign({src:"l"},p)),club.map(p=>Object.assign({src:"c"},p)))}
+function renderPatSel(){
+  const l=allPresets(),s=$("#patSel");
+  const g=(src,lab)=>{const it=l.filter(p=>p.src===src);return it.length?'<optgroup label="'+lab+'">'+it.map(p=>'<option value="'+src+":"+esc(p.id)+'">'+esc(p.name)+'</option>').join("")+'</optgroup>':""};
+  s.innerHTML=g("b","หน้าทับตั้งต้น")+g("l","บันทึกในเครื่องนี้")+g("c","ครูแชร์ให้ทั้งชมรม")+'<option value="custom">✍️ พิมพ์เอง</option>';
+  s.value=l.some(p=>p.src+":"+p.id===S.patSel)?S.patSel:"custom";
+}
+$("#patSel").addEventListener("change",e=>{
+  const v=e.target.value;S.patSel=v;if(v==="custom"){$("#patIn").focus();save();return}
+  const p=allPresets().find(x=>x.src+":"+x.id===v);if(!p)return;
+  $("#patIn").value=p.str||"";setPat(p.str||"");
+  if(p.src!=="b")applyPreset(p);save();
+});
+function setPat(str){const p=parsePat(str);if(p.err){$("#patErr").textContent=p.err;return false}$("#patErr").textContent="";P=p;S.pat=str.trim().replace(/\s+/g," ");save();renderNota(0,-1);return true}
+$("#patIn").addEventListener("input",e=>{S.patSel="custom";$("#patSel").value="custom";setPat(e.target.value)});
+function applyPreset(p){if(p.bpm)S.bpm=p.bpm;if(p.rate)S.rate=p.rate;if(p.mix)S.mix=Object.assign({},S.mix,p.mix);uiRate();uiMix();applyVol();toast("โหลด “"+p.name+"” แล้ว")}
+
+function uiMix(){
+  document.querySelectorAll(".mix .sw").forEach(b=>b.classList.toggle("on",!!S.mix[b.dataset.m]));
+  document.querySelectorAll(".mix input").forEach(r=>r.value=S.vol[r.dataset.v]);
+}
+document.querySelectorAll(".mix .sw").forEach(b=>b.addEventListener("click",()=>{S.mix[b.dataset.m]=!S.mix[b.dataset.m];uiMix();applyVol();save()}));
+document.querySelectorAll(".mix input").forEach(r=>r.addEventListener("input",()=>{S.vol[r.dataset.v]=+r.value;applyVol();save()}));
+
+function uiRamp(){$("#rampSw").classList.toggle("on",S.ramp.on);$("#rampBy").value=S.ramp.by;$("#rampEv").value=S.ramp.ev;$("#rampTo").value=S.ramp.to}
+$("#rampSw").addEventListener("click",()=>{S.ramp.on=!S.ramp.on;uiRamp();save();toast(S.ramp.on?"เปิดการเร่งความเร็ว":"ปิดการเร่งความเร็ว")});
+[["#rampBy","by",1,30],["#rampEv","ev",1,64],["#rampTo","to",30,260]].forEach(([id,k,a,b])=>$(id).addEventListener("change",e=>{S.ramp[k]=Math.max(a,Math.min(b,+e.target.value||a));uiRamp();save()}));
+
+/* ---------- บันทึก ---------- */
+function current(name){return {id:String(Date.now()),name,str:S.pat,bpm:S.bpm,rate:S.rate,mix:Object.assign({},S.mix),at:Date.now()}}
+$("#saveBtn").addEventListener("click",()=>{
+  const name=$("#saveName").value.trim();if(!name){toast("ตั้งชื่อก่อนบันทึก");$("#saveName").focus();return}
+  if(!setPat($("#patIn").value))return toast("หน้าทับยังไม่ถูกต้อง");
+  const l=getLocal().filter(p=>p.name!==name);const p=current(name);l.unshift(p);setLocal(l.slice(0,60));
+  S.patSel="l:"+p.id;save();$("#saveName").value="";renderLists();renderPatSel();toast("บันทึก “"+name+"” แล้ว");
+});
+const desc=p=>(RATE[p.rate]?RATE[p.rate].n:"")+" · "+p.bpm+" ตัว/นาที · "+(p.str?parsePat(p.str).bars+" ห้อง":"ฉิ่งอย่างเดียว");
+function renderLists(){
+  const l=getLocal(),T=isTeacher();
+  $("#localList").innerHTML=l.length?l.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+'</span></div><button class="btn sec sm" data-load="l:'+esc(p.id)+'">ใช้</button>'+(T&&FB?'<button class="btn sec sm" data-share="'+esc(p.id)+'">แชร์</button>':'')+'<button class="btn sec sm" data-del="'+esc(p.id)+'">ลบ</button></div>').join(""):'<div class="empty">ยังไม่มี — ตั้งค่าแล้วกดบันทึก</div>';
+  $("#clubWrap").classList.toggle("hidden",!FB);
+  $("#clubList").innerHTML=club.length?club.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+(p.by?" · "+esc(p.by):"")+'</span></div><button class="btn sec sm" data-load="c:'+esc(p.id)+'">ใช้</button>'+(T?'<button class="btn sec sm" data-cdel="'+esc(p.id)+'">ลบ</button>':'')+'</div>').join(""):'<div class="empty">'+(T?"กด “แชร์” ที่หน้าทับในเครื่องนี้ เพื่อให้นักเรียนทุกคนเห็น":"ครูยังไม่ได้แชร์หน้าทับ")+'</div>';
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.load){const p=allPresets().find(x=>x.src+":"+x.id===t.dataset.load);if(!p)return;S.patSel=t.dataset.load;$("#patIn").value=p.str||"";setPat(p.str||"");applyPreset(p);renderPatSel();window.scrollTo({top:0,behavior:"smooth"})}
+  else if(t.dataset.del){if(!confirmTwice(t))return;setLocal(getLocal().filter(p=>p.id!==t.dataset.del));renderLists();renderPatSel();toast("ลบแล้ว")}
+  else if(t.dataset.share){const p=getLocal().find(x=>x.id===t.dataset.share);if(!p||!FB)return;
+    FB.database().ref("tapPresets/"+p.id).set({name:p.name,str:p.str||"",bpm:p.bpm,rate:p.rate,mix:p.mix||{},by:myName(),at:Date.now()}).then(()=>{toast("แชร์ให้ทั้งชมรมแล้ว");loadClub()}).catch(err=>toast("แชร์ไม่สำเร็จ: "+(err.code||err.message)))}
+  else if(t.dataset.cdel){if(!confirmTwice(t))return;FB.database().ref("tapPresets/"+t.dataset.cdel).remove().then(()=>{toast("ลบจากชมรมแล้ว");loadClub()}).catch(err=>toast("ลบไม่สำเร็จ: "+(err.code||err.message)))}
+});
+function confirmTwice(b){if(b.dataset.sure)return true;b.dataset.sure=1;const o=b.textContent;b.textContent="แน่ใจ?";setTimeout(()=>{b.textContent=o;delete b.dataset.sure},2500);return false}
+
+/* ---------- เชื่อมแอป (แชร์ให้ทั้งชมรม) ---------- */
+let FB=null,club=[];
+try{const w=window.parent!==window&&window.parent,f=w&&w.firebase;if(f&&f.apps&&f.apps.length&&f.auth().currentUser)FB=f}catch(e){}
+function isTeacher(){try{return !!(window.parent.APP&&window.parent.APP.teacher())}catch(e){return false}}
+function myName(){try{return window.parent.APP.myName()||""}catch(e){return ""}}
+function loadClub(){if(!FB)return;FB.database().ref("tapPresets").once("value").then(s=>{const v=s.val()||{};club=Object.keys(v).map(k=>Object.assign({id:k},v[k])).filter(p=>p&&p.name&&!parsePat(p.str).err).sort((a,b)=>(b.at||0)-(a.at||0));renderLists();renderPatSel()}).catch(()=>{})}
+
+/* ---------- เริ่ม ---------- */
+buildDots();$("#patIn").value=S.pat;uiRate();uiMix();uiRamp();renderLists();renderPatSel();renderNota(0,-1);loadClub();
+})();
+</script>
+</body>
+</html>
