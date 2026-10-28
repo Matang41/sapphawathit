@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b1628">
+<title>เทียบเสียง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
+button,select{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px 28px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:28px;color:var(--gold);text-align:center}
+.sub{color:var(--muted);font-size:14px;text-align:center;margin-top:2px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px}
+.lb{font-family:Mitr;color:var(--gold);font-size:16px;margin-bottom:10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:88px;border:1px solid var(--line);background:none;border-radius:10px;padding:9px 6px;color:var(--muted);font-size:14px}
+.seg button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.notes{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:10px}
+.notes button{border:none;border-radius:12px;min-height:56px;font-family:Mitr;font-size:20px;color:#2a1630;background:#f6e3b0;box-shadow:inset 0 -4px 0 rgba(0,0,0,.2)}
+.notes button.on{background:#ff9fb3;color:#fff}
+.notes button small{display:block;font-family:Sarabun;font-size:10px;opacity:.6}
+.pre{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.pre button{border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:12px;padding:10px;text-align:left;font-size:14px}
+.pre button b{font-family:Mitr;color:var(--gold);font-weight:500;display:block;font-size:15px}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.btn{border:none;border-radius:14px;padding:13px 18px;font-family:Mitr;font-size:18px;background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 4px 0 #8a5d1a;width:100%}
+.btn.on{background:linear-gradient(180deg,#ff9fb3,#d9587a);color:#fff;box-shadow:0 4px 0 #7a2340}
+.meter{margin-top:14px;text-align:center}
+.nn{font-family:Mitr;font-size:64px;line-height:1;color:var(--gold);min-height:64px}
+.hz{font-size:14px;color:var(--muted);margin-top:4px;min-height:20px}
+.dial{position:relative;height:56px;margin:14px 6px 0;border-radius:12px;background:linear-gradient(90deg,#d9587a 0%,#f2c14e 38%,#7ee081 47%,#7ee081 53%,#f2c14e 62%,#d9587a 100%);opacity:.9}
+.dial i{position:absolute;top:-6px;bottom:-6px;width:6px;margin-left:-3px;left:50%;background:#fff;border-radius:3px;box-shadow:0 0 0 2px #2b1628;transition:left .08s}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:4px 6px 0}
+.msg{font-family:Mitr;font-size:18px;margin-top:10px;min-height:26px}
+.help{font-size:13px;color:var(--muted);line-height:1.5;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>เทียบเสียง</h1>
+  <div class="sub">ใช้ระดับเสียงวงของชมรม (ระนาดเอกและฆ้องวงใหญ่ห้อง 512)</div>
+
+  <div class="sec">
+    <div class="lb">1 · เปิดเสียงอ้างอิง</div>
+    <div class="seg" id="src">
+      <button data-s="sine" class="on">เสียงเรียบ (ค้าง)</button><button data-s="sor">ซอด้วง (ค้าง)</button><button data-s="khlui">ขลุ่ย (ค้าง)</button><button data-s="ranad">ระนาดเอก</button><button data-s="khong">ฆ้องวงใหญ่</button>
+    </div>
+    <div class="row">ช่วงเสียง <div class="seg" id="oct" style="flex:1"><button data-o="-7">ต่ำ</button><button data-o="0" class="on">กลาง</button><button data-o="7">สูง</button></div></div>
+    <div class="notes" id="notes"></div>
+    <div class="pre">
+      <button data-p="7,11"><b>ตั้งสายซอด้วง</b>สายทุ้ม ซ · สายเอก รํ</button>
+      <button data-p="3,7"><b>ตั้งสายซออู้</b>สายทุ้ม ด · สายเอก ซ</button>
+    </div>
+    <div class="help">แตะโน้ตเพื่อเปิดเสียง แตะซ้ำเพื่อปิด · ปุ่มตั้งสายจะเปิดสองเสียงสลับกันให้เทียบทีละสาย</div>
+  </div>
+
+  <div class="sec">
+    <div class="lb">2 · จูนด้วยไมโครโฟน</div>
+    <button class="btn" id="mic">🎙 เปิดไมค์แล้วเล่นทีละเสียง</button>
+    <div class="meter">
+      <div class="nn" id="nn">–</div>
+      <div class="hz" id="hz">ยังไม่ได้ยินเสียง</div>
+      <div class="dial" aria-hidden="true"><i id="needle"></i></div>
+      <div class="scale"><span>ต่ำไป</span><span>ตรง</span><span>สูงไป</span></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="help">เทียบกับเสียงวงของชมรม ไม่ใช่เสียงสากล · ขีดกลางสีเขียว = ตรงเสียงวง · ห่างไม่เกิน 10 เซนต์ถือว่าตรง · ใช้ได้กับซอ ขลุ่ย และการร้อง (บางเครื่องไม่อนุญาตไมค์ในแอป ให้เปิดเกมนี้จากลิงก์ตรง)</div>
+  </div>
+  <div class="help" style="text-align:center;margin-top:18px">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+<script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script src="natab.js"></script>
+<script src="thaiinst.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let AC=null,OUT=null;
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C();OUT=AC.createGain();OUT.gain.value=.9;OUT.connect(AC.destination);TI.init(AC,OUT)}if(AC.state==='suspended')AC.resume();return AC}
+let src='sine',oct=0,cur=null,curI=null,alt=null;
+function stopAll(){if(cur){cur.stop();cur=null}clearInterval(alt);alt=null;curI=null;$$('#notes button').forEach(b=>b.classList.remove('on'))}
+function tone(i){audio();if(cur){cur.stop();cur=null}
+  if(src==='ranad'||src==='khong'){TI.note(src,i,0,1);return null}
+  cur=TS2.sustain(src,TI.freq(i),src==='sine'?1:.9);curI=i;return cur}
+function renderNotes(){const N=$('#notes');N.innerHTML='';for(let d=0;d<8;d++){const i=3+d+oct;const b=document.createElement('button');b.innerHTML=TI.noteName(i)+'<small>'+Math.round(TI.freq(i))+' Hz</small>';b.dataset.i=i;
+  b.onclick=()=>{const was=b.classList.contains('on');stopAll();if(was)return;if(tone(i)!==null||src==='ranad'||src==='khong'){if(src!=='ranad'&&src!=='khong')b.classList.add('on')}};N.appendChild(b)}}
+$$('#src button').forEach(b=>b.onclick=()=>{stopAll();$$('#src button').forEach(x=>x.classList.toggle('on',x===b));src=b.dataset.s});
+$$('#oct button').forEach(b=>b.onclick=()=>{stopAll();$$('#oct button').forEach(x=>x.classList.toggle('on',x===b));oct=+b.dataset.o;renderNotes()});
+$$('.pre button').forEach(b=>b.onclick=()=>{const was=!!alt;stopAll();if(was)return;const [a,c]=b.dataset.p.split(',').map(Number);let k=0;
+  if(src==='ranad'||src==='khong'){src='sine';$$('#src button').forEach(x=>x.classList.toggle('on',x.dataset.s==='sine'))}
+  const go=()=>{const i=k++%2?c:a;tone(i);$$('#notes button').forEach(x=>x.classList.toggle('on',+x.dataset.i===i))};go();alt=setInterval(go,2200)});
+renderNotes();
+
+/* ---------- จูนเนอร์ ---------- */
+const REF=[];(function(){for(let i=-10;i<=26;i++)REF.push({i,f:TI.freq(i)})})();
+function nearestRef(f){let b=REF[0];REF.forEach(r=>{if(Math.abs(Math.log(r.f/f))<Math.abs(Math.log(b.f/f)))b=r});return b}
+function acf(buf,sr){let n=buf.length,rms=0;for(let i=0;i<n;i++)rms+=buf[i]*buf[i];rms=Math.sqrt(rms/n);if(rms<.012)return -1;
+  const minL=Math.floor(sr/1500),maxL=Math.floor(sr/120);let best=-1,bv=0;const c=new Float32Array(maxL+2);
+  for(let L=minL;L<=maxL;L++){let s=0;for(let i=0;i<n-L;i++)s+=buf[i]*buf[i+L];c[L]=s}
+  let L=minL;while(L<maxL&&c[L]>c[L+1])L++;for(;L<=maxL;L++){if(c[L]>bv){bv=c[L];best=L}}
+  if(best<=0)return -1;let d=0;if(best>minL&&best<maxL){const a=c[best-1],b2=c[best],e=c[best+1];d=(a-e)/(2*(a-2*b2+e))}
+  let e0=0;for(let i=0;i<n;i++)e0+=buf[i]*buf[i];if(bv/e0<.3)return -1;return sr/(best+d)}
+let micOn=false,stream=null,an=null,raf=0,hist=[];
+$('#mic').onclick=async()=>{
+  if(micOn){micOn=false;cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());$('#mic').classList.remove('on');$('#mic').textContent='🎙 เปิดไมค์แล้วเล่นทีละเสียง';return}
+  audio();try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}catch(e){$('#msg').textContent='เปิดไมค์ไม่ได้ · อนุญาตไมค์ในเบราว์เซอร์ หรือเปิดหน้านี้จากลิงก์ตรง';return}
+  stopAll();const s=AC.createMediaStreamSource(stream);an=AC.createAnalyser();an.fftSize=2048;s.connect(an);micOn=true;$('#mic').classList.add('on');$('#mic').textContent='■ ปิดไมค์';
+  const buf=new Float32Array(an.fftSize);
+  const loop=()=>{if(!micOn)return;an.getFloatTimeDomainData(buf);const f=acf(buf,AC.sampleRate);
+    if(f>0){hist.push(f);if(hist.length>5)hist.shift();const fm=hist.slice().sort((a,b)=>a-b)[Math.floor(hist.length/2)];const r=nearestRef(fm),cents=1200*Math.log2(fm/r.f);
+      $('#nn').textContent=TI.noteName(r.i);$('#hz').textContent=fm.toFixed(1)+' Hz · เสียงวง '+r.f.toFixed(1)+' Hz';
+      $('#needle').style.left=Math.max(2,Math.min(98,50+cents))+'%';
+      $('#msg').textContent=Math.abs(cents)<=10?'ตรงแล้ว ✓':cents<0?'ต่ำไป '+Math.round(-cents)+' เซนต์ · ขันขึ้นอีกนิด':'สูงไป '+Math.round(cents)+' เซนต์ · ผ่อนลงอีกนิด';
+      $('#msg').style.color=Math.abs(cents)<=10?'#7ee081':'#ffd77a'}
+    else{hist=[]}
+    raf=requestAnimationFrame(loop)};loop()};
+</script>
+</body>
+</html>

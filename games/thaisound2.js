@@ -30,7 +30,14 @@
   function fold(f,lo,hi){while(f<lo)f*=2;while(f>hi)f/=2;return f}
   function pitched(kind,f,t,v,dur,out){const L=PITCH[kind];f=fold(f,L[0][1]*.94,L[L.length-1][1]*1.06);const [k,f0]=near(L,f);return play(k,t,v,f/f0,dur,out)}
   function ranadKey(k,t,v,out){k=Math.round(k);let r=1;while(k>21){k-=7;r*=2}while(k<3){k+=7;r/=2}const e=RK[k];return e?play(e[0],t,v==null?1:v,r,0,out):false}
-  window.TS2={init,ready,ranadKey,
+  /* เสียงค้าง (ขลุ่ย ซอ หรือเสียงบริสุทธิ์) จนกว่าจะเรียก stop() */
+  function sustain(kind,f,v,out){if(!AC)return{stop(){}};const t=AC.currentTime;v=v==null?1:v;const g=AC.createGain();g.connect(out||OUT);
+    let n;if(kind==='sine'){n=AC.createOscillator();n.type='sine';n.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25*v,t+.03);n.connect(g);n.start(t)}
+    else{const L=PITCH[kind];if(!L)return{stop(){}};f=fold(f,L[0][1]*.94,L[L.length-1][1]*1.06);const [k,f0]=near(L,f),sm=B[k];if(!sm)return{stop(){}};
+      n=AC.createBufferSource();n.buffer=sm.b;n.playbackRate.value=f/f0;n.loop=true;n.loopStart=Math.min(sm.b.duration-.4,sm.off+.35);n.loopEnd=sm.b.duration-.2;g.gain.setValueAtTime(v,t);n.connect(g);n.start(t,sm.off)}
+    return{stop(){const e=AC.currentTime;try{g.gain.cancelScheduledValues(e);g.gain.setValueAtTime(g.gain.value,e);g.gain.linearRampToValueAtTime(0,e+.08);n.stop(e+.12)}catch(x){}}}}
+  const RANADF=PITCH.ranad.reduce((o,[k,f])=>{o[+k.slice(1)]=f;return o},{});
+  window.TS2={init,ready,ranadKey,sustain,RANADF,
     ranad:(f,t,v,out)=>{const [k]=near(PITCH.ranad,f);return ranadKey(+k.slice(1),t,v,out)},
     thum:(k,t,v,out)=>{k=Math.round(k);while(k<3)k+=7;while(k>21)k-=7;const e=RK[k];return e?play(e[0],t,(v==null?1:v)*1.1,.5,0,out,1400):false},
     khlui:(f,t,dur,v,out)=>pitched('khlui',f,t,v,dur||.6,out),

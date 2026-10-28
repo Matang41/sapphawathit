@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b1628">
+<title>หูทองสรรพวาทิต</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35);--ok:#7fd99a;--bad:#ff8fa3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:30px;color:var(--gold);text-align:center}
+.sub{color:var(--muted);font-size:14px;text-align:center;margin-top:2px}
+.modes{display:grid;gap:12px;margin-top:18px}
+.mode{display:flex;gap:14px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:16px}
+.mode .ic{font-size:36px;width:52px;text-align:center}
+.mode b{font-family:Mitr;font-weight:500;font-size:20px;color:var(--gold);display:block}
+.mode span{font-size:14px;color:var(--muted)}
+.mode em{font-style:normal;font-size:12.5px;color:var(--gold);display:block;margin-top:3px}
+.lv{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.lv button{border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:99px;padding:8px 16px;color:var(--muted)}
+.lv button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:14px;color:var(--muted)}
+.hud b{font-family:Mitr;color:var(--gold);font-size:18px}
+.back{border:none;background:none;color:var(--muted);font-size:15px;padding:6px 0}
+.bar{height:6px;border-radius:99px;background:rgba(0,0,0,.3);overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--gold);width:0;transition:width .3s}
+.q{text-align:center;margin-top:22px}
+.q .t{font-family:Mitr;font-size:20px}
+.q .h{font-size:13.5px;color:var(--muted);margin-top:4px;min-height:20px}
+.big{width:128px;height:128px;border-radius:50%;border:none;margin:18px auto 6px;display:flex;align-items:center;justify-content:center;font-size:52px;background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 6px 0 #8a5d1a,0 10px 30px rgba(0,0,0,.35)}
+.big:active{transform:translateY(3px);box-shadow:0 3px 0 #8a5d1a}
+.big.playing{animation:pulse .6s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.06)}}
+.refb{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:99px;padding:8px 16px;font-size:14px;margin-top:6px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px}
+.opts.n7{grid-template-columns:repeat(4,minmax(0,1fr))}
+.opts button{border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:16px;min-height:66px;padding:10px 8px;font-family:Mitr;font-size:18px;line-height:1.2}
+.opts.n7 button{font-size:26px;min-height:70px}
+.opts button small{display:block;font-family:Sarabun;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.opts button.ok{background:#2f6b45;border-color:var(--ok)}
+.opts button.bad{background:#7a2340;border-color:var(--bad)}
+.opts button:disabled{cursor:default}
+.fb{text-align:center;margin-top:14px;min-height:56px;font-size:15px;line-height:1.5}
+.fb b{font-family:Mitr;font-size:20px}
+.fb .ok{color:var(--ok)}.fb .bad{color:var(--bad)}
+.next{display:block;margin:10px auto 0;border:none;border-radius:14px;padding:13px 34px;font-family:Mitr;font-size:18px;background:var(--gold);color:#3b2205}
+.end{text-align:center;margin-top:30px}
+.end .sc{font-family:Mitr;font-size:64px;color:var(--gold);line-height:1}
+.end .st{font-size:40px;letter-spacing:4px;margin-top:6px}
+.end p{color:var(--muted);line-height:1.6}
+.best{font-size:12.5px;color:var(--muted);text-align:center;margin-top:16px}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:28px;opacity:.8}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="home">
+    <h1>หูทองสรรพวาทิต</h1>
+    <div class="sub">เกมฝึกหูด้วยเสียงเครื่องดนตรีที่อัดจริงในห้อง 512 · รอบละ 10 ข้อ</div>
+    <div class="lv" id="lv"></div>
+    <div class="modes">
+      <button class="mode" data-m="inst"><div class="ic">🎼</div><div><b>ทายเครื่องดนตรี</b><span>ฟังแล้วบอกว่าเป็นเสียงเครื่องไหนในวง</span><em id="b_inst"></em></div></button>
+      <button class="mode" data-m="note"><div class="ic">🎵</div><div><b>ทายโน้ต</b><span>ฟังเสียง “โด” ก่อน แล้วทายว่าเสียงถัดไปคือโน้ตอะไร</span><em id="b_note"></em></div></button>
+      <button class="mode" data-m="natab"><div class="ic">🥁</div><div><b>ทายหน้าทับ</b><span>ฟังกลองแขกกับฉิ่ง แล้วบอกชื่อหน้าทับ</span><em id="b_natab"></em></div></button>
+      <button class="mode" data-m="dir"><div class="ic">↕️</div><div><b>ทำนองขึ้นหรือลง</b><span>ฟังโน้ตสองตัวว่าตัวหลังสูงขึ้น ต่ำลง หรือเท่าเดิม (เหมาะกับน้องใหม่)</span><em id="b_dir"></em></div></button>
+    </div>
+    <div class="foot">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="hud"><button class="back" id="quit">‹ ออก</button><span id="mt"></span><span>คะแนน <b id="sc">0</b></span></div>
+    <div class="bar"><i id="pr"></i></div>
+    <div class="q">
+      <div class="t" id="qt"></div>
+      <div class="h" id="qh"></div>
+      <button class="big" id="play" aria-label="ฟังอีกครั้ง">▶</button>
+      <div><button class="refb" id="ref" hidden>ฟังเสียงโดอีกครั้ง</button></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb"></div>
+    <button class="next" id="next" hidden>ข้อต่อไป ›</button>
+  </section>
+
+  <section id="end" hidden>
+    <div class="end">
+      <div class="sub" id="eMode"></div>
+      <div class="sc" id="eSc"></div>
+      <div class="st" id="eSt"></div>
+      <p id="eTx"></p>
+      <button class="next" id="again">เล่นอีกรอบ</button>
+      <button class="refb" id="home2" style="margin-top:12px">เลือกโหมดอื่น</button>
+    </div>
+  </section>
+</div>
+
+<script src="natab.js"></script>
+<script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script src="thaiinst.js"></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)],shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+let ST;try{ST=JSON.parse(localStorage.getItem('sapphawathit_hoo')||'{}')}catch(e){ST={}}ST.best=ST.best||{};ST.lv=ST.lv||1;
+const save=()=>{try{localStorage.setItem('sapphawathit_hoo',JSON.stringify(ST))}catch(e){}};
+const LV=[{n:'น้องใหม่',k:0},{n:'ปกติ',k:1},{n:'หูทอง',k:2}];
+
+/* ---------- เสียง ---------- */
+let AC=null,OUT=null;
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C();OUT=AC.createGain();OUT.gain.value=.9;const cp=AC.createDynamicsCompressor();OUT.connect(cp);cp.connect(AC.destination);TI.init(AC,OUT)}if(AC.state==='suspended')AC.resume();return AC}
+function waitReady(ms){return new Promise(r=>{const t0=Date.now();(function chk(){if(!window.TS2||TS2.ready()||Date.now()-t0>ms)return r();setTimeout(chk,120)})()})}
+
+/* ---------- เครื่องดนตรี ---------- */
+const MEL=['khong','khongS','ranad','thum','khlui','sor'];
+const INSTS=[
+  {id:'ranad',n:'ระนาดเอก'},{id:'thum',n:'ระนาดทุ้ม'},{id:'khong',n:'ฆ้องวงใหญ่'},{id:'khongS',n:'ฆ้องวงเล็ก'},
+  {id:'khlui',n:'ขลุ่ย'},{id:'sor',n:'ซอด้วง'},{id:'thon',n:'โทน–รำมะนา'},{id:'drum',n:'กลองแขก'},{id:'ching',n:'ฉิ่ง'},{id:'chab',n:'ฉาบเล็ก'}
+];
+/* ระดับง่ายใช้เครื่องที่เสียงต่างกันชัด */
+const INST_LV=[['ranad','khong','khlui','sor','thon','ching'],['ranad','thum','khong','khlui','sor','thon','drum','ching','chab'],INSTS.map(x=>x.id)];
+function phraseFor(id){/* ทำนองสั้น 4–5 เสียง ตามช่วงเสียงของเครื่อง */
+  const base=id==='thum'?rnd(4)+1:id==='khongS'?rnd(4)+4:rnd(5)+3,steps=[0,1,2,-1,1,2,-2,3,4];const out=[base];
+  for(let k=0;k<4;k++)out.push(Math.max(0,Math.min(15,out[out.length-1]+pick(steps))));return out}
+function playInst(id,ph,t){const u=.36;
+  if(MEL.includes(id)){ph.forEach((i,k)=>TI.note(id,i,t+k*u,.95,u*.98));return t+ph.length*u}
+  if(id==='thon'){[2,1,0,3,2,1].forEach((l,k)=>TI.perc('thon',l,t+k*u*.75,.95));return t+6*u*.75}
+  if(id==='drum'){[2,1,0,3,2,0].forEach((l,k)=>TI.perc('drum',l,t+k*u*.75,.95));return t+6*u*.75}
+  if(id==='ching'){[2,1,2,1].forEach((c,k)=>TI.perc('ching',c,t+k*u*1.2,1));return t+4*u*1.2}
+  if(id==='chab'){[1,0,1,2].forEach((c,k)=>TI.perc('chab',c,t+k*u*1.2,1));return t+4*u*1.2}}
+
+/* ---------- หน้าทับ ---------- */
+const NATAB_LV=[['pk2','sm2','km2','lao'],['pk2','sm2','sd2','km2','lao','mon','khaek1','pk1','sm1'],['pk3','pk2','pk1','sm3','sm2','sm1','sd3','sd2','sd1','km3','km2','km1','lao','mon','khaek1','lukmod']];
+function playNatab(id,t){const p=NATAB.get(id),tl=NATAB.timeline(p,{end:false}),r=p.sec[0].r,u=r===3?.2:r===2?.24:.3;
+  for(let k=-4;k<0;k++){const c=NATAB.countInCh(k,r);if(c)TI.perc('ching',c,t+(k+4)*u,.9)}t+=4*u;
+  tl.forEach((s,k)=>{s.l.forEach(l=>TI.perc('drum',l,t+k*u,.95));if(s.ch)TI.perc('ching',s.ch,t+k*u,.85)});return t+tl.length*u}
+const shortName=n=>n.replace('หน้าทับ','').trim();
+
+/* ---------- โหมด ---------- */
+const NM=['ด','ร','ม','ฟ','ซ','ล','ท'],NMF=['โด','เร','มี','ฟา','ซอล','ลา','ที'];
+const MODES={
+  inst:{n:'ทายเครื่องดนตรี',make(lv){const pool=INST_LV[lv],ans=pick(pool),n=lv===0?3:4,opts=shuf([ans,...shuf(pool.filter(x=>x!==ans)).slice(0,n-1)]),ph=phraseFor(ans);
+      return{t:'เสียงนี้คือเครื่องอะไร',h:'ฟังเสียงแล้วเลือกเครื่องดนตรี',ans,opts:opts.map(id=>({v:id,l:INSTS.find(x=>x.id===id).n})),play:t=>playInst(ans,ph,t),
+        why:'เป็นเสียง'+INSTS.find(x=>x.id===ans).n}}},
+  note:{n:'ทายโน้ต',make(lv){/* ด = ลูก 3 · น้องใหม่ใช้ ด ร ม ซ ล */const pool=lv===0?[0,1,2,4,5]:[0,1,2,3,4,5,6],d=pick(pool),vo=lv===2?pick(['ranad','khlui','sor','khong']):'ranad';
+      const i=3+d;return{t:'เสียงที่สองคือโน้ตอะไร',h:'เสียงแรกคือ “ด” (โด) · ใช้เสียง'+TI.INST[vo].n,ans:d,opts:pool.map(x=>({v:x,l:NM[x],s:NMF[x]})),n7:true,ref:true,
+        play:t=>{TI.note(vo,3,t,.95,.6);TI.note(vo,i,t+.85,.95,.8);return t+1.8},refPlay:t=>{TI.note(vo,3,t,.95,.6);return t+.8},
+        why:'เป็นเสียง '+NM[d]+' ('+NMF[d]+')',after:t=>{for(let k=0;k<=d;k++)TI.note(vo,3+k,t+k*.28,.8,.28)}}}},
+  natab:{n:'ทายหน้าทับ',make(lv){const pool=NATAB_LV[lv],ans=pick(pool),g0=NATAB.get(ans).grp,oth=shuf(pool.filter(x=>x!==ans)),pref=lv===2?oth:oth.filter(x=>NATAB.get(x).grp!==g0).concat(oth.filter(x=>NATAB.get(x).grp===g0)),o=shuf([ans,...pref.slice(0,3)]);
+      const P=NATAB.get(ans);return{t:'หน้าทับนี้ชื่ออะไร',h:'กลองแขกตีหนึ่งรอบหน้าทับ พร้อมฉิ่ง',ans,opts:o.map(id=>({v:id,l:shortName(NATAB.get(id).name),s:NATAB.bars(NATAB.get(id))+' ห้อง'})),play:t=>playNatab(ans,t),
+        why:'เป็นหน้าทับ'+shortName(P.name)+' · '+P.tip}}},
+  dir:{n:'ทำนองขึ้นหรือลง',make(lv){const a=rnd(9)+3,dd=pick(lv===0?[-3,-2,2,3,0]:[-2,-1,1,2,0,-1,1]),b=Math.max(0,Math.min(15,a+dd)),ans=b>a?'up':b<a?'dn':'eq',vo=lv===0?'ranad':pick(['ranad','khlui','sor','khong']);
+      return{t:'เสียงที่สองสูงขึ้นหรือต่ำลง',h:'ใช้เสียง'+TI.INST[vo].n,ans,opts:[{v:'up',l:'⬆ สูงขึ้น'},{v:'eq',l:'= เท่าเดิม'},{v:'dn',l:'⬇ ต่ำลง'}],play:t=>{TI.note(vo,a,t,.95,.6);TI.note(vo,b,t+.8,.95,.7);return t+1.7},
+        why:'จาก '+TI.noteName(a)+' ไป '+TI.noteName(b)}}}
+};
+
+/* ---------- เกม ---------- */
+const N=10;let G=null,busy=0;
+function show(id){['home','game','end'].forEach(x=>$('#'+x).hidden=x!==id);window.scrollTo(0,0)}
+function homeUI(){$('#lv').innerHTML=LV.map((l,k)=>'<button data-k="'+k+'" class="'+(ST.lv===k?'on':'')+'">'+l.n+'</button>').join('');
+  $$('#lv button').forEach(b=>b.onclick=()=>{ST.lv=+b.dataset.k;save();homeUI()});
+  Object.keys(MODES).forEach(m=>{const b=ST.best[m+ST.lv];$('#b_'+m).textContent=b!=null?'ดีที่สุดระดับ'+LV[ST.lv].n+': '+b+'/'+N:''})}
+$$('.mode').forEach(b=>b.onclick=()=>start(b.dataset.m));
+async function start(m){audio();G={m,lv:ST.lv,i:0,sc:0,streak:0,last:null};show('game');$('#mt').textContent=MODES[m].n+' · '+LV[ST.lv].n;$('#sc').textContent='0';
+  $('#qt').textContent='กำลังเตรียมเสียง…';$('#qh').textContent='';$('#opts').innerHTML='';$('#fb').textContent='';$('#next').hidden=true;
+  await waitReady(5000);nextQ()}
+function nextQ(){if(G.i>=N)return finish();let q,tries=0;do{q=MODES[G.m].make(G.lv);tries++}while(G.last&&JSON.stringify(q.ans)===JSON.stringify(G.last)&&tries<4);G.last=q.ans;G.q=q;G.done=false;
+  $('#pr').style.width=(G.i/N*100)+'%';$('#qt').textContent='ข้อ '+(G.i+1)+' · '+q.t;$('#qh').textContent=q.h;$('#ref').hidden=!q.ref;
+  const O=$('#opts');O.className='opts'+(q.n7?' n7':'');O.innerHTML=q.opts.map(o=>'<button data-v="'+o.v+'">'+o.l+(o.s?'<small>'+o.s+'</small>':'')+'</button>').join('');
+  if(q.opts.length===3&&!q.n7)O.style.gridTemplateColumns='repeat(3,minmax(0,1fr))';else O.style.gridTemplateColumns='';
+  $$('#opts button').forEach(b=>b.onclick=()=>answer(b));$('#fb').innerHTML='';$('#next').hidden=true;setTimeout(playQ,250)}
+function playQ(){if(!G||!G.q)return;audio();const t=AC.currentTime+.08,end=G.q.play(t),b=$('#play');b.classList.add('playing');clearTimeout(busy);busy=setTimeout(()=>b.classList.remove('playing'),(end-t)*1000)}
+$('#play').onclick=playQ;$('#ref').onclick=()=>{if(G&&G.q&&G.q.refPlay){audio();G.q.refPlay(AC.currentTime+.05)}};
+function answer(b){if(G.done)return;G.done=true;const q=G.q,v=b.dataset.v,ok=String(q.ans)===v;
+  $$('#opts button').forEach(x=>{x.disabled=true;if(x.dataset.v===String(q.ans))x.classList.add('ok')});if(!ok)b.classList.add('bad');
+  if(ok){G.sc++;G.streak++}else G.streak=0;$('#sc').textContent=G.sc;
+  const praise=['ถูกต้อง!','เยี่ยม!','หูทองจริง!','แม่นมาก!'];
+  $('#fb').innerHTML=(ok?'<b class="ok">'+(G.streak>=3?'ถูกติดกัน '+G.streak+' ข้อ!':pick(praise))+'</b>':'<b class="bad">ยังไม่ใช่</b>')+'<br>'+q.why;
+  if(ok)TI.perc('ching',1,AC.currentTime+.02,.6);else if(q.after)q.after(AC.currentTime+.3);
+  G.i++;$('#next').textContent=G.i>=N?'ดูคะแนน ›':'ข้อต่อไป ›';$('#next').hidden=false}
+$('#next').onclick=nextQ;
+function finish(){const s=G.sc,k=G.m+G.lv,old=ST.best[k];if(old==null||s>old)ST.best[k]=s;save();show('end');
+  $('#eMode').textContent=MODES[G.m].n+' · ระดับ'+LV[G.lv].n;$('#eSc').textContent=s+' / '+N;$('#eSt').textContent='★'.repeat(s>=9?3:s>=6?2:s>=3?1:0)+'☆'.repeat(3-(s>=9?3:s>=6?2:s>=3?1:0));
+  $('#eTx').innerHTML=(s>=9?'สุดยอด! ลองระดับที่ยากขึ้นดูไหม':s>=6?'ดีมาก ฟังอีกสักรอบจะแม่นขึ้น':'ไม่เป็นไร ฟังบ่อย ๆ หูจะชินเอง')+(old!=null&&s>old?'<br>ทำลายสถิติเดิม ('+old+')':'')}
+$('#again').onclick=()=>start(G.m);$('#home2').onclick=()=>{homeUI();show('home')};$('#quit').onclick=()=>{homeUI();show('home')};
+homeUI();
+window.__HOO={MODES,start,get G(){return G}};
+</script>
+</body>
+</html>

@@ -168,6 +168,8 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
       <button class="sw" data-m="ching"></button><label>ฉิ่ง–ฉับ</label><input type="range" min="0" max="100" data-v="ching">
       <button class="sw" data-m="drumM"></button><label>กลองตัวผู้ <small style="color:var(--m1)">ติง โจ๊ะ · ขวา</small></label><input type="range" min="0" max="100" data-v="drumM">
       <button class="sw" data-m="drumF"></button><label>กลองตัวเมีย <small style="color:var(--f1)">ทั่ม จ๊ะ · ซ้าย</small></label><input type="range" min="0" max="100" data-v="drumF">
+      <button class="sw" data-m="thon"></button><label>โทน–รำมะนา <small style="color:var(--gold)">เสียงจริง · ทางเดียวกับหน้าทับ</small></label><input type="range" min="0" max="100" data-v="thon">
+      <button class="sw" data-m="chab"></button><label>ฉาบเล็ก <small style="color:var(--gold)">เสียงจริง · ตีตามฉิ่ง</small></label><input type="range" min="0" max="100" data-v="chab">
       <button class="sw" data-m="click"></button><label>เสียงเคาะทุกตัว</label><input type="range" min="0" max="100" data-v="click">
     </div>
     <div class="help" style="margin-top:10px">ชดเชยความหน่วงลำโพง <button class="btn sec sm latb" data-d="-10">−</button> <b class="latV">0</b> ms <button class="btn sec sm latb" data-d="10">+</button> · ถ้าภาพนำเสียง (มักเกิดกับลำโพงบลูทูธ ราว 150–250 ms) ให้เพิ่มจนภาพตรงเสียง ค่านี้ใช้ร่วมกับเกมกลองแขก</div>
@@ -220,6 +222,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
 </div>
 
 <script src="natab.js"></script>
+<script src="thaisound2.js"></script>
 <script>
 (function(){
 "use strict";
@@ -231,7 +234,7 @@ function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("show");cl
 
 /* ---------- สถานะ (จำไว้ในเครื่อง) ---------- */
 const SKEY="sapphawathit_metronome_state",PKEY="sapphawathit_tap_presets";
-const DEF={bpm:120,rate:2,pat:"",patSel:"b:pk2",mix:{ching:true,drumM:true,drumF:true,click:false},vol:{ching:80,drumM:80,drumF:80,click:45},ramp:{on:false,by:4,ev:4,to:180}};
+const DEF={bpm:120,rate:2,pat:"",patSel:"b:pk2",mix:{ching:true,drumM:true,drumF:true,click:false,thon:false,chab:false},vol:{ching:80,drumM:80,drumF:80,click:45,thon:85,chab:60},ramp:{on:false,by:4,ev:4,to:180}};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(SKEY)||"{}"));if(S.mix&&"drum" in S.mix&&!("drumM" in S.mix)){S.mix.drumM=S.mix.drumF=S.mix.drum}S.mix=Object.assign({},DEF.mix,S.mix);S.vol=Object.assign({},DEF.vol,S.vol);S.ramp=Object.assign({},DEF.ramp,S.ramp)}catch(e){S=JSON.parse(JSON.stringify(DEF))}
 const save=()=>{try{localStorage.setItem(SKEY,JSON.stringify(S))}catch(e){}};
 const getLocal=()=>{try{return JSON.parse(localStorage.getItem(PKEY)||"[]")||[]}catch(e){return []}};
@@ -242,11 +245,11 @@ let AC=null,master=null,noiseBuf=null,bus={};
 function audio(){
   if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();
     master=AC.createGain();master.gain.value=.9;const comp=AC.createDynamicsCompressor();master.connect(comp);comp.connect(AC.destination);
-    ["ching","drumM","drumF","click"].forEach(k=>{bus[k]=AC.createGain();bus[k].connect(master)});applyVol();
+    ["ching","drumM","drumF","click","thon","chab"].forEach(k=>{bus[k]=AC.createGain();bus[k].connect(master)});applyVol();if(window.TS2)TS2.init(AC,master);
     noiseBuf=AC.createBuffer(1,AC.sampleRate*.5,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;loadChing();}
   if(AC.state==="suspended")AC.resume();return AC;
 }
-function applyVol(){if(!AC)return;["ching","drumM","drumF","click"].forEach(k=>bus[k].gain.value=S.mix[k]?Math.pow(S.vol[k]/100,1.5)*1.4:0)}
+function applyVol(){if(!AC)return;["ching","drumM","drumF","click","thon","chab"].forEach(k=>bus[k].gain.value=S.mix[k]?Math.pow(S.vol[k]/100,1.5)*1.4:0)}
 function osc(out,type,f0,f1,amp,dur,t,att){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur*.6);
   g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(amp,t+(att||.003));g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(out);o.start(t);o.stop(t+dur+.05)}
 function noise(out,ft,f,q,amp,dur,t){const s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;fl.type=ft;fl.frequency.value=f;fl.Q.value=q;
@@ -313,7 +316,9 @@ function schedule(){
     }
     const k=slot%TL.length,sl=TL[k];
     sl.l.forEach(l=>drum(l,nextT));
+    if(S.mix.thon&&window.TS2)sl.l.forEach(l=>TS2.thon(l,nextT,.9,bus.thon));
     if(sl.ch)ching(sl.ch===1,nextT);
+    if(sl.ch&&S.mix.chab&&window.TS2)TS2.chab(sl.ch===1?1:0,nextT,.8,bus.chab);
     click(slot%4===0,nextT);
     vq.push({t:nextT,slot,k,ch:sl.ch,rate:sl.rate});
     // เร่งจังหวะอัตโนมัติ: ทุก N ห้อง

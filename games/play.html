@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2b1628">
+<title>เครื่องดนตรีจำลอง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--cream:#fff6e0;--muted:#d9c3d4;--line:rgba(242,193,78,.35)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%);background-color:var(--bg2);-webkit-user-select:none;user-select:none;touch-action:none;display:flex;flex-direction:column;height:100dvh}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{padding:max(10px,env(safe-area-inset-top)) 12px 6px;display:flex;flex-direction:column;gap:8px}
+.head{display:flex;align-items:center;gap:10px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:22px;color:var(--gold)}
+.head .sp{flex:1}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:99px;padding:7px 14px;font-size:14px;color:var(--muted);white-space:nowrap}
+.tabs button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:6px 12px}
+.big{font-family:Mitr;font-size:clamp(46px,14vw,88px);line-height:1;color:var(--gold);min-height:1em;text-shadow:0 3px 0 #6a3a10}
+.trail{font-family:Mitr;font-size:16px;color:var(--muted);min-height:22px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:rtl;text-align:left}
+.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tools button{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 12px;font-size:14px;min-height:40px}
+.tools button.on{background:#d9587a;border-color:#ff9fb3;color:#fff}
+.tools .oct{min-width:44px;font-size:18px}
+.hint{font-size:12.5px;color:var(--muted);text-align:center;max-width:520px}
+/* แผงปุ่มด้านล่าง ใช้นิ้วโป้งกด */
+.pad{padding:8px max(8px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-bottom));display:grid;gap:7px;background:rgba(0,0,0,.28);border-top:1px solid var(--line)}
+.row{display:grid;gap:7px}
+.k{border:none;border-radius:16px;min-height:min(19vh,96px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:Mitr;font-size:clamp(17px,4.6vw,24px);color:#2a1630;box-shadow:inset 0 -6px 0 rgba(0,0,0,.22),0 2px 0 rgba(0,0,0,.35);touch-action:none;transition:transform .05s,filter .05s;padding:0}
+.k small{font-family:Sarabun;font-size:11px;opacity:.65}
+.k.dn{transform:translateY(3px);filter:brightness(1.3);box-shadow:inset 0 -2px 0 rgba(0,0,0,.22)}
+.k.wide{min-height:min(26vh,130px)}
+@media (orientation:landscape) and (max-height:500px){.k{min-height:min(22vh,80px)}.mid{gap:4px}.big{font-size:40px}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="head"><h1>เครื่องดนตรีจำลอง</h1><span class="sp"></span></div>
+  <div class="tabs" id="tabs" role="tablist" aria-label="เลือกเครื่องดนตรี"></div>
+</div>
+<div class="mid">
+  <div class="big" id="big" aria-live="polite">ด</div>
+  <div class="trail" id="trail"></div>
+  <div class="tools">
+    <button class="oct" id="octD" aria-label="เลื่อนลงต่ำ">◀</button>
+    <button id="rec">● อัด</button><button id="playR" disabled>▶ ฟังที่อัด</button>
+    <button id="chingT">ฉิ่งเคาะตาม</button>
+    <button class="oct" id="octU" aria-label="เลื่อนขึ้นสูง">▶</button>
+  </div>
+  <div class="hint" id="hint">แตะปุ่มด้านล่างด้วยนิ้วโป้ง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่เสียง · กดได้หลายนิ้วพร้อมกัน</div>
+  <div class="hint" style="opacity:.7;font-size:11px">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+<div class="pad" id="pad"></div>
+
+<script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script src="natab.js"></script>
+<script src="thaiinst.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   เครื่องดนตรีจำลอง · เสียงจริงที่อัดในห้อง 512 (ระนาดเอก ขลุ่ย ซอ โทน–รำมะนา ฉาบ ฉิ่ง)
+   ปุ่มอยู่ด้านล่าง ขนาดใหญ่ กดด้วยนิ้วโป้งได้ · ลากนิ้วเพื่อรัวไล่ · หลายนิ้วพร้อมกัน
+   ============================================================ */
+const $=s=>document.querySelector(s);
+let AC=null,OUT=null;
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C({latencyHint:'interactive'});OUT=AC.createGain();OUT.gain.value=.95;const cp=AC.createDynamicsCompressor();OUT.connect(cp);cp.connect(AC.destination);TI.init(AC,OUT)}if(AC.state==='suspended')AC.resume();return AC}
+const COL=['#ffb3a7','#ffd59a','#fff1a6','#c9f2a8','#a8e6e0','#b3c8ff','#e2b8ff'];
+const INSTS=[
+  {id:'ranad',n:'ระนาดเอก',melo:1,lo:-3,hi:16,start:3},
+  {id:'khong',n:'ฆ้องวงใหญ่',melo:1,lo:0,hi:15,start:0},
+  {id:'thum',n:'ระนาดทุ้ม',melo:1,lo:-2,hi:16,start:0},
+  {id:'khlui',n:'ขลุ่ย',melo:1,hold:1,lo:0,hi:16,start:3},
+  {id:'sor',n:'ซอด้วง',melo:1,hold:1,lo:0,hi:16,start:3},
+  {id:'thon',n:'โทน–รำมะนา',pads:[{n:'โทน',k:0},{n:'ป๊ะ',k:1},{n:'ทั่ม',k:2},{n:'ติง',k:3}]},
+  {id:'drum',n:'กลองแขก',pads:[{n:'ติง',k:0},{n:'โจ๊ะ',k:1},{n:'ทั่ม',k:2},{n:'จ๊ะ',k:3}]},
+  {id:'ching',n:'ฉิ่ง · ฉาบ',pads:[{n:'ฉิ่ง',k:'c1'},{n:'ฉับ',k:'c2'},{n:'ฉาบเปิด',k:'b1'},{n:'ฉาบปิด',k:'b0'},{n:'ฉาบกระทบ',k:'b2'}]}
+];
+let cur=INSTS[0],base=3;try{const v=JSON.parse(localStorage.getItem('sapphawathit_play')||'null');if(v){cur=INSTS.find(x=>x.id===v.i)||cur;base=+v.b||cur.start||0}}catch(e){}
+const saveSt=()=>{try{localStorage.setItem('sapphawathit_play',JSON.stringify({i:cur.id,b:base}))}catch(e){}};
+
+/* ---------- เสียง ---------- */
+const held={};
+function sound(key,id){audio();
+  if(cur.melo){const i=key;
+    if(cur.hold){const st=TS2&&TS2.sustain(cur.id,TI.freq(i),.9);held[id]=st;}
+    else TI.note(cur.id,i,0,1);
+    show(TI.noteName(i))}
+  else{const p=key;
+    if(cur.id==='thon')TI.perc('thon',p,0,1);else if(cur.id==='drum')TI.perc('drum',p,0,1);
+    else if(p==='c1')TI.perc('ching',1,0,1);else if(p==='c2')TI.perc('ching',2,0,1);else TI.perc('chab',+p.slice(1),0,1.2);
+    show((cur.pads.find(x=>x.k===p)||{}).n||'')}
+  if(recOn)recBuf.push({t:performance.now()-recT0,inst:cur.id,key})}
+function release(id){const st=held[id];if(st){st.stop();delete held[id]}}
+let trail=[];function show(n){$('#big').textContent=n;trail.push(n);if(trail.length>24)trail.shift();$('#trail').textContent=trail.join(' ')}
+
+/* ---------- แผงปุ่ม ---------- */
+function build(){
+  const T=$('#tabs');T.innerHTML=INSTS.map(x=>'<button role="tab" aria-selected="'+(x===cur)+'" class="'+(x===cur?'on':'')+'" data-i="'+x.id+'">'+x.n+'</button>').join('');
+  T.querySelectorAll('button').forEach(b=>b.onclick=()=>{Object.values(held).forEach(s=>s.stop());cur=INSTS.find(x=>x.id===b.dataset.i);base=cur.start||0;saveSt();build()});
+  const P=$('#pad');$('#octD').disabled=$('#octU').disabled=!cur.melo;
+  if(cur.melo){base=Math.max(cur.lo,Math.min(cur.hi-15,base));
+    let h='';for(const r of [1,0]){h+='<div class="row" style="grid-template-columns:repeat(8,minmax(0,1fr))">';for(let c=0;c<8;c++){const i=base+r*8+c;const d=((i+4)%7+7)%7;
+      h+='<button class="k" data-key="'+i+'" style="background:'+COL[d]+'" aria-label="โน้ต '+TI.noteName(i)+'">'+TI.noteName(i)+'</button>'}h+='</div>'}
+    P.innerHTML=h;$('#hint').textContent=cur.hold?'กดค้างเพื่อลากเสียงยาว · ปล่อยนิ้วเสียงหยุด · ลากนิ้วเพื่อเปลี่ยนโน้ต':'แถวล่างเสียงต่ำ แถวบนเสียงสูง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่ · กด ◀ ▶ เลื่อนช่วงเสียง'}
+  else{const n=cur.pads.length;P.innerHTML='<div class="row" style="grid-template-columns:repeat('+Math.min(n,n>4?3:n)+',minmax(0,1fr))">'+cur.pads.map((p,j)=>'<button class="k wide" data-key="'+p.k+'" style="background:'+COL[(j*2+1)%7]+'">'+p.n+'<small>'+(cur.id==='thon'?(j<2?'โทน':'รำมะนา'):cur.id==='drum'?(j<2?'ตัวผู้':'ตัวเมีย'):'')+'</small></button>').join('')+'</div>';
+    $('#hint').textContent=cur.id==='thon'?'โทน–รำมะนา เสียงจริงที่อัดในห้อง 512 · กดสองนิ้วพร้อมกันได้':'กดได้หลายนิ้วพร้อมกัน'}
+}
+const keyOf=el=>el&&el.closest&&el.closest('.k');
+const touching={};
+function down(e){const k=keyOf(e.target);if(!k)return;e.preventDefault();try{k.releasePointerCapture(e.pointerId)}catch(x){}
+  touching[e.pointerId]=k;k.classList.add('dn');const key=cur.melo?+k.dataset.key:k.dataset.key;sound(key,e.pointerId)}
+function move(e){if(!(e.pointerId in touching))return;const el=keyOf(document.elementFromPoint(e.clientX,e.clientY));const old=touching[e.pointerId];
+  if(el&&el!==old){if(old)old.classList.remove('dn');release(e.pointerId);touching[e.pointerId]=el;el.classList.add('dn');sound(cur.melo?+el.dataset.key:el.dataset.key,e.pointerId)}}
+function up(e){const k=touching[e.pointerId];if(k)k.classList.remove('dn');delete touching[e.pointerId];release(e.pointerId)}
+const pad=$('#pad');pad.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+pad.addEventListener('contextmenu',e=>e.preventDefault());
+$('#octD').onclick=()=>{base=Math.max(cur.lo,base-7);saveSt();build()};$('#octU').onclick=()=>{base=Math.min(cur.hi-15,base+7);saveSt();build()};
+/* แป้นพิมพ์: แถวล่าง A S D F G H J K · แถวบน Q W E R T Y U I */
+const KB={a:0,s:1,d:2,f:3,g:4,h:5,j:6,k:7,q:8,w:9,e:10,r:11,t:12,y:13,u:14,i:15};
+window.addEventListener('keydown',e=>{if(e.repeat)return;const v=KB[e.key.toLowerCase()];if(v==null)return;
+  if(cur.melo){const el=pad.querySelector('[data-key="'+(base+v)+'"]');if(el)el.classList.add('dn');sound(base+v,'kb'+v)}
+  else if(cur.pads[v]){const el=pad.querySelectorAll('.k')[v];if(el)el.classList.add('dn');sound(cur.pads[v].k,'kb'+v)}});
+window.addEventListener('keyup',e=>{const v=KB[e.key.toLowerCase()];if(v==null)return;release('kb'+v);pad.querySelectorAll('.k.dn').forEach(x=>x.classList.remove('dn'))});
+
+/* ---------- อัดเล่น ---------- */
+let recOn=false,recT0=0,recBuf=[];
+$('#rec').onclick=()=>{audio();if(!recOn){recBuf=[];recT0=performance.now();recOn=true;$('#rec').classList.add('on');$('#rec').textContent='■ หยุดอัด';$('#playR').disabled=true}
+  else{recOn=false;$('#rec').classList.remove('on');$('#rec').textContent='● อัด';$('#playR').disabled=!recBuf.length}};
+$('#playR').onclick=()=>{if(!recBuf.length)return;audio();const t0=AC.currentTime+.1,first=recBuf[0].t;recBuf.forEach(n=>{const t=t0+(n.t-first)/1000;
+  if(typeof n.key==='number')TI.note(n.inst==='khlui'||n.inst==='sor'?n.inst:n.inst,n.key,t,1,.5);
+  else if(n.inst==='thon')TI.perc('thon',n.key,t,1);else if(n.inst==='drum')TI.perc('drum',n.key,t,1);
+  else if(n.key==='c1'||n.key==='c2')TI.perc('ching',n.key==='c1'?1:2,t,1);else TI.perc('chab',+String(n.key).slice(1),t,1.2)})};
+/* ---------- ฉิ่งเคาะตาม (สองชั้น 70 ครั้ง/นาที) ---------- */
+let chT=null,chN=0,chNext=0;
+$('#chingT').onclick=()=>{audio();if(chT){clearInterval(chT);chT=null;$('#chingT').classList.remove('on');return}
+  $('#chingT').classList.add('on');chNext=AC.currentTime+.1;chN=0;chT=setInterval(()=>{while(chNext<AC.currentTime+.2){TI.perc('ching',chN%2?2:1,chNext,.7);chN++;chNext+=60/70*2}},50)};
+build();
+</script>
+</body>
+</html>

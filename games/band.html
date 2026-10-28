@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b1628">
+<title>แทร็กซ้อมวง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:620px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 120px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:28px;color:var(--gold);text-align:center}
+.sub{color:var(--muted);font-size:14px;text-align:center;margin-top:2px}
+.sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px}
+.lb{font-family:Mitr;color:var(--gold);font-size:16px;margin-bottom:8px}
+select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#3a2236;font-size:15px}
+select option{color:#222;background:#fff}
+.meta{font-size:13px;color:var(--muted);margin-top:6px}
+.tempo{display:flex;align-items:center;gap:10px;margin-top:10px}
+.tempo b{font-family:Mitr;font-size:22px;color:var(--gold);min-width:52px;text-align:center}
+.tempo input{flex:1;accent-color:var(--gold)}
+.rb{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.25);font-size:20px}
+.mine{display:flex;flex-wrap:wrap;gap:6px}
+.mine button{border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:99px;padding:8px 13px;font-size:14px;color:var(--muted)}
+.mine button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin-top:10px}
+.chk input{width:20px;height:20px;accent-color:var(--gold)}
+.mix{display:grid;grid-template-columns:auto 1fr 96px;gap:8px 10px;align-items:center}
+.mix .sw{width:46px;height:28px;border-radius:99px;border:1px solid var(--line);background:rgba(0,0,0,.3);position:relative;padding:0}
+.mix .sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#8a7088;transition:left .15s}
+.mix .sw.on{background:#7a5a18;border-color:var(--gold)}.mix .sw.on:after{left:21px;background:var(--gold)}
+.mix label{font-size:15px}.mix label small{display:block;font-size:11.5px;color:var(--muted)}
+.mix input{width:100%;accent-color:var(--gold)}
+.mix .me{color:#ff9fb3;font-size:11.5px;font-family:Mitr}
+.now{text-align:center}
+.now .ln{font-size:14px;color:var(--muted);min-height:20px}
+.now .nn{font-family:Mitr;font-size:40px;color:var(--gold);min-height:48px;letter-spacing:2px}
+.prog{height:8px;border-radius:99px;background:rgba(0,0,0,.3);overflow:hidden;margin-top:8px}.prog i{display:block;height:100%;width:0;background:var(--gold)}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:10px 14px max(12px,env(safe-area-inset-bottom));background:rgba(30,14,28,.94);border-top:1px solid var(--line);display:flex;gap:8px;justify-content:center;backdrop-filter:blur(6px)}
+.dock button{border:none;border-radius:14px;padding:13px 16px;font-family:Mitr;font-size:17px;background:rgba(255,255,255,.1);color:var(--cream);min-height:52px}
+.dock .go{flex:1;max-width:260px;background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 4px 0 #8a5d1a}
+.dock .go.on{background:linear-gradient(180deg,#ff9fb3,#d9587a);color:#fff;box-shadow:0 4px 0 #7a2340}
+.dock .t.on{background:#7a5a18;color:var(--gold)}
+.btn{border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:rgba(0,0,0,.25);font-family:Mitr;font-size:15px;width:100%}
+.btn:disabled{opacity:.5}
+.help{font-size:13px;color:var(--muted);line-height:1.55;margin-top:8px}
+.empty{padding:14px;border-radius:12px;background:rgba(0,0,0,.2);font-size:14px;line-height:1.6}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#1b0f18;border:1px solid var(--gold);border-radius:12px;padding:9px 16px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>แทร็กซ้อมวง</h1>
+  <div class="sub">เปิดเพลงจากสื่อของชมรม ให้วงจำลองเล่นคลอ แล้วปิดเครื่องของตัวเองเพื่อซ้อมตาม</div>
+
+  <div class="sec">
+    <div class="lb">1 · เลือกเพลง</div>
+    <div id="songBox"></div>
+    <div class="tempo"><button class="rb" id="tDn" aria-label="ช้าลง">−</button><input type="range" id="tR" min="40" max="260" step="2" aria-label="ความเร็ว"><button class="rb" id="tUp" aria-label="เร็วขึ้น">+</button><b id="tV">120</b></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="sec">
+    <div class="lb">2 · ฉันเล่นเครื่องไหน (วงจะปิดเครื่องนั้นให้)</div>
+    <div class="mine" id="mine"></div>
+    <label class="chk"><input type="checkbox" id="guide"> เปิดเสียงนำของเครื่องฉันเบา ๆ (ช่วยตอนซ้อมใหม่)</label>
+  </div>
+
+  <div class="sec">
+    <div class="lb">3 · เครื่องในวง</div>
+    <div class="mix" id="mix"></div>
+    <div class="help">ระนาด ขลุ่ย ซอ โทน–รำมะนา ฉาบ และฉิ่ง ใช้เสียงจริงที่อัดในห้อง 512 · ฆ้องเล่นตามโน้ตที่บันทึก เครื่องอื่นเล่นตามทำนองหลักแบบง่าย</div>
+  </div>
+
+  <div class="sec now">
+    <div class="ln" id="ln">กด ▶ เพื่อเริ่ม</div>
+    <div class="nn" id="nn">–</div>
+    <div class="prog"><i id="pg"></i></div>
+  </div>
+
+  <div class="sec">
+    <div class="lb">4 · บันทึกเป็นไฟล์เสียง</div>
+    <button class="btn" id="exp">💾 บันทึกแทร็กซ้อม (MP3) ตามที่ตั้งไว้</button>
+    <div class="help" id="expH">ได้ไฟล์เสียงตามเครื่องที่เปิดอยู่ · ส่งเข้ากลุ่มไลน์ให้เพื่อนซ้อมที่บ้านได้</div>
+  </div>
+  <div class="help" style="text-align:center;margin-top:18px">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+<div class="dock">
+  <button class="t" id="cnt" title="นับเข้าด้วยฉิ่งหนึ่งห้อง">นับเข้า</button>
+  <button class="go" id="go">▶ เล่น</button>
+  <button class="t" id="lp">🔁 วน</button>
+</div>
+<div id="toast" role="status"></div>
+
+<script src="natab.js"></script>
+<script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script src="thaiinst.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   แทร็กซ้อมวง · วงจำลองเล่นเพลงจากบันทึกโน้ตเพลงไทย
+   ฆ้องวงใหญ่ตามโน้ตที่จด · ระนาดเอกตีคู่แปด · ระนาดทุ้มคู่แปดต่ำ · ขลุ่ยกับซอลากเสียงตามทำนองหลัก
+   โทน–รำมะนา/กลองแขกตามหน้าทับของท่อน · ฉิ่งตามอัตราจังหวะ · ฉาบตีคู่ฉิ่ง
+   ============================================================ */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2600)}
+const PART=[
+  {id:'khong',n:'ฆ้องวงใหญ่',d:'ตามโน้ตที่บันทึก'},
+  {id:'ranad',n:'ระนาดเอก',d:'ตีคู่แปด เสียงจริง'},
+  {id:'thum',n:'ระนาดทุ้ม',d:'คู่แปดต่ำ'},
+  {id:'khlui',n:'ขลุ่ย',d:'ลากเสียงตามทำนอง เสียงจริง'},
+  {id:'sor',n:'ซอด้วง',d:'ลากเสียงตามทำนอง เสียงจริง'},
+  {id:'thon',n:'โทน–รำมะนา',d:'ตามหน้าทับ เสียงจริง'},
+  {id:'drum',n:'กลองแขก',d:'ตามหน้าทับ'},
+  {id:'ching',n:'ฉิ่ง',d:'ตามอัตราจังหวะ เสียงจริง'},
+  {id:'chab',n:'ฉาบเล็ก',d:'ตีคู่ฉิ่ง เสียงจริง'}
+];
+const DEF={on:{khong:true,ranad:true,thum:false,khlui:true,sor:true,thon:true,drum:false,ching:true,chab:false},vol:{khong:80,ranad:70,thum:60,khlui:70,sor:60,thon:75,drum:70,ching:75,chab:55},mine:'',guide:false,cnt:true,loop:false,bpm:{}};
+let ST;try{ST=Object.assign({},DEF,JSON.parse(localStorage.getItem('sapphawathit_band')||'{}'));ST.on=Object.assign({},DEF.on,ST.on);ST.vol=Object.assign({},DEF.vol,ST.vol);ST.bpm=ST.bpm||{}}catch(e){ST=JSON.parse(JSON.stringify(DEF))}
+const save=()=>{try{localStorage.setItem('sapphawathit_band',JSON.stringify(ST))}catch(e){}};
+
+/* ---------- เพลง ---------- */
+let SONGS=[],cur=null,TL=null,bpm=120;
+function loadSongs(){
+  SONGS=TI.songs();const B=$('#songBox');
+  if(!SONGS.length){B.innerHTML='<div class="empty">ยังไม่มีเพลง · จดโน้ตในเกม “บันทึกโน้ตเพลงไทย” ก่อน แล้วบันทึกเป็นสื่อของชมรม (หรือบันทึกร่างในเครื่อง) แล้วกลับมาที่นี่</div>';return}
+  let want='';try{const q=new URLSearchParams(location.search).get('song');if(q)want='c:'+q}catch(e){}
+  if(!want)want=ST.last||'';
+  B.innerHTML='<select id="sel" aria-label="เพลง">'+SONGS.map(s=>'<option value="'+s.key+'">'+esc(s.title)+' · '+s.src+(s.by?' · '+esc(s.by):'')+'</option>').join('')+'</select>';
+  const sel=$('#sel');if(SONGS.some(s=>s.key===want))sel.value=want;sel.onchange=()=>{stop();pick(sel.value)};pick(sel.value);
+}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pick(key){cur=SONGS.find(s=>s.key===key)||SONGS[0];ST.last=cur.key;save();TL=TI.timeline(cur.song);
+  bpm=ST.bpm[cur.key]||TL.bpm||120;tempoUI();
+  const bars=TL.slots.length/4,lines=[...new Set(TL.slots.map(s=>s.line))].length;
+  $('#meta').textContent=bars+' ห้อง · '+lines+' ท่อน · อัตรา '+NATAB.RATE[TL.rate].n+(cur.song.natab?' · หน้าทับ '+((NATAB.get(cur.song.natab)||{}).name||''):'')+' · ยาวประมาณ '+fmtT(TL.slots.length*60/bpm);
+  $('#ln').textContent='กด ▶ เพื่อเริ่ม';$('#nn').textContent='–';$('#pg').style.width='0'}
+const fmtT=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+function tempoUI(){$('#tR').value=bpm;$('#tV').textContent=bpm}
+$('#tR').addEventListener('input',e=>{bpm=+e.target.value;$('#tV').textContent=bpm;if(cur){ST.bpm[cur.key]=bpm;save()}});
+[['#tDn',-2],['#tUp',2]].forEach(([id,d])=>$(id).onclick=()=>{bpm=Math.max(40,Math.min(260,bpm+d));tempoUI();if(cur){ST.bpm[cur.key]=bpm;save()}});
+
+/* ---------- หน้าตั้งค่า ---------- */
+function ui(){
+  $('#mine').innerHTML='<button data-m="" class="'+(!ST.mine?'on':'')+'">ฟังทั้งวง</button>'+PART.map(p=>'<button data-m="'+p.id+'" class="'+(ST.mine===p.id?'on':'')+'">'+p.n+'</button>').join('');
+  $$('#mine button').forEach(b=>b.onclick=()=>{ST.mine=b.dataset.m;save();ui();applyVol()});
+  $('#guide').checked=!!ST.guide;
+  $('#mix').innerHTML=PART.map(p=>'<button class="sw '+(ST.on[p.id]?'on':'')+'" data-p="'+p.id+'" aria-label="เปิดปิด '+p.n+'" aria-pressed="'+!!ST.on[p.id]+'"></button><label>'+p.n+(ST.mine===p.id?' <span class="me">· ฉันเล่น</span>':'')+'<small>'+p.d+'</small></label><input type="range" min="0" max="100" data-v="'+p.id+'" value="'+ST.vol[p.id]+'" aria-label="ความดัง '+p.n+'">').join('');
+  $$('#mix .sw').forEach(b=>b.onclick=()=>{ST.on[b.dataset.p]=!ST.on[b.dataset.p];save();ui();applyVol()});
+  $$('#mix input').forEach(r=>r.oninput=()=>{ST.vol[r.dataset.v]=+r.value;save();applyVol()});
+  $('#cnt').classList.toggle('on',!!ST.cnt);$('#lp').classList.toggle('on',!!ST.loop);
+}
+$('#guide').onchange=e=>{ST.guide=e.target.checked;save();applyVol()};
+$('#cnt').onclick=()=>{ST.cnt=!ST.cnt;save();ui()};$('#lp').onclick=()=>{ST.loop=!ST.loop;save();ui()};
+function gainOf(id){if(!ST.on[id])return 0;let g=Math.pow(ST.vol[id]/100,1.5)*1.3;if(ST.mine===id)g=ST.guide?g*.22:0;return g}
+
+/* ---------- เสียง ---------- */
+let AC=null,MASTER=null,BUS={};
+function mkBuses(ctx,dest){const B={};PART.forEach(p=>{B[p.id]=ctx.createGain();B[p.id].gain.value=gainOf(p.id);B[p.id].connect(dest)});return B}
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();MASTER=AC.createGain();MASTER.gain.value=.85;const cp=AC.createDynamicsCompressor();MASTER.connect(cp);cp.connect(AC.destination);TI.init(AC,MASTER);BUS=mkBuses(AC,MASTER)}if(AC.state==='suspended')AC.resume();return AC}
+function applyVol(){if(!AC)return;PART.forEach(p=>BUS[p.id].gain.value=gainOf(p.id))}
+const isGrp=e=>e&&!Array.isArray(e);
+/* ทำนองหลักของช่อง: เสียงบนสุดของแถวมือขวา ถ้าว่างใช้มือซ้าย */
+function hold(g){let n=1;while(n<8&&g+n<TL.slots.length){const s=TL.slots[g+n];if(s.mel!=null||s.R===null)break;n++}return n}
+function ent(e,t,u,fn){if(e===null)return;if(isGrp(e)){const d=e.span*u/e.g.length;e.g.forEach((x,j)=>x.forEach(i=>fn(i,t+j*d,x.length>1?.7:.95,d)))}else e.forEach(i=>fn(i,t,e.length>1?.75:.9,u))}
+/* เล่นช่องที่ g ที่เวลา t ลงบัส B */
+function slot(g,t,u,B,skip){
+  const s=TL.slots[g];if(!s)return;const on=id=>!skip||gainOf(id)>0;
+  if(on('khong')){ent(s.L,t,u,(i,tt,v)=>TI.note('khong',i,tt,v,0,B.khong));ent(s.R,t,u,(i,tt,v)=>TI.note('khong',i,tt,v,0,B.khong))}
+  const m=s.mel;
+  if(m!=null){
+    if(on('ranad')){if(isGrp(s.R))ent(s.R,t,u,(i,tt,v)=>{TI.note('ranad',i,tt,v*.9,0,B.ranad);if(i+7<=16)TI.note('ranad',i+7,tt,v*.7,0,B.ranad)});else{TI.note('ranad',m,t,.9,0,B.ranad);TI.note('ranad',m+7<=16?m+7:m-7,t,.7,0,B.ranad)}}
+    if(on('thum'))TI.note('thum',m-7>=-2?m-7:m,t,.9,0,B.thum);
+    const d=hold(g)*u*.97;
+    if(on('khlui'))TI.note('khlui',m,t,.85,d,B.khlui);
+    if(on('sor'))TI.note('sor',m,t,.8,d,B.sor);
+  }else if(on('ranad')&&s.R!==null&&g>0){/* ลากเสียง: ระนาดกรอเบา ๆ ด้วยเสียงก่อนหน้า */let k=g-1;while(k>=0&&TL.slots[k].mel==null)k--;const pm=k>=0?TL.slots[k].mel:null;if(pm!=null&&g-k<=3){TI.note('ranad',pm,t,.45,0,B.ranad);TI.note('ranad',pm+7<=16?pm+7:pm-7,t+u/2,.35,0,B.ranad)}}
+  if(on('thon'))s.dl.forEach(l=>TI.perc('thon',l,t,.9,B.thon));
+  if(on('drum'))s.dl.forEach(l=>TI.perc('drum',l,t,.85,B.drum));
+  if(s.ch){if(on('ching'))TI.perc('ching',s.ch,t,1,B.ching);if(on('chab'))TI.perc('chab',s.ch===1?1:0,t,.9,B.chab)}
+}
+function countIn(t0,u,B){const n=4;for(let k=-n;k<0;k++){const c=NATAB.countInCh(k,TL.rate)||(k===-n?1:0);if(c)TI.perc('ching',c,t0+(k+n)*u,1,B.ching)}return n}
+
+/* ---------- เล่นสด ---------- */
+let run=false,timer=0,raf=0,g=0,nextT=0,vq=[];
+function play(){if(!cur||!TL||!TL.slots.length)return toast('ยังไม่มีเพลงให้เล่น');audio();applyVol();run=true;$('#go').classList.add('on');$('#go').textContent='■ หยุด';
+  const u=60/bpm;nextT=AC.currentTime+.15;g=0;vq=[];
+  if(ST.cnt){countIn(nextT,u,BUS);nextT+=4*u}
+  timer=setInterval(sched,25);sched();raf=requestAnimationFrame(draw)}
+function sched(){const u=60/bpm;
+  while(nextT<AC.currentTime+.18){
+    if(g>=TL.slots.length){if(ST.loop){g=0}else{const e=nextT;setTimeout(()=>{if(run)stop()},Math.max(0,(e-AC.currentTime)*1000+600));clearInterval(timer);return}}
+    slot(g,nextT,u,BUS,true);vq.push({t:nextT,g});g++;nextT+=u}}
+function stop(){run=false;clearInterval(timer);cancelAnimationFrame(raf);$('#go').classList.remove('on');$('#go').textContent='▶ เล่น'}
+function draw(){if(!run)return;const now=AC.currentTime;let c=null;while(vq.length&&vq[0].t<=now)c=vq.shift();
+  if(c){const s=TL.slots[c.g],b=Math.floor(c.g/4);$('#ln').textContent=(s.line?s.line+' · ':'')+'ห้องที่ '+(b+1)+' / '+(TL.slots.length/4);
+    const bar=TL.slots.slice(b*4,b*4+4).map(x=>x.mel!=null?TI.noteName(x.mel):'-').join(' ');$('#nn').textContent=bar;$('#pg').style.width=((c.g+1)/TL.slots.length*100)+'%'}
+  raf=requestAnimationFrame(draw)}
+$('#go').onclick=()=>{if(run)stop();else play()};
+
+/* ---------- บันทึกเป็นไฟล์เสียง ---------- */
+function loadLame(){if(window.lamejs)return Promise.resolve();return new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';s.onload=()=>res();s.onerror=()=>rej();document.head.appendChild(s)})}
+function wav(buf){const d=buf.getChannelData(0),n=d.length,sr=buf.sampleRate,ab=new ArrayBuffer(44+n*2),v=new DataView(ab);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,d[i]))*32767,true);return new Blob([ab],{type:'audio/wav'})}
+async function mp3(buf,prog){const d=buf.getChannelData(0),enc=new lamejs.Mp3Encoder(1,buf.sampleRate,128),blk=1152,parts=[],pcm=new Int16Array(d.length);
+  for(let i=0;i<d.length;i++)pcm[i]=Math.max(-1,Math.min(1,d[i]))*32767;
+  for(let i=0;i<pcm.length;i+=blk){const b=enc.encodeBuffer(pcm.subarray(i,i+blk));if(b.length)parts.push(new Int8Array(b));if(i%(blk*400)===0){prog(i/pcm.length);await new Promise(r=>setTimeout(r,0))}}
+  const e=enc.flush();if(e.length)parts.push(new Int8Array(e));return new Blob(parts,{type:'audio/mpeg'})}
+async function saveFile(blob,name){
+  try{const P=window.parent;if(P&&P!==window&&P.MC&&P.MC.saveBlob){await P.MC.saveBlob(blob,name);return}}catch(e){}
+  try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
+$('#exp').onclick=async()=>{
+  if(!cur||!TL||!TL.slots.length)return toast('ยังไม่มีเพลง');stop();audio();const btn=$('#exp');btn.disabled=true;const H=$('#expH');
+  try{
+    const u=60/bpm,sr=44100,cnt=ST.cnt?4:0,len=(TL.slots.length+cnt)*u+2.5;
+    if(len>900)throw new Error('เพลงยาวเกิน 15 นาที ลองลดจำนวนท่อนหรือเร่งความเร็ว');
+    H.textContent='กำลังเรียงเสียงทั้งวง…';await new Promise(r=>setTimeout(r,30));
+    const off=new OfflineAudioContext(1,Math.ceil(sr*len),sr),m=off.createGain();m.gain.value=.85;const cp=off.createDynamicsCompressor();m.connect(cp);cp.connect(off.destination);
+    TI.init(off,m);const B=mkBuses(off,m);let t=.3;if(cnt){countIn(t,u,B);t+=cnt*u}
+    for(let k=0;k<TL.slots.length;k++)slot(k,t+k*u,u,B,true);
+    const buf=await off.startRendering();TI.init(AC,MASTER);
+    let blob,ext='mp3';
+    try{H.textContent='กำลังแปลงเป็น MP3…';await loadLame();blob=await mp3(buf,p=>{H.textContent='กำลังแปลงเป็น MP3… '+Math.round(p*100)+'%'})}catch(e){blob=wav(buf);ext='wav'}
+    const who=ST.mine?'_ไม่มี'+(PART.find(p=>p.id===ST.mine)||{}).n:'_ทั้งวง';
+    await saveFile(blob,(cur.title||'เพลง').replace(/[\\/:*?"<>|]/g,'')+who+'_'+bpm+'.'+ext);
+    H.textContent='บันทึกแล้ว ('+(blob.size/1048576).toFixed(1)+' MB'+(ext==='wav'?' · ไฟล์ WAV เพราะแปลง MP3 ไม่ได้ตอนออฟไลน์':'')+')';
+  }catch(e){H.textContent='บันทึกไม่สำเร็จ: '+(e.message||e);try{TI.init(AC,MASTER)}catch(x){}}
+  btn.disabled=false};
+
+ui();loadSongs();
+window.__BAND={get TL(){return TL},slot,play,stop};
+</script>
+</body>
+</html>

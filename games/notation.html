@@ -32,6 +32,7 @@ select option{color:#222}
 .tempo b{font-family:Mitr;color:var(--gold);min-width:38px;text-align:center;font-size:16px}
 .tb{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.25);cursor:pointer}
 .mix button{font-size:12px}
+.voice{display:inline-flex;align-items:center;gap:6px;font-size:13px}.voice select{font:inherit;padding:4px 6px;border-radius:8px}
 .hint{font-size:12px;color:var(--muted);margin:6px 0 0}
 .hint b{color:var(--cream)}
 
@@ -128,7 +129,7 @@ body.selmode .sl{cursor:copy}
     <button class="btn play" id="bPlay">▶ เล่นตั้งแต่ต้น</button>
     <button class="btn" id="bPlayHere">▶ เล่นจากห้องนี้</button>
     <button class="btn" id="bLoop">🔁 วน</button>
-    <span class="seg mix"><button data-m="khong">ฆ้อง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button></span>
+    <label class="voice">เสียงทำนอง <select id="voice" aria-label="เครื่องดนตรีที่เล่นทำนอง"></select></label><span class="seg mix"><button data-m="khong">ทำนอง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button></span>
     <span class="west">🎼 โน้ตสากล: ด =<select id="wKey" aria-label="คีย์สากล"></select><button class="btn" id="wChord">🎸 คอร์ด</button></span>
   </div>
   <div class="bar-set tech">
@@ -167,6 +168,8 @@ body.selmode .sl{cursor:copy}
 
 <script src="natab.js"></script>
 <script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script src="thaiinst.js"></script>
 <script>
 (function(){
 "use strict";
@@ -205,8 +208,8 @@ function decBars(str){
 const blankBars=n=>Array.from({length:n},()=>[[],[],[],[]]);
 /* แต่ละท่อนมีสองแถว: h.L = มือซ้าย (แถวบน) · h.R = มือขวา (แถวล่าง) จำนวนห้องเท่ากันเสมอ */
 const blankLine=(label,n)=>({label,h:{L:blankBars(n),R:blankBars(n)}});
-function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
-function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{})),at:Date.now()}}
+function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",voice:"khong",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
+function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{})),at:Date.now()}}
 /* เพลงรุ่นเก่า (แถวเดียว): ตีคู่แยกเป็นเสียงต่ำ→มือซ้าย เสียงสูง→มือขวา · โน้ตเดี่ยวอยู่มือขวา */
 function splitOld(bars){
   const L=bars.map(b=>b.map(e=>Array.isArray(e)&&e.length>1?[Math.min(...e)]:[]));
@@ -247,7 +250,7 @@ try{const q=new URLSearchParams(location.search).get("song");if(q&&P){const x=(P
 
 /* ---------- เสียง ---------- */
 let AC=null,master=null;
-function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.85;const cp=AC.createDynamicsCompressor();master.connect(cp);cp.connect(AC.destination);TS.init(AC,master)}if(AC.state==="suspended")AC.resume();return AC}
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.85;const cp=AC.createDynamicsCompressor();master.connect(cp);cp.connect(AC.destination);TI.init(AC,master)}if(AC.state==="suspended")AC.resume();return AC}
 const LATKEY="sapphawathit_audio_lat";
 const visNow=()=>{let u=0;try{u=+(localStorage.getItem(LATKEY)||0)}catch(e){}return AC.currentTime-Math.max(0,(AC.outputLatency||0)+(AC.baseLatency||0)+u/1000)};
 
@@ -320,7 +323,7 @@ function clearGroupAt(c){const e=entryAt(c);if(!isGrp(e))return false;for(let k=
 function refreshSlot(c){const e=$('.sl[data-c="'+ck(c)+'"]');if(e)e.innerHTML=cellHTML(entryAt(c))}
 /* ใส่โน้ต · โหมด “คู่”: กดสองลูก → เสียงต่ำลงแถวมือซ้าย เสียงสูงลงแถวมือขวา ในช่องเดียวกัน */
 function putNote(i){
-  audio();TS.khong(i);flashKey(i);
+  audio();vN(i);flashKey(i);
   if(selMode){toast("ปิด “ติ๊กเลือก” ก่อน เพื่อใส่โน้ต");return}
   if(pair&&!song.hands){const e=entryAt(cur);
     if(Array.isArray(e)&&e.length===1&&e[0]!==i&&pend){e.push(i);e.sort((a,b)=>a-b);pend=null;touch();refreshSlot(cur);move(1);return}
@@ -377,7 +380,7 @@ function ungroup(){
 $("#sheet").addEventListener("click",e=>{
   const s2=e.target.closest(".sl");if(s2){const p=s2.dataset.c.split(",");const c={l:+p[0],b:+p[1],s:+p[2],h:p[3]};
     if(selMode){toggleSel(c);return}
-    pend=null;setCur(c);const x=entryAt(c);audio();if(isGrp(x))playEntry(x,AC.currentTime,60/song.bpm);else x.forEach(i=>TS.khong(i));return}
+    pend=null;setCur(c);const x=entryAt(c);audio();if(isGrp(x))playEntry(x,AC.currentTime,60/song.bpm);else x.forEach(i=>vN(i));return}
   const a=e.target.closest("[data-lact]");if(a){const li=+a.dataset.li;
     if(a.dataset.lact==="del"){if(song.lines.length<=1)return toast("ต้องมีอย่างน้อย 1 ท่อน");if(!a.dataset.sure){a.dataset.sure=1;a.textContent="แน่ใจ?";setTimeout(()=>{a.textContent="ลบท่อน";delete a.dataset.sure},2500);return}
       song.lines.splice(li,1);cur={l:0,b:0,s:0,h:cur.h};touch();render();setCur(cur)}
@@ -441,10 +444,11 @@ function natabOptions(){
   $("#natab").value=song.natab||"";
 }
 function uiSettings(){
-  keyUI();$("#title").value=song.title;$$("#rate button").forEach(b=>b.classList.toggle("on",+b.dataset.r===song.rate));natabOptions();
+  keyUI();voiceUI();$("#title").value=song.title;$$("#rate button").forEach(b=>b.classList.toggle("on",+b.dataset.r===song.rate));natabOptions();
   $("#tV").textContent=song.bpm;$$(".mix button").forEach(b=>b.classList.toggle("on",!!song.mix[b.dataset.m]));
 }
 $("#title").addEventListener("input",e=>{song.title=e.target.value;touch()});
+$("#voice").addEventListener("change",e=>{song.voice=e.target.value;touch();audio();vN(7,0,.9,.6)});
 $$("#rate button").forEach(b=>b.addEventListener("click",()=>{song.rate=+b.dataset.r;natabOptions();uiSettings();render();setCur(cur);touch()}));
 $("#natab").addEventListener("change",e=>{song.natab=e.target.value;touch();render();setCur(cur)});
 $$(".mix button").forEach(b=>b.addEventListener("click",()=>{song.mix[b.dataset.m]=!song.mix[b.dataset.m];uiSettings();touch()}));
@@ -454,7 +458,13 @@ let th=null;[["#tDn",-1],["#tUp",1]].forEach(([id,d])=>{const b=$(id);const st=v
 
 /* ---------- เล่น ---------- */
 /* กลุ่มเทคนิค: กระจายเสียงในกลุ่มให้เท่ากันตลอดช่วงเวลาของกลุ่ม */
-function playEntry(e,t,u){const d=e.span*u/e.g.length;e.g.forEach((x,j)=>x.forEach(i=>TS.khong(i,t+j*d,x.length>1?.7:.95)))}
+function playEntry(e,t,u){const d=e.span*u/e.g.length;e.g.forEach((x,j)=>x.forEach(i=>vN(i,t+j*d,x.length>1?.7:.95,d*1.1)))}
+/* เสียงทำนอง: ฆ้อง ระนาด ขลุ่ย ซอ (เสียงจริงที่อัดในห้อง 512) */
+const VOICE=()=>(song&&song.voice&&TI.INST[song.voice])?song.voice:"khong";
+function vN(i,t,v,dur){TI.note(VOICE(),i,t,v,dur)}
+/* เครื่องเป่า/สี: ลากเสียงยาวถึงโน้ตตัวถัดไปในแถวเดียวกัน (ไม่เกิน 8 ช่อง) */
+function holdSlots(g,h){let n=1;while(n<8&&g+n<TL.length){const x=TL[g+n][h];if(x===null||isGrp(x)||(x&&x.length))break;n++}return n}
+function voiceUI(){const v=$("#voice");if(!v)return;if(!v.options.length)v.innerHTML=Object.keys(TI.INST).map(k=>'<option value="'+k+'">'+TI.INST[k].n+'</option>').join("");v.value=VOICE()}
 let from0=0,run=false,timer=0,raf=0,nextT=0,g=0,vq=[],TL=[],DT=null,loop=false;
 $("#bLoop").addEventListener("click",()=>{loop=!loop;$("#bLoop").classList.toggle("on",loop)});
 function play(from){
@@ -471,7 +481,8 @@ function sched(){
     if(g>=TL.length){if(loop)g=0;else{const end=nextT;setTimeout(()=>{if(run)stop()},Math.max(0,(end-AC.currentTime)*1000+400));clearInterval(timer);return}}
     if(g<0){const c=NT.countInCh(g,SM[from0]?SM[from0].r:song.rate);if(c&&song.mix.ching)TS.ching(c===1,nextT)}
     else{
-      if(song.mix.khong)["L","R"].forEach(h=>{const sl=TL[g][h];if(sl===null)return;if(isGrp(sl))playEntry(sl,nextT,u);else sl.forEach(i=>TS.khong(i,nextT,.85))});
+      if(song.mix.khong){if(TI.INST[VOICE()].hold){const h=TL[g].R&&(isGrp(TL[g].R)||TL[g].R.length)?"R":"L",sl=TL[g][h];if(sl!==null){if(isGrp(sl))playEntry(sl,nextT,u);else if(sl.length)vN(Math.max(...sl),nextT,.9,holdSlots(g,h)*u*.96)}}
+        else["L","R"].forEach(h=>{const sl=TL[g][h];if(sl===null)return;if(isGrp(sl))playEntry(sl,nextT,u);else sl.forEach(i=>vN(i,nextT,.85))})}
       const c=chAt(g);if(c&&song.mix.ching)TS.ching(c===1,nextT);
       const m=SM[g],dt=m&&m.p&&DT[m.p];if(dt&&song.mix.drum)dt[m.dk%dt.length].l.forEach(l=>TS.drum(l,nextT,.8));
       vq.push({t:nextT,g});
