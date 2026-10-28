@@ -242,7 +242,10 @@ function audio(){
   if(ctx.state==="suspended") ctx.resume();
   return ctx;
 }
-const freq=i=>185*Math.pow(2,i/7);   // Thai 7-tone equal temperament
+/* เสียงฆ้องวงใหญ่ 16 ลูก — ความถี่และลักษณะเสียงวัดจากเสียงตีไล่ฆ้องวงใหญ่จริง (ลูกต่ำ → สูง)
+   แต่ละลูกห่างกันประมาณ 1/7 ช่วงทบเสียง ตามระบบเสียงดนตรีไทย */
+const KF=[280,312,344,377,420,452,517,560,624,689,754,829,915,1023,1130,1238];
+const freq=i=>KF[Math.max(0,Math.min(15,i))];
 function tone(f,type,amp,dur,t,attack){
   const o=ctx.createOscillator(),g=ctx.createGain();
   o.type=type;o.frequency.value=f;
@@ -251,15 +254,24 @@ function tone(f,type,amp,dur,t,attack){
   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.05);
 }
+function mode(f,amp,tau,t,att){ // เสียงย่อยหนึ่งเสียง: ขึ้นเร็ว แล้วจางแบบเอ็กซ์โพเนนเชียล
+  const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.value=f;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp,t+(att||.003));g.gain.setTargetAtTime(0,t+(att||.003),tau);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+tau*7+.05);
+}
+let nbuf=null;
 function strike(i,vol){
   if(!audio())return;
-  const t=ctx.currentTime,f=freq(i),v=vol||1;
-  tone(f,"sine",.5*v,1.8,t);
-  tone(f*1.004,"sine",.22*v,1.6,t);
-  tone(f*2.02,"sine",.14*v,.8,t);
-  tone(f*2.95,"sine",.07*v,.4,t);
-  tone(f*4.2,"sine",.035*v,.18,t);
-  tone(f*6,"triangle",.05*v,.05,t,.002);
+  const t=ctx.currentTime,k=Math.max(0,Math.min(15,i)),f=freq(k),v=(vol||1)*.62;
+  const tau1=.65-.022*k,tau2=.5-.021*k,r2=1.87-.0173*k;
+  mode(f,.55*v,tau1,t);                 // เสียงหลัก
+  mode(f*1.0035,.12*v,tau1*.9,t);       // เสียงสั่นพลิ้ว (beating) ของฆ้องจริง
+  mode(f*r2,.16*v,tau2,t);              // เสียงย่อยที่สอง (สูงกว่าเสียงหลัก 1.6–1.9 เท่า)
+  const f3=f*(10.2-.32*k);if(f3<9000)mode(f3,.07*v,.15,t,.001);  // เสียงโลหะแหลมของปุ่มฆ้อง หายเร็ว
+  // เสียงไม้ตีกระทบ
+  if(!nbuf){nbuf=ctx.createBuffer(1,ctx.sampleRate*.2,ctx.sampleRate);const d=nbuf.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=Math.random()*2-1}
+  const s=ctx.createBufferSource(),fl=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=nbuf;fl.type="lowpass";fl.frequency.value=1800;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18*v,t+.001);g.gain.setTargetAtTime(0,t+.001,.012);s.connect(fl);fl.connect(g);g.connect(master);s.start(t);s.stop(t+.12);
 }
 function buzz(){
   if(!audio())return;
