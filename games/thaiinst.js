@@ -3,7 +3,7 @@
    ใช้ร่วมกันโดย บันทึกโน้ต · แทร็กซ้อมวง · เครื่องดนตรีจำลอง · ฝึกหู
    ต้องโหลด thaisound.js, thaisound2.js และ natab.js ก่อน
      TI.init(audioContext, outputNode)
-     TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง
+     TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง โน้ตเกินช่วงเสียงจริงทบช่วงให้
      TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum
      TI.songs()                         เพลงจากสื่อของชมรม + ร่างในเครื่อง
      TI.timeline(packedSong)            ช่องโน้ตทั้งเพลง พร้อมฉิ่งและหน้าทับของแต่ละช่อง
@@ -11,6 +11,10 @@
 (function () {
   'use strict';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  /* ช่วงเสียงจริงของแต่ละเครื่อง (ลูกฆ้อง i: 0 = ซฺ · 3 = ด · 15 = ลํ) โน้ตที่เกินช่วงจะทบช่วงเสียงเข้ามาเหมือนนักดนตรีจริง
+     ระนาดเอก 21 ลูก ซฺ…ฟํ · ระนาดทุ้ม 17 ลูก · ขลุ่ย ด…ซํ · ซอด้วง ซ…ลํ · ฆ้องวงใหญ่ 16 ลูก ซฺ…ลํ */
+  const RANGE = { ranad: [-7, 13], thum: [-7, 9], khlui: [3, 14], sor: [7, 15], khong: [0, 15], khongS: [0, 15] };
+  function fold(i, inst) { const r = RANGE[inst]; if (!r) return i; while (i < r[0]) i += 7; while (i > r[1]) i -= 7; return clamp(i, r[0], r[1]) }
   let AC = null, OUT = null;
   function init(ac, out) { AC = ac; OUT = out || ac.destination; TS.init(ac, OUT); if (window.TS2) TS2.init(ac, OUT); }
   const INST = {
@@ -30,12 +34,13 @@
   }
   function note(inst, i, t, v, dur, out) {
     i = Math.round(i); v = v == null ? 1 : v; out = out || OUT; const T2 = window.TS2;
-    /* ระนาดมี 22 ลูก (ต่ำกว่าฆ้อง 2 ลูก สูงกว่า 1 ลูก) */
-    if (inst === 'ranad' && T2 && T2.ranadKey(clamp(i, -2, 16) + 5, t, v * .85, out)) return;
-    if (inst === 'thum' && T2 && T2.thum(clamp(i, -2, 16) + 5, t, v * .9, out)) return;
+    i = fold(i, inst);
+    /* ลูกระนาด k = ลูกฆ้อง i + 7 (ลูกระนาดลูกที่ 0 = ซฺ ลูกทวน) */
+    if (inst === 'ranad' && T2 && T2.ranadKey(i + 7, t, v * .85, out)) return;
+    if (inst === 'thum' && T2 && T2.thum(i + 7, t, v * .9, out)) return;
+    if (inst === 'khlui' && T2 && T2.khlui(freq(i), t, dur || .5, v * .9, out)) return;
+    if (inst === 'sor' && T2 && T2.sor(freq(i), t, dur || .45, v * .85, out)) return;
     i = clamp(i, 0, 15);
-    if (inst === 'khlui' && T2 && T2.khlui(TS.KF[i], t, dur || .5, v * .9, out)) return;
-    if (inst === 'sor' && T2 && T2.sor(TS.KF[i], t, dur || .45, v * .85, out)) return;
     if (inst === 'khongS') { gongF(TS.KF[i] * 2, t, v, out); return; }
     TS.khong(i, t, v, out);
   }
@@ -71,7 +76,9 @@
     const natabFor = r => { if (!o.natab) return null; if (r === rate0) return NT.get(o.natab); return NT.get(o.natab.replace(/[0-9T]$/, '') + r) };
     const lineNatab = (l, r) => { const v = l.natab; if (v === 'none') return null; if (v && NT.get(v)) return NT.get(v); return natabFor(r) };
     const slots = []; let k = 0, dk = 0, prev = null, pp = null;
-    lines.forEach(l => {
+    /* ท่อนที่ตั้ง rep: 2 เล่นวนสองเที่ยว */
+    const seq = []; lines.forEach(l => { seq.push(l); if (+l.rep === 2) seq.push(Object.assign({}, l, { label: (l.label || '') + ' (เที่ยวกลับ)' })) });
+    seq.forEach(l => {
       const R = decBars(l.bars), L = l.barsL != null ? decBars(l.barsL) : R.map(() => [[], [], [], []]);
       const r = +l.rate || rate0, p = lineNatab(l, r), pid = p ? p.id : '';
       if (r !== prev) { k = 0; prev = r } if (pid !== pp || k === 0) { dk = 0; pp = pid }
@@ -85,8 +92,10 @@
   }
   /* ชื่อโน้ตของลูกที่ i (ลูกฆ้อง 0 = ซฺ) ใช้ได้ทั้งต่ำกว่า 0 และสูงกว่า 15 */
   const NM = ['ด', 'ร', 'ม', 'ฟ', 'ซ', 'ล', 'ท'];
-  function noteName(i) { const d = ((i + 4) % 7 + 7) % 7, o = Math.floor((i + 4) / 7); return NM[d] + (o <= 0 ? 'ฺ'.repeat(1 - o) : o >= 2 ? 'ํ'.repeat(o - 1) : '') }
+  /* ใช้จุดเดียวตามการเขียนโน้ตของชมรม (ระนาด: ซฺลฺทฺดฺรฺมฺฟฺซฺลฺทฺ ดรมฟซลท ดํรํมํฟํ) */
+  function noteName(i) { const d = ((i + 4) % 7 + 7) % 7, o = Math.floor((i + 4) / 7); return NM[d] + (o <= 0 ? 'ฺ' : o >= 2 ? 'ํ' : '') }
   /* ความถี่ของลูกที่ i ตามเสียงวงของชมรม (ระนาดเอกที่อัดไว้ ลูก i+5) */
-  function freq(i) { const F = window.TS2 && TS2.RANADF; let k = i + 5, r = 1; if (F) { while (k > 21) { k -= 7; r *= 2 } while (k < 3) { k += 7; r /= 2 } if (F[k]) return F[k] * r } return TS.KF[clamp(i, 0, 15)] }
-  window.TI = { init, INST, note, perc, songs, timeline, decBars, noteName, freq, KNOTE: () => TS.KNOTE };
+  function freq(i) { const F = window.TS2 && TS2.RANADF; let k = i + 7, r = 1; if (F) { while (k > 21) { k -= 7; r *= 2 } while (k < 0) { k += 7; r /= 2 } if (F[k]) return F[k] * r } return TS.KF[clamp(i, 0, 15)] }
+  const THON = (window.TS2 && TS2.THON_NAMES) || ['ติง', 'จ๊ง', 'ทั่ม', 'จ๊ะ'];
+  window.TI = { init, INST, RANGE, fold, THON, note, perc, songs, timeline, decBars, noteName, freq, KNOTE: () => TS.KNOTE };
 })();

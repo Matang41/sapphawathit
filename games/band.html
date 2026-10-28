@@ -177,12 +177,12 @@ function slot(g,t,u,B,skip){
   if(on('khong')){ent(s.L,t,u,(i,tt,v)=>TI.note('khong',i,tt,v,0,B.khong));ent(s.R,t,u,(i,tt,v)=>TI.note('khong',i,tt,v,0,B.khong))}
   const m=s.mel;
   if(m!=null){
-    if(on('ranad')){if(isGrp(s.R))ent(s.R,t,u,(i,tt,v)=>{TI.note('ranad',i,tt,v*.9,0,B.ranad);if(i+7<=16)TI.note('ranad',i+7,tt,v*.7,0,B.ranad)});else{TI.note('ranad',m,t,.9,0,B.ranad);TI.note('ranad',m+7<=16?m+7:m-7,t,.7,0,B.ranad)}}
-    if(on('thum'))TI.note('thum',m-7>=-2?m-7:m,t,.9,0,B.thum);
+    if(on('ranad')){if(isGrp(s.R))ent(s.R,t,u,(i,tt,v)=>{TI.note('ranad',i,tt,v*.9,0,B.ranad);TI.note('ranad',i+7<=13?i+7:i-7,tt,v*.7,0,B.ranad)});else{TI.note('ranad',m,t,.9,0,B.ranad);TI.note('ranad',m+7<=13?m+7:m-7,t,.7,0,B.ranad)}}
+    if(on('thum'))TI.note('thum',m-7,t,.9,0,B.thum);
     const d=hold(g)*u*.97;
     if(on('khlui'))TI.note('khlui',m,t,.85,d,B.khlui);
     if(on('sor'))TI.note('sor',m,t,.8,d,B.sor);
-  }else if(on('ranad')&&s.R!==null&&g>0){/* ลากเสียง: ระนาดกรอเบา ๆ ด้วยเสียงก่อนหน้า */let k=g-1;while(k>=0&&TL.slots[k].mel==null)k--;const pm=k>=0?TL.slots[k].mel:null;if(pm!=null&&g-k<=3){TI.note('ranad',pm,t,.45,0,B.ranad);TI.note('ranad',pm+7<=16?pm+7:pm-7,t+u/2,.35,0,B.ranad)}}
+  }else if(on('ranad')&&s.R!==null&&g>0){/* ลากเสียง: ระนาดกรอเบา ๆ ด้วยเสียงก่อนหน้า */let k=g-1;while(k>=0&&TL.slots[k].mel==null)k--;const pm=k>=0?TL.slots[k].mel:null;if(pm!=null&&g-k<=3){TI.note('ranad',pm,t,.45,0,B.ranad);TI.note('ranad',pm+7<=13?pm+7:pm-7,t+u/2,.35,0,B.ranad)}}
   if(on('thon'))s.dl.forEach(l=>TI.perc('thon',l,t,.9,B.thon));
   if(on('drum'))s.dl.forEach(l=>TI.perc('drum',l,t,.85,B.drum));
   if(s.ch){if(on('ching'))TI.perc('ching',s.ch,t,1,B.ching);if(on('chab'))TI.perc('chab',s.ch===1?1:0,t,.9,B.chab)}

@@ -217,7 +217,7 @@ const cv=$('#cv'),cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;
 let W=320,H=180,SC=2;
 let playerName='';try{playerName=(new URLSearchParams(location.search).get('name')||'').trim().slice(0,30)}catch(e){}
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const rfold=(i,lo,hi)=>{while(i<lo)i+=7;while(i>hi)i-=7;return i};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ===================== เสียง ===================== */
@@ -246,7 +246,7 @@ const sfx={
   glitch(){if(!AC)return;const t=AC.currentTime;for(let i=0;i<6;i++)tone(rnd(150,900),t+i*.05,.09,'sawtooth',.05,null,rnd(80,1200))},
   count(t){tone(1500,t,.04,'square',.05)}
 };
-function ranad(i,t,v){if(window.TS2&&TS2.ranadKey(clamp(Math.round(i),0,16)+5,t,(v||1)*.85))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)]*2;v=(v||1)*.5;
+function ranad(i,t,v){if(window.TS2&&TS2.ranadKey(rfold(Math.round(i),-7,13)+7,t,(v||1)*.85))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)]*2;v=(v||1)*.5;
   [[f,1,.11],[f*3.93,.25,.035],[f*2.01,.12,.06]].forEach(([fr,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fr;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.002);g.gain.setTargetAtTime(0,t+.002,tau);o.connect(g);g.connect(SFX);o.start(t);o.stop(t+tau*8)});
   noise(t,.02,3500,.12*v,2)}
 
@@ -611,7 +611,7 @@ const WHO={
   boss:{n:'ท้าวเพี้ยนสุร'},canteen:{n:'ปีศาจตะหลิวเพี้ยน'},library:{n:'ผีหนังสือโน้ตหลุด'},dome:{n:'ยักษ์เสียงก้องโดม'},note:{n:'โน้ตหลง'},mini:{n:'เพี้ยนน้อย'},
   guard:{n:'ลุงยาม'},nurse:{n:'คุณครูพยาบาล'},clerk:{n:'พนักงานเซเว่น'},stu:{n:'น้องชมรม'},stuG:{n:'น้องชมรม'},pot:{n:'หม้อแกงเดือดเพี้ยน'},whistle:{n:'นกหวีดกรรมการเพี้ยน'},folder:{n:'ปีศาจแฟ้มกองโต'},mist:{n:'หมอกขลุ่ยหลงทาง'},shadow:{n:'เงาวงปี่พาทย์'},book2:{n:'สมุดโน้ตลายมือ'},saw:{n:'หุ่นเลื่อยจักรรัวไม่หยุด'},khun:{n:'ขุนไม้เดี่ยว'}
 };
-['mateo','che','jao','captain','yum','kaimuk','ing','ice','foo','waen'].forEach(k=>{WHO[k]={n:{mateo:'มาเตโอ',che:'เช่',jao:'จ้าว',captain:'กัปตัน',yum:'ยุ้ม',kaimuk:'ไข่มุก',ing:'อิ้ง',ice:'ไอซ์',foo:'ฟู',waen:'แว่น'}[k],img:PORT_IMG[k]}});
+['mateo','che','jao','captain','yum','kaimuk','ing','ice','foo','waen'].forEach(k=>{WHO[k]={n:{mateo:'มาเตโอ',che:'เช่',jao:'จ้าว',captain:'กัปตัน',yum:'จักร',kaimuk:'ไข่มุก',ing:'อิ้ง',ice:'ไอซ์',foo:'ฟู',waen:'แว่น'}[k],img:PORT_IMG[k]}});
 let dlgRes=null,dlgTyping=0,dlgFull='',dlgTimer=null;
 function say(who,text){
   return new Promise(res=>{
@@ -945,7 +945,7 @@ const LANE={
   taphon:[{n:'หน้าเท่ง',s:'F',c:'#d0905a',k:['f','d']},{n:'หน้ามัด',s:'J',c:'#f0c080',k:['j','k']}],
   voice:[{n:'ร้อง!',s:'Space / J',c:'#ffb0d8',k:[' ','j','f','k','d']}],
   follow:[{n:'ต่ำ',s:'D',c:'#e8c060',k:['d']},{n:'กลาง',s:'F',c:'#ffd77a',k:['f']},{n:'สูง',s:'J',c:'#7ee081',k:['j']},{n:'สูงสุด',s:'K',c:'#9ad0ff',k:['k']}],
-  thon:[{n:'โทน',s:'D',c:'#ff9a6a',k:['d']},{n:'ป๊ะ',s:'F',c:'#ffd07a',k:['f']},{n:'ทั่ม',s:'J',c:'#7ac8f0',k:['j']},{n:'ติง',s:'K',c:'#b8a8ff',k:['k']}]
+  thon:[{n:'ติง',s:'D',c:'#ff9a6a',k:['d']},{n:'จ๊ง',s:'F',c:'#ffd07a',k:['f']},{n:'ทั่ม',s:'J',c:'#7ac8f0',k:['j']},{n:'จ๊ะ',s:'K',c:'#b8a8ff',k:['k']}]
 };
 const GONGS=[3,4,5,6,7,8,9,10];
 function layoutBattle(){
@@ -1298,7 +1298,7 @@ const CAST={
   mateo:{n:'มาเตโอ',ic:'🔔',inst:'gong',mode:'gong',att:'ฆ้องวงใหญ่ (มึน ๆ)',pas:'โชคมึน: ตีผิดบางทีไม่เสียพลัง',fld:'มุดลอดช่องแคบ'},
   foo:{n:'ฟู',ic:'✨',inst:'gongS',mode:'gongS',att:'ฆ้องวงเล็กรัวป่วน (สุ่มแรง/พลาด)',pas:'มาคู่กับแว่นเสมอ',fld:'ปีนรั้ว'},
   waen:{n:'แว่น',ic:'🎹',inst:'thum',mode:'thum',att:'ระนาดทุ้มล้อ',pas:'อ่านทาง: บอกชื่อโน้ตทำนองปีศาจ',fld:'ไขรหัส'},
-  yum:{n:'ยุ้ม',ic:'🎻',inst:'sor',mode:'sor',att:'สีซอด้วงเสียงจ้า',pas:'ตะกละ: ของกินฟื้นพลัง ×2',fld:'ดมกลิ่นของกิน',where:'อาคารคหกรรม (21)'},
+  yum:{n:'จักร',ic:'🎻',inst:'sor',mode:'sor',att:'สีซอด้วงเสียงจ้า',pas:'ตะกละ: ของกินฟื้นพลัง ×2',fld:'ดมกลิ่นของกิน',where:'อาคารคหกรรม (21)'},
   che:{n:'เช่',ic:'🎶',inst:'ranad',mode:'ranadR',att:'ระนาดเอกพริ้ว ๆ',pas:'นิ้วพริ้ว: เกจไม้ตายเต็มไว ×2 + ท่ารัวระนาด',fld:'ดันของหนัก',where:'ศูนย์ฝึกอาชีพ (16)'},
   jao:{n:'จ้าว',ic:'🎵',inst:'khlui',mode:'khlui',att:'เป่าขลุ่ยลากยาว (บางทีเป่าผิดเพลง)',pas:'ท่าพิเศษ “เป่ากล่อม” ฟื้นพลังทั้งทีม',fld:'เป่ากล่อมหมาเฝ้าทาง',where:'อาคาร3 เพชรประจิม (3)'},
   captain:{n:'กัปตัน',ic:'🥁',inst:'taphon',mode:'taphon',att:'ตีตะโพนมั่ว (สุ่มแรง)',pas:'ประกาศเสียงตามสาย: ทำนองปีศาจสั้นลง 1 ลูก',fld:'กุญแจสภา เปิดประตูที่ล็อก',where:'ห้องสภานักเรียน (20)'},
@@ -1320,15 +1320,15 @@ function sp2(lines){return lines.map(([w,t])=>[w==='L'?S.lead:(w&&w[0]==='?')?(i
 async function talk2(lines){await talk(sp2(lines))}
 
 /* ---- เสียงเครื่องดนตรีใหม่ (สังเคราะห์ไว้ก่อน รอเสียงจริง) ---- */
-function thum(i,t,v){if(window.TS2&&TS2.thum(clamp(Math.round(i),0,16)+5,t,(v||1)*.9))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)];v=(v||1)*.55;
+function thum(i,t,v){if(window.TS2&&TS2.thum(rfold(Math.round(i),-7,9)+7,t,(v||1)*.9))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)];v=(v||1)*.55;
   [[f,1,.24],[f*2.92,.16,.05],[f*2,.14,.09]].forEach(([fr,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fr;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.004);g.gain.setTargetAtTime(0,t+.004,tau);o.connect(g);g.connect(SFX);o.start(t);o.stop(t+tau*8)});noise(t,.02,1800,.08*v,2)}
 function reed(f,t,dur,v,type,bp,vib){if(!AC)return;t=Math.max(t||0,AC.currentTime);const o=AC.createOscillator(),o2=AC.createOscillator(),lfo=AC.createOscillator(),lg=AC.createGain(),fl=AC.createBiquadFilter(),g=AC.createGain();
   o.type=type;o2.type='square';o.frequency.setValueAtTime(f*.985,t);o.frequency.linearRampToValueAtTime(f,t+.04);o2.frequency.value=f*1.003;lfo.frequency.value=5.6;lg.gain.value=f*vib;lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
   fl.type='bandpass';fl.frequency.value=bp;fl.Q.value=.9;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.03);g.gain.setValueAtTime(v*.85,t+dur);g.gain.exponentialRampToValueAtTime(.0005,t+dur+.12);
   const m=AC.createGain();m.gain.value=.5;o.connect(fl);o2.connect(m);m.connect(fl);fl.connect(g);g.connect(SFX);[o,o2,lfo].forEach(x=>{x.start(t);x.stop(t+dur+.15)})}
 function pinae(i,t,v){const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.22,.16*(v||1),'sawtooth',f*2.2,.012)}
-function sor(i,t,v,dur){if(window.TS2&&TS2.sor(TS.KF[clamp(i,0,15)],t,dur||.42,(v||1)*.85))return;const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.26,.11*(v||1),'sawtooth',f*1.6,.008)}
-function khlui(i,t,v,dur){const f=TS.KF[clamp(i,0,15)];if(window.TS2&&TS2.khlui(f,t,dur||.45,(v||1)*.9))return;reed(f,t,dur||.4,.1*(v||1),'triangle',f*2,.01)}
+function sor(i,t,v,dur){if(window.TS2&&TS2.sor(TS.KF[rfold(clamp(i,0,15),7,15)],t,dur||.42,(v||1)*.85))return;const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.26,.11*(v||1),'sawtooth',f*1.6,.008)}
+function khlui(i,t,v,dur){const f=TS.KF[rfold(clamp(i,0,15),3,14)];if(window.TS2&&TS2.khlui(f,t,dur||.45,(v||1)*.9))return;reed(f,t,dur||.4,.1*(v||1),'triangle',f*2,.01)}
 function voice(i,t,v,dur){const f=TS.KF[clamp(i,0,15)]*(1+rnd(-.05,.06));reed(f,t,dur||.32,.13*(v||1),'triangle',f*2.6,.03);reed(f*1.5*(1+rnd(-.03,.03)),t,dur||.32,.04*(v||1),'sine',f*3,.02)}
 function taphon(l,t,v){if(!AC)return;t=Math.max(t||0,AC.currentTime);v=(v||1);if(l===0){tone(95,t,.45,'sine',.32*v,null,62);noise(t,.05,300,.25*v,1)}else{tone(240,t,.16,'triangle',.16*v,null,170);noise(t,.04,2600,.3*v,1.5)}}
 function thonS(l,t,v){if(window.TS2&&TS2.thon(l,t,(v||1)*.95))return;TS.drum(l,t,v)}
@@ -1403,7 +1403,7 @@ const IDLE2={
 const STAGE2={
   kahakam:{mon:'pot',rescue:['yum'],calm:'อาคารคหกรรมกลับมาหอมกลิ่นแกงตามปกติ',
     pre:[[null,'อาคารคหกรรม · กลิ่นแกงเขียวหวานลอยมาแต่ไกล แต่หม้อเดือดปุด ๆ ผิดจังหวะ'],['yum','(สีซอแต่ไม่มีเสียง) … ฮือ ซอเราเงียบ แถมยังไม่ได้กินข้าวเที่ยงอีก'],['pot','ปุด ปุด! ลูกระนาดสามลูกนี้อุ่นดี ข้าจะต้มให้เปื่อยพร้อมเสียงซอของเจ้า!'],['?pob','แกงต้องคนตามจังหวะครับ ไม่ใช่เดือดมั่วแบบนี้'],['L','ฟังทำนองมันให้ดี แล้วตีตาม']],
-    win:[['pot','ปุด… ปุ… แกงหอมขึ้นเพราะเดือดตรงจังหวะ…'],[null,'ได้ลูกระนาดคืน 3 ลูก!'],['yum','(ซอดังจ้า) อ๊ะ! เสียงกลับมาแล้ว! ขอบคุณนะทุกคน… ว่าแต่ แกงหม้อนี้กินได้ไหม'],['?waen','ยุ้มครับ มันเพิ่งเป็นปีศาจเมื่อกี้'],[null,'ยุ้มเข้าร่วมทีมได้แล้ว! เมื่อยุ้มอยู่ในทีม ของกินฟื้นพลังได้สองเท่า']]},
+    win:[['pot','ปุด… ปุ… แกงหอมขึ้นเพราะเดือดตรงจังหวะ…'],[null,'ได้ลูกระนาดคืน 3 ลูก!'],['yum','(ซอดังจ้า) อ๊ะ! เสียงกลับมาแล้ว! ขอบคุณนะทุกคน… ว่าแต่ แกงหม้อนี้กินได้ไหม'],['?waen','จักรครับ มันเพิ่งเป็นปีศาจเมื่อกี้'],[null,'จักรเข้าร่วมทีมได้แล้ว! เมื่อจักรอยู่ในทีม ของกินฟื้นพลังได้สองเท่า']]},
   vocation:{mon:'saw',rescue:['che'],need:{foo:'เดี๋ยวผมปีนเข้าไปเปิดให้! …ฮึบ! ได้แล้วพี่!',mateo:'ผมตัวเล็ก มุดลอดได้ครับ… เอ๊ะ กระเป๋าติด… ผ่านแล้ว! กลอนเปิดแล้ว',ice:'รั้วแค่นี้! (กระโดดข้ามไปเปิดกลอนในพริบตา)'},calm:'ศูนย์ฝึกอาชีพเงียบสงบ เหลือแต่ขี้เลื่อยเป็นกองเรียบร้อย',
     gate:[[null,'ประตูรั้วศูนย์ฝึกอาชีพถูกล็อกด้วยโซ่ ข้างในมีเสียงเลื่อยรัวไม่หยุด'],['L','ต้องมีคนปีนรั้ว (ฟู) คนตัวเล็กมุดลอดช่อง (มาเตโอ) หรือคนกระโดดข้ามรั้ว (ไอซ์) เข้าไปเปิดกลอนจากข้างใน'],[null,'จัดทีมใหม่ได้ที่ศาลาพักคอย (22) หรือโต๊ะครูในห้อง 512']],
     pre:[['che','นิ้วผม… แข็งไปหมดเลย รัวระนาดไม่ได้สักโน้ต'],['saw','ครืดดด! รัว! รัว! รัว! ไม่ต้องฟังใคร รัวให้เร็วที่สุดก็พอ!'],['?waen','มันรัวเร็วแต่ไม่ลงจังหวะเลยครับ ถ้าเราตีตรง มันจะเสียหลัก'],['L','ลุยกันเลย']],
@@ -1458,7 +1458,7 @@ async function milestone(){
 }
 function stuHint(){
   const n=stagesDone();
-  if(n<2)return[['stuG','พี่ ๆ! เมื่อเช้าหนูเห็นลูกไฟสีทองลอยเข้าอาคารคหกรรมกับศูนย์ฝึกอาชีพ'],['stuG','ได้ยินว่าพี่ยุ้มกับพี่เช่ติดอยู่ข้างในด้วย']];
+  if(n<2)return[['stuG','พี่ ๆ! เมื่อเช้าหนูเห็นลูกไฟสีทองลอยเข้าอาคารคหกรรมกับศูนย์ฝึกอาชีพ'],['stuG','ได้ยินว่าพี่จักรกับพี่เช่ติดอยู่ข้างในด้วย']];
   if(!S.beat.whistle)return[['stuG','ที่สนามบาสมีเสียงนกหวีดดังทั้งวันเลยค่ะ พี่ไอซ์กับพี่อิ้งโดนกรรมการเป่าฟาวล์ไม่หยุด']];
   if(!S.beat.folder)return[['stuG','พี่กัปตันยืนพึมพำอยู่หน้าห้องสภาค่ะ บอกว่าตู้เอกสารล็อกด้วยรหัสเพลง']];
   if(!S.beat.mist)return[['stuG','ข้างอาคาร3 มีหมอกลงทั้งที่แดดจ้า หนูได้ยินเสียงขลุ่ยหลงทางอยู่ในนั้น']];
@@ -1518,7 +1518,7 @@ function songMelody(){
   try{const P=window.parent;const L=(P&&P!==window&&P.APP&&P.APP.D&&P.APP.D.library)||{};
     const k=Object.keys(L).find(k=>{const x=L[k];return x&&x.kind==='song'&&x.song&&/แขก\s*บรเทศ/.test((x.song.title||'')+' '+(x.title||''))});
     if(k){const sg=L[k].song,ls=Array.isArray(sg.lines)?sg.lines:Object.values(sg.lines||{});const out=[];let slot=0;
-      ls.forEach(l=>String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBarNotes(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++})));
+      ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++)String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBarNotes(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++}))});
       if(out.length>=12){MELC={notes:out,src:'lib',title:sg.title||L[k].title||'แขกบรเทศ'};try{localStorage.setItem('spw_pisat_khaek',JSON.stringify(MELC))}catch(e){}return MELC}}}catch(e){}
   try{const c=JSON.parse(localStorage.getItem('spw_pisat_khaek')||'null');if(c&&c.notes&&c.notes.length){MELC=c;MELC.src='cache';return MELC}}catch(e){}
   const out=[];const P=[3,4,5,7,8,10,11,12];let j=3;for(let s=0;s<64;s++){if(s%4===1||s%4===3||Math.random()<.3){j=clamp(j+pick([-2,-1,0,1,1,2]),0,7);out.push({s,g:P[j]})}}
@@ -1631,7 +1631,7 @@ async function ending2(){
   await talk([['khun','(วางไม้ระนาดลง) …แปดสิบปี ข้าเพิ่งได้ยินเพลงของข้าเล่นจบเป็นครั้งแรก'],['khun','ข้าคืนเสียงให้ทุกคนแล้ว ซอ ขลุ่ย โทน รำมะนา เสียงร้อง… และความจำของเด็กสภาคนนั้น']]);
   await talk2([['captain','ขอบคุณครับ! …แต่ตะโพนผมยังมั่วอยู่นะ'],['khun','อันนั้นข้าไม่ได้เอาไปตั้งแต่แรก'],['che','ขุนครับ ไม้ระนาดคู่นี้…'],['khun','เจ้าตีระนาดพริ้วดี เก็บไว้เถิด ฝากรางระนาดของข้าไว้ในห้อง 512 ด้วย'],['foo','ขอโทษนะครับขุน ผมตีระนาดโดยไม่ได้ขออนุญาต'],['khun','ถ้าเจ้าไม่ตี ข้าก็คงนั่งรออยู่คนเดียวอีกแปดสิบปี… ขอบใจนะ']]);
   await talk([[null,'เช้าวันงานตลาดนัดดนตรีไทย · ซุ้มชมรมสรรพวาทิตมีระนาดโบราณตั้งโชว์ และมีวงเล่นสดทั้งวัน'],['tang','(ลากกระเป๋าเดินทางเข้ามา) …ครูกลับมาแล้ว เกิดอะไรขึ้นบ้าง ทำไมทุกคนดูโตขึ้นเยอะเลย'],['kaimuk','ครูคะ เมื่อคืนพวกเราคุมวงกันเองได้แล้วค่ะ'],['tang','ครูรู้… ครูได้ยินเสียงวงพวกเธอตั้งแต่ปากทางเข้าโรงเรียน'],['pob','ครูครับ แล้วเรื่องที่ผมกับกัปตันส่งน้องขึ้นไปค้นห้อง…'],['tang','เดี๋ยวคุยกัน ตอนนี้ไปช่วยยกฆ้องก่อน ทั้งสองคน'],['pob','…ครับ']]);
-  const cr=$('#credits .roll');if(cr)cr.innerHTML='<p>ขุนไม้เดี่ยวได้ร่วมวงเป็นครั้งแรกในรอบแปดสิบปี<br>ลูกระนาด 21 ลูกกลับคืนรางในห้อง 512</p><p>มาเตโอ · เช่ · จ้าว · มหาพราหมณ์ · กัปตัน · ยุ้ม<br>ไข่มุก · อิ้ง · ไอซ์ · ฟู · แว่น · พบธรรม · ครูตังค์</p><p style="color:#d8c8ff">โปรดติดตาม บทที่ 3<br>“กลองหลวงปลุกผี” · ตำนานนอกรั้วโรงเรียน</p><p style="font-size:13px;opacity:.8">เสียงเครื่องดนตรีอัดจริงโดยชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</p>';
+  const cr=$('#credits .roll');if(cr)cr.innerHTML='<p>ขุนไม้เดี่ยวได้ร่วมวงเป็นครั้งแรกในรอบแปดสิบปี<br>ลูกระนาด 21 ลูกกลับคืนรางในห้อง 512</p><p>มาเตโอ · เช่ · จ้าว · มหาพราหมณ์ · กัปตัน · จักร<br>ไข่มุก · อิ้ง · ไอซ์ · ฟู · แว่น · พบธรรม · ครูตังค์</p><p style="color:#d8c8ff">โปรดติดตาม บทที่ 3<br>“กลองหลวงปลุกผี” · ตำนานนอกรั้วโรงเรียน</p><p style="font-size:13px;opacity:.8">เสียงเครื่องดนตรีอัดจริงโดยชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</p>';
   const h=$('#credits h2');if(h)h.textContent='จบบทที่ 2';
   hud();$('#credits').classList.remove('hide');paused=true;sfx.get();
 }
@@ -1679,7 +1679,7 @@ async function intro2(){
   await talk([['pob','ผมว่าผมคุ้น ๆ กับสถานการณ์แบบนี้นะ'],['waen','ลูกระนาด 21 ลูกกระจายไปทั่วโรงเรียนครับ ผมนับได้ทุกลูก'],['foo','ขอโทษครับพี่… ผมไม่น่าตีเลย']]);
   ACT.maha.hide=false;ACT.maha.y=9*T+12;await walk(ACT.maha,[[6,7]]);ACT.mateo.hide=false;ACT.mateo.y=9*T+12;await walk(ACT.mateo,[[7,8]]);
   await talk([['maha','เสียงระนาดหลอน ๆ ดังไปถึงห้อง 512'],['mateo','พี่ ๆ… เมื่อกี้ผมเห็นลูกไฟสีทองบินผ่านหัว สวยดีนะ'],['pob','มหาพราหมณ์! ครั้งนี้ไม่ใช่ผมนะ! ผมแค่บริหาร… อ้อ ใช่ ผมเป็นคนสั่งให้มาค้น'],['maha','(มองแรง)']]);
-  await talk([[null,'📱 ไลน์กลุ่มชมรมเด้งไม่หยุด'],['kaimuk','ทุกคน! ซอของยุ้มไม่มีเสียง จ้าวเป่าขลุ่ยได้โน้ตเดียว ไอซ์กับอิ้งตีไม่พร้อมกัน แล้วเราก็นับจังหวะไม่ได้! เกิดอะไรขึ้น!?'],['tang','📱 (วิดีโอคอล) ครูอบรมอยู่เชียงใหม่ อีกสามวันถึงจะกลับ… ครูเห็นข้อความแล้ว'],['tang','ครูกลับไปช่วยไม่ทัน แต่ครูเชื่อว่าพวกเธอคุมวงกันเองได้ ฟังกันไว้ แล้วไปเอาเสียงเพื่อนคืนมา'],['maha','ครับครู… จัดทีมกันเถอะ']]);
+  await talk([[null,'📱 ไลน์กลุ่มชมรมเด้งไม่หยุด'],['kaimuk','ทุกคน! ซอของจักรไม่มีเสียง จ้าวเป่าขลุ่ยได้โน้ตเดียว ไอซ์กับอิ้งตีไม่พร้อมกัน แล้วเราก็นับจังหวะไม่ได้! เกิดอะไรขึ้น!?'],['tang','📱 (วิดีโอคอล) ครูอบรมอยู่เชียงใหม่ อีกสามวันถึงจะกลับ… ครูเห็นข้อความแล้ว'],['tang','ครูกลับไปช่วยไม่ทัน แต่ครูเชื่อว่าพวกเธอคุมวงกันเองได้ ฟังกันไว้ แล้วไปเอาเสียงเพื่อนคืนมา'],['maha','ครับครู… จัดทีมกันเถอะ']]);
   await teamSelect();
   S.intro=1;S.phase=0;S.x=7*T+8;S.y=7*T+12;S.dir='d';for(const k in ACT)delete ACT[k];follow=[];save();hud();showHud(true);
   await talk2([['L','เริ่มจากอาคารคหกรรมกับศูนย์ฝึกอาชีพ มีคนเห็นลูกไฟสีทองลอยไปทางนั้น'],[null,'ภารกิจ: ออกจากห้องทางประตูด้านล่าง · กด 🗺 ดูแผนที่ · จัดทีมใหม่ได้ที่ศาลาพักคอย (22) และโต๊ะครูห้อง 512']]);

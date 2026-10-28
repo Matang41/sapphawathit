@@ -36,6 +36,8 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:22px;color:var(--gold)}
 .k small{font-family:Sarabun;font-size:11px;opacity:.65}
 .k.dn{transform:translateY(3px);filter:brightness(1.3);box-shadow:inset 0 -2px 0 rgba(0,0,0,.22)}
 .k.wide{min-height:min(26vh,130px)}
+.pad.r3 .k{min-height:min(14vh,78px);font-size:clamp(16px,4.4vw,22px)}
+.k small.r{display:block;font-size:10px;opacity:.6}
 @media (orientation:landscape) and (max-height:500px){.k{min-height:min(22vh,80px)}.mid{gap:4px}.big{font-size:40px}}
 </style>
 </head>
@@ -48,10 +50,8 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:22px;color:var(--gold)}
   <div class="big" id="big" aria-live="polite">ด</div>
   <div class="trail" id="trail"></div>
   <div class="tools">
-    <button class="oct" id="octD" aria-label="เลื่อนลงต่ำ">◀</button>
     <button id="rec">● อัด</button><button id="playR" disabled>▶ ฟังที่อัด</button>
     <button id="chingT">ฉิ่งเคาะตาม</button>
-    <button class="oct" id="octU" aria-label="เลื่อนขึ้นสูง">▶</button>
   </div>
   <div class="hint" id="hint">แตะปุ่มด้านล่างด้วยนิ้วโป้ง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่เสียง · กดได้หลายนิ้วพร้อมกัน</div>
   <div class="hint" style="opacity:.7;font-size:11px">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
@@ -73,17 +73,19 @@ let AC=null,OUT=null;
 function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C({latencyHint:'interactive'});OUT=AC.createGain();OUT.gain.value=.95;const cp=AC.createDynamicsCompressor();OUT.connect(cp);cp.connect(AC.destination);TI.init(AC,OUT)}if(AC.state==='suspended')AC.resume();return AC}
 const COL=['#ffb3a7','#ffd59a','#fff1a6','#c9f2a8','#a8e6e0','#b3c8ff','#e2b8ff'];
 const INSTS=[
-  {id:'ranad',n:'ระนาดเอก',melo:1,lo:-3,hi:16,start:3},
-  {id:'khong',n:'ฆ้องวงใหญ่',melo:1,lo:0,hi:15,start:0},
-  {id:'thum',n:'ระนาดทุ้ม',melo:1,lo:-2,hi:16,start:0},
-  {id:'khlui',n:'ขลุ่ย',melo:1,hold:1,lo:0,hi:16,start:3},
-  {id:'sor',n:'ซอด้วง',melo:1,hold:1,lo:0,hi:16,start:3},
-  {id:'thon',n:'โทน–รำมะนา',pads:[{n:'โทน',k:0},{n:'ป๊ะ',k:1},{n:'ทั่ม',k:2},{n:'ติง',k:3}]},
+  /* ช่วงเสียงจริงของแต่ละเครื่อง ตาม TI.RANGE (ระนาดเอก 21 ลูก ซฺ…ฟํ · ขลุ่ย ด…ซํ · ซอด้วง ซ…ลํ) */
+  {id:'ranad',n:'ระนาดเอก',melo:1,d:'21 ลูก'},
+  {id:'khong',n:'ฆ้องวงใหญ่',melo:1,d:'16 ลูก'},
+  {id:'thum',n:'ระนาดทุ้ม',melo:1,d:'17 ลูก'},
+  {id:'khlui',n:'ขลุ่ย',melo:1,hold:1,d:'ด ถึง ซํ'},
+  {id:'sor',n:'ซอด้วง',melo:1,hold:1,d:'ซ ถึง ลํ'},
+  {id:'thon',n:'โทน–รำมะนา',pads:[{n:'ทั่ม',k:2},{n:'ติง',k:0},{n:'จ๊ง',k:1},{n:'จ๊ะ',k:3}]},
   {id:'drum',n:'กลองแขก',pads:[{n:'ติง',k:0},{n:'โจ๊ะ',k:1},{n:'ทั่ม',k:2},{n:'จ๊ะ',k:3}]},
   {id:'ching',n:'ฉิ่ง · ฉาบ',pads:[{n:'ฉิ่ง',k:'c1'},{n:'ฉับ',k:'c2'},{n:'ฉาบเปิด',k:'b1'},{n:'ฉาบปิด',k:'b0'},{n:'ฉาบกระทบ',k:'b2'}]}
 ];
-let cur=INSTS[0],base=3;try{const v=JSON.parse(localStorage.getItem('sapphawathit_play')||'null');if(v){cur=INSTS.find(x=>x.id===v.i)||cur;base=+v.b||cur.start||0}}catch(e){}
-const saveSt=()=>{try{localStorage.setItem('sapphawathit_play',JSON.stringify({i:cur.id,b:base}))}catch(e){}};
+INSTS.forEach(x=>{if(x.melo){x.lo=TI.RANGE[x.id][0];x.hi=TI.RANGE[x.id][1]}});
+let cur=INSTS[0];try{const v=JSON.parse(localStorage.getItem('sapphawathit_play')||'null');if(v)cur=INSTS.find(x=>x.id===v.i)||cur}catch(e){}
+const saveSt=()=>{try{localStorage.setItem('sapphawathit_play',JSON.stringify({i:cur.id}))}catch(e){}};
 
 /* ---------- เสียง ---------- */
 const held={};
@@ -103,13 +105,15 @@ let trail=[];function show(n){$('#big').textContent=n;trail.push(n);if(trail.len
 /* ---------- แผงปุ่ม ---------- */
 function build(){
   const T=$('#tabs');T.innerHTML=INSTS.map(x=>'<button role="tab" aria-selected="'+(x===cur)+'" class="'+(x===cur?'on':'')+'" data-i="'+x.id+'">'+x.n+'</button>').join('');
-  T.querySelectorAll('button').forEach(b=>b.onclick=()=>{Object.values(held).forEach(s=>s.stop());cur=INSTS.find(x=>x.id===b.dataset.i);base=cur.start||0;saveSt();build()});
-  const P=$('#pad');$('#octD').disabled=$('#octU').disabled=!cur.melo;
-  if(cur.melo){base=Math.max(cur.lo,Math.min(cur.hi-15,base));
-    let h='';for(const r of [1,0]){h+='<div class="row" style="grid-template-columns:repeat(8,minmax(0,1fr))">';for(let c=0;c<8;c++){const i=base+r*8+c;const d=((i+4)%7+7)%7;
+  T.querySelectorAll('button').forEach(b=>b.onclick=()=>{Object.values(held).forEach(s=>s.stop());cur=INSTS.find(x=>x.id===b.dataset.i);saveSt();build()});
+  const P=$('#pad');P.classList.remove('r3');
+  if(cur.melo){/* แสดงครบทุกลูกตามช่วงเสียงจริง แถวล่างเสียงต่ำสุด */
+    const n=cur.hi-cur.lo+1,rows=n<=8?1:n<=16?2:3,cols=Math.ceil(n/rows);if(rows===3)P.classList.add('r3');
+    let h='';for(let r=rows-1;r>=0;r--){h+='<div class="row" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">';for(let c=0;c<cols;c++){const i=cur.lo+r*cols+c;
+      if(i>cur.hi){h+='<span></span>';continue}const d=((i+4)%7+7)%7;
       h+='<button class="k" data-key="'+i+'" style="background:'+COL[d]+'" aria-label="โน้ต '+TI.noteName(i)+'">'+TI.noteName(i)+'</button>'}h+='</div>'}
-    P.innerHTML=h;$('#hint').textContent=cur.hold?'กดค้างเพื่อลากเสียงยาว · ปล่อยนิ้วเสียงหยุด · ลากนิ้วเพื่อเปลี่ยนโน้ต':'แถวล่างเสียงต่ำ แถวบนเสียงสูง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่ · กด ◀ ▶ เลื่อนช่วงเสียง'}
-  else{const n=cur.pads.length;P.innerHTML='<div class="row" style="grid-template-columns:repeat('+Math.min(n,n>4?3:n)+',minmax(0,1fr))">'+cur.pads.map((p,j)=>'<button class="k wide" data-key="'+p.k+'" style="background:'+COL[(j*2+1)%7]+'">'+p.n+'<small>'+(cur.id==='thon'?(j<2?'โทน':'รำมะนา'):cur.id==='drum'?(j<2?'ตัวผู้':'ตัวเมีย'):'')+'</small></button>').join('')+'</div>';
+    P.innerHTML=h;$('#hint').textContent=cur.n+' '+cur.d+' · '+(cur.hold?'กดค้างเพื่อลากเสียงยาว ปล่อยนิ้วเสียงหยุด ลากนิ้วเพื่อเปลี่ยนโน้ต':'แถวล่างเสียงต่ำ แถวบนเสียงสูง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่')}
+  else{const n=cur.pads.length;P.innerHTML='<div class="row" style="grid-template-columns:repeat('+Math.min(n,n>4?3:n)+',minmax(0,1fr))">'+cur.pads.map((p,j)=>'<button class="k wide" data-key="'+p.k+'" style="background:'+COL[(j*2+1)%7]+'">'+p.n+'<small>'+(cur.id==='drum'?(j<2?'ตัวผู้':'ตัวเมีย'):'')+'</small></button>').join('')+'</div>';
     $('#hint').textContent=cur.id==='thon'?'โทน–รำมะนา เสียงจริงที่อัดในห้อง 512 · กดสองนิ้วพร้อมกันได้':'กดได้หลายนิ้วพร้อมกัน'}
 }
 const keyOf=el=>el&&el.closest&&el.closest('.k');
@@ -121,11 +125,10 @@ function move(e){if(!(e.pointerId in touching))return;const el=keyOf(document.el
 function up(e){const k=touching[e.pointerId];if(k)k.classList.remove('dn');delete touching[e.pointerId];release(e.pointerId)}
 const pad=$('#pad');pad.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
 pad.addEventListener('contextmenu',e=>e.preventDefault());
-$('#octD').onclick=()=>{base=Math.max(cur.lo,base-7);saveSt();build()};$('#octU').onclick=()=>{base=Math.min(cur.hi-15,base+7);saveSt();build()};
-/* แป้นพิมพ์: แถวล่าง A S D F G H J K · แถวบน Q W E R T Y U I */
-const KB={a:0,s:1,d:2,f:3,g:4,h:5,j:6,k:7,q:8,w:9,e:10,r:11,t:12,y:13,u:14,i:15};
+/* แป้นพิมพ์: ไล่จากเสียงต่ำ Z X C V B N M , · A S D F G H J K · Q W E R T Y U I */
+const KB={};'zxcvbnm,asdfghjkqwertyui'.split('').forEach((c,j)=>KB[c]=j);
 window.addEventListener('keydown',e=>{if(e.repeat)return;const v=KB[e.key.toLowerCase()];if(v==null)return;
-  if(cur.melo){const el=pad.querySelector('[data-key="'+(base+v)+'"]');if(el)el.classList.add('dn');sound(base+v,'kb'+v)}
+  if(cur.melo){const i=cur.lo+v;if(i>cur.hi)return;const el=pad.querySelector('[data-key="'+i+'"]');if(el)el.classList.add('dn');sound(i,'kb'+v)}
   else if(cur.pads[v]){const el=pad.querySelectorAll('.k')[v];if(el)el.classList.add('dn');sound(cur.pads[v].k,'kb'+v)}});
 window.addEventListener('keyup',e=>{const v=KB[e.key.toLowerCase()];if(v==null)return;release('kb'+v);pad.querySelectorAll('.k.dn').forEach(x=>x.classList.remove('dn'))});
 
@@ -134,7 +137,7 @@ let recOn=false,recT0=0,recBuf=[];
 $('#rec').onclick=()=>{audio();if(!recOn){recBuf=[];recT0=performance.now();recOn=true;$('#rec').classList.add('on');$('#rec').textContent='■ หยุดอัด';$('#playR').disabled=true}
   else{recOn=false;$('#rec').classList.remove('on');$('#rec').textContent='● อัด';$('#playR').disabled=!recBuf.length}};
 $('#playR').onclick=()=>{if(!recBuf.length)return;audio();const t0=AC.currentTime+.1,first=recBuf[0].t;recBuf.forEach(n=>{const t=t0+(n.t-first)/1000;
-  if(typeof n.key==='number')TI.note(n.inst==='khlui'||n.inst==='sor'?n.inst:n.inst,n.key,t,1,.5);
+  if(TI.INST[n.inst])TI.note(n.inst,n.key,t,1,.5);
   else if(n.inst==='thon')TI.perc('thon',n.key,t,1);else if(n.inst==='drum')TI.perc('drum',n.key,t,1);
   else if(n.key==='c1'||n.key==='c2')TI.perc('ching',n.key==='c1'?1:2,t,1);else TI.perc('chab',+String(n.key).slice(1),t,1.2)})};
 /* ---------- ฉิ่งเคาะตาม (สองชั้น 70 ครั้ง/นาที) ---------- */
