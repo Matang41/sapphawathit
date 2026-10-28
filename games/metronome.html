@@ -82,7 +82,37 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
 .pi .nm span{font-size:12px;color:var(--muted)}
 .empty{font-size:13px;color:var(--muted);text-align:center;padding:6px}
 .credit{padding-top:22px;text-align:center;font-size:12px;color:rgba(217,195,212,.7)}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--cream);color:#3b2205;font-family:Mitr;padding:9px 16px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+.karaBtn{display:block;width:100%;margin-top:10px;border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(0,0,0,.25);color:var(--gold2);font-family:Mitr;font-size:15px;cursor:pointer}
+.kara{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;background:radial-gradient(120% 90% at 50% 0%,#3e2139,#140910 80%);color:var(--cream);padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.ktop{display:flex;align-items:center;gap:10px}
+.kb{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:14px;cursor:pointer}
+.kname{flex:1;text-align:center;min-width:0}
+.kname b{display:block;font-family:Mitr;font-weight:500;font-size:clamp(18px,3vw,32px);color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kname span{font-size:clamp(12px,1.6vw,18px);color:var(--muted)}
+.kmain{flex:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,3vh,34px);position:relative;min-height:0}
+.kline{display:flex;gap:clamp(6px,1.4vw,18px);justify-content:center}
+.kline.next{opacity:.35;transform:scale(.88);transform-origin:top center}
+.kbar{display:flex;gap:3px;padding:5px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(242,193,78,.18)}
+.kc{position:relative;overflow:hidden;width:var(--kw,64px);border-radius:10px;background:rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;padding:6px 0 4px;transition:background .1s,transform .1s}
+.kc .km,.kc .kf{font-family:Mitr;font-size:var(--kf,30px);line-height:1.2;position:relative;z-index:1;color:rgba(217,195,212,.3)}
+.kc .km.n0{color:var(--m1)}.kc .km.n1{color:var(--m2)}.kc .kf.n2{color:var(--f1)}.kc .kf.n3{color:var(--f2)}
+.kc .kch{font-family:Mitr;font-size:calc(var(--kf,30px)*.45);height:1.4em;line-height:1.4em;color:transparent;position:relative;z-index:1}
+.kc .kch.c1{color:var(--gold)}.kc .kch.c2{color:#ff9fc5}
+.kc .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(255,246,213,.10),rgba(255,227,154,.32));z-index:0}
+.kc.past{opacity:.38}
+.kc.cur{background:rgba(242,193,78,.18);transform:scale(1.06);box-shadow:0 0 0 2px var(--cream),0 0 26px rgba(255,214,102,.55)}
+.kc.cur .km:not(:empty),.kc.cur .kf:not(:empty){text-shadow:0 0 14px rgba(255,255,255,.5)}
+.kara.fM .kf,.kara.fF .km{opacity:.18}
+.kcount{position:absolute;inset:0;display:grid;place-items:center;font-family:Mitr;font-size:clamp(90px,22vw,260px);color:rgba(255,227,154,.92);text-shadow:0 6px 30px rgba(0,0,0,.6);pointer-events:none;z-index:5}
+.kcount:empty{display:none}
+.kbot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 18px;padding-top:8px}
+.kgrp{display:flex;align-items:center;gap:8px}
+.kgrp.col{flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.kgrp .seg button{padding:6px 10px;flex:none}
+.kbpm{text-align:center;min-width:86px}.kbpm b{display:block;font-family:Mitr;font-size:28px;color:var(--gold);line-height:1}.kbpm span{font-size:11px;color:var(--muted)}
+.kplay{border:none;border-radius:14px;padding:12px 26px;font-family:Mitr;font-size:20px;cursor:pointer;background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;box-shadow:0 4px 0 #8a5d1a}
+.kplay.on{background:linear-gradient(180deg,#ff9fb3,#d9587a);color:#fff;box-shadow:0 4px 0 #7a2340}
+.toast{z-index:40;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--cream);color:#3b2205;font-family:Mitr;padding:9px 16px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1}
 </style>
 </head>
@@ -105,9 +135,10 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
       <div><div class="bpm" id="bpmV">120</div><div class="bpmU">ตัวโน้ต / นาที</div><div class="bpmU" id="thaiT"></div></div>
       <button class="rb" id="bpmUp" aria-label="เร็วขึ้น">+</button>
     </div>
-    <input type="range" id="bpmR" min="30" max="480" step="1">
+    <input type="range" id="bpmR" min="30" max="960" step="1">
     <div class="info" id="chingInfo"></div>
     <button class="playBtn" id="play">▶ เริ่ม</button>
+    <button class="karaBtn" id="karaOpen">🎤 โหมดคาราโอเกะ — ขึ้นจอให้นักเรียนตีกลองจริงตาม</button>
   </div>
 
   <!-- ===== อัตราจังหวะ ===== -->
@@ -142,7 +173,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
   <!-- ===== เร่งจังหวะ ===== -->
   <div class="sec">
     <div class="lb">ฝึกเร่งความเร็ว <span class="r"><button class="sw" id="rampSw"></button></span></div>
-    <div class="row" style="font-size:14px;gap:6px;flex-wrap:wrap">เพิ่มทีละ <input type="number" id="rampBy" min="1" max="30" style="width:70px;padding:6px 8px"> ทุก <input type="number" id="rampEv" min="1" max="64" style="width:70px;padding:6px 8px"> ห้อง จนถึง <input type="number" id="rampTo" min="30" max="480" style="width:80px;padding:6px 8px"></div>
+    <div class="row" style="font-size:14px;gap:6px;flex-wrap:wrap">เพิ่มทีละ <input type="number" id="rampBy" min="1" max="30" style="width:70px;padding:6px 8px"> ทุก <input type="number" id="rampEv" min="1" max="64" style="width:70px;padding:6px 8px"> ห้อง จนถึง <input type="number" id="rampTo" min="30" max="960" style="width:80px;padding:6px 8px"></div>
     <div class="help">ซ้อมจากช้าแล้วค่อย ๆ เร็วขึ้นเอง เหมาะกับการซ้อมเพลงให้ได้ความเร็วจริง · กดหยุดแล้วความเร็วจะกลับไปที่ค่าเริ่ม</div>
   </div>
 
@@ -161,6 +192,26 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
   <div class="credit">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- ===== โหมดคาราโอเกะ ===== -->
+<div id="kara" class="kara hidden">
+  <div class="ktop">
+    <button class="kb" id="kExit">‹ ออก</button>
+    <div class="kname"><b id="kName"></b><span id="kMeta"></span></div>
+    <button class="kb" id="kFull" title="เต็มจอ">⛶ เต็มจอ</button>
+  </div>
+  <div class="kmain">
+    <div class="kcount" id="kCount"></div>
+    <div class="kline" id="kLine"></div>
+    <div class="kline next" id="kNext"></div>
+  </div>
+  <div class="kbot">
+    <div class="kgrp"><button class="rb" id="kDn">−</button><div class="kbpm"><b id="kBpm"></b><span id="kThai"></span></div><button class="rb" id="kUp">+</button></div>
+    <button class="kplay" id="kPlay">▶ เริ่ม</button>
+    <div class="kgrp col"><span>เสียงกลองนำ</span><div class="seg" id="kGuide"><button data-g="none">ปิด</button><button data-g="M">ตัวผู้</button><button data-g="F">ตัวเมีย</button><button data-g="both">ทั้งคู่</button></div></div>
+    <div class="kgrp col"><span>ไฮไลต์แถว</span><div class="seg" id="kFocus"><button data-f="both">ทั้งคู่</button><button data-f="M">ตัวผู้</button><button data-f="F">ตัวเมีย</button></div></div>
+  </div>
+</div>
 
 <script src="natab.js"></script>
 <script>
@@ -246,6 +297,10 @@ let run=false,timer=null,nextT=0,slot=0,vq=[],raf=0,wake=null;
 function slotDur(){return 60/S.bpm}
 function schedule(){
   while(nextT<AC.currentTime+.15){
+    if(slot<0){ // นับเข้า (โหมดคาราโอเกะ) — ฉิ่งต่อเนื่องกับช่วงแรก ยังไม่มีกลอง
+      const c=NT.countInCh(slot,TL[0].rate);if(c)ching(c===1,nextT);click(((slot%4)+4)%4===0,nextT);
+      vq.push({t:nextT,slot,k:-1,ch:c,rate:TL[0].rate,count:true});nextT+=slotDur();slot++;continue;
+    }
     const k=slot%TL.length,sl=TL[k];
     sl.l.forEach(l=>drum(l,nextT));
     if(sl.ch)ching(sl.ch===1,nextT);
@@ -259,12 +314,12 @@ function schedule(){
 function start(){
   if(!audio())return toast("เครื่องนี้เล่นเสียงไม่ได้");
   const b=AC.createBuffer(1,1,22050),s=AC.createBufferSource();s.buffer=b;s.connect(AC.destination);s.start(0);
-  run=true;slot=0;vq=[];S.rampFrom=S.bpm;nextT=AC.currentTime+.12;schedule();timer=setInterval(schedule,25);raf=requestAnimationFrame(vis);
-  $("#play").textContent="■ หยุด";$("#play").classList.add("on");
+  run=true;slot=K.open?-8:0;vq=[];S.rampFrom=S.bpm;nextT=AC.currentTime+.12;schedule();timer=setInterval(schedule,25);raf=requestAnimationFrame(vis);
+  $("#play").textContent="■ หยุด";$("#play").classList.add("on");kPlayUI();
   try{navigator.wakeLock&&navigator.wakeLock.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
 }
 function stop(){
-  run=false;clearInterval(timer);if(S.ramp.on&&S.rampFrom){S.bpm=S.rampFrom;uiBpm()}cancelAnimationFrame(raf);$("#play").textContent="▶ เริ่ม";$("#play").classList.remove("on");
+  run=false;clearInterval(timer);if(S.ramp.on&&S.rampFrom){S.bpm=S.rampFrom;uiBpm()}cancelAnimationFrame(raf);$("#play").textContent="▶ เริ่ม";$("#play").classList.remove("on");kPlayUI();if(K.open)kStopped();
   try{wake&&wake.release()}catch(e){}wake=null;$("#barNo").textContent="หยุดแล้ว";
   document.querySelectorAll("#dots i").forEach(i=>i.classList.remove("on"));
 }
@@ -276,6 +331,9 @@ function buildDots(){$("#dots").innerHTML=[0,1,2,3].map(()=>'<i></i>').join("")}
 function vis(){
   if(!run)return;const now=AC.currentTime;let cur=null;
   while(vq.length&&vq[0].t<=now)cur=vq.shift();
+  if(cur){K.cur=cur;if(K.open)kOnSlot(cur)}
+  if(K.open)kFrame(now);
+  if(cur&&cur.count){if(cur.ch){const c=$("#chingBig");c.textContent=cur.ch===1?"ฉิ่ง":"ฉับ"}$("#barNo").textContent="นับเข้า…";cur=null}
   if(cur){
     const ds=document.querySelectorAll("#dots i"),pos=cur.slot%4;
     ds.forEach((d,i)=>{d.classList.toggle("on",i===pos);d.classList.toggle("ch",i===pos&&cur.ch===1);d.classList.toggle("cb",i===pos&&cur.ch===2)});
@@ -298,8 +356,8 @@ function renderNota(bar,pos){
 /* ---------- ควบคุม ---------- */
 function uiBpm(){$("#bpmV").textContent=S.bpm;$("#bpmR").value=S.bpm;const multi=CUR&&!CUR.single,ev=RATE[S.rate].ev;
   uiThai();$("#chingInfo").textContent=(multi?"เถา: ฉิ่งเปลี่ยนอัตราตามช่วง":"ฉิ่ง–ฉับ "+Math.round(S.bpm/ev*10)/10+" ครั้ง/นาที")+" · ห้องละ "+(Math.round(240/S.bpm*100)/100)+" วินาที";save()}
-function uiThai(){$("#thaiT").textContent="เทียบจังหวะดนตรีไทย ≈ "+Math.round(S.bpm/2)+(S.bpm>260?" · ช่วงฝึกไล่นิ้ว":"")}
-function setBpm(v){S.bpm=Math.max(30,Math.min(480,Math.round(v)));uiBpm()}
+function uiThai(){kBpmUI();$("#thaiT").textContent="เทียบจังหวะดนตรีไทย ≈ "+Math.round(S.bpm/2)+(S.bpm>260?" · ช่วงฝึกไล่นิ้ว":"")}
+function setBpm(v){S.bpm=Math.max(30,Math.min(960,Math.round(v)));uiBpm()}
 $("#bpmR").addEventListener("input",e=>setBpm(+e.target.value));
 let hold=null;
 [["#bpmDn",-1],["#bpmUp",1]].forEach(([id,d])=>{const b=$(id);
@@ -331,7 +389,7 @@ function rebuild(keepText){
   const ta=$("#patIn");if(!keepText)ta.value=(CUR.txt||"").replace(/ \/ /g,"\n");ta.readOnly=!CUR.single;
   $("#patNote").textContent=CUR.p.src?"ที่มา: "+CUR.p.src+(CUR.p.tip?" · "+CUR.p.tip:""):(CUR.single?"":"");
   if(!CUR.single)$("#patNote").textContent+=" · หน้าทับเถาแก้ในช่องนี้ไม่ได้ ให้เลือกทีละอัตราแล้วแก้";
-  if(!run){renderNota(0,-1)}uiRate();
+  if(!run){renderNota(0,-1)}K.line=-1;if(K.open)kOnSlot(null);uiRate();
 }
 function allOptions(){
   const o=[{v:"b:b0",n:"ฉิ่งอย่างเดียว",g:"พื้นฐาน"}];
@@ -368,7 +426,7 @@ document.querySelectorAll(".mix input").forEach(r=>r.addEventListener("input",()
 
 function uiRamp(){$("#rampSw").classList.toggle("on",S.ramp.on);$("#rampBy").value=S.ramp.by;$("#rampEv").value=S.ramp.ev;$("#rampTo").value=S.ramp.to}
 $("#rampSw").addEventListener("click",()=>{S.ramp.on=!S.ramp.on;uiRamp();save();toast(S.ramp.on?"เปิดการเร่งความเร็ว":"ปิดการเร่งความเร็ว")});
-[["#rampBy","by",1,30],["#rampEv","ev",1,64],["#rampTo","to",30,480]].forEach(([id,k,a,b])=>$(id).addEventListener("change",e=>{S.ramp[k]=Math.max(a,Math.min(b,+e.target.value||a));uiRamp();save()}));
+[["#rampBy","by",1,30],["#rampEv","ev",1,64],["#rampTo","to",30,960]].forEach(([id,k,a,b])=>$(id).addEventListener("change",e=>{S.ramp[k]=Math.max(a,Math.min(b,+e.target.value||a));uiRamp();save()}));
 
 /* ---------- บันทึก ---------- */
 function current(name){const o={id:String(Date.now()),name,bpm:S.bpm,rate:S.rate,mix:Object.assign({},S.mix),at:Date.now()};
@@ -402,6 +460,72 @@ try{const w=window.parent!==window&&window.parent,f=w&&w.firebase;if(f&&f.apps&&
 function isTeacher(){try{return !!(window.parent.APP&&window.parent.APP.teacher())}catch(e){return false}}
 function myName(){try{return window.parent.APP.myName()||""}catch(e){return ""}}
 function loadClub(){if(!FB)return;FB.database().ref("tapPresets").once("value").then(s=>{const v=s.val()||{};club=Object.keys(v).map(k=>Object.assign({id:k},v[k])).filter(p=>p&&p.name&&(p.pid?!!NT.get(p.pid):!NT.parse(p.str||"").err)).sort((a,b)=>(b.at||0)-(a.at||0));renderLists();renderPatSel();rebuild()}).catch(()=>{})}
+
+
+/* ---------- โหมดคาราโอเกะ: ขึ้นจอใหญ่ ไฮไลต์ตัวที่ต้องตี ให้นักเรียนตีกลองจริงตาม ---------- */
+const K={open:false,line:-1,per:4,cells:[],prevMix:null,cur:null};
+const TH=["๐","๑","๒","๓","๔"];
+function kLayout(){
+  const W=window.innerWidth,H=window.innerHeight;K.per=W<720?2:4;
+  const gapL=Math.max(6,Math.min(18,W*.014)),avail=W-32-(K.per-1)*gapL-K.per*21;   // 21 = ขอบและช่องไฟในแต่ละห้อง
+  const kw=Math.max(28,Math.min(150,Math.floor(Math.min(avail/(K.per*4),H*.22))));
+  const el=$("#kara");el.style.setProperty("--kw",kw+"px");el.style.setProperty("--kf",Math.round(kw*.42)+"px");
+}
+function kLineHTML(L){
+  const per=K.per*4,from=L*per;let h="";
+  for(let b=0;b<K.per;b++){const st=from+b*4;if(st>=TL.length)break;h+='<div class="kbar">';
+    for(let j=0;j<4;j++){const i=st+j,sl=TL[i];if(!sl){h+='<div class="kc"></div>';continue}
+      const m=sl.l.filter(x=>x<2),f=sl.l.filter(x=>x>=2);
+      h+='<div class="kc" data-i="'+i+'"><i class="fill"></i><div class="km'+(m.length?" n"+m[0]:"")+'">'+(m.length?SYM[m[0]]:"·")+'</div><div class="kf'+(f.length?" n"+f[0]:"")+'">'+(f.length?SYM[f[0]]:"·")+'</div><div class="kch c'+sl.ch+'">'+(sl.ch===1?"ฉิ่ง":sl.ch===2?"ฉับ":"·")+'</div></div>'}
+    h+='</div>'}
+  return h;
+}
+function kRender(L){
+  const lines=Math.ceil(TL.length/(K.per*4));L=((L%lines)+lines)%lines;K.line=L;
+  $("#kLine").innerHTML=kLineHTML(L);$("#kNext").innerHTML=lines>1?kLineHTML((L+1)%lines):"";
+  K.cells=[...document.querySelectorAll("#kLine .kc[data-i]")];
+}
+function kOnSlot(cur){
+  const k=cur&&!cur.count?cur.k:0,L=Math.floor(k/(K.per*4));
+  if(L!==K.line)kRender(L);
+  K.cells.forEach(c=>{const i=+c.dataset.i;c.classList.toggle("past",!!cur&&!cur.count&&i<k);c.classList.toggle("cur",!!cur&&!cur.count&&i===k);const f=c.firstChild;if(f)f.style.width=(!!cur&&!cur.count&&i<k)?"100%":"0"});
+  $("#kCount").textContent=cur&&cur.count?(TH[Math.ceil(-cur.slot/2)]||""):"";
+  const sl=cur&&!cur.count?TL[k]:TL[0];
+  $("#kMeta").textContent=NT.RATE[sl?sl.rate:S.rate].n+(cur&&!cur.count?" · หน้าทับห้อง "+(Math.floor(k/4)+1)+"/"+(TL.length/4):" · "+(TL.length/4)+" ห้อง");
+}
+function kFrame(now){
+  const cur=K.cur;if(!cur||cur.count)return;const c=K.cells.find(x=>+x.dataset.i===cur.k);if(!c)return;
+  const p=Math.max(0,Math.min(1,(now-cur.t)/slotDur()));c.firstChild.style.width=(p*100)+"%";
+}
+function kStopped(){K.cur=null;$("#kCount").textContent="";K.line=-1;kOnSlot(null)}
+function kPlayUI(){const b=$("#kPlay");if(!b)return;b.textContent=run?"■ หยุด":"▶ เริ่ม";b.classList.toggle("on",run)}
+function kBpmUI(){const b=$("#kBpm");if(!b)return;b.textContent=S.bpm;$("#kThai").textContent="ตัว/นาที · ไทย ≈ "+Math.round(S.bpm/2)}
+function kGuide(g){S.kGuide=g;S.mix.drumM=g==="M"||g==="both";S.mix.drumF=g==="F"||g==="both";uiMix();applyVol();save();
+  document.querySelectorAll("#kGuide button").forEach(b=>b.classList.toggle("on",b.dataset.g===g))}
+function kFocus(fv){S.kFocus=fv;const el=$("#kara");el.classList.toggle("fM",fv==="M");el.classList.toggle("fF",fv==="F");save();
+  document.querySelectorAll("#kFocus button").forEach(b=>b.classList.toggle("on",b.dataset.f===fv))}
+function kOpen(){
+  if(run)stop();K.open=true;K.prevMix={drumM:S.mix.drumM,drumF:S.mix.drumF};
+  $("#kara").classList.remove("hidden");document.body.style.overflow="hidden";
+  $("#kName").textContent=CUR?CUR.name:"";kLayout();K.line=-1;kOnSlot(null);kBpmUI();kPlayUI();
+  kGuide(S.kGuide||"none");kFocus(S.kFocus||"both");
+}
+function kClose(){
+  if(run)stop();K.open=false;$("#kara").classList.add("hidden");document.body.style.overflow="";
+  if(K.prevMix){S.mix.drumM=K.prevMix.drumM;S.mix.drumF=K.prevMix.drumF;uiMix();applyVol();save()}
+  try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
+}
+$("#karaOpen").addEventListener("click",kOpen);
+$("#kExit").addEventListener("click",kClose);
+$("#kPlay").addEventListener("click",()=>run?stop():start());
+$("#kFull").addEventListener("click",()=>{try{const d=document.documentElement;document.fullscreenElement?document.exitFullscreen():(d.requestFullscreen||d.webkitRequestFullscreen).call(d)}catch(e){toast("เครื่องนี้ขยายเต็มจอไม่ได้ ลองหมุนจอเป็นแนวนอน")}});
+document.querySelectorAll("#kGuide button").forEach(b=>b.addEventListener("click",()=>kGuide(b.dataset.g)));
+document.querySelectorAll("#kFocus button").forEach(b=>b.addEventListener("click",()=>kFocus(b.dataset.f)));
+let kHold=null;[["#kDn",-1],["#kUp",1]].forEach(([id,d])=>{const b=$(id);
+  b.addEventListener("pointerdown",e=>{e.preventDefault();setBpm(S.bpm+d);let n=0;kHold=setInterval(()=>{n++;setBpm(S.bpm+d*(n>20?10:n>10?5:1))},120)});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>clearInterval(kHold)))});
+window.addEventListener("resize",()=>{if(K.open){kLayout();K.line=-1;kOnSlot(K.cur)}});
+document.addEventListener("keydown",e=>{if(!K.open)return;if(e.code==="Space"){e.preventDefault();run?stop():start()}else if(e.key==="Escape")kClose();else if(e.key==="ArrowUp")setBpm(S.bpm+2);else if(e.key==="ArrowDown")setBpm(S.bpm-2)});
 
 /* ---------- เริ่ม ---------- */
 buildDots();uiMix();uiRamp();renderLists();renderPatSel();rebuild();loadClub();
