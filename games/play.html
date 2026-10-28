@@ -111,7 +111,7 @@ function build(){
   if(cur.melo){/* แสดงครบทุกลูกตามช่วงเสียงจริง แถวล่างเสียงต่ำสุด */
     const n=cur.hi-cur.lo+1,rows=n<=8?1:n<=16?2:3,cols=Math.ceil(n/rows);if(rows===3)P.classList.add('r3');
     let h='';for(let r=rows-1;r>=0;r--){h+='<div class="row" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">';for(let c=0;c<cols;c++){const i=cur.lo+r*cols+c;
-      if(i>cur.hi){h+='<span></span>';continue}const d=((i+4-(cur.id==='khong'?0:2))%7+7)%7;
+      if(i>cur.hi){h+='<span></span>';continue}const d=((i+4)%7+7)%7;
       const nm=TI.label(cur.id,i);h+='<button class="k" data-key="'+i+'" style="background:'+COL[d]+'" aria-label="โน้ต '+nm+'">'+nm+'</button>'}h+='</div>'}
     P.innerHTML=h;$('#hint').textContent=cur.n+' '+(cur.d?cur.d+' ':'')+TI.label(cur.id,cur.lo)+' ถึง '+TI.label(cur.id,cur.hi)+' · '+(cur.hold?'กดค้างเพื่อลากเสียงยาว ปล่อยนิ้วเสียงหยุด ลากนิ้วเพื่อเปลี่ยนโน้ต':'แถวล่างเสียงต่ำ แถวบนเสียงสูง · ลากนิ้วผ่านหลายปุ่มเพื่อรัวไล่')}
   else{const n=cur.pads.length;P.innerHTML='<div class="row" style="grid-template-columns:repeat('+Math.min(n,n>4?3:n)+',minmax(0,1fr))">'+cur.pads.map((p,j)=>'<button class="k wide" data-key="'+p.k+'" style="background:'+COL[(j*2+1)%7]+'">'+p.n+'<small>'+(cur.id==='drum'?(j<2?'ตัวผู้':'ตัวเมีย'):'')+'</small></button>').join('')+'</div>';

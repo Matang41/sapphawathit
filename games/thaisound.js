@@ -10,15 +10,17 @@
   /* ---------- ฆ้องวงใหญ่ ---------- */
   /* วัดจากเสียงตีไล่ฆ้องวงใหญ่จริง · ตรงกับผังช่วงเสียงเครื่องดนตรีไทย (ลูกทวนอยู่ระดับเดียวกับลูกระนาดเอกลูกที่ 6) */
   const KF = [280, 312, 344, 377, 420, 452, 517, 560, 624, 689, 754, 829, 915, 1023, 1130, 1238];
-  /* ชื่อเสียงของลูกฆ้อง จากลูกต่ำสุด (ลูกทวน) ไปสูงสุด · ฺ = เสียงต่ำ  ํ = เสียงสูง */
+  /* ชื่อโน้ต 16 ตัวบนแป้นบันทึกโน้ต (n = 0–15) · ฆ้องวงใหญ่จริงของชมรมมีลูก มฺ ถึง ฟํ (ลูกทวน = มฺ = n -2)
+     KF[k] = ความถี่ลูกฆ้องจริงลูกที่ k (k = n + 2) · ฺ = เสียงต่ำ  ํ = เสียงสูง */
   const KNOTE = ['ซฺ', 'ลฺ', 'ทฺ', 'ด', 'ร', 'ม', 'ฟ', 'ซ', 'ล', 'ท', 'ดํ', 'รํ', 'มํ', 'ฟํ', 'ซํ', 'ลํ'];
   function mode(out, f, amp, tau, t, att) {
     const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = f; att = att || .003;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + att); g.gain.setTargetAtTime(0, t + att, tau);
     o.connect(g); g.connect(out); o.start(t); o.stop(t + tau * 7 + .05);
   }
-  function khong(i, t, v, out) {
-    if (!AC) return; out = out || OUT; t = Math.max(t || 0, AC.currentTime); const k = Math.max(0, Math.min(15, i)), f = KF[k]; v = (v == null ? 1 : v) * .62;
+  /* TS.khong(n): ตีลูกฆ้องที่มีชื่อโน้ต n (ด = 3) · โน้ตที่เกินฆ้อง (มฺ–ฟํ) ทบช่วงเสียงเข้ามา */
+  function khong(n, t, v, out) {
+    if (!AC) return; out = out || OUT; t = Math.max(t || 0, AC.currentTime); let k = Math.round(n) + 2; while (k < 0) k += 7; while (k > 15) k -= 7; const f = KF[k]; v = (v == null ? 1 : v) * .62;
     const tau1 = .65 - .022 * k, tau2 = .5 - .021 * k, r2 = 1.87 - .0173 * k;
     /* เสียงฆ้องเปล่า ๆ: เสียงหลัก + เสียงย่อยของตัวฆ้อง ไม่มีเอฟเฟค (ไม่มีเสียงสั่นพลิ้ว เสียงแหลม หรือเสียงไม้กระทบ) */
     mode(out, f, .62 * v, tau1, t); mode(out, f * r2, .14 * v, tau2, t);
@@ -67,5 +69,7 @@
     noiseBuf = AC.createBuffer(1, AC.sampleRate * .5, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     loadChing();
   }
-  window.TS = { init, khong, drum, ching, KF, KNOTE };
+  /* ความถี่ของชื่อโน้ต n (ด = 3) ตามฆ้องจริง ต่อช่วงทบได้ไม่จำกัด */
+  function F(n) { let k = Math.round(n) + 2, r = 1; while (k < 0) { k += 7; r /= 2 } while (k > 15) { k -= 7; r *= 2 } return KF[k] * r }
+  window.TS = { init, khong, drum, ching, KF, KNOTE, F };
 })();

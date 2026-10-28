@@ -246,7 +246,7 @@ const sfx={
   glitch(){if(!AC)return;const t=AC.currentTime;for(let i=0;i<6;i++)tone(rnd(150,900),t+i*.05,.09,'sawtooth',.05,null,rnd(80,1200))},
   count(t){tone(1500,t,.04,'square',.05)}
 };
-function ranad(i,t,v){if(window.TS2&&TS2.ranadKey(rfold(Math.round(i),-5,15)+5,t,(v||1)*.85))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)]*2;v=(v||1)*.5;
+function ranad(i,t,v){if(window.TS2&&TS2.ranadKey(rfold(Math.round(i),-7,13)+7,t,(v||1)*.85))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)]*2;v=(v||1)*.5;
   [[f,1,.11],[f*3.93,.25,.035],[f*2.01,.12,.06]].forEach(([fr,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fr;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.002);g.gain.setTargetAtTime(0,t+.002,tau);o.connect(g);g.connect(SFX);o.start(t);o.stop(t+tau*8)});
   noise(t,.02,3500,.12*v,2)}
 
@@ -1320,15 +1320,15 @@ function sp2(lines){return lines.map(([w,t])=>[w==='L'?S.lead:(w&&w[0]==='?')?(i
 async function talk2(lines){await talk(sp2(lines))}
 
 /* ---- เสียงเครื่องดนตรีใหม่ (สังเคราะห์ไว้ก่อน รอเสียงจริง) ---- */
-function thum(i,t,v){if(window.TS2&&TS2.thum(rfold(Math.round(i),-7,9)+12,t,(v||1)*.9))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)];v=(v||1)*.55;
+function thum(i,t,v){if(window.TS2&&TS2.thum(rfold(Math.round(i),-9,7)+14,t,(v||1)*.9))return;if(!AC)return;t=Math.max(t||0,AC.currentTime);const f=TS.KF[clamp(i,0,15)];v=(v||1)*.55;
   [[f,1,.24],[f*2.92,.16,.05],[f*2,.14,.09]].forEach(([fr,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=fr;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.004);g.gain.setTargetAtTime(0,t+.004,tau);o.connect(g);g.connect(SFX);o.start(t);o.stop(t+tau*8)});noise(t,.02,1800,.08*v,2)}
 function reed(f,t,dur,v,type,bp,vib){if(!AC)return;t=Math.max(t||0,AC.currentTime);const o=AC.createOscillator(),o2=AC.createOscillator(),lfo=AC.createOscillator(),lg=AC.createGain(),fl=AC.createBiquadFilter(),g=AC.createGain();
   o.type=type;o2.type='square';o.frequency.setValueAtTime(f*.985,t);o.frequency.linearRampToValueAtTime(f,t+.04);o2.frequency.value=f*1.003;lfo.frequency.value=5.6;lg.gain.value=f*vib;lfo.connect(lg);lg.connect(o.frequency);lg.connect(o2.frequency);
   fl.type='bandpass';fl.frequency.value=bp;fl.Q.value=.9;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.03);g.gain.setValueAtTime(v*.85,t+dur);g.gain.exponentialRampToValueAtTime(.0005,t+dur+.12);
   const m=AC.createGain();m.gain.value=.5;o.connect(fl);o2.connect(m);m.connect(fl);fl.connect(g);g.connect(SFX);[o,o2,lfo].forEach(x=>{x.start(t);x.stop(t+dur+.15)})}
 function pinae(i,t,v){const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.22,.16*(v||1),'sawtooth',f*2.2,.012)}
-function sor(i,t,v,dur){if(window.TS2&&TS2.sor(TS.KF[rfold(clamp(i,0,15),9,15)],t,dur||.42,(v||1)*.85))return;const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.26,.11*(v||1),'sawtooth',f*1.6,.008)}
-function khlui(i,t,v,dur){const f=TS.KF[rfold(clamp(i,0,15),5,15)];if(window.TS2&&TS2.khlui(f,t,dur||.45,(v||1)*.9))return;reed(f,t,dur||.4,.1*(v||1),'triangle',f*2,.01)}
+function sor(i,t,v,dur){if(window.TS2&&TS2.sor(TS.F(rfold(Math.round(i),7,21)),t,dur||.42,(v||1)*.85))return;const f=TS.KF[clamp(i,0,15)]*2;reed(f,t,.26,.11*(v||1),'sawtooth',f*1.6,.008)}
+function khlui(i,t,v,dur){const f=TS.F(rfold(Math.round(i),3,17));if(window.TS2&&TS2.khlui(f,t,dur||.45,(v||1)*.9))return;reed(f,t,dur||.4,.1*(v||1),'triangle',f*2,.01)}
 function voice(i,t,v,dur){const f=TS.KF[clamp(i,0,15)]*(1+rnd(-.05,.06));reed(f,t,dur||.32,.13*(v||1),'triangle',f*2.6,.03);reed(f*1.5*(1+rnd(-.03,.03)),t,dur||.32,.04*(v||1),'sine',f*3,.02)}
 function taphon(l,t,v){if(!AC)return;t=Math.max(t||0,AC.currentTime);v=(v||1);if(l===0){tone(95,t,.45,'sine',.32*v,null,62);noise(t,.05,300,.25*v,1)}else{tone(240,t,.16,'triangle',.16*v,null,170);noise(t,.04,2600,.3*v,1.5)}}
 function thonS(l,t,v){if(window.TS2&&TS2.thon(l,t,(v||1)*.95))return;TS.drum(l,t,v)}
