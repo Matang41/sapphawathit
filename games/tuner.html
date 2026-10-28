@@ -44,7 +44,7 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:28px;color:var(--gold);te
 <body>
 <div class="wrap">
   <h1>เทียบเสียง</h1>
-  <div class="sub">ใช้ระดับเสียงวงของชมรม (ระนาดเอกและฆ้องวงใหญ่ห้อง 512)</div>
+  <div class="sub">ใช้ระดับเสียงวงของชมรม (ระนาดเอกและฆ้องวงใหญ่ห้อง 512) · ชื่อโน้ตเรียกตามระดับเพียงออ แบบขลุ่ยและซอ</div>
 
   <div class="sec">
     <div class="lb">1 · เปิดเสียงอ้างอิง</div>
@@ -54,8 +54,8 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:28px;color:var(--gold);te
     <div class="row">ช่วงเสียง <div class="seg" id="oct" style="flex:1"><button data-o="-7">ต่ำ</button><button data-o="0" class="on">กลาง</button><button data-o="7">สูง</button></div></div>
     <div class="notes" id="notes"></div>
     <div class="pre">
-      <button data-p="7,11"><b>ตั้งสายซอด้วง</b>สายทุ้ม ซ · สายเอก รํ</button>
-      <button data-p="-4,0"><b>ตั้งสายซออู้</b>สายทุ้ม ดฺ · สายเอก ซฺ</button>
+      <button data-p="9,13"><b>ตั้งสายซอด้วง</b>สายทุ้ม ซ · สายเอก รํ</button>
+      <button data-p="5,9"><b>ตั้งสายซออู้</b>สายทุ้ม ด · สายเอก ซ</button>
     </div>
     <div class="help">แตะโน้ตเพื่อเปิดเสียง แตะซ้ำเพื่อปิด · ปุ่มตั้งสายจะเปิดสองเสียงสลับกันให้เทียบทีละสาย</div>
   </div>
@@ -88,7 +88,7 @@ function stopAll(){if(cur){cur.stop();cur=null}clearInterval(alt);alt=null;curI=
 function tone(i){audio();if(cur){cur.stop();cur=null}
   if(src==='ranad'||src==='khong'){TI.note(src,i,0,1);return null}
   cur=TS2.sustain(src,TI.freq(i),src==='sine'?1:.9);curI=i;return cur}
-function renderNotes(){const N=$('#notes');N.innerHTML='';for(let d=0;d<8;d++){const i=3+d+oct;const b=document.createElement('button');b.innerHTML=TI.noteName(i)+'<small>'+Math.round(TI.freq(i))+' Hz</small>';b.dataset.i=i;
+function renderNotes(){const N=$('#notes');N.innerHTML='';for(let d=0;d<8;d++){const i=5+d+oct;const b=document.createElement('button');b.innerHTML=TI.label('khlui',i)+'<small>'+Math.round(TI.freq(i))+' Hz</small>';b.dataset.i=i;
   b.onclick=()=>{const was=b.classList.contains('on');stopAll();if(was)return;if(tone(i)!==null||src==='ranad'||src==='khong'){if(src!=='ranad'&&src!=='khong')b.classList.add('on')}};N.appendChild(b)}}
 $$('#src button').forEach(b=>b.onclick=()=>{stopAll();$$('#src button').forEach(x=>x.classList.toggle('on',x===b));src=b.dataset.s});
 $$('#oct button').forEach(b=>b.onclick=()=>{stopAll();$$('#oct button').forEach(x=>x.classList.toggle('on',x===b));oct=+b.dataset.o;renderNotes()});
@@ -114,7 +114,7 @@ $('#mic').onclick=async()=>{
   const buf=new Float32Array(an.fftSize);
   const loop=()=>{if(!micOn)return;an.getFloatTimeDomainData(buf);const f=acf(buf,AC.sampleRate);
     if(f>0){hist.push(f);if(hist.length>5)hist.shift();const fm=hist.slice().sort((a,b)=>a-b)[Math.floor(hist.length/2)];const r=nearestRef(fm),cents=1200*Math.log2(fm/r.f);
-      $('#nn').textContent=TI.noteName(r.i);$('#hz').textContent=fm.toFixed(1)+' Hz · เสียงวง '+r.f.toFixed(1)+' Hz';
+      $('#nn').textContent=TI.label('khlui',r.i);$('#hz').textContent=fm.toFixed(1)+' Hz · เสียงวง '+r.f.toFixed(1)+' Hz';
       $('#needle').style.left=Math.max(2,Math.min(98,50+cents))+'%';
       $('#msg').textContent=Math.abs(cents)<=10?'ตรงแล้ว ✓':cents<0?'ต่ำไป '+Math.round(-cents)+' เซนต์ · ขันขึ้นอีกนิด':'สูงไป '+Math.round(cents)+' เซนต์ · ผ่อนลงอีกนิด';
       $('#msg').style.color=Math.abs(cents)<=10?'#7ee081':'#ffd77a'}

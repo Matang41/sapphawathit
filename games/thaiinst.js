@@ -4,6 +4,7 @@
    ต้องโหลด thaisound.js, thaisound2.js และ natab.js ก่อน
      TI.init(audioContext, outputNode)
      TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง โน้ตเกินช่วงเสียงจริงทบช่วงให้
+     TI.label(inst, i)                  ชื่อโน้ตที่ผู้เล่นเครื่องนั้นเรียก (ฆ้องตามโน้ตชมรม · ระนาด ขลุ่ย ซอ ตามระดับเพียงออ)
      TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum
      TI.songs()                         เพลงจากสื่อของชมรม + ร่างในเครื่อง
      TI.timeline(packedSong)            ช่องโน้ตทั้งเพลง พร้อมฉิ่งและหน้าทับของแต่ละช่อง
@@ -11,9 +12,10 @@
 (function () {
   'use strict';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  /* ช่วงเสียงจริงของแต่ละเครื่อง (ลูกฆ้อง i: 0 = ซฺ · 3 = ด · 15 = ลํ) โน้ตที่เกินช่วงจะทบช่วงเสียงเข้ามาเหมือนนักดนตรีจริง
-     ระนาดเอก 21 ลูก ซฺ…ฟํ · ระนาดทุ้ม 17 ลูก · ขลุ่ย ด…ซํ · ซอด้วง ซ…ลํ · ฆ้องวงใหญ่ 16 ลูก ซฺ…ลํ */
-  const RANGE = { ranad: [-7, 13], thum: [-7, 9], khlui: [3, 14], sor: [7, 15], khong: [0, 15], khongS: [0, 15] };
+  /* ช่วงเสียงจริงของแต่ละเครื่อง ตาม “ผังช่วงเสียงเครื่องดนตรีไทย” ที่ครูให้มา
+     i = ลูกฆ้องวงใหญ่ (0 = ลูกทวน · 15 = ลูกยอด) ทุกเครื่องเล่นระดับเสียงจริงเดียวกัน โน้ตเกินช่วงทบช่วงเสียงเข้ามาเหมือนนักดนตรีจริง
+     ระนาดเอก 21 ลูก (ผังเขียนสูงกว่าเสียงจริงหนึ่งช่วงทบ) · ระนาดทุ้ม 17 ลูก · ฆ้องวงเล็ก 18 ลูก · ขลุ่ยเพียงออ · ซอด้วง · ซออู้ */
+  const RANGE = { ranad: [-5, 15], thum: [-7, 9], khong: [0, 15], khongS: [5, 22], khlui: [5, 19], sor: [9, 23], sorU: [5, 19] };
   function fold(i, inst) { const r = RANGE[inst]; if (!r) return i; while (i < r[0]) i += 7; while (i > r[1]) i -= 7; return clamp(i, r[0], r[1]) }
   let AC = null, OUT = null;
   function init(ac, out) { AC = ac; OUT = out || ac.destination; TS.init(ac, OUT); if (window.TS2) TS2.init(ac, OUT); }
@@ -25,23 +27,23 @@
     khlui: { n: 'ขลุ่ย', s: 'ขลุ่ย', hold: true },
     sor: { n: 'ซอด้วง', s: 'ซอ', hold: true }
   };
-  /* ฆ้องวงเล็ก: เสียงฆ้องแบบโมดัล สูงกว่าฆ้องวงใหญ่หนึ่งช่วงทบ */
+  /* ฆ้องวงเล็ก: เสียงฆ้องแบบโมดัล ไม่มีเอฟเฟค */
   function gongF(f, t, v, out) {
     if (!AC) return; t = Math.max(t || 0, AC.currentTime); v = (v == null ? 1 : v) * .5; out = out || OUT;
     const md = (fr, a, tau, att) => { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = fr; att = att || .003;
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a * v, t + att); g.gain.setTargetAtTime(0, t + att, tau); o.connect(g); g.connect(out); o.start(t); o.stop(t + tau * 7 + .05); };
-    md(f, .55, .34); md(f * 1.004, .12, .3); md(f * 1.72, .14, .2); md(f * 5.2, .05, .06, .001);
+    md(f, .6, .34); md(f * 1.72, .14, .2);
   }
   function note(inst, i, t, v, dur, out) {
     i = Math.round(i); v = v == null ? 1 : v; out = out || OUT; const T2 = window.TS2;
     i = fold(i, inst);
-    /* ลูกระนาด k = ลูกฆ้อง i + 7 (ลูกระนาดลูกที่ 0 = ซฺ ลูกทวน) */
-    if (inst === 'ranad' && T2 && T2.ranadKey(i + 7, t, v * .85, out)) return;
-    if (inst === 'thum' && T2 && T2.thum(i + 7, t, v * .9, out)) return;
+    /* ลูกระนาดเอก k = ลูกฆ้อง i + 5 (ระดับเสียงเดียวกัน) · ระนาดทุ้มใช้ลูก i+12 เล่นช้าลงครึ่งหนึ่ง = ระดับเสียง i */
+    if (inst === 'ranad' && T2 && T2.ranadKey(i + 5, t, v * .85, out)) return;
+    if (inst === 'thum' && T2 && T2.thum(i + 12, t, v * .9, out)) return;
     if (inst === 'khlui' && T2 && T2.khlui(freq(i), t, dur || .5, v * .9, out)) return;
     if (inst === 'sor' && T2 && T2.sor(freq(i), t, dur || .45, v * .85, out)) return;
+    if (inst === 'khongS') { gongF(freq(i), t, v, out); return; }
     i = clamp(i, 0, 15);
-    if (inst === 'khongS') { gongF(TS.KF[i] * 2, t, v, out); return; }
     TS.khong(i, t, v, out);
   }
   function perc(kind, k, t, v, out) {
@@ -92,10 +94,14 @@
   }
   /* ชื่อโน้ตของลูกที่ i (ลูกฆ้อง 0 = ซฺ) ใช้ได้ทั้งต่ำกว่า 0 และสูงกว่า 15 */
   const NM = ['ด', 'ร', 'ม', 'ฟ', 'ซ', 'ล', 'ท'];
-  /* ใช้จุดเดียวตามการเขียนโน้ตของชมรม (ระนาด: ซฺลฺทฺดฺรฺมฺฟฺซฺลฺทฺ ดรมฟซลท ดํรํมํฟํ) */
-  function noteName(i) { const d = ((i + 4) % 7 + 7) % 7, o = Math.floor((i + 4) / 7); return NM[d] + (o <= 0 ? 'ฺ' : o >= 2 ? 'ํ' : '') }
+  /* จุดล่างใช้จุดเดียว (ระนาด: ซฺลฺทฺดฺรฺมฺฟฺซฺลฺทฺ ดรมฟซลท ดํรํมํฟํ) · สูงเกินสองช่วงทบใช้สองจุด */
+  function noteName(i) { const d = ((i + 4) % 7 + 7) % 7, o = Math.floor((i + 4) / 7); return NM[d] + (o <= 0 ? 'ฺ' : o === 2 ? 'ํ' : o >= 3 ? 'ํํ' : '') }
+  /* ชื่อเรียกตามระดับเสียงเพียงออ (ระนาด ขลุ่ย ซอ ตามผังช่วงเสียง) ต่ำกว่าชื่อลูกฆ้องสองเสียง:
+     ลูกทวนฆ้องวงใหญ่ (ซฺ ในโน้ตของชมรม) = มฺ · ขลุ่ยปิดหมด ด = ม ของฆ้อง */
+  const STD = { ranad: 1, thum: 1, khongS: 1, khlui: 1, sor: 1, sorU: 1 };
+  function label(inst, i) { return STD[inst] ? noteName(i - 2) : noteName(i) }
   /* ความถี่ของลูกที่ i ตามเสียงวงของชมรม (ระนาดเอกที่อัดไว้ ลูก i+5) */
-  function freq(i) { const F = window.TS2 && TS2.RANADF; let k = i + 7, r = 1; if (F) { while (k > 21) { k -= 7; r *= 2 } while (k < 0) { k += 7; r /= 2 } if (F[k]) return F[k] * r } return TS.KF[clamp(i, 0, 15)] }
+  function freq(i) { const F = window.TS2 && TS2.RANADF; let k = i + 5, r = 1; if (F) { while (k > 21) { k -= 7; r *= 2 } while (k < 0) { k += 7; r /= 2 } if (F[k]) return F[k] * r } return TS.KF[clamp(i, 0, 15)] }
   const THON = (window.TS2 && TS2.THON_NAMES) || ['ติง', 'จ๊ง', 'ทั่ม', 'จ๊ะ'];
-  window.TI = { init, INST, RANGE, fold, THON, note, perc, songs, timeline, decBars, noteName, freq, KNOTE: () => TS.KNOTE };
+  window.TI = { init, INST, RANGE, fold, THON, note, perc, songs, timeline, decBars, noteName, label, freq, KNOTE: () => TS.KNOTE };
 })();

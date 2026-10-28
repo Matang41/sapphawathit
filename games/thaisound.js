@@ -8,8 +8,8 @@
   'use strict';
   let AC = null, OUT = null, noiseBuf = null, lastCh = null; const SB = {};
   /* ---------- ฆ้องวงใหญ่ ---------- */
-  /* ตั้งเสียงตรงกับระนาดเอกและขลุ่ยของชมรมที่อัดจริง (ด = 459 Hz) */
-  const KF = [341, 376, 415, 459, 505, 559, 616, 681, 753, 834, 915, 1011, 1118, 1230, 1366, 1508];
+  /* วัดจากเสียงตีไล่ฆ้องวงใหญ่จริง · ตรงกับผังช่วงเสียงเครื่องดนตรีไทย (ลูกทวนอยู่ระดับเดียวกับลูกระนาดเอกลูกที่ 6) */
+  const KF = [280, 312, 344, 377, 420, 452, 517, 560, 624, 689, 754, 829, 915, 1023, 1130, 1238];
   /* ชื่อเสียงของลูกฆ้อง จากลูกต่ำสุด (ลูกทวน) ไปสูงสุด · ฺ = เสียงต่ำ  ํ = เสียงสูง */
   const KNOTE = ['ซฺ', 'ลฺ', 'ทฺ', 'ด', 'ร', 'ม', 'ฟ', 'ซ', 'ล', 'ท', 'ดํ', 'รํ', 'มํ', 'ฟํ', 'ซํ', 'ลํ'];
   function mode(out, f, amp, tau, t, att) {
@@ -20,10 +20,8 @@
   function khong(i, t, v, out) {
     if (!AC) return; out = out || OUT; t = Math.max(t || 0, AC.currentTime); const k = Math.max(0, Math.min(15, i)), f = KF[k]; v = (v == null ? 1 : v) * .62;
     const tau1 = .65 - .022 * k, tau2 = .5 - .021 * k, r2 = 1.87 - .0173 * k;
-    mode(out, f, .55 * v, tau1, t); mode(out, f * 1.0035, .12 * v, tau1 * .9, t); mode(out, f * r2, .16 * v, tau2, t);
-    const f3 = f * (10.2 - .32 * k); if (f3 < 9000) mode(out, f3, .07 * v, .15, t, .001);
-    const s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = noiseBuf; fl.type = 'lowpass'; fl.frequency.value = 1800;
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.18 * v, t + .001); g.gain.setTargetAtTime(0, t + .001, .012); s.connect(fl); fl.connect(g); g.connect(out); s.start(t); s.stop(t + .12);
+    /* เสียงฆ้องเปล่า ๆ: เสียงหลัก + เสียงย่อยของตัวฆ้อง ไม่มีเอฟเฟค (ไม่มีเสียงสั่นพลิ้ว เสียงแหลม หรือเสียงไม้กระทบ) */
+    mode(out, f, .62 * v, tau1, t); mode(out, f * r2, .14 * v, tau2, t);
   }
   /* ---------- กลองแขก (0 ติง · 1 โจ๊ะ · 2 ทั่ม · 3 จ๊ะ) ---------- */
   const DR=[
@@ -35,14 +33,15 @@
   function drum(l, t, v, out) {
     if (!AC) return; out = out || OUT; t = Math.max(t || 0, AC.currentTime);
     const d = DR[l]; if (!d) return; v = (v == null ? 1 : v) * d.g;
-    const pn = AC.createStereoPanner ? AC.createStereoPanner() : null; if (pn) { pn.pan.value = l < 2 ? .55 : -.55; pn.connect(out); out = pn; }
     d.p.forEach(([f0, f1, a, tau]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine';
-      o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.setTargetAtTime(f1, t, .06);
+      o.frequency.setValueAtTime(f0, t);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a * v, t + .002); g.gain.setTargetAtTime(0, t + .002, tau);
       o.connect(g); g.connect(out); o.start(t); o.stop(t + .002 + tau * 7); });
+    /* ไม่มีเอฟเฟค (ไม่แพนซ้ายขวา ไม่ไล่ระดับเสียง) · เหลือเสียงมือกระทบหนังสั้น ๆ เฉพาะเสียงปิด (โจ๊ะ จ๊ะ) */
+    if (l === 0 || l === 2) return;
     const [c, q, a, dur] = d.n, s = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
     s.buffer = noiseBuf; fl.type = 'bandpass'; fl.frequency.value = c; fl.Q.value = q;
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a * v * 1.6, t + .001); g.gain.setTargetAtTime(0, t + .001, dur / 2.3);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a * v * .7, t + .001); g.gain.setTargetAtTime(0, t + .001, dur / 4);
     s.connect(fl); fl.connect(g); g.connect(out); s.start(t); s.stop(t + dur * 4);
   }
   /* ---------- ฉิ่ง–ฉับ (เสียงจริง) ---------- */

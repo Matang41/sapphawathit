@@ -264,15 +264,15 @@ const DR=[
 ];
 function drumTo(out,l,t,v){
   const d=DR[l];if(!d)return;v=(v==null?1:v)*d.g;
-  const pn=AC.createStereoPanner?AC.createStereoPanner():null;   // ตัวผู้อยู่ขวา ตัวเมียอยู่ซ้าย (ตามที่นั่งในวง) ช่วยให้แยกเสียงที่ตีพร้อมกันได้
-  if(pn){pn.pan.value=l<2?.55:-.55;pn.connect(out);out=pn}
   d.p.forEach(([f0,f1,a,tau])=>{const o=AC.createOscillator(),g=AC.createGain();o.type="sine";
-    o.frequency.setValueAtTime(f0,t);if(f1!==f0)o.frequency.setTargetAtTime(f1,t,.06);
+    o.frequency.setValueAtTime(f0,t);
     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v,t+.002);g.gain.setTargetAtTime(0,t+.002,tau);
     o.connect(g);g.connect(out);o.start(t);o.stop(t+.002+tau*7)});
+  /* ไม่มีเอฟเฟค (ไม่แพนซ้ายขวา ไม่ไล่ระดับเสียง) · เหลือเสียงมือกระทบหนังสั้น ๆ เฉพาะเสียงปิด (โจ๊ะ จ๊ะ) */
+  if(l===0||l===2)return;
   const [c,q,a,dur]=d.n,s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();
   s.buffer=noiseBuf;fl.type="bandpass";fl.frequency.value=c;fl.Q.value=q;
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v*1.6,t+.001);g.gain.setTargetAtTime(0,t+.001,dur/2.3);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*v*.7,t+.001);g.gain.setTargetAtTime(0,t+.001,dur/4);
   s.connect(fl);fl.connect(g);g.connect(out);s.start(t);s.stop(t+dur*4);
 }
 function drum(l,t){drumTo(l<2?bus.drumM:bus.drumF,l,t,1)}

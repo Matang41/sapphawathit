@@ -244,7 +244,7 @@ function audio(){
 }
 /* เสียงฆ้องวงใหญ่ 16 ลูก — ความถี่และลักษณะเสียงวัดจากเสียงตีไล่ฆ้องวงใหญ่จริง (ลูกต่ำ → สูง)
    แต่ละลูกห่างกันประมาณ 1/7 ช่วงทบเสียง ตามระบบเสียงดนตรีไทย */
-const KF=[341,376,415,459,505,559,616,681,753,834,915,1011,1118,1230,1366,1508];
+const KF=[280,312,344,377,420,452,517,560,624,689,754,829,915,1023,1130,1238];
 const freq=i=>KF[Math.max(0,Math.min(15,i))];
 function tone(f,type,amp,dur,t,attack){
   const o=ctx.createOscillator(),g=ctx.createGain();
@@ -264,14 +264,9 @@ function strike(i,vol){
   if(!audio())return;
   const t=ctx.currentTime,k=Math.max(0,Math.min(15,i)),f=freq(k),v=(vol||1)*.62;
   const tau1=.65-.022*k,tau2=.5-.021*k,r2=1.87-.0173*k;
-  mode(f,.55*v,tau1,t);                 // เสียงหลัก
-  mode(f*1.0035,.12*v,tau1*.9,t);       // เสียงสั่นพลิ้ว (beating) ของฆ้องจริง
-  mode(f*r2,.16*v,tau2,t);              // เสียงย่อยที่สอง (สูงกว่าเสียงหลัก 1.6–1.9 เท่า)
-  const f3=f*(10.2-.32*k);if(f3<9000)mode(f3,.07*v,.15,t,.001);  // เสียงโลหะแหลมของปุ่มฆ้อง หายเร็ว
-  // เสียงไม้ตีกระทบ
-  if(!nbuf){nbuf=ctx.createBuffer(1,ctx.sampleRate*.2,ctx.sampleRate);const d=nbuf.getChannelData(0);for(let j=0;j<d.length;j++)d[j]=Math.random()*2-1}
-  const s=ctx.createBufferSource(),fl=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=nbuf;fl.type="lowpass";fl.frequency.value=1800;
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18*v,t+.001);g.gain.setTargetAtTime(0,t+.001,.012);s.connect(fl);fl.connect(g);g.connect(master);s.start(t);s.stop(t+.12);
+  /* เสียงฆ้องเปล่า ๆ ไม่มีเอฟเฟค: เสียงหลัก + เสียงย่อยของตัวฆ้อง */
+  mode(f,.62*v,tau1,t);
+  mode(f*r2,.14*v,tau2,t);
 }
 function buzz(){
   if(!audio())return;
