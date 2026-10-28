@@ -3,6 +3,7 @@
    หน้าที่: อ่านคิว c/{ชมรม}/pushq ในฐานข้อมูล → เลือกผู้รับ → ส่งผ่าน Firebase Cloud Messaging → ลบคิว
             และเตือนล่วงหน้าหนึ่งวันก่อนกิจกรรม (ทุกวัน 17.00 น.)
 
+   หน้าที่เพิ่มในรุ่น 3.6: ชวนกลับนักเรียนที่หายไปจากแอป 7/14/30 วัน · คำชมเมื่อเข้าแอปต่อเนื่อง · สรุปการเข้าแอปในรายงานวันศุกร์
    หน้าที่เพิ่มในรุ่น 3.5: กล่องแจ้งเตือนในแอป · เตือนซ้ำคนที่ยังไม่ทำ · สรุปรายสัปดาห์ถึงครู · สำรองฐานข้อมูลลง Google Drive ทุกคืน
    ★ อัปเดตจากรุ่นก่อน: วางไฟล์นี้ทับของเดิม › เรียกใช้ setup อีกครั้ง (จะถามสิทธิ์ Google Drive) › ทำให้ใช้งานได้ › จัดการ › แก้ไข › เวอร์ชันใหม่
 
@@ -25,7 +26,8 @@ const DEFAULT_YEAR = '2569';
 const TZ = 'Asia/Bangkok';
 const FROM_STUDENT = { leave: 1, griev: 1, tx: 1, att: 1, join: 1, ct: 1 };     // ตัวส่งแต่งข้อความเอง ส่งถึงครู
 const STAFF_OK = { ann: 1, ev: 1 };                                               // กรรมการส่งถึงสมาชิกได้
-const GROUP = { ann: 'ann', msg: 'ann', ev: 'ev', poll: 'poll', leaveok: 'own', cert: 'own', ctreq: 'own' };   // หมวดที่นักเรียนเลือกปิดได้
+const GROUP = { ann: 'ann', msg: 'ann', ev: 'ev', poll: 'poll', leaveok: 'own', cert: 'own', ctreq: 'own' };
+const AWAY_STEPS = [7, 14, 30];   // ชวนกลับเมื่อหายไปครบกี่วัน (ขั้นละครั้งเดียว)   // หมวดที่นักเรียนเลือกปิดได้
 
 function doGet() { let r; try { r = run(); } catch (e) { r = 'error'; console.error(e); } return ContentService.createTextOutput(String(r)); }
 
@@ -145,6 +147,7 @@ function remind() {
     due.forEach(id => { const e = evs[id], sids = e.people ? Object.keys(e.people) : cx.active();
       n += send_(cx.stu(sids, 'ev'), { title: 'พรุ่งนี้: ' + e.title, body: [e.start ? 'เวลา ' + e.start + (e.end ? '–' + e.end : '') : '', e.place ? 'ณ ' + e.place : ''].filter(String).join(' ') || CLUBS[cid], url: PAGE[cid] + '#/ev/' + id, tag: 'rem-' + id }); });
     try { n += nudge_(cid, cx, year); } catch (e) { console.error('nudge', cid, e); }
+    try { n += comeback_(cid, cx, year, evs); } catch (e) { console.error('comeback', cid, e); }
   });
   console.log('remind sent ' + n); return n;
 }
@@ -171,6 +174,28 @@ function nudge_(cid, cx, year) {
   return n;
 }
 
+/* ---------- ชวนกลับคนที่หายไปจากแอป (เรียกจาก remind ทุกวัน) ---------- */
+function comeback_(cid, cx, year, evs) {
+  const now = Date.now(), DAY = 864e5, usage = db_('get', 'c/' + cid + '/usage') || {}, upd = {}; let n = 0;
+  const today = Utilities.formatDate(new Date(now), TZ, 'yyyy-MM-dd'), d14 = Utilities.formatDate(new Date(now + 14 * DAY), TZ, 'yyyy-MM-dd');
+  const nextEv = Object.keys(evs || {}).map(k => evs[k]).filter(e => e && e.status !== 'cancelled' && e.date >= today && e.date <= d14).sort((a, b) => a.date < b.date ? -1 : 1)[0];
+  cx.active().forEach(s => {
+    const u = usage[s] || {}; if (!u.last) return;                                   // ไม่เคยเข้า = ยังไม่มีเครื่องรับ ครูเห็นในสรุปรายสัปดาห์
+    const stepOf = dd => dd >= AWAY_STEPS[2] ? 2 : dd >= AWAY_STEPS[1] ? 1 : dd >= AWAY_STEPS[0] ? 0 : -1;
+    const away = Math.floor((now - u.last) / DAY), step = stepOf(away), prev = u.nudged > u.last ? stepOf(Math.floor((u.nudged - u.last) / DAY)) : -1;
+    if (step < 0 || step <= prev) return;                                              // ส่งครั้งเดียวต่อขั้น: 7, 14, 30 วัน
+    const first = (cx.members[s] || {}).first || '';
+    const hook = nextEv ? 'มีกิจกรรม “' + nextEv.title + '” เร็ว ๆ นี้ เปิดดูรายละเอียดได้ในแอป' : 'มีเกมฝึกหูและเครื่องดนตรีจำลองรอให้ลองอยู่ในเมนูเกม';
+    const T = [['คิดถึงนะ ' + first, 'ไม่ได้เจอกันในแอปมา ' + away + ' วันแล้ว ' + hook],
+               [first + ' ชมรมรออยู่นะ', 'ฝึกวันละนิด ฝีมือก้าวไกล แวะมาซ้อมด้วยกันสัก 5 นาทีไหม · ' + hook],
+               ['กลับมาซ้อมด้วยกันนะ ' + first, 'หายไปเดือนกว่าแล้ว เพื่อน ๆ และครูยังรออยู่ ถ้ามีอะไรติดขัด ส่งข้อความถึงครูในแอปได้เลย']][step];
+    n += send_(cx.stu([s], 'cheer'), { title: T[0], body: T[1], url: PAGE[cid] + '#/home', tag: 'comeback' });
+    upd['c/' + cid + '/usage/' + s + '/nudged'] = now;
+  });
+  if (Object.keys(upd).length) db_('patch', '', upd);
+  return n;
+}
+
 /* ---------- สรุปรายสัปดาห์ถึงครู (เย็นวันศุกร์) ---------- */
 function weekly() {
   let n = 0; const now = Date.now(), DAY = 24 * 3600 * 1000, days = {}; for (let i = 0; i < 7; i++) days[Utilities.formatDate(new Date(now - i * DAY), TZ, 'yyyy-MM-dd')] = 1;
@@ -184,6 +209,14 @@ function weekly() {
     abs.sort((a, b) => b[0] - a[0]);
     const parts = [tot ? 'มาซ้อม ' + Math.round((c.p + c.l) / tot * 100) + '% (ขาด ' + c.a + ' ลา ' + c.v + ' ครั้ง)' : 'สัปดาห์นี้ยังไม่มีการเช็กชื่อ'];
     if (abs.length) parts.push('ขาดบ่อย: ' + abs.slice(0, 4).map(x => x[1] + ' ' + x[0]).join(', '));
+    const usage = db_('get', base + 'usage') || {}, act = cx.active(), wk = Object.keys(days), cut = Utilities.formatDate(new Date(now - 200 * DAY), TZ, 'yyyy-MM-dd'), prune = {};
+    const never = act.filter(s => !(usage[s] || {}).last), away = act.filter(s => (usage[s] || {}).last && now - usage[s].last >= 14 * DAY);
+    const used = act.filter(s => wk.some(k => (((usage[s] || {}).d || {})[k] || {}).n));
+    parts.push('เข้าแอป ' + used.length + '/' + act.length + ' คน' + (away.length ? ' · หายไปเกิน 14 วัน ' + away.length : '') + (never.length ? ' · ไม่เคยเข้า ' + never.length : ''));
+    act.forEach(s => { const d = (usage[s] || {}).d || {}, n7 = wk.filter(k => (d[k] || {}).n).length;   // คำชมคนที่เข้าแอปอย่างน้อย 4 วันในสัปดาห์
+      if (n7 >= 4) n += send_(cx.stu([s], 'cheer'), { title: 'เยี่ยมมาก ' + ((cx.members[s] || {}).first || ''), body: 'สัปดาห์นี้เข้าแอปชมรม ' + n7 + ' วัน ฝึกต่อเนื่องแบบนี้ฝีมือก้าวหน้าแน่นอน', url: PAGE[cid] + '#/home', tag: 'cheer' });
+      Object.keys(d).forEach(k => { if (k < cut) prune['c/' + cid + '/usage/' + s + '/d/' + k] = null; }); });
+    if (Object.keys(prune).length) db_('patch', '', prune);   // เก็บประวัติรายวันย้อนหลัง 200 วัน
     const pend = []; if (pl) pend.push('ใบลา ' + pl); if (pt) pend.push('รายการเงิน ' + pt); if (pa) pend.push('ใบสมัคร ' + pa); if (pend.length) parts.push('รอครู: ' + pend.join(' · '));
     n += send_(cx.tea('weekly'), { title: 'สรุปสัปดาห์นี้ · ' + CLUBS[cid], body: parts.join(' | '), url: PAGE[cid] + '#/practice', tag: 'weekly' });
   } catch (e) { console.error('weekly', cid, e); } });
