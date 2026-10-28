@@ -81,7 +81,7 @@ const INSTS=[
   {id:'khlui',n:'ขลุ่ยเพียงออ',melo:1,hold:1},
   {id:'sor',n:'ซอด้วง',melo:1,hold:1},
   {id:'thon',n:'โทน–รำมะนา',pads:[{n:'ทั่ม',k:2},{n:'ติง',k:0},{n:'จ๊ะ',k:3},{n:'จ๊ง',k:1}]},
-  {id:'klong',n:'กลองหลวงแม่สอด',pads:[{n:'กลองหลวง',k:'k0'},{n:'กลองหลวง',k:'k2'},{n:'ฆ้องโหม่ง',k:'m'},{n:'ฉาบ',k:'b1'}]},
+  {id:'klong',n:'กลองหลวงแม่สอด',pads:[{n:'กลองหลวง',k:'k0'},{n:'กลองหลวง',k:'k2'},{n:'ฆ้อง',k:'m'},{n:'ฉาบเปิด',k:'x0'},{n:'ฉาบปิด',k:'x1'}]},
   {id:'drum',n:'กลองแขก',pads:[{n:'ติง',k:0},{n:'โจ๊ะ',k:1},{n:'ทั่ม',k:2},{n:'จ๊ะ',k:3}]},
   {id:'ching',n:'ฉิ่ง · ฉาบ',pads:[{n:'ฉิ่ง',k:'c1'},{n:'ฉับ',k:'c2'},{n:'ฉาบเปิด',k:'b1'},{n:'ฉาบปิด',k:'b0'},{n:'ฉาบกระทบ',k:'b2'}]}
 ];
@@ -98,7 +98,7 @@ function sound(key,id){audio();
     show(TI.label(cur.id,i))}
   else{const p=key;
     if(cur.id==='thon')TI.perc('thon',p,0,1);else if(cur.id==='drum')TI.perc('drum',p,0,1);
-    else if(p==='m')TI.perc('mong',0,0,1);else if(/^k\d$/.test(p))TI.perc('klong',+p[1],0,1.1);
+    else if(p==='m')TI.perc('mong',0,0,1);else if(/^x\d$/.test(p))TI.perc('klchab',+p[1],0,1);else if(/^k\d$/.test(p))TI.perc('klong',+p[1],0,1.1);
     else if(p==='c1')TI.perc('ching',1,0,1);else if(p==='c2')TI.perc('ching',2,0,1);else TI.perc('chab',+p.slice(1),0,1.2);
     show((cur.pads.find(x=>x.k===p)||{}).n||'')}
   if(recOn)recBuf.push({t:performance.now()-recT0,inst:cur.id,key})}
@@ -142,7 +142,7 @@ $('#rec').onclick=()=>{audio();if(!recOn){recBuf=[];recT0=performance.now();recO
 $('#playR').onclick=()=>{if(!recBuf.length)return;audio();const t0=AC.currentTime+.1,first=recBuf[0].t;recBuf.forEach(n=>{const t=t0+(n.t-first)/1000;
   if(TI.INST[n.inst])TI.note(n.inst,n.key,t,1,.5);
   else if(n.inst==='thon')TI.perc('thon',n.key,t,1);else if(n.inst==='drum')TI.perc('drum',n.key,t,1);
-  else if(n.key==='m')TI.perc('mong',0,t,1);else if(/^k\d$/.test(n.key))TI.perc('klong',+n.key[1],t,1.1);
+  else if(n.key==='m')TI.perc('mong',0,t,1);else if(/^x\d$/.test(n.key))TI.perc('klchab',+n.key[1],t,1);else if(/^k\d$/.test(n.key))TI.perc('klong',+n.key[1],t,1.1);
   else if(n.key==='c1'||n.key==='c2')TI.perc('ching',n.key==='c1'?1:2,t,1);else TI.perc('chab',+String(n.key).slice(1),t,1.2)})};
 /* ---------- ฉิ่งเคาะตาม (สองชั้น 70 ครั้ง/นาที) ---------- */
 let chT=null,chN=0,chNext=0;
