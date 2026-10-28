@@ -5,7 +5,7 @@
      TI.init(audioContext, outputNode)
      TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง โน้ตเกินช่วงเสียงจริงทบช่วงให้
      TI.label(inst, i)                  ชื่อโน้ต (ตรงกันทุกเครื่อง)
-     TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum
+     TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum · klong (กลองหลวง k 0–2) · mong (ฆ้องโหม่ง)
      TI.songs()                         เพลงจากสื่อของชมรม + ร่างในเครื่อง
      TI.timeline(packedSong)            ช่องโน้ตทั้งเพลง พร้อมฉิ่งและหน้าทับของแต่ละช่อง
    ============================================================ */
@@ -28,6 +28,12 @@
     khlui: { n: 'ขลุ่ย', s: 'ขลุ่ย', hold: true },
     sor: { n: 'ซอด้วง', s: 'ซอ', hold: true }
   };
+  /* ฆ้องโหม่ง (วงกลองหลวง): ฆ้องใหญ่เสียงต่ำ ก้องยาว ไม่มีเอฟเฟค */
+  function mongF(f, t, v, out) {
+    if (!AC) return; t = Math.max(t || 0, AC.currentTime); v = (v == null ? 1 : v) * .6; out = out || OUT;
+    [[f, .7, 1.6], [f * 2, .22, .9], [f * 2.76, .08, .5]].forEach(([fr, a, tau]) => { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = fr;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a * v, t + .006); g.gain.setTargetAtTime(0, t + .006, tau); o.connect(g); g.connect(out); o.start(t); o.stop(t + tau * 7) });
+  }
   /* ฆ้องวงเล็ก: เสียงฆ้องแบบโมดัล ไม่มีเอฟเฟค */
   function gongF(f, t, v, out) {
     if (!AC) return; t = Math.max(t || 0, AC.currentTime); v = (v == null ? 1 : v) * .5; out = out || OUT;
@@ -52,6 +58,8 @@
     else if (kind === 'chab') { if (!(T2 && T2.chab(k, t, v * .6, out))) TS.ching(false, t, v * .4, out); }
     else if (kind === 'thon') { if (!(T2 && T2.thon(k, t, v, out))) TS.drum(k, t, v, out); }
     else if (kind === 'drum') TS.drum(k, t, v, out);
+    else if (kind === 'klong') { if (T2 && T2.klong) T2.klong(k, t, v, out); }
+    else if (kind === 'mong') mongF(TS.F(-9), t, v, out);
   }
   /* ---------- เพลงจากบันทึกโน้ตเพลงไทย ---------- */
   function readToks(str) { const out = []; let i = 0; while (i < str.length) { const c = str[i]; if (c === '-') { out.push([]); i++ } else if (c === '(') { const j = str.indexOf(')', i); out.push(str.slice(i + 1, j).split('').map(x => x.charCodeAt(0) - 97).filter(x => x >= 0 && x < 16)); i = j + 1 } else { const v = c.charCodeAt(0) - 97; out.push(v >= 0 && v < 16 ? [v] : []); i++ } } return out }
