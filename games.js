@@ -29,7 +29,8 @@
     const g = list().find(x => x.id === d.id); if (!g) return;
     const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(g.title) + '</h3><button class="btn ghost sm" data-close>ปิดเกม</button></div><div class="gm-host"></div>', { full: true, sticky: true });
     const host = $('.gm-host', w);
-    if (g.src) host.innerHTML = '<iframe class="gm-f" src="' + esc(g.src) + '" title="' + esc(g.title) + '" allow="autoplay; fullscreen"></iframe>';
+    if (g.src) { const me = (A.members() || {})[A.sid()] || {}, nm = A.teacher() ? 'คุณครู' : (me.first || A.myName() || ''); const url = g.src + (g.src.includes('?') ? '&' : '?') + 'name=' + encodeURIComponent(nm.trim());
+      host.innerHTML = '<iframe class="gm-f" src="' + esc(url) + '" title="' + esc(g.title) + '" allow="autoplay; fullscreen"></iframe>'; }
     else if (typeof g.mount === 'function') { try { g.mount(host, () => w.remove(), { sid: A.sid(), name: A.myName(), club: C.club.id }); } catch (e) { console.error(e); host.textContent = 'เปิดเกมไม่สำเร็จ'; } }
     else host.textContent = 'เกมนี้ยังไม่พร้อมเล่น';
   };
