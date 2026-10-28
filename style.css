@@ -420,3 +420,12 @@ a.li.ib { display: block; text-decoration: none; color: inherit; } a.li.ib.new b
 .mn-s { margin-bottom: 14px; } .mn-s h4 { margin: 0 0 6px; padding: 6px 12px; background: var(--plum); color: var(--gold); border-radius: 8px; font-family: 'Noto Serif Thai', 'Sarabun', serif; font-size: 17px; font-weight: 600; }
 .mn-s p { margin: 0 0 3px; padding-left: 14px; } .mn-s p.b { padding-left: 28px; text-indent: -14px; } .mn-s p.i { padding-left: 34px; color: var(--mut); } .mn-s p.h { font-weight: 700; color: var(--deep); margin-top: 4px; } .mn-s .gap { height: 7px; }
 .login { position: relative; }
+
+/* ===== v3.6 การเข้าใช้งาน ===== */
+.us-strip { display: inline-flex; gap: 2px; vertical-align: middle; }
+.us-strip i { width: 9px; height: 14px; border-radius: 2px; background: var(--line); display: block; }
+.us-strip i.h1 { background: var(--gold); } .us-strip i.h2 { background: var(--gold-d); }
+.us-row { width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.us-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+@media (max-width: 899px) { .us-r { padding-left: 52px; margin-left: 0; } }
+.us-me .us-fire { width: 44px; height: 44px; border-radius: 50%; background: var(--gold); color: var(--deep); font-family: var(--head); font-weight: 700; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; flex: none; }

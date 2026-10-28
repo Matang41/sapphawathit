@@ -231,6 +231,37 @@
       ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || (((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && (!data.exists() || data.child('sid').val() == auth.token.email.replace('@sappha.ac.th', '')) && (!newData.exists() || newData.child('sid').val() == auth.token.email.replace('@sappha.ac.th', '')))",
       ".validate": "!newData.exists() || (newData.hasChildren(['kind', 'title', 'sid', 'at']) && newData.child('title').isString() && newData.child('title').val().length <= 120)"
      }
+    },
+    "usage": {
+     "$sid": {
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+      "last": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+       ".validate": "newData.isNumber() && newData.val() <= now + 600000"
+      },
+      "d": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+       "$day": {
+        ".validate": "$day.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+        "n": {
+         ".validate": "newData.isNumber() && newData.val() < 1000"
+        },
+        "g": {
+         "$g": {
+          ".validate": "newData.isNumber() && newData.val() < 1000"
+         }
+        },
+        "m": {
+         "$g": {
+          ".validate": "newData.isNumber() && newData.val() < 2000"
+         }
+        },
+        "$other": {
+         ".validate": false
+        }
+       }
+      }
+     }
     }
    }
   },
@@ -292,7 +323,7 @@
    }
   },
   "rulesProbe": {
-   "v9": {
+   "v10": {
     ".read": true
    }
   },
