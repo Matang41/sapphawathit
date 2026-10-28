@@ -16,13 +16,28 @@
   const size = n => n ? (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB') : '';
 
   /* โน้ตเพลงที่บันทึกจากเกม “บันทึกโน้ตเพลงไทย” (kind: 'song') เปิดในตัวบันทึกโน้ตเพื่อเล่น/แก้/ส่งออก */
-  function openSong(id) {
-    const x = (A.D.library || {})[id]; if (!x) return;
+  function openSong(id, sub) {
+    const x = sub ? (A.D.libsub || {})[id] : (A.D.library || {})[id]; if (!x) return;
     const me = (A.members() || {})[A.sid()] || {}, nm = A.teacher() ? 'คุณครู' : (me.first || A.myName() || '');
-    const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(x.title) + '</h3><button class="btn ghost sm" data-close>ปิด</button></div><div class="gm-host"><iframe class="gm-f" src="games/notation.html?song=' + encodeURIComponent(id) + '&name=' + encodeURIComponent(nm) + '" title="' + esc(x.title) + '" allow="autoplay; fullscreen"></iframe></div>', { full: true, sticky: true });
+    const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(x.title) + '</h3><button class="btn ghost sm" data-close>ปิด</button></div><div class="gm-host"><iframe class="gm-f" src="games/notation.html?' + (sub ? 'sub=' : 'song=') + encodeURIComponent(id) + '&name=' + encodeURIComponent(nm) + '" title="' + esc(x.title) + '" allow="autoplay; fullscreen"></iframe></div>', { full: true, sticky: true });
     return w;
   }
   A.SUBS.push({ key: 'library', path: () => 'library' });
+  /* ผลงานที่สมาชิกส่งมาให้ครูตรวจ: libsub/{id} = { kind: 'song' | 'tap', title, sid, by, at, … } */
+  A.SUBS.push({ key: 'libsub', path: () => 'libsub' });
+  const subs = () => Object.keys(A.D.libsub || {}).map(id => Object.assign({ id }, A.D.libsub[id])).filter(x => x && x.title).sort((a, b) => a.at - b.at);
+  const subKind = x => x.kind === 'tap' ? 'หน้าทับ/จังหวะ' : 'โน้ตเพลง';
+  function reviewHTML() {
+    const l = subs(); if (T()) {
+      if (!l.length) return '';
+      return '<section class="card" style="border:2px solid var(--gold)"><div class="lb">ผลงานที่สมาชิกส่งมา รอครูตรวจ (' + l.length + ')</div>' + l.map(x =>
+        '<div class="lib"><div class="row"><span class="lib-k">' + subKind(x) + '</span><div class="grow"><b>' + esc(x.title) + '</b><div class="muted">ส่งโดย ' + esc(x.by || x.sid) + ' · ' + M.thDate(x.at) + (x.target ? ' · ขอแก้เพลงเดิม' : '') + '</div>' + (x.desc ? '<div class="lib-d">' + esc(x.desc) + '</div>' : '') +
+        '<div class="row wrap" style="margin-top:8px">' + (x.kind === 'song' ? '<button class="btn ghost sm" data-act="subView" data-id="' + esc(x.id) + '">ดู / ฟัง</button>' : '') + '<button class="btn sm" data-act="subOk" data-id="' + esc(x.id) + '">ยอมรับ</button><button class="btn ghost sm danger" data-act="subNo" data-id="' + esc(x.id) + '">ไม่รับ</button></div></div></div></div>').join('') + '</section>';
+    }
+    const mine = l.filter(x => x.sid === A.sid());
+    return mine.length ? '<section class="card"><div class="lb">ผลงานของฉันที่รอครูตรวจ</div>' + mine.map(x => '<div class="muted">• ' + esc(x.title) + ' (' + subKind(x) + ') · ส่งเมื่อ ' + M.thDate(x.at) + '</div>').join('') + '</section>' : '';
+  }
+  A.TODO.push(() => T() && subs().length ? { n: subs().length, label: 'ผลงานที่สมาชิกส่งมา รอครูตรวจ', href: '#/library' } : null);
   A.NAVS.push({ id: 'library', label: 'คลังความรู้', icon: 'lib', order: 36 });
 
   function card(x) {
@@ -36,7 +51,7 @@
     return l.map(card).join('') || '<div class="empty">' + (all.length ? 'ไม่พบรายการตามเงื่อนไข' : 'ยังไม่มีสื่อการเรียนรู้' + (T() ? ' — กด “เพิ่มสื่อ”' : '')) + '</div>';
   }
   A.V.library = function () {
-    const cs = allCats(); let b = '';
+    const cs = allCats(); let b = reviewHTML();
     if (T()) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="libNew">' + ic('plus', 18) + 'เพิ่มสื่อ / ไฟล์ความรู้</button><button class="btn ghost" data-act="libCats">จัดการหมวดหมู่</button></div>';
     b += '<div class="tabs" role="tablist"><button role="tab" aria-selected="' + !LB.cat + '" class="' + (!LB.cat ? 'on' : '') + '" data-act="libCat" data-c="">ทั้งหมด</button>' + cs.map(c => '<button role="tab" aria-selected="' + (LB.cat === c) + '" class="' + (LB.cat === c ? 'on' : '') + '" data-act="libCat" data-c="' + esc(c) + '">' + esc(c) + '</button>').join('') + '</div>' +
       '<section class="card"><input id="lq" class="in" type="search" placeholder="ค้นหาชื่อเรื่อง คำอธิบาย" value="' + esc(LB.q) + '" aria-label="ค้นหาในคลังความรู้" style="margin-bottom:10px"><div id="llist">' + listHTML() + '</div></section>';
@@ -84,6 +99,28 @@
     libCats: () => {
       if (!T()) return; const w = modal('<h3>หมวดหมู่คลังความรู้</h3><form class="form"><div class="muted" style="margin-bottom:8px">หนึ่งหมวดต่อหนึ่งบรรทัด</div><textarea class="in" id="lc" rows="8" aria-label="หมวดหมู่">' + esc(cats().join('\n')) + '</textarea><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const l = Array.from(new Set($('#lc', w).value.split(/\r?\n/).map(s => s.trim()).filter(Boolean))); if (!l.length) return toast('ต้องมีอย่างน้อยหนึ่งหมวด'); A.W(B.set('config/libCats', l)); w.remove(); toast('บันทึกหมวดหมู่แล้ว'); });
+    },
+    subView: d => { if (T()) openSong(d.id, true); },
+    subOk: async d => {
+      if (!T()) return; const x = (A.D.libsub || {})[d.id]; if (!x) return;
+      if (!(await M.confirmBox('ยอมรับผลงาน', 'เผยแพร่ “' + esc(x.title) + '” ของ ' + esc(x.by || '') + ' เป็นสื่อของชมรม', 'ยอมรับ'))) return;
+      if (x.kind === 'tap') {
+        const p = x.preset || {}; const rec = { name: x.title, bpm: p.bpm || 120, rate: p.rate || 2, mix: p.mix || {}, by: x.by || '', bySid: x.sid || '', approvedBy: A.myName(), at: Date.now() };
+        if (p.pid) rec.pid = p.pid; else rec.str = p.str || '';
+        try { await B.direct('set', '/tapPresets/' + d.id, rec); } catch (e) { return toast('บันทึกไม่สำเร็จ: ' + A.errTH(e)); }
+        A.W(B.remove('libsub/' + d.id));
+      } else {
+        const lid = x.target && (A.D.library || {})[x.target] ? x.target : 'song_' + d.id.replace(/^sub_/, ''); const old = (A.D.library || {})[lid];
+        const song = Object.assign({}, x.song, { libId: lid }); const cs = cats(), cat = cs.includes('โน้ตและเพลง') ? 'โน้ตและเพลง' : (cs[0] || 'อื่น ๆ');
+        const au = (x.song && x.song.author) || { name: x.by, sid: x.sid };
+        A.W(B.update('', { ['library/' + lid]: { title: x.title, cat, desc: x.desc || '', kind: 'song', song, at: old && old.at || Date.now(), edited: Date.now(), by: au.name || x.by || '', bySid: au.sid || x.sid || '', approvedBy: A.myName() }, ['libsub/' + d.id]: null }));
+      }
+      A.log('library.approve', x.sid || '', x.title); toast('ยอมรับแล้ว ขึ้นเป็นสื่อของชมรม พร้อมเครดิต ' + (x.by || ''));
+    },
+    subNo: async d => {
+      if (!T()) return; const x = (A.D.libsub || {})[d.id]; if (!x) return;
+      if (!(await M.confirmBox('ไม่รับผลงาน', '“' + esc(x.title) + '” ของ ' + esc(x.by || '') + ' จะถูกนำออก ไม่เผยแพร่', 'ไม่รับ', true))) return;
+      A.W(B.remove('libsub/' + d.id)); A.log('library.reject', x.sid || '', x.title); toast('นำออกแล้ว');
     },
     libOpen: async d => {
       const x = (A.D.library || {})[d.id]; if (!x) return; if (x.kind === 'song') return openSong(d.id); if (x.kind === 'link') { window.open(x.url, '_blank', 'noopener'); return; }

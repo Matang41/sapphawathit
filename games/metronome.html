@@ -185,7 +185,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
   <div class="sec">
     <div class="lb">บันทึกหน้าทับและจังหวะ</div>
     <div class="row"><input type="text" id="saveName" placeholder="ตั้งชื่อ เช่น ปรบไก่ สองชั้น ช้า" maxlength="40"><button class="btn pri" id="saveBtn" style="flex:none">บันทึก</button></div>
-    <div class="help">บันทึกทั้งหน้าทับ อัตราจังหวะ ความเร็ว และเสียงที่เปิดไว้ · หน้าทับที่บันทึกจะไปอยู่ในเกม “กลองแขกคู่ขวัญ” ด้วย</div>
+    <div class="help">ทุกคนส่งหน้าทับเข้าชมรมได้: นักเรียนกด “ส่งครู” แล้วครูตรวจและกดยอมรับในเมนูคลังความรู้ หน้าทับจะขึ้นเป็นของชมรมพร้อมชื่อผู้บันทึก · บันทึกทั้งหน้าทับ อัตราจังหวะ ความเร็ว และเสียงที่เปิดไว้ · หน้าทับที่บันทึกจะไปอยู่ในเกม “กลองแขกคู่ขวัญ” ด้วย</div>
     <div class="lb" style="margin-top:12px;font-size:14px">ในเครื่องนี้</div>
     <div class="plist" id="localList"></div>
     <div id="clubWrap" class="hidden">
@@ -450,15 +450,21 @@ $("#saveBtn").addEventListener("click",()=>{
 const desc=p=>{const b=p.pid&&NT.get(p.pid);return (b?b.name+" · ":(p.str?NT.parse(p.str).bars+" ห้อง · ":"ฉิ่งอย่างเดียว · "))+(b&&b.sec.length>1?"เถา":(RATE[p.rate]?RATE[p.rate].n:""))+" · "+p.bpm+" ตัว/นาที"};
 function renderLists(){
   const l=getLocal(),T=isTeacher();
-  $("#localList").innerHTML=l.length?l.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+'</span></div><button class="btn sec sm" data-load="l:'+esc(p.id)+'">ใช้</button>'+(T&&FB?'<button class="btn sec sm" data-share="'+esc(p.id)+'">แชร์</button>':'')+'<button class="btn sec sm" data-del="'+esc(p.id)+'">ลบ</button></div>').join(""):'<div class="empty">ยังไม่มี — ตั้งค่าแล้วกดบันทึก</div>';
+  $("#localList").innerHTML=l.length?l.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+'</span></div><button class="btn sec sm" data-load="l:'+esc(p.id)+'">ใช้</button>'+(FB&&APPB()?'<button class="btn sec sm" data-share="'+esc(p.id)+'">'+(T?"แชร์":"ส่งครู")+'</button>':'')+'<button class="btn sec sm" data-del="'+esc(p.id)+'">ลบ</button></div>').join(""):'<div class="empty">ยังไม่มี — ตั้งค่าแล้วกดบันทึก</div>';
   $("#clubWrap").classList.toggle("hidden",!FB);
-  $("#clubList").innerHTML=club.length?club.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+(p.by?" · "+esc(p.by):"")+'</span></div><button class="btn sec sm" data-load="c:'+esc(p.id)+'">ใช้</button>'+(T?'<button class="btn sec sm" data-cdel="'+esc(p.id)+'">ลบ</button>':'')+'</div>').join(""):'<div class="empty">'+(T?"กด “แชร์” ที่หน้าทับในเครื่องนี้ เพื่อให้นักเรียนทุกคนเห็น":"ครูยังไม่ได้แชร์หน้าทับ")+'</div>';
+  $("#clubList").innerHTML=club.length?club.map(p=>'<div class="pi"><div class="nm"><b>'+esc(p.name)+'</b><span>'+esc(desc(p))+(p.by?" · "+esc(p.by):"")+'</span></div><button class="btn sec sm" data-load="c:'+esc(p.id)+'">ใช้</button>'+(T?'<button class="btn sec sm" data-cdel="'+esc(p.id)+'">ลบ</button>':'')+'</div>').join(""):'<div class="empty">'+(T?"กด “แชร์” ที่หน้าทับในเครื่องนี้ (นักเรียนกด “ส่งครู” แล้วครูยอมรับในคลังความรู้) เพื่อให้นักเรียนทุกคนเห็น":"ครูยังไม่ได้แชร์หน้าทับ")+'</div>';
 }
 document.addEventListener("click",e=>{
   const t=e.target.closest("button");if(!t)return;
   if(t.dataset.load){const p=findPreset(t.dataset.load);if(!p)return;S.patSel=t.dataset.load;applyPreset(p);renderPatSel();rebuild();save();window.scrollTo({top:0,behavior:"smooth"})}
   else if(t.dataset.del){if(!confirmTwice(t))return;setLocal(getLocal().filter(p=>p.id!==t.dataset.del));renderLists();renderPatSel();toast("ลบแล้ว")}
   else if(t.dataset.share){const p=getLocal().find(x=>x.id===t.dataset.share);if(!p||!FB)return;
+    if(!isTeacher()){ // นักเรียน: ส่งให้ครูตรวจก่อน ครูยอมรับแล้วจึงขึ้นเป็นของชมรม พร้อมเครดิตชื่อผู้ส่ง
+      const W=window.parent,id="sub_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),b=p.pid&&NT.get(p.pid);
+      const preset=Object.assign({bpm:p.bpm,rate:p.rate,mix:p.mix||{}},p.pid?{pid:p.pid}:{str:p.str||""});
+      W.APP.W(W.B.set("libsub/"+id,{kind:"tap",title:p.name.slice(0,120),desc:desc(p),preset,sid:W.APP.sid()||"",by:myName(),at:Date.now()})).then(()=>toast("ส่งให้ครูตรวจแล้ว ครูยอมรับเมื่อไรจะขึ้นเป็นของชมรม"));
+      return;
+    }
     FB.database().ref("tapPresets/"+p.id).set(Object.assign({name:p.name,bpm:p.bpm,rate:p.rate,mix:p.mix||{},by:myName(),at:Date.now()},p.pid?{pid:p.pid}:{str:p.str||""})).then(()=>{toast("แชร์ให้ทั้งชมรมแล้ว");loadClub()}).catch(err=>toast("แชร์ไม่สำเร็จ: "+(err.code||err.message)))}
   else if(t.dataset.cdel){if(!confirmTwice(t))return;FB.database().ref("tapPresets/"+t.dataset.cdel).remove().then(()=>{toast("ลบจากชมรมแล้ว");loadClub()}).catch(err=>toast("ลบไม่สำเร็จ: "+(err.code||err.message)))}
 });
@@ -467,6 +473,7 @@ function confirmTwice(b){if(b.dataset.sure)return true;b.dataset.sure=1;const o=
 /* ---------- เชื่อมแอป (แชร์ให้ทั้งชมรม) ---------- */
 let FB=null,club=[];
 try{const w=window.parent!==window&&window.parent,f=w&&w.firebase;if(f&&f.apps&&f.apps.length&&f.auth().currentUser)FB=f}catch(e){}
+function APPB(){try{return !!(window.parent.APP&&window.parent.B)}catch(e){return false}}
 function isTeacher(){try{return !!(window.parent.APP&&window.parent.APP.teacher())}catch(e){return false}}
 function myName(){try{return window.parent.APP.myName()||""}catch(e){return ""}}
 function loadClub(){if(!FB)return;FB.database().ref("tapPresets").once("value").then(s=>{const v=s.val()||{};club=Object.keys(v).map(k=>Object.assign({id:k},v[k])).filter(p=>p&&p.name&&(p.pid?!!NT.get(p.pid):!NT.parse(p.str||"").err)).sort((a,b)=>(b.at||0)-(a.at||0));renderLists();renderPatSel();rebuild()}).catch(()=>{})}
