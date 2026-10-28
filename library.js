@@ -12,9 +12,16 @@
   const cats = () => { const l = A.cfg().libCats; return Array.isArray(l) && l.length ? l : (C.libCats || ['อื่น ๆ']); };
   const items = () => Object.keys(A.D.library || {}).map(id => Object.assign({ id }, A.D.library[id])).filter(x => x.title).sort((a, b) => b.at - a.at);
   const allCats = () => cats().concat(items().map(x => x.cat).filter(c => c && !cats().includes(c))).filter((c, i, a) => a.indexOf(c) === i);
-  const kindLabel = x => x.kind === 'link' ? 'ลิงก์' : /pdf/.test(x.mime || '') ? 'PDF' : /^image\//.test(x.mime || '') ? 'ภาพ' : /^audio\//.test(x.mime || '') ? 'เสียง' : /^video\//.test(x.mime || '') ? 'วิดีโอ' : 'ไฟล์';
+  const kindLabel = x => x.kind === 'song' ? 'โน้ตเพลง' : x.kind === 'link' ? 'ลิงก์' : /pdf/.test(x.mime || '') ? 'PDF' : /^image\//.test(x.mime || '') ? 'ภาพ' : /^audio\//.test(x.mime || '') ? 'เสียง' : /^video\//.test(x.mime || '') ? 'วิดีโอ' : 'ไฟล์';
   const size = n => n ? (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB') : '';
 
+  /* โน้ตเพลงที่บันทึกจากเกม “บันทึกโน้ตเพลงไทย” (kind: 'song') เปิดในตัวบันทึกโน้ตเพื่อเล่น/แก้/ส่งออก */
+  function openSong(id) {
+    const x = (A.D.library || {})[id]; if (!x) return;
+    const me = (A.members() || {})[A.sid()] || {}, nm = A.teacher() ? 'คุณครู' : (me.first || A.myName() || '');
+    const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(x.title) + '</h3><button class="btn ghost sm" data-close>ปิด</button></div><div class="gm-host"><iframe class="gm-f" src="games/notation.html?song=' + encodeURIComponent(id) + '&name=' + encodeURIComponent(nm) + '" title="' + esc(x.title) + '" allow="autoplay; fullscreen"></iframe></div>', { full: true, sticky: true });
+    return w;
+  }
   A.SUBS.push({ key: 'library', path: () => 'library' });
   A.NAVS.push({ id: 'library', label: 'คลังความรู้', icon: 'lib', order: 36 });
 
@@ -72,14 +79,14 @@
 
   Object.assign(A.ACT, {
     libCat: d => { LB.cat = d.c || ''; A.rerender(); },
-    libNew: () => { if (T()) form(null); }, libEdit: d => { if (T()) form(d.id); },
+    libNew: () => { if (T()) form(null); }, libEdit: d => { if (!T()) return; const x = (A.D.library || {})[d.id]; if (x && x.kind === 'song') return openSong(d.id); form(d.id); },
     libDel: async d => { if (!T()) return; const x = A.D.library[d.id]; if (!x || !(await M.confirmBox('ลบรายการ', esc(x.title) + ' จะหายไปจากคลังความรู้', 'ลบ', true))) return; A.W(B.update('', { ['library/' + d.id]: null, ['libfiles/' + d.id]: null })); A.log('library.del', '', x.title); },
     libCats: () => {
       if (!T()) return; const w = modal('<h3>หมวดหมู่คลังความรู้</h3><form class="form"><div class="muted" style="margin-bottom:8px">หนึ่งหมวดต่อหนึ่งบรรทัด</div><textarea class="in" id="lc" rows="8" aria-label="หมวดหมู่">' + esc(cats().join('\n')) + '</textarea><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const l = Array.from(new Set($('#lc', w).value.split(/\r?\n/).map(s => s.trim()).filter(Boolean))); if (!l.length) return toast('ต้องมีอย่างน้อยหนึ่งหมวด'); A.W(B.set('config/libCats', l)); w.remove(); toast('บันทึกหมวดหมู่แล้ว'); });
     },
     libOpen: async d => {
-      const x = (A.D.library || {})[d.id]; if (!x) return; if (x.kind === 'link') { window.open(x.url, '_blank', 'noopener'); return; }
+      const x = (A.D.library || {})[d.id]; if (!x) return; if (x.kind === 'song') return openSong(d.id); if (x.kind === 'link') { window.open(x.url, '_blank', 'noopener'); return; }
       let url = ''; const w = modal('<h3>' + esc(x.title) + '</h3><div id="lv" class="muted">กำลังโหลดไฟล์ …</div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true, wide: true, onClose: () => { if (url) URL.revokeObjectURL(url); } });
       try {
         const data = await B.get('libfiles/' + d.id); if (!data) throw new Error('ไม่พบไฟล์'); const blob = toBlob(data); url = URL.createObjectURL(blob); const mime = blob.type;

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4a2944">
+<title>บันทึกโน้ตเพลงไทย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--gold2:#ffe39a;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35);--m1:#f2c14e;--f1:#ef86b8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 12px 0}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.title-in{flex:1;min-width:180px;font-family:Mitr;font-size:22px;color:var(--gold);background:transparent;border:none;border-bottom:1px dashed var(--line);padding:4px 2px;outline:none}
+.btn{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.btn.pri{background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;border-color:transparent;font-family:Mitr}
+.btn.on{background:var(--gold);color:#3b2205;border-color:var(--gold)}
+.btn.play{background:linear-gradient(180deg,#ffd76e,#e0a32e);color:#3b2205;border:none;font-family:Mitr;font-size:16px;padding:9px 16px}
+.btn.play.on{background:linear-gradient(180deg,#ff9fb3,#d9587a);color:#fff}
+.bar-set{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;gap:4px}
+.seg button{border:1px solid var(--line);background:none;border-radius:9px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:13px}
+.seg button.on{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+select{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:9px;padding:6px 8px;color:var(--cream);max-width:210px}
+select option{color:#222}
+.tempo{display:inline-flex;align-items:center;gap:4px}
+.tempo b{font-family:Mitr;color:var(--gold);min-width:38px;text-align:center;font-size:16px}
+.tb{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.25);cursor:pointer}
+.mix button{font-size:12px}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+.hint b{color:var(--cream)}
+
+/* sheet */
+.sheet{padding:10px 0 300px}
+.line{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 10px 10px;margin-top:10px}
+.lhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lhead input{flex:1;background:transparent;border:none;border-bottom:1px dashed transparent;font-family:Mitr;color:var(--gold2);font-size:15px;outline:none;padding:2px}
+.lhead input:focus{border-bottom-color:var(--line)}
+.lhead .mini{border:1px solid var(--line);background:none;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--muted)}
+.bars{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+@media (max-width:820px){.bars{grid-template-columns:repeat(4,1fr)}}
+.bar{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(242,193,78,.3);border-radius:8px;overflow:hidden;background:rgba(0,0,0,.2);position:relative}
+.bar .no{position:absolute;left:3px;top:1px;font-size:9px;color:rgba(217,195,212,.45);pointer-events:none}
+.sl{min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-left:1px dashed rgba(255,255,255,.06);position:relative;padding:8px 0 10px}
+.sl:first-child{border-left:none}
+.sl .n{font-family:Mitr;font-size:20px;line-height:1.05;color:var(--cream)}
+.sl .n.pair{font-size:15px}
+.sl .n.rest{color:rgba(217,195,212,.35)}
+.sl .ch{position:absolute;bottom:1px;font-size:9px;font-family:Mitr;color:var(--gold)}
+.sl .ch.c2{color:#ff9fc5}
+.sl.cur{background:rgba(242,193,78,.2);box-shadow:inset 0 0 0 2px var(--gold)}
+.sl.play{background:rgba(255,246,213,.55)}
+.sl.play .n{color:#2b1628}
+.addline{display:block;width:100%;margin-top:10px;border:1px dashed var(--line);background:none;border-radius:14px;padding:12px;color:var(--gold2);cursor:pointer}
+.credit{text-align:center;font-size:12px;color:rgba(217,195,212,.7);padding:18px 0}
+
+/* keypad */
+.pad{position:fixed;left:0;right:0;bottom:0;z-index:10;background:linear-gradient(180deg,rgba(43,22,40,.92),#1d0e1b);border-top:1px solid var(--line);padding:8px 10px max(8px,env(safe-area-inset-bottom));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.pad-in{max-width:1100px;margin:0 auto}
+.keys{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.key{border:none;border-radius:50%;aspect-ratio:1;max-height:58px;justify-self:center;width:100%;max-width:58px;cursor:pointer;font-family:Mitr;font-size:18px;color:#3b2205;
+  background:radial-gradient(circle at 35% 30%,#fff1c2,#d9a640 55%,#8a5d1a);box-shadow:0 3px 6px rgba(0,0,0,.45);transition:transform .06s;touch-action:manipulation}
+.key:active,.key.hit{transform:scale(.9);filter:brightness(1.25)}
+.key small{display:block;font-size:9px;font-family:Sarabun;margin-top:-3px;opacity:.75}
+.ctl{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;justify-content:center}
+.ctl .btn{padding:7px 10px;font-size:13px}
+.toast{position:fixed;left:50%;bottom:190px;transform:translateX(-50%);background:var(--cream);color:#3b2205;font-family:Mitr;padding:9px 16px;border-radius:99px;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:40;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+
+/* dialogs */
+.ov{position:fixed;inset:0;background:rgba(20,8,18,.75);z-index:30;display:grid;place-items:center;padding:16px}
+.dlg{width:100%;max-width:460px;max-height:86vh;overflow:auto;background:linear-gradient(160deg,#5e3757,#2f1830);border:1px solid var(--line);border-radius:18px;padding:16px}
+.dlg h3{font-family:Mitr;font-weight:500;color:var(--gold);margin:0 0 10px}
+.it{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.2);border-radius:12px;padding:9px 10px;margin-top:6px}
+.it .nm{flex:1;min-width:0}.it .nm b{display:block;font-family:Mitr;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.it .nm span{font-size:12px;color:var(--muted)}
+.lbl{font-family:Mitr;font-size:14px;color:var(--gold2);margin:12px 0 2px}
+.empty{font-size:13px;color:var(--muted);padding:6px}
+.xb{display:block;width:100%;text-align:left;margin-top:8px;border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:12px;padding:12px;cursor:pointer}
+.xb b{font-family:Mitr;color:var(--gold2)}.xb span{display:block;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <input class="title-in" id="title" maxlength="80" placeholder="ชื่อเพลง" aria-label="ชื่อเพลง">
+    <button class="btn" id="bOpen">📂 เปิด</button>
+    <button class="btn" id="bSave">💾 บันทึก</button>
+    <button class="btn pri" id="bExport">⤓ ส่งออก</button>
+  </div>
+  <div class="bar-set">
+    <span>อัตรา</span><div class="seg" id="rate"><button data-r="3">สามชั้น</button><button data-r="2">สองชั้น</button><button data-r="1">ชั้นเดียว</button></div>
+    <span>หน้าทับ</span><select id="natab"></select>
+    <span class="tempo"><button class="tb" id="tDn">−</button><b id="tV">160</b><button class="tb" id="tUp">+</button></span><span>ตัว/นาที</span>
+  </div>
+  <div class="bar-set">
+    <button class="btn play" id="bPlay">▶ เล่นตั้งแต่ต้น</button>
+    <button class="btn" id="bPlayHere">▶ เล่นจากห้องนี้</button>
+    <button class="btn" id="bLoop">🔁 วน</button>
+    <span class="seg mix"><button data-m="khong">ฆ้อง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button></span>
+  </div>
+  <div class="hint">แตะช่องในห้องเพื่อเลือก แล้วกดลูกฆ้องด้านล่างเพื่อใส่โน้ต · <b>–</b> = เว้น/ลากเสียง · <b>คู่</b> = ตีสองเสียงพร้อมกัน · คีย์บอร์ด: <b>1–7</b> ด–ท กลาง · <b>Shift+1–6</b> ดํ–ลํ สูง · <b>Alt+5–7</b> ซฺ ลฺ ทฺ ต่ำ · <b>เว้นวรรค</b> = – · <b>←→</b> เลื่อน</div>
+  <div class="sheet" id="sheet"></div>
+  <div class="credit">บันทึกโน้ตเพลงไทย · ชมรมดนตรีไทยสรรพวาทิต<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+
+<div class="pad">
+  <div class="pad-in">
+    <div class="keys" id="keys"></div>
+    <div class="ctl">
+      <button class="btn" data-k="rest">– เว้น</button>
+      <button class="btn" data-k="back">⌫ ลบ</button>
+      <button class="btn" data-k="pair" id="kPair">คู่</button>
+      <button class="btn" data-k="left">◀</button>
+      <button class="btn" data-k="right">▶</button>
+      <button class="btn" data-k="addbar">+ ห้อง</button>
+      <button class="btn" data-k="delbar">− ห้อง</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="ov hidden" id="ov"><div class="dlg" id="dlg"></div></div>
+
+<script src="natab.js"></script>
+<script src="thaisound.js"></script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NT=window.NATAB,TS=window.TS,KN=TS.KNOTE;
+const TH=n=>String(n).replace(/[0-9]/g,d=>"๐๑๒๓๔๕๖๗๘๙"[d]);
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("show"),2400)}
+
+/* ---------- เชื่อมแอป ---------- */
+let P=null;try{if(window.parent!==window&&window.parent.APP&&window.parent.B)P=window.parent}catch(e){}
+const inApp=()=>!!P;
+const isTeacher=()=>{try{return !!(P&&P.APP.teacher())}catch(e){return false}};
+const myName=()=>{try{return P?P.APP.myName():""}catch(e){return ""}};
+
+/* ---------- รูปแบบข้อมูลเพลง ----------
+   ช่องหนึ่ง = [] (เว้น) หรือ [ลูกฆ้อง] หรือ [ลูก,ลูก] (ตีคู่) · ลูกฆ้อง 0–15 จากต่ำไปสูง
+   เก็บเป็นข้อความสั้น: ลูกฆ้อง = a–p, เว้น = -, ตีคู่ = (ab) · ห้องคั่นด้วยเว้นวรรค */
+const enc=sl=>!sl.length?"-":sl.length===1?String.fromCharCode(97+sl[0]):"("+sl.map(i=>String.fromCharCode(97+i)).join("")+")";
+function encBars(bars){return bars.map(b=>b.map(enc).join("")).join(" ")}
+function decBars(str){
+  return String(str||"").trim().split(/\s+/).filter(Boolean).map(b=>{const out=[];let i=0;
+    while(i<b.length&&out.length<4){const c=b[i];if(c==="-"){out.push([]);i++}else if(c==="("){const j=b.indexOf(")",i);out.push(b.slice(i+1,j).split("").map(x=>x.charCodeAt(0)-97).filter(x=>x>=0&&x<16));i=j+1}else{const v=c.charCodeAt(0)-97;out.push(v>=0&&v<16?[v]:[]);i++}}
+    while(out.length<4)out.push([]);return out});
+}
+const blankBars=n=>Array.from({length:n},()=>[[],[],[],[]]);
+function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true},lines:[{label:"ท่อน ๑",bars:blankBars(8)}]}}
+function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,lines:s.lines.map(l=>({label:l.label,bars:encBars(l.bars)})),at:Date.now()}}
+function unpack(o){const s=Object.assign(newSong(),o||{});s.mix=Object.assign({khong:true,drum:true,ching:true},s.mix||{});
+  const ls=Array.isArray(o&&o.lines)?o.lines:Object.values((o&&o.lines)||{});
+  s.lines=ls.map(l=>({label:l.label||"",bars:decBars(l.bars)})).filter(l=>l.bars.length);if(!s.lines.length)s.lines=[{label:"ท่อน ๑",bars:blankBars(8)}];return s}
+
+/* ---------- ที่เก็บในเครื่อง ---------- */
+const KDR="sapphawathit_songs",KCUR="sapphawathit_song_cur";
+const getDrafts=()=>{try{return JSON.parse(localStorage.getItem(KDR)||"[]")||[]}catch(e){return []}};
+const setDrafts=l=>{try{localStorage.setItem(KDR,JSON.stringify(l))}catch(e){toast("บันทึกในเครื่องไม่ได้ (พื้นที่เต็ม?)")}};
+let song=null,cur={l:0,b:0,s:0},pair=false;
+try{const c=JSON.parse(localStorage.getItem(KCUR)||"null");song=c?unpack(c):newSong()}catch(e){song=newSong()}
+let saveT=0;function touch(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KCUR,JSON.stringify(pack(song)))}catch(e){}},300)}
+/* เปิดจากคลังความรู้: ?song=<id> */
+try{const q=new URLSearchParams(location.search).get("song");if(q&&P){const x=(P.APP.D.library||{})[q];if(x&&x.song){song=unpack(Object.assign({},x.song,{libId:q}));toast("เปิด “"+song.title+"” จากสื่อของชมรม")}}}catch(e){}
+
+/* ---------- เสียง ---------- */
+let AC=null,master=null;
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C();master=AC.createGain();master.gain.value=.85;const cp=AC.createDynamicsCompressor();master.connect(cp);cp.connect(AC.destination);TS.init(AC,master)}if(AC.state==="suspended")AC.resume();return AC}
+const LATKEY="sapphawathit_audio_lat";
+const visNow=()=>{let u=0;try{u=+(localStorage.getItem(LATKEY)||0)}catch(e){}return AC.currentTime-Math.max(0,(AC.outputLatency||0)+(AC.baseLatency||0)+u/1000)};
+
+/* ---------- แผ่นโน้ต ---------- */
+function flat(){const out=[];song.lines.forEach((l,li)=>l.bars.forEach((b,bi)=>b.forEach((s,si)=>out.push({l:li,b:bi,s:si}))));return out}
+function gIndex(c){let g=0;for(let li=0;li<c.l;li++)g+=song.lines[li].bars.length*4;return g+c.b*4+c.s}
+const chAt=g=>{const ev=NT.RATE[song.rate].ev;return (g%ev)===ev-1?(Math.floor(g/ev)%2===0?1:2):0};
+function slotHTML(sl,g){
+  const t=!sl.length?'<div class="n rest">–</div>':'<div class="n'+(sl.length>1?" pair":"")+'">'+sl.map(i=>KN[i]).join(sl.length>1?"<br>":"")+'</div>';
+  const c=chAt(g);return t+(c?'<div class="ch'+(c===2?" c2":"")+'">'+(c===1?"ฉิ่ง":"ฉับ")+'</div>':"");
+}
+function render(){
+  let g=0,h="",barNo=0;
+  song.lines.forEach((l,li)=>{
+    h+='<div class="line"><div class="lhead"><input data-lab="'+li+'" value="'+esc(l.label)+'" placeholder="ชื่อท่อน" aria-label="ชื่อท่อน"><button class="mini" data-lact="up" data-li="'+li+'" title="ย้ายขึ้น">▲</button><button class="mini" data-lact="del" data-li="'+li+'">ลบท่อน</button></div><div class="bars">';
+    l.bars.forEach((b,bi)=>{barNo++;h+='<div class="bar"><span class="no">'+TH(barNo)+'</span>';
+      b.forEach((sl,si)=>{h+='<div class="sl'+(li===cur.l&&bi===cur.b&&si===cur.s?" cur":"")+'" data-g="'+g+'" data-c="'+li+","+bi+","+si+'">'+slotHTML(sl,g)+'</div>';g++});h+='</div>'});
+    h+='</div></div>';
+  });
+  h+='<button class="addline" id="addLine">+ เพิ่มท่อนใหม่ (8 ห้อง)</button>';
+  $("#sheet").innerHTML=h;
+}
+function setCur(c,scroll){cur=c;$$(".sl.cur").forEach(e=>e.classList.remove("cur"));const e=$('.sl[data-c="'+c.l+","+c.b+","+c.s+'"]');if(e){e.classList.add("cur");if(scroll)e.scrollIntoView({block:"nearest",behavior:"smooth"})}}
+function curSlot(){return song.lines[cur.l].bars[cur.b][cur.s]}
+function refreshSlot(c){const e=$('.sl[data-c="'+c.l+","+c.b+","+c.s+'"]');if(e)e.innerHTML=slotHTML(song.lines[c.l].bars[c.b][c.s],+e.dataset.g)}
+function move(d){
+  const F=flat();let i=F.findIndex(x=>x.l===cur.l&&x.b===cur.b&&x.s===cur.s)+d;
+  if(i>=F.length){song.lines[song.lines.length-1].bars.push([[],[],[],[]]);touch();render();return setCur({l:song.lines.length-1,b:song.lines[song.lines.length-1].bars.length-1,s:0},true)}
+  i=Math.max(0,i);setCur(F[i],true);
+}
+function putNote(i){
+  audio();TS.khong(i);flashKey(i);
+  const sl=curSlot();
+  if(pair){if(sl.length===1&&sl[0]!==i){sl.push(i);sl.sort((a,b)=>a-b);refreshSlot(cur);touch();move(1)}else{song.lines[cur.l].bars[cur.b][cur.s]=[i];refreshSlot(cur);touch()}return}
+  song.lines[cur.l].bars[cur.b][cur.s]=[i];refreshSlot(cur);touch();move(1);
+}
+function rest(){song.lines[cur.l].bars[cur.b][cur.s]=[];refreshSlot(cur);touch();move(1)}
+function back(){if(curSlot().length){song.lines[cur.l].bars[cur.b][cur.s]=[];refreshSlot(cur)}else{move(-1);song.lines[cur.l].bars[cur.b][cur.s]=[];refreshSlot(cur)}touch()}
+function addBar(){song.lines[cur.l].bars.splice(cur.b+1,0,[[],[],[],[]]);touch();render();setCur({l:cur.l,b:cur.b+1,s:0},true)}
+function delBar(){const L=song.lines[cur.l];if(L.bars.length<=1&&song.lines.length<=1)return toast("ต้องมีอย่างน้อย 1 ห้อง");
+  L.bars.splice(cur.b,1);if(!L.bars.length){song.lines.splice(cur.l,1);cur={l:Math.max(0,cur.l-1),b:0,s:0}}else cur={l:cur.l,b:Math.min(cur.b,L.bars.length-1),s:0};touch();render();setCur(cur)}
+
+$("#sheet").addEventListener("click",e=>{
+  const s=e.target.closest(".sl");if(s){const [l,b,si]=s.dataset.c.split(",").map(Number);setCur({l,b,s:si});const sl=song.lines[l].bars[b][si];if(sl.length){audio();sl.forEach(i=>TS.khong(i))}return}
+  const a=e.target.closest("[data-lact]");if(a){const li=+a.dataset.li;
+    if(a.dataset.lact==="del"){if(song.lines.length<=1)return toast("ต้องมีอย่างน้อย 1 ท่อน");if(!a.dataset.sure){a.dataset.sure=1;a.textContent="แน่ใจ?";setTimeout(()=>{a.textContent="ลบท่อน";delete a.dataset.sure},2500);return}
+      song.lines.splice(li,1);cur={l:0,b:0,s:0};touch();render();setCur(cur)}
+    else if(a.dataset.lact==="up"&&li>0){const t=song.lines[li];song.lines[li]=song.lines[li-1];song.lines[li-1]=t;touch();render()}
+    return}
+  if(e.target.id==="addLine"){song.lines.push({label:"ท่อน "+TH(song.lines.length+1),bars:blankBars(8)});touch();render();setCur({l:song.lines.length-1,b:0,s:0},true)}
+});
+$("#sheet").addEventListener("input",e=>{if(e.target.dataset.lab!=null){song.lines[+e.target.dataset.lab].label=e.target.value;touch()}});
+
+/* ---------- แป้นลูกฆ้อง ---------- */
+const OCT=i=>i<3?"ต่ำ":i<10?"กลาง":"สูง";
+$("#keys").innerHTML=KN.map((n,i)=>'<button class="key" data-i="'+i+'" aria-label="ลูกฆ้อง '+(i+1)+' '+n+'">'+n+'<small>'+OCT(i)+'</small></button>').join("");
+$("#keys").addEventListener("pointerdown",e=>{const k=e.target.closest(".key");if(!k)return;e.preventDefault();putNote(+k.dataset.i)});
+function flashKey(i){const k=$('.key[data-i="'+i+'"]');if(!k)return;k.classList.add("hit");setTimeout(()=>k.classList.remove("hit"),110)}
+$$(".ctl [data-k]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.k;
+  if(k==="rest")rest();else if(k==="back")back();else if(k==="left")move(-1);else if(k==="right")move(1);else if(k==="addbar")addBar();else if(k==="delbar")delBar();
+  else if(k==="pair"){pair=!pair;b.classList.toggle("on",pair);toast(pair?"โหมดตีคู่: กดสองลูกต่อกันในช่องเดียว":"ปิดโหมดตีคู่")}}));
+document.addEventListener("keydown",e=>{
+  if(e.target.matches("input,textarea,select"))return;
+  const d=e.code&&/^Digit[1-7]$/.test(e.code)?+e.code.slice(5):null;
+  if(d){e.preventDefault();let i;if(e.altKey){if(d<5)return;i=d-5}else if(e.shiftKey){i=9+d;if(i>15)return}else i=2+d;putNote(i);return}
+  if(e.key===" "||e.key==="-"){e.preventDefault();rest()}else if(e.key==="Backspace"){e.preventDefault();back()}
+  else if(e.key==="ArrowRight"){e.preventDefault();move(1)}else if(e.key==="ArrowLeft"){e.preventDefault();move(-1)}
+});
+
+/* ---------- ตั้งค่าเพลง ---------- */
+function natabOptions(){
+  const l=NT.LIST.filter(p=>p.sec.length===1&&p.sec[0].r===song.rate);
+  $("#natab").innerHTML='<option value="">ไม่มีกลอง (ฉิ่งอย่างเดียว)</option>'+l.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("");
+  if(song.natab&&!l.some(p=>p.id===song.natab))song.natab=l[0]?l[0].id:"";
+  $("#natab").value=song.natab||"";
+}
+function uiSettings(){
+  $("#title").value=song.title;$$("#rate button").forEach(b=>b.classList.toggle("on",+b.dataset.r===song.rate));natabOptions();
+  $("#tV").textContent=song.bpm;$$(".mix button").forEach(b=>b.classList.toggle("on",!!song.mix[b.dataset.m]));
+}
+$("#title").addEventListener("input",e=>{song.title=e.target.value;touch()});
+$$("#rate button").forEach(b=>b.addEventListener("click",()=>{song.rate=+b.dataset.r;natabOptions();uiSettings();render();setCur(cur);touch()}));
+$("#natab").addEventListener("change",e=>{song.natab=e.target.value;touch()});
+$$(".mix button").forEach(b=>b.addEventListener("click",()=>{song.mix[b.dataset.m]=!song.mix[b.dataset.m];uiSettings();touch()}));
+let th=null;[["#tDn",-1],["#tUp",1]].forEach(([id,d])=>{const b=$(id);const st=v=>{song.bpm=Math.max(30,Math.min(600,v));$("#tV").textContent=song.bpm;touch()};
+  b.addEventListener("pointerdown",e=>{e.preventDefault();st(song.bpm+d*4);let n=0;th=setInterval(()=>{n++;st(song.bpm+d*(n>10?10:4))},130)});
+  ["pointerup","pointerleave","pointercancel"].forEach(v=>b.addEventListener(v,()=>clearInterval(th)))});
+
+/* ---------- เล่น ---------- */
+let run=false,timer=0,raf=0,nextT=0,g=0,vq=[],TL=[],DT=null,loop=false;
+$("#bLoop").addEventListener("click",()=>{loop=!loop;$("#bLoop").classList.toggle("on",loop)});
+function play(from){
+  if(!audio())return toast("เครื่องนี้เล่นเสียงไม่ได้");stop();
+  TL=flat().map(c=>song.lines[c.l].bars[c.b][c.s]);
+  const p=song.natab&&NT.get(song.natab);DT=p?NT.timeline(p,{rate:song.rate,end:false}):null;
+  g=from-4;run=true;vq=[];nextT=AC.currentTime+.12;sched();timer=setInterval(sched,25);raf=requestAnimationFrame(vis);
+  $("#bPlay").textContent="■ หยุด";$("#bPlay").classList.add("on");
+}
+function stop(){run=false;clearInterval(timer);cancelAnimationFrame(raf);$$(".sl.play").forEach(e=>e.classList.remove("play"));$("#bPlay").textContent="▶ เล่นตั้งแต่ต้น";$("#bPlay").classList.remove("on")}
+function sched(){
+  const u=60/song.bpm;
+  while(nextT<AC.currentTime+.15){
+    if(g>=TL.length){if(loop)g=0;else{const end=nextT;setTimeout(()=>{if(run)stop()},Math.max(0,(end-AC.currentTime)*1000+400));clearInterval(timer);return}}
+    if(g<0){const c=NT.countInCh(g,song.rate);if(c&&song.mix.ching)TS.ching(c===1,nextT)}
+    else{
+      const sl=TL[g];if(song.mix.khong)sl.forEach(i=>TS.khong(i,nextT,sl.length>1?.75:1));
+      const c=chAt(g);if(c&&song.mix.ching)TS.ching(c===1,nextT);
+      if(DT&&song.mix.drum)DT[g%DT.length].l.forEach(l=>TS.drum(l,nextT,.8));
+      vq.push({t:nextT,g});
+    }
+    nextT+=u;g++;
+  }
+}
+let lastG=-1;
+function vis(){
+  if(!run)return;const now=visNow();let c=null;while(vq.length&&vq[0].t<=now)c=vq.shift();
+  if(c&&c.g!==lastG){lastG=c.g;$$(".sl.play").forEach(e=>e.classList.remove("play"));const e=$('.sl[data-g="'+c.g+'"]');if(e){e.classList.add("play");const r=e.getBoundingClientRect();if(r.top<60||r.bottom>window.innerHeight-200)e.scrollIntoView({block:"center",behavior:"smooth"})}}
+  raf=requestAnimationFrame(vis);
+}
+$("#bPlay").addEventListener("click",()=>run?stop():play(0));
+$("#bPlayHere").addEventListener("click",()=>{if(run)stop();play(gIndex({l:cur.l,b:cur.b,s:0}))});
+
+/* ---------- กล่องโต้ตอบ ---------- */
+function dlg(html){$("#dlg").innerHTML=html+'<button class="btn" data-x="close" style="margin-top:14px;width:100%">ปิด</button>';$("#ov").classList.remove("hidden")}
+function closeDlg(){$("#ov").classList.add("hidden")}
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov"||e.target.dataset.x==="close")closeDlg()});
+const meta=s=>NT.RATE[s.rate].n+" · "+s.lines.reduce((a,l)=>a+l.bars.length,0)+" ห้อง";
+function clubSongs(){try{const L=P.APP.D.library||{};return Object.keys(L).filter(k=>L[k]&&L[k].kind==="song"&&L[k].song).map(k=>Object.assign({lid:k},L[k])).sort((a,b)=>(b.at||0)-(a.at||0))}catch(e){return []}}
+
+/* เปิด */
+$("#bOpen").addEventListener("click",()=>{
+  const d=getDrafts(),c=inApp()?clubSongs():[];
+  dlg('<h3>เปิดเพลง</h3><button class="xb" data-o="new"><b>+ เพลงใหม่</b><span>เริ่มแผ่นโน้ตเปล่า 8 ห้อง</span></button>'+
+    (inApp()?'<div class="lbl">🏫 สื่อของชมรม</div>'+(c.length?c.map(x=>'<div class="it"><div class="nm"><b>'+esc(x.title)+'</b><span>'+esc(meta(unpack(x.song)))+(x.by?" · "+esc(x.by):"")+'</span></div><button class="btn" data-o="c:'+esc(x.lid)+'">เปิด</button></div>').join(""):'<div class="empty">ยังไม่มีเพลงที่ครูบันทึกเป็นสื่อของชมรม</div>'):"")+
+    '<div class="lbl">💾 ในเครื่องนี้</div>'+(d.length?d.map(x=>'<div class="it"><div class="nm"><b>'+esc(x.title)+'</b><span>'+esc(meta(unpack(x)))+'</span></div><button class="btn" data-o="d:'+esc(x.id)+'">เปิด</button><button class="btn" data-o="x:'+esc(x.id)+'">ลบ</button></div>').join(""):'<div class="empty">ยังไม่มี</div>'));
+});
+$("#dlg").addEventListener("click",e=>{
+  const b=e.target.closest("[data-o],[data-s],[data-e]");if(!b)return;
+  if(b.dataset.o){const o=b.dataset.o;
+    if(o==="new"){stop();song=newSong();cur={l:0,b:0,s:0};touch();closeDlg();uiSettings();render();setCur(cur);return}
+    if(o.startsWith("c:")){const x=(P.APP.D.library||{})[o.slice(2)];if(!x)return;stop();song=unpack(Object.assign({},x.song,{libId:o.slice(2)}));cur={l:0,b:0,s:0};touch();closeDlg();uiSettings();render();setCur(cur);toast("เปิด “"+song.title+"” แล้ว");return}
+    if(o.startsWith("d:")){const x=getDrafts().find(y=>y.id===o.slice(2));if(!x)return;stop();song=unpack(x);cur={l:0,b:0,s:0};touch();closeDlg();uiSettings();render();setCur(cur);return}
+    if(o.startsWith("x:")){if(!b.dataset.sure){b.dataset.sure=1;b.textContent="แน่ใจ?";return}setDrafts(getDrafts().filter(y=>y.id!==o.slice(2)));b.closest(".it").remove();toast("ลบแล้ว");return}
+  }
+  if(b.dataset.s){const s=b.dataset.s;
+    if(s==="local"){const l=getDrafts().filter(x=>x.id!==song.id);l.unshift(pack(song));setDrafts(l.slice(0,80));closeDlg();toast("บันทึก “"+song.title+"” ในเครื่องนี้แล้ว")}
+    else if(s==="club")publish();
+    return}
+  if(b.dataset.e){const x=b.dataset.e;closeDlg();if(x==="pdf")exportPDF();else if(x==="docx")exportDocx();}
+});
+
+/* บันทึก */
+$("#bSave").addEventListener("click",()=>{
+  if(!song.title.trim()){toast("ตั้งชื่อเพลงก่อน");$("#title").focus();return}
+  dlg('<h3>บันทึก “'+esc(song.title)+'”</h3><button class="xb" data-s="local"><b>💾 บันทึกในเครื่องนี้</b><span>เก็บเป็นร่างไว้แก้ต่อ เปิดได้จากปุ่ม “เปิด”</span></button>'+
+    (inApp()?(isTeacher()?'<button class="xb" data-s="club"><b>🏫 บันทึกเป็นสื่อของชมรม</b><span>'+(song.libId?"อัปเดตเพลงเดิมใน":"เพิ่มลงใน")+'คลังความรู้ หมวด “โน้ตและเพลง” สมาชิกทุกคนเปิดเล่นและส่งออกได้</span></button>':'<div class="empty">การบันทึกเป็นสื่อของชมรมทำได้เฉพาะครู · นักเรียนบันทึกในเครื่อง แล้วส่งออกเป็นไฟล์ส่งครูได้</div>'):'<div class="empty">เปิดจากเมนูเกมในแอปสรรพวาทิต เพื่อบันทึกเป็นสื่อของชมรม</div>'));
+});
+async function publish(){
+  if(!isTeacher())return;
+  try{
+    const cats=(P.APP.cfg().libCats||P.MC.C.libCats||[]),cat=cats.includes("โน้ตและเพลง")?"โน้ตและเพลง":(cats[0]||"อื่น ๆ");
+    const id=song.libId||("song_"+Date.now().toString(36));const old=(P.APP.D.library||{})[id];
+    const rec={title:song.title.trim(),cat,desc:"โน้ตเพลง · "+meta(song)+(song.natab&&NT.get(song.natab)?" · หน้าทับ"+NT.get(song.natab).name.replace(/^หน้าทับ/,""):""),kind:"song",song:pack(Object.assign({},song,{libId:id})),at:old&&old.at||Date.now(),edited:Date.now(),by:old&&old.by||myName()};
+    await P.APP.W(P.B.set("library/"+id,rec));song.libId=id;touch();closeDlg();toast("บันทึกเป็นสื่อของชมรมแล้ว (คลังความรู้)");
+  }catch(e){console.error(e);toast("บันทึกไม่สำเร็จ: "+(e.message||e))}
+}
+
+/* ---------- ส่งออก ---------- */
+$("#bExport").addEventListener("click",()=>dlg('<h3>ส่งออกแผ่นโน้ต</h3><button class="xb" data-e="pdf"><b>PDF</b><span>กระดาษ A4 พร้อมพิมพ์ หรือส่งในกลุ่มแชต</span></button><button class="xb" data-e="docx"><b>Word (.docx)</b><span>แก้ไขต่อในโปรแกรม Word ได้ · ฟอนต์ TH SarabunPSK</span></button>'));
+const cellText=b=>b.map(sl=>!sl.length?"-":sl.map(i=>KN[i]).join("")).join(" ");
+function metaLines(){const p=song.natab&&NT.get(song.natab);return ["อัตรา"+NT.RATE[song.rate].n+(p?" · หน้าทับ"+p.name.replace(/^หน้าทับ/,""):"")+" · ความเร็ว "+song.bpm+" ตัวโน้ต/นาที","บันทึกโดย "+(myName()||"สมาชิกชมรม")+" · "+thDate(Date.now())]}
+function thDate(ts){const M=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"],d=new Date(ts);return d.getDate()+" "+M[d.getMonth()]+" "+(d.getFullYear()+543)}
+const fname=ext=>(song.title.trim()||"โน้ตเพลง").replace(/[\\/:*?"<>|\s]+/g,"_")+"."+ext;
+const CLUB="ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม";
+
+function pagesHTML(){
+  const PH=1123,top=56,bottom=70,usable=PH-top-bottom,FONT="'Sarabun','TH Sarabun New',sans-serif";
+  const head='<div style="text-align:center;margin-bottom:18px"><div style="font-size:13px;color:#7a5a6e">'+CLUB+'</div><div style="font-size:28px;font-weight:700;margin:4px 0">'+esc(song.title||"โน้ตเพลง")+'</div>'+metaLines().map(t=>'<div style="font-size:14px;color:#444">'+esc(t)+'</div>').join("")+'</div>';
+  const blocks=[];let barNo=0;
+  song.lines.forEach(l=>{const rows=[];for(let i=0;i<l.bars.length;i+=8)rows.push(l.bars.slice(i,i+8));
+    let h='<div style="margin-bottom:14px"><div style="font-size:16px;font-weight:700;margin:0 0 4px">'+esc(l.label||"")+'</div><table style="width:100%;border-collapse:collapse;table-layout:fixed">';
+    rows.forEach(r=>{h+='<tr>';for(let k=0;k<8;k++){const b=r[k];if(b)barNo++;h+='<td style="border:1px solid #555;height:40px;text-align:center;font-size:18px;padding:2px 0;position:relative">'+(b?'<span style="position:absolute;left:3px;top:0;font-size:9px;color:#999">'+TH(barNo)+'</span>'+esc(cellText(b)):"")+'</td>'}h+='</tr>'});
+    h+='</table></div>';blocks.push({h,ht:30+rows.length*42+14});
+  });
+  const pages=[];let curP=[],used=170;
+  blocks.forEach(b=>{if(used+b.ht>usable&&curP.length){pages.push(curP);curP=[];used=0}curP.push(b.h);used+=b.ht});pages.push(curP);
+  return pages.map((p,i)=>'<div class="rp-page" style="width:794px;height:1123px;padding:'+top+'px 60px 0;box-sizing:border-box;background:#fff;color:#111;font-family:'+FONT+';position:relative">'+(i===0?head:"")+p.join("")+
+    '<div style="position:absolute;left:60px;right:60px;bottom:28px;display:flex;justify-content:space-between;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:6px"><span>บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</span><span>หน้า '+TH(i+1)+'/'+TH(pages.length)+'</span></div></div>').join("");
+}
+async function exportPDF(){
+  if(P&&P.MC&&P.MC.exportPDF){
+    toast("กำลังสร้าง PDF…");
+    try{const root=P.document.createElement("div");root.innerHTML=pagesHTML();await P.MC.exportPDF(root,fname("pdf"));toast("ส่งออก PDF แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
+    return;
+  }
+  // นอกแอป: เปิดหน้าพิมพ์ แล้วเลือก “บันทึกเป็น PDF”
+  const w=window.open("","_blank");if(!w)return toast("เบราว์เซอร์บล็อกหน้าต่างใหม่");
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(song.title)+'</title><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet"><style>@page{size:A4;margin:0}body{margin:0}.rp-page{page-break-after:always}</style></head><body>'+pagesHTML()+'<script>setTimeout(()=>print(),700)<\/script></body></html>');w.document.close();
+}
+async function exportDocx(){
+  const rows=[];
+  if(P&&P.MC&&P.MC.docxDoc){
+    const M=P.MC;let body=M.wPara(M.wRun(CLUB,{sz:24}),{jc:"center"})+M.wPara(M.wRun(song.title||"โน้ตเพลง",{b:true,sz:44}),{jc:"center"})+metaLines().map((t,i,a)=>M.wPara(M.wRun(t,{sz:28}),{jc:"center",after:i===a.length-1?200:0})).join("");
+    song.lines.forEach(l=>{body+=M.wPara(M.wRun(l.label||"",{b:true,sz:32}),{after:60});const rs=[];for(let i=0;i<l.bars.length;i+=8){const r=l.bars.slice(i,i+8).map(cellText);while(r.length<8)r.push("");rs.push(r)}
+      body+=M.wTable(rs,Array(8).fill(1204),{sz:28,align:Array(8).fill("center")})+M.wPara("",{after:160})});
+    body+=M.wPara(M.wRun("บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026",{sz:22}),{jc:"center"});
+    try{await M.saveBlob(M.docxDoc(body),fname("docx"));toast("ส่งออก Word แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
+    return;
+  }
+  // นอกแอป: ไฟล์ .doc แบบ HTML (Word เปิดได้)
+  const html='<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>body{font-family:"TH SarabunPSK";font-size:16pt}td{border:1px solid #000;text-align:center;width:12.5%;height:28pt}table{border-collapse:collapse;width:100%}</style></head><body><p align=center>'+esc(CLUB)+'</p><h1 align=center>'+esc(song.title)+'</h1>'+metaLines().map(t=>'<p align=center>'+esc(t)+'</p>').join("")+
+    song.lines.map(l=>{let h='<p><b>'+esc(l.label)+'</b></p><table>';for(let i=0;i<l.bars.length;i+=8){h+='<tr>'+l.bars.slice(i,i+8).map(b=>'<td>'+esc(cellText(b))+'</td>').join("")+'</tr>'}return h+'</table>'}).join("")+'</body></html>';
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["﻿"+html],{type:"application/msword"}));a.download=fname("doc");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+}
+
+/* ---------- เริ่ม ---------- */
+uiSettings();render();setCur(cur);
+try{if(/[?&]debug=1/.test(location.search))window.__NO=()=>({song,cur,pack,unpack,pagesHTML})}catch(e){}
+})();
+</script>
+</body>
+</html>
