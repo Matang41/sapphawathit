@@ -31,9 +31,9 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
 #quest{padding:4px 8px;font-size:11.5px;max-width:52%;line-height:1.35}
 #tbtn{margin-left:auto;display:flex;gap:4px;pointer-events:auto}
 #tbtn button{width:34px;height:34px;font-size:16px;padding:0;color:var(--cream)}
-#banner{position:absolute;left:50%;top:58px;transform:translateX(-50%);padding:5px 14px;font-family:Mitr;font-size:13px;white-space:nowrap;opacity:0;transition:opacity .4s;pointer-events:none;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#banner{position:absolute;left:50%;top:84px;transform:translateX(-50%);padding:5px 14px;font-family:Mitr;font-size:13px;white-space:nowrap;opacity:0;transition:opacity .4s;pointer-events:none;max-width:94%;overflow:hidden;text-overflow:ellipsis}
 #banner.on{opacity:1}
-#hint{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);padding:4px 12px;font-family:Mitr;font-size:12.5px;pointer-events:auto;white-space:nowrap;cursor:pointer}
+#hint{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);padding:4px 12px;font-family:Mitr;font-size:12.5px;pointer-events:auto;white-space:nowrap;cursor:pointer}
 #bub{position:absolute;padding:4px 9px;background:var(--cream);color:#2a1630;font-family:Mitr;font-size:11.5px;border-radius:8px;max-width:180px;pointer-events:none;transform:translate(-50%,-100%);box-shadow:0 2px 0 #000;line-height:1.3}
 #bub:after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--cream);border-bottom:0}
 /* dialogue */
@@ -65,7 +65,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
 #lanes button{flex:1;height:64px;border-radius:10px;border:3px solid #000;font-size:16px;color:#1a0f10;font-weight:600;box-shadow:inset 0 -5px 0 rgba(0,0,0,.25);touch-action:none}
 #lanes button small{display:block;font-size:10.5px;font-weight:400;opacity:.7}
 #lanes button.dn{transform:translateY(3px);box-shadow:inset 0 -2px 0 rgba(0,0,0,.25);filter:brightness(1.25)}
-#lanes.gong button{height:58px;border-radius:50%;max-width:58px;background:radial-gradient(circle at 50% 45%,#ffe9a8 0 18%,#c99a3a 20% 44%,#7a5418 46% 60%,#3a2408 62%);color:#2a1600;font-size:15px;border:2px solid #000;padding:0}
+#lanes.gong button{flex:1 1 0;height:auto;aspect-ratio:1;min-width:0;border-radius:50%;max-width:58px;background:radial-gradient(circle at 50% 45%,#ffe9a8 0 18%,#c99a3a 20% 44%,#7a5418 46% 60%,#3a2408 62%);color:#2a1600;font-size:15px;border:2px solid #000;padding:0}
 #lanes.gong{justify-content:center;flex-wrap:nowrap;gap:3px}
 #lanes.gong button.lit{filter:brightness(1.6) drop-shadow(0 0 8px #ffd34d)}
 /* overlays */
@@ -86,6 +86,9 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
 .leg b{color:var(--gold)}
 #credits{text-align:center}
 #credits .roll{font-size:15px;line-height:1.8}
+#replay{position:absolute;left:50%;transform:translateX(-50%);pointer-events:auto;padding:6px 16px;color:var(--cream);font-family:Mitr;font-size:14px;cursor:pointer}
+#replay:disabled{opacity:.4}
+.bag{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.bag button{flex:1;min-width:120px;padding:8px;color:var(--cream);background:#2b1f40;border:2px solid var(--cream);border-radius:6px;font-size:13px}.bag button:disabled{opacity:.4}
 #flash{position:absolute;inset:0;pointer-events:none;z-index:25;opacity:0;background:#c69bff;transition:opacity .25s}
 </style>
 </head>
@@ -111,6 +114,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
     <div id="bmsg" class="box hide"></div>
     <div id="menu" class="hide"></div>
     <div id="lanes" class="hide"></div>
+    <button id="replay" class="box hide">🔁 ฟังอีกครั้ง</button>
   </div>
   <div id="dlg" class="box hide"><img id="dP" alt=""><div style="flex:1;min-width:0"><div class="nm" id="dN"></div><div class="tx" id="dT"></div></div><div class="more">▼</div></div>
   <div id="flash"></div>
@@ -133,6 +137,8 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
     <p><b>ตาเรา (โจมตี)</b> เลือกเครื่องดนตรี แล้วกดให้ตรงตอนโน้ตวิ่งมาถึงเส้น ยิ่งตรงจังหวะยิ่งแรง<br>ตบมือ: Space/J · ฉิ่ง–ฉับ: F J · กลองแขก: D F J K (ติง โจ๊ะ ทั่ม จ๊ะ)</p>
     <p><b>เอาเครื่องดนตรีคืน</b> ได้ฉิ่ง → ท่าฉิ่ง · ได้กลองแขก → ท่าหน้าทับ · ได้ระนาดเอก → ท่าไม้ตายรัวระนาด (เมื่อเกจเต็ม)</p>
     <p><b>พบธรรมช่วย</b> ผู้จัดการสายป่วน สุ่มช่วยได้หลายแบบ ใช้ได้ทุก 3 ตา</p>
+    <p><b>ฟังไม่ทัน?</b> กด 🔁 ฟังอีกครั้ง (หรือแป้น R) ได้ตาละ 2 ครั้ง · ตีผิดจะมีไฟบอกลูกที่ถูกแล้วให้ตีแก้ได้</p>
+    <p><b>เพิ่มพลัง</b> ชนะแล้วได้ค่าประสบการณ์ เลเวลอัปพลังวงและแรงตีเพิ่ม · เก็บของที่ส่องประกายทั่วโรงเรียน (นมเย็น ข้าวเหนียวหมูปิ้ง ยาดม) ใช้ในการต่อสู้ได้จากเมนู 🎒 · โน้ตหลงจะกลับมาให้ฝึกซ้ำเรื่อย ๆ · ยังยากอยู่ เปิด <b>โหมดง่าย</b> ในเมนู ☰</p>
     <p style="opacity:.75;font-size:13px">ถ้าเสียงช้ากว่าภาพ (เช่นลำโพงบลูทูธ) ตั้งค่าความหน่วงได้ในเกมกลองแขกคู่ขวัญ เกมนี้ใช้ค่าเดียวกัน</p>
     <button class="btn" onclick="this.closest('.ov').classList.add('hide')">เข้าใจแล้ว</button>
   </div></div>
@@ -145,6 +151,8 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
   <div id="pause" class="ov hide"><div class="card box">
     <h2>พักเกม</h2>
     <p id="pInfo"></p>
+    <div class="bag" id="pBag"></div>
+    <button class="btn" id="pEasy"></button>
     <button class="btn" onclick="this.closest('.ov').classList.add('hide');paused=false">เล่นต่อ</button>
     <button class="btn" onclick="document.getElementById('how').classList.remove('hide')">วิธีเล่น</button>
     <button class="btn s" onclick="toTitle()">บันทึกและกลับหน้าแรก</button>
@@ -153,6 +161,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
     <h2>วงแตก!</h2>
     <p>จังหวะหลุดจนปีศาจได้ใจ… หายใจลึก ๆ ฟังฉิ่งให้ดี แล้วลองใหม่</p>
     <button class="btn g" id="lRetry">สู้ใหม่ (พลังเต็ม)</button>
+    <button class="btn" id="lEasy">สู้ใหม่แบบโหมดง่าย</button>
     <button class="btn s" id="lRun">ถอยไปตั้งหลัก</button>
   </div></div>
   <div id="credits" class="ov hide"><div class="card box">
@@ -240,7 +249,18 @@ const SPEC={
   stuG:{skin:'#efc0a0',hair:'#1a1410',hs:'long',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#22305e',shoe:'#111',skirt:1},
   guard:{skin:'#c88c62',hair:'#2a2420',hs:'short',shirt:'#6b5a3a',shade:'#544629',pants:'#3a3326',shoe:'#111',cap:'#3a3326'},
   nurse:{skin:'#f0c8a8',hair:'#20140f',hs:'long',shirt:'#ffffff',shade:'#dcdce8',pants:'#ffffff',shoe:'#ddd',cap:'#ffffff',skirt:1},
-  clerk:{skin:'#e8b48c',hair:'#2a1a12',hs:'short',shirt:'#2e8b57',shade:'#22704a',pants:'#333',shoe:'#111',cap:'#e6403a'}
+  clerk:{skin:'#e8b48c',hair:'#2a1a12',hs:'short',shirt:'#2e8b57',shade:'#22704a',pants:'#333',shoe:'#111',cap:'#e6403a'},
+  /* ตัวละครบทที่ 2 (ชุดนักเรียน ม.ต้น กางเกงสีกากี ถุงเท้าน้ำตาล · นักเรียนหญิงกระโปรงกรม) */
+  mateo:{skin:'#e6b48a',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22',small:1},
+  che:{skin:'#c98d62',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22',chub:1},
+  jao:{skin:'#e2ad85',hair:'#15100e',hs:'bang',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22'},
+  captain:{skin:'#c89068',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#2a2a30',shorts:'#7a3a1a',shoe:'#111',pocket:'#3b5bb5'},
+  yum:{skin:'#e2ad85',hair:'#15100e',hs:'short',blush:'#d0706a',chub:1,shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22'},
+  kaimuk:{skin:'#f0c4a0',hair:'#1a1210',hs:'long',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,glass:'#6a5a8a',chub:1,bow:'#24305e'},
+  ing:{skin:'#f2cbb0',hair:'#1a1210',hs:'long',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,bow:'#24305e'},
+  ice:{skin:'#f2cbb0',hair:'#1a1210',hs:'pony',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,bow:'#3a7ad8'},
+  foo:{skin:'#d9a07a',hair:'#14100e',hs:'curly',shirt:'#1a1820',shade:'#a8326e',pants:'#1a1820',shoe:'#111',polo:'#fff'},
+  waen:{skin:'#d9a07a',hair:'#14100e',hs:'short',shirt:'#1a1820',shade:'#a8326e',pants:'#1a1820',shoe:'#111',polo:'#fff',glass:'#a8a8b8'}
 };
 function drawChar(g,s,dir,f){
   const P=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w||1,h||1)};
@@ -248,10 +268,12 @@ function drawChar(g,s,dir,f){
   // ขา
   if(!side){const lu=f===1?1:0,ru=f===2?1:0;
     if(s.skirt){P(s.pants,4,18,8,3);P(s.skin,5,21,2,2-lu);P(s.skin,9,21,2,2-ru)}
+    else if(s.shorts){P(s.pants,4,19,8,2);P(s.skin,5,21,2,1-lu);P(s.skin,9,21,2,1-ru);P(s.shorts,5,22-lu,2,1);P(s.shorts,9,22-ru,2,1)}
     else{P(s.pants,5,19,3,4-lu);P(s.pants,8,19,3,4-ru)}
     P(s.shoe,5,23-lu,3,1);P(s.shoe,8,23-ru,3,1)}
   else{const a=f===1?1:f===2?-1:0;
     if(s.skirt){P(s.pants,5,18,7,3);P(s.skin,6+a,21,2,2);P(s.skin,8-a,21,2,2)}
+    else if(s.shorts){P(s.pants,5,19,7,2);P(s.skin,6+a,21,2,1);P(s.skin,8-a,21,2,1);P(s.shorts,6+a,22,2,1);P(s.shorts,8-a,22,2,1)}
     else{P(s.pants,6+a,19,3,4);P(s.pants,7-a,19,3,4)}
     P(s.shoe,6+a,23,4,1);P(s.shoe,7-a,23,4,1)}
   // ลำตัว
@@ -260,6 +282,8 @@ function drawChar(g,s,dir,f){
   if(s.tie&&!up&&!side){P(s.collar,6,12,4,1);P(s.tie,7,13,2,4);P(s.tie,7,17,2,1);P(s.shade,tx,12,1,6);P(s.shade,tx+tw-1,12,1,6)}
   if(s.tie&&side){P(s.collar,9,12,2,1);P(s.tie,10,13,1,3)}
   if(s.pocket&&!up&&!side)P(s.pocket,tx+tw-3,13,1,1);
+  if(s.polo){if(!up&&!side){P(s.polo,6,12,1,1);P(s.polo,9,12,1,1);P(s.polo,tx,14,1,2);P(s.polo,tx+tw-1,13,1,2)}else P(s.polo,tx+1,13,2,1)}
+  if(s.bow&&!up&&!side&&s.skirt){P(s.bow,7,12,2,2)}
   if(s.strap){if(!side){for(let i=0;i<7;i++)P(s.strap,up?tx+1+i:tx+tw-2-i,12+i,1,1);if(!up)P(s.strap,tx-1,17,2,2)}else P(s.strap,8,12,1,6)}
   // แขน
   if(!side){const sw=f===1?1:f===2?-1:0;
@@ -271,13 +295,15 @@ function drawChar(g,s,dir,f){
   P(s.skin,hx,3,hw,9);g.clearRect(hx,3,1,1);g.clearRect(hx+hw-1,3,1,1);g.clearRect(hx,11,1,1);g.clearRect(hx+hw-1,11,1,1);
   P(s.skin,7,11,2,1);
   const hr=s.hair;
-  if(up){P(hr,hx,2,hw,9);if(s.hs==='vol')P(hr,hx-1,1,hw+2,7);if(s.hs==='long')P(hr,hx,10,hw,4);if(s.cap)P(s.cap,hx,1,hw,3);return}
+  if(up){P(hr,hx,2,hw,9);if(s.hs==='vol'||s.hs==='curly')P(hr,hx-1,1,hw+2,7);if(s.hs==='pony'){P(hr,hx+3,10,2,4);if(s.bow)P(s.bow,hx+2,9,4,1)}if(s.hs==='long')P(hr,hx,10,hw,4);if(s.cap)P(s.cap,hx,1,hw,3);return}
   if(side){
     P(hr,hx,2,hw,3);P(hr,hx,5,4,5);P(hr,hx+4,5,2,1);
     if(s.hs==='vol'){P(hr,hx-1,1,hw+1,5);P(hr,hx+3,6,4,1)}
     if(s.hs==='bang')P(hr,hx+4,5,4,2);
     if(s.hs==='part')P(hr,hx+4,5,3,1);
     if(s.hs==='long')P(hr,hx-1,5,4,8);
+    if(s.hs==='curly'){P(hr,hx-1,0,hw+1,5);P(hr,hx+2,0,1,1);P(hr,hx+6,0,1,1);P(hr,hx+4,5,4,1);P('#2e2620',hx+1,1,1,1);P('#2e2620',hx+5,2,1,1)}
+    if(s.hs==='pony'){P(hr,hx-2,5,2,5);if(s.bow)P(s.bow,hx-1,4,2,2)}
     P(s.skin,hx+hw,8,1,1);
     P('#1a0c0c',hx+hw-2,8,1,1);if(s.eye==='side')P(hr,hx+hw-3,7,2,1);
     if(s.glass){P(s.glass,hx+hw-3,7,3,1);P(s.glass,hx+hw-3,9,3,1);P(s.glass,hx+hw-3,8,1,1)}
@@ -291,6 +317,8 @@ function drawChar(g,s,dir,f){
   if(s.hs==='part'){P(hr,hx,1,hw,1);P(hr,hx+1,5,5,1);P(hr,hx+1,6,2,1);P('#3a3448',hx+hw-4,2,1,2)}
   if(s.hs==='short')P(hr,hx+1,5,hw-2,1);
   if(s.hs==='long'){P(hr,hx-1,4,2,9);P(hr,hx+hw-1,4,2,9);P(hr,hx+1,5,hw-2,1)}
+  if(s.hs==='curly'){P(hr,hx-1,0,hw+2,5);P(hr,hx-1,5,2,2);P(hr,hx+hw-1,5,2,2);P(hr,hx+1,5,3,1);P(hr,hx+hw-4,5,3,1);P(hr,hx+2,6,1,1);P(hr,hx+hw-3,6,1,1);P('#2e2620',hx+1,1,1,1);P('#2e2620',hx+4,0,1,1);P('#2e2620',hx+hw-2,2,1,1);P(hr,hx-2,2,1,2);P(hr,hx+hw+1,2,1,2)}
+  if(s.hs==='pony'){P(hr,hx+1,5,hw-2,1);if(s.bow){P(s.bow,hx+hw-2,1,3,2)}}
   const ex1=hx+2,ex2=hx+hw-3;
   if(s.eye==='side'){P(hr,ex1-1,7,3,1);P(hr,ex2-1,7,3,1);P('#fff',ex1,8,1,1);P('#fff',ex2,8,1,1);P('#1a0c0c',ex1+1,8,1,1);P('#1a0c0c',ex2+1,8,1,1)}
   else{P('#1a0c0c',ex1,8,1,1);P('#1a0c0c',ex2,8,1,1)}
@@ -309,7 +337,7 @@ function buildSprites(){
   for(const k in SPEC){SPR[k]={};
     for(const dir of ['d','u','r','l']){SPR[k][dir]=[0,1,2].map(f=>{const c=document.createElement('canvas');c.width=16;c.height=24;const g=c.getContext('2d');
       if(dir==='l'){g.translate(16,0);g.scale(-1,1)}
-      drawChar(g,SPEC[k],dir==='l'?'r':dir,f);g.setTransform(1,0,0,1,0,0);return outline(c)})}}
+      if(SPEC[k].small){g.translate(dir==='l'?16:0,2);g.scale(dir==='l'?-1:1,1)}drawChar(g,SPEC[k],dir==='l'?'r':dir,f);g.setTransform(1,0,0,1,0,0);return outline(c)})}}
 }
 function spriteFace(k){const c=document.createElement('canvas');c.width=48;c.height=48;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#2b2040';g.fillRect(0,0,48,48);g.drawImage(SPR[k].d[0],2,0,12,15,4,6,36,45);return c.toDataURL()}
 
@@ -478,15 +506,26 @@ function prerenderRoom(stolen){
 /* ===================== สถานะเกม ===================== */
 const SAVEKEY='spw_pisat_v1';
 let S=null;
-function fresh(){return{map:'room',x:7*T+8,y:6*T+14,dir:'d',got:{ching:0,drum:0,ranad:0},beat:{},intro:0,hp:100,hpMax:100,done:0,t0:Date.now()}}
+function fresh(){return{map:'room',x:7*T+8,y:6*T+14,dir:'d',got:{ching:0,drum:0,ranad:0},beat:{},intro:0,hp:100,hpMax:100,done:0,t0:Date.now(),lv:1,xp:0,bag:{milk:1,moo:0,yadom:1},easy:0,picked:{}}}
+function fixSave(v){v.lv=v.lv||1;v.xp=v.xp||0;v.bag=v.bag||{milk:1,moo:0,yadom:1};v.picked=v.picked||{};v.easy=v.easy||0;['r0','r1','r2','r3'].forEach(k=>{if(v.beat[k]===1)v.beat[k]=Date.now()});return v}
 function save(){try{localStorage.setItem(SAVEKEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const v=JSON.parse(localStorage.getItem(SAVEKEY)||'null');if(v&&v.got&&v.intro)return v}catch(e){}return null}
 const nGot=()=>S.got.ching+S.got.drum+S.got.ranad;
-const hpMaxCalc=()=>100+15*nGot()+5*['r0','r1','r2','r3'].filter(k=>S.beat[k]).length;
+const hpMaxCalc=()=>100+15*nGot()+10*((S.lv||1)-1);
+const xpNeed=lv=>20+lv*20;
+const ITEMS={milk:{n:'นมเย็น',ic:'🥛',d:'ฟื้นพลัง 40%'},moo:{n:'ข้าวเหนียวหมูปิ้ง',ic:'🍢',d:'ฟื้นพลัง 70%'},yadom:{n:'ยาดม',ic:'🌿',d:'ตาปีศาจครั้งหน้า ไฟช่วยครบ ฟังซ้ำไม่จำกัด'}};
+const PICKS=[{id:'p1',x:14,y:9,it:'moo'},{id:'p2',x:2,y:24,it:'milk'},{id:'p3',x:44,y:4,it:'yadom'},{id:'p4',x:30,y:34,it:'moo'},{id:'p5',x:41,y:30,it:'yadom'},{id:'p6',x:9,y:31,it:'milk'},{id:'p7',x:52,y:18,it:'moo'},{id:'p8',x:26,y:24,it:'milk'},{id:'p9',x:1,y:9,it:'yadom'},{id:'p10',x:33,y:2,it:'moo'}];
+const roamDead=r=>S.beat[r.id]&&Date.now()-S.beat[r.id]<120000;
+async function gainXP(n){if(!n)return;S.xp=(S.xp||0)+n;let up=0;while(S.xp>=xpNeed(S.lv)){S.xp-=xpNeed(S.lv);S.lv++;up=1}
+  if(up){S.hpMax=hpMaxCalc();S.hp=S.hpMax;hud();save();sfx.get();await say(null,'เลเวลอัป! ตอนนี้ Lv.'+S.lv+' · พลังวงสูงสุด +10 และตีแรงขึ้น')}else{hud();save()}}
+function useItem(k,inBattle){if(!S.bag[k])return false;
+  if(k==='yadom'){if(!inBattle)return false;BT.focus=1}
+  else{S.hp=Math.min(S.hpMax,S.hp+S.hpMax*(k==='milk'?.4:.7));sfx.heal()}
+  S.bag[k]--;hud();save();return true}
 let mode='title',paused=false,busy=false;
 const keys={};let follow=[];
 const ACT={};// actors in cutscene
-const ROAM=[{id:'r0',x:5,y:26},{id:'r1',x:31,y:35},{id:'r2',x:44,y:22},{id:'r3',x:14,y:6}].map(r=>({...r,px:r.x*T+8,py:r.y*T+12,vx:0,vy:0,tm:0}));
+const ROAM=[{id:'r0',x:5,y:26},{id:'r1',x:31,y:35},{id:'r2',x:44,y:22},{id:'r3',x:14,y:6},{id:'r4',x:50,y:26},{id:'r5',x:20,y:4}].map(r=>({...r,px:r.x*T+8,py:r.y*T+12,vx:0,vy:0,tm:0}));
 const BOSSPOS={x:30*T,y:18*T+4},TANGPOS={x:30*T,y:16*T};
 const MON=[{k:'canteen',act:'canteen',x:24*T+8,y:30*T+14},{k:'library',act:'library',x:24*T+8,y:22*T+14},{k:'dome',act:'dome',x:19*T+8,y:22*T+14}];
 
@@ -533,7 +572,7 @@ let shakeT=0;function shake(ms){shakeT=performance.now()+(ms||300)}
 /* ===================== HUD ===================== */
 function hud(){
   S.hpMax=hpMaxCalc();S.hp=Math.min(S.hp,S.hpMax);
-  $('#hpT').textContent='พลังวง '+Math.max(0,Math.round(S.hp))+'/'+S.hpMax;$('#hpB').style.width=clamp(S.hp/S.hpMax*100,0,100)+'%';
+  $('#hpT').textContent='Lv.'+(S.lv||1)+' · พลังวง '+Math.max(0,Math.round(S.hp))+'/'+S.hpMax+(S.easy?' · ง่าย':'');$('#hpB').style.width=clamp(S.hp/S.hpMax*100,0,100)+'%';
   document.querySelectorAll('#items span').forEach(s=>s.classList.toggle('on',!!S.got[s.dataset.k]));
   $('#quest').innerHTML='<b>ภารกิจ</b> · '+quest();
 }
@@ -561,9 +600,17 @@ document.querySelectorAll('#pad button').forEach(b=>{
   b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)});
 $('#abtn').addEventListener('pointerdown',e=>{e.preventDefault();audio();if(dlgNext())return;if(mode==='world'&&!busy)interact()});
 $('#hint').addEventListener('pointerdown',e=>{e.preventDefault();audio();if(mode==='world'&&!busy)interact()});
+$('#replay').addEventListener('pointerdown',e=>{e.preventDefault();audio();if(BT&&BT.replay)BT.replay()});
 $('#bMap').onclick=()=>{if(mode==='world'&&!busy)openMap()};
 $('#bSnd').onclick=()=>{audio();muted=!muted;try{localStorage.setItem('spw_pisat_mute',muted?'1':'0')}catch(e){}applyMute()};
-$('#bMenu').onclick=()=>{if(mode!=='world'||busy)return;paused=true;const m=Math.round((Date.now()-S.t0)/60000);$('#pInfo').innerHTML='เครื่องดนตรีที่ได้คืน '+nGot()+'/3<br>'+quest();$('#pause').classList.remove('hide')};
+$('#bMenu').onclick=()=>{if(mode!=='world'||busy)return;paused=true;fillPause();$('#pause').classList.remove('hide')};
+function fillPause(){
+  $('#pInfo').innerHTML='Lv.'+S.lv+' · ประสบการณ์ '+S.xp+'/'+xpNeed(S.lv)+'<br>เครื่องดนตรีที่ได้คืน '+nGot()+'/3 · ของที่เก็บได้ '+Object.keys(S.picked).length+'/'+PICKS.length+'<br>'+quest();
+  $('#pBag').innerHTML=Object.keys(ITEMS).map(k=>'<button data-k="'+k+'" '+(k==='yadom'||!S.bag[k]||S.hp>=S.hpMax?'disabled':'')+'>'+ITEMS[k].ic+' '+ITEMS[k].n+' ×'+(S.bag[k]||0)+'<br><small>'+(k==='yadom'?'ใช้ได้ตอนต่อสู้':ITEMS[k].d)+'</small></button>').join('');
+  $('#pBag').querySelectorAll('button').forEach(b=>b.onclick=()=>{useItem(b.dataset.k,false);fillPause()});
+  $('#pEasy').textContent='โหมดง่าย: '+(S.easy?'เปิดอยู่ (กดเพื่อปิด)':'ปิดอยู่ (กดเพื่อเปิด)');
+  $('#pEasy').onclick=()=>{S.easy=S.easy?0:1;save();hud();fillPause()};
+}
 function setPad(on){$('#pad').classList.toggle('hide',!on||!isTouch);$('#abtn').classList.toggle('hide',!on||!isTouch)}
 
 /* ===================== โลก ===================== */
@@ -590,7 +637,8 @@ function updateWorld(dt){
   // ปีศาจหน้าประตู
   if(S.map==='world'&&S.intro&&performance.now()>encCool){
     for(const m of MON){if(S.beat[m.k])continue;if(Math.hypot(S.x-m.x,S.y-m.y)<20){keys.up=keys.down=keys.left=keys.right=0;runAct(m.act);return}}
-    for(const r of ROAM){if(S.beat[r.id])continue;if(Math.hypot(S.x-r.px,S.y-r.py)<12){keys.up=keys.down=keys.left=keys.right=0;roamBattle(r);return}}
+    for(const p of PICKS){if(S.picked[p.id])continue;if(Math.hypot(S.x-(p.x*T+8),S.y-(p.y*T+12))<14){S.picked[p.id]=1;S.bag[p.it]=(S.bag[p.it]||0)+1;sfx.get();banner('เก็บได้ '+ITEMS[p.it].ic+' '+ITEMS[p.it].n+' · '+ITEMS[p.it].d,3000);save()}}
+    for(const r of ROAM){if(roamDead(r))continue;if(Math.hypot(S.x-r.px,S.y-r.py)<12){keys.up=keys.down=keys.left=keys.right=0;roamBattle(r);return}}
     if(!S.done&&Math.hypot(S.x-BOSSPOS.x,S.y-BOSSPOS.y-14)<26){keys.up=keys.down=keys.left=keys.right=0;bossGate();return}
   }
   // ผู้คนรอบตัว / ประตู
@@ -598,7 +646,7 @@ function updateWorld(dt){
   if(n!==lastNear){lastNear=n;const h=$('#hint');if(n){h.textContent=(isTouch?'แตะ / A':'Space')+' · '+n.lb;h.classList.remove('hide')}else h.classList.add('hide')}
   if(S.map==='world'){const b=BLD.find(b=>S.x>b.x*T-24&&S.x<(b.x+b.w)*T+24&&S.y>b.y*T-10&&S.y<(b.y+b.h)*T+30);if(b&&b!==updateWorld.lb){updateWorld.lb=b;banner((b.n?b.n+'. ':'')+b.nm)}if(!b)updateWorld.lb=null}
   // โรมมิ่ง
-  ROAM.forEach(r=>{if(S.beat[r.id])return;r.tm-=dt;if(r.tm<=0){r.tm=rnd(.8,2.2);const a=rnd(0,7);r.vx=Math.cos(a)*22;r.vy=Math.sin(a)*22;if(Math.random()<.3)r.vx=r.vy=0}
+  ROAM.forEach(r=>{if(roamDead(r))return;r.tm-=dt;if(r.tm<=0){r.tm=rnd(.8,2.2);const a=rnd(0,7);r.vx=Math.cos(a)*22;r.vy=Math.sin(a)*22;if(Math.random()<.3)r.vx=r.vy=0}
     const nx=r.px+r.vx*dt,ny=r.py+r.vy*dt;if(!blocked(nx,ny)&&Math.hypot(nx-r.x*T,ny-r.y*T)<70){r.px=nx;r.py=ny}else r.tm=0});
   // พบธรรมป่วน
   if(S.intro&&idleT>7&&performance.now()>bubT){bubT=performance.now()+16000;pobBubble(pick(POBIDLE))}
@@ -641,8 +689,8 @@ async function doAct(n){
 async function runAct(a){
   busy=true;try{
   if(a==='enter512'){goRoom();return}
-  if(a==='heal'){await talk([['nurse','ดึกแล้วยังไม่กลับบ้านอีก… บาดเจ็บจากการตีผิดจังหวะใช่ไหม'],['nurse','นั่งพักแป๊บนึง ดื่มน้ำเยอะ ๆ']]);S.hp=S.hpMax;hud();sfx.heal();save();await say(null,'พลังวงเต็มแล้ว');return}
-  if(a==='seven'){await talk([['clerk','สวัสดีค่ะ รับนมเย็นไหมคะ'],['pob','สองแก้วครับ ผมเลี้ยงเอง (เบิกงบชมรมพื้นเมืองได้มั้ยนะ)'],['maha','…']]);S.hp=S.hpMax;hud();sfx.heal();save();await say(null,'นมเย็นฟื้นพลัง! พลังวงเต็มแล้ว');return}
+  if(a==='heal'){await talk([['nurse','ดึกแล้วยังไม่กลับบ้านอีก… บาดเจ็บจากการตีผิดจังหวะใช่ไหม'],['nurse','นั่งพักแป๊บนึง ดื่มน้ำเยอะ ๆ']]);S.hp=S.hpMax;let ex='';if(!S.bag.yadom){S.bag.yadom=1;ex='\nได้ 🌿 ยาดม ติดกระเป๋า (ใช้ตอนต่อสู้ ช่วยให้ฟังทำนองง่ายขึ้น)'}hud();sfx.heal();save();await say(null,'พลังวงเต็มแล้ว'+ex);return}
+  if(a==='seven'){await talk([['clerk','สวัสดีค่ะ รับนมเย็นไหมคะ'],['pob','สองแก้วครับ ผมเลี้ยงเอง (เบิกงบชมรมพื้นเมืองได้มั้ยนะ)'],['maha','…']]);S.hp=S.hpMax;let ex='';if((S.bag.milk||0)<3){S.bag.milk=3;ex='\nซื้อ 🥛 นมเย็นใส่กระเป๋าไว้ด้วย (มี 3 แก้ว)'}hud();sfx.heal();save();await say(null,'นมเย็นฟื้นพลัง! พลังวงเต็มแล้ว'+ex);return}
   if(a==='rest'){S.hp=Math.min(S.hpMax,S.hp+S.hpMax*.5);hud();save();sfx.heal();await say(null,'นั่งพักที่ศาลาพักคอย ฟื้นพลังครึ่งหนึ่ง · บันทึกเกมแล้ว');return}
   if(a==='guard'){await talk(S.done?[['guard','เมื่อคืนเงียบดีนะ มีแต่เสียงฉิ่งตรงจังหวะ ลุงหลับสบายเลย']]:[['guard','สองทุ่มแล้ว ยังไม่กลับบ้านอีกเหรอเด็ก ๆ'],['pob','ลุงครับ เรากำลังกู้ภัยเครื่องดนตรีครับ เป็นภารกิจระดับโรงเรียน'],['guard','ไม่ว่าอะไรหรอก ลุงได้ยินเสียงเพี้ยน ๆ ดังมาจากสนามบอลตั้งแต่หัวค่ำ'],['guard','ตรงกลางสนามมีแสงม่วง ๆ ลอยอยู่ ระวังตัวด้วยล่ะ']]);return}
   if(a==='council'){await talk([['pob','ห้องสภานักเรียน… ที่นี่คือบ้านหลังที่สองของผม'],['pob','ผมเคยเสนอโครงการ “ห้อง 512 เปิด 24 ชั่วโมง” แต่โดนตีตก'],['maha','ดีแล้ว']]);return}
@@ -674,7 +722,8 @@ function drawWorld(t){
     P('guard',36*T+8,10*T+4,'l',0);P('nurse',37*T+2,15*T+2,'r',0);P('clerk',49*T+8,12*T+14,'d',0);
     if(S.intro){
       MON.forEach(m=>{if(S.beat[m.k])return;list.push({y:m.y,fn:()=>drawMon(cx,m.k,m.x-cX,m.y-cY,t,.55)})});
-      ROAM.forEach(r=>{if(S.beat[r.id])return;list.push({y:r.py,fn:()=>drawMon(cx,'note',r.px-cX,r.py-cY,t+r.x,.6)})});
+      PICKS.forEach(p=>{if(S.picked[p.id])return;list.push({y:p.y*T+12,fn:()=>{const k=Math.sin(t*4+p.x)*.5+.5,x=p.x*T+8-cX,y=p.y*T+8-cY;cx.fillStyle='rgba(255,230,120,'+(.25+.3*k)+')';cx.fillRect(x-5,y-1,10,2);cx.fillRect(x-1,y-5,2,10);cx.fillStyle='#fff6c0';cx.fillRect(x-1,y-1,2,2)}})});
+      ROAM.forEach(r=>{if(roamDead(r))return;list.push({y:r.py,fn:()=>drawMon(cx,'note',r.px-cX,r.py-cY,t+r.x,.6)})});
       if(!S.done){
         list.push({y:BOSSPOS.y,fn:()=>{const a=.5+.3*Math.sin(t*2);cx.globalAlpha=a;drawMon(cx,'boss',BOSSPOS.x-cX,BOSSPOS.y-cY,t,.5);cx.globalAlpha=1}});
         list.push({y:TANGPOS.y,fn:()=>{cx.drawImage(SPR.tang.d[0],TANGPOS.x-8-cX,TANGPOS.y-24-cY);cx.fillStyle='rgba(198,155,255,'+(.35+.15*Math.sin(t*3))+')';cx.fillRect(TANGPOS.x-11-cX,TANGPOS.y-28-cY,22,30);cx.strokeStyle='#e8d8ff';cx.strokeRect(TANGPOS.x-11.5-cX,TANGPOS.y-28.5-cY,23,31)}});
@@ -748,33 +797,33 @@ function drawIntroFx(t){
 
 /* ===================== การต่อสู้ ===================== */
 const ENEMY={
-  canteen:{k:'canteen',n:'ปีศาจตะหลิวเพี้ยน',hp:45,atk:8,phr:[3,4],gap:.52,show:4,slot:.34,pats:['p1','p2'],item:'ching',bg:'canteen',
+  canteen:{k:'canteen',n:'ปีศาจตะหลิวเพี้ยน',hp:45,atk:6,xp:25,phr:[3,4],gap:.55,show:4,slot:.34,pats:['p1','p2'],item:'ching',bg:'canteen',
     intro:[['canteen','ป๊ง! ป๊ง! ฉิ่งอันนี้ข้าจะเอาไว้เคาะกระทะ ตะหลิวข้าไม่เคยตรงจังหวะ ใครก็ห้ามตรง!'],['pob','ตะหลิวพูดได้… วันนี้ผมเห็นอะไรมาเยอะเกินไปแล้ว'],['maha','ฟังทำนองมันให้ดี แล้วตีตาม']],
     win:[['canteen','ป๊ง… ป๊ง… ทำไมตีตรงแล้วมันอร่อยกว่าล่ะ…'],[null,'ได้ฉิ่งคืนแล้ว! ปลดท่า “ฉิ่ง–ฉับ” โจมตีแรงขึ้น และพลังวงสูงขึ้น'],['pob','ฉิ่งคุมวง ข้อนี้ผมจดลงสมุดบริหารแล้ว']]},
-  library:{k:'library',n:'ผีหนังสือโน้ตหลุด',hp:60,atk:10,phr:[4,5],gap:.48,show:2,slot:.32,pats:['p3','pk1','sd1','p2'],item:'drum',bg:'library',
+  library:{k:'library',n:'ผีหนังสือโน้ตหลุด',hp:60,atk:8,xp:30,phr:[3,5],gap:.5,show:3,slot:.32,pats:['p3','pk1','sd1','p2'],item:'drum',bg:'library',
     intro:[['library','ชู่ว… ห้องสมุดต้องเงียบ… แต่โน้ตในหนังสือข้าหลุดหน้าหมดแล้ว!'],['library','กลองแขกคู่นี้ ข้าจะตีให้เพี้ยนจนไม่มีใครจำหน้าทับได้'],['pob','ผมแนะนำว่าเราควรทำ index โน้ตใหม่ทั้งเล่มครับ'],['maha','พบธรรม เงียบก่อน']]},
-  dome:{k:'dome',n:'ยักษ์เสียงก้องโดม',hp:75,atk:12,phr:[4,6],gap:.45,show:1,slot:.3,pats:['sm1','km1','sd1','pk1'],item:'ranad',bg:'dome',
+  dome:{k:'dome',n:'ยักษ์เสียงก้องโดม',hp:75,atk:9,xp:35,phr:[4,5],gap:.48,show:2,slot:.3,pats:['sm1','km1','sd1','pk1'],item:'ranad',bg:'dome',
     intro:[['dome','โด๊ม… โด๊ม… ในโดมนี้ทุกเสียงก้องซ้ำ ซ้อนกันจนไม่รู้อะไรจริงอะไรสะท้อน!'],['dome','ระนาดเอกตัวนี้ข้าจะรัวให้ก้องจนหูเจ้าแตก!'],['maha','เสียงก้องหลอกได้แค่คนที่ไม่ฟัง'],['pob','ตรงนี้ผมไม่มีอะไรจะบริหาร ขอเชียร์อย่างเดียวนะ']]},
-  note:{k:'note',n:'โน้ตหลง',hp:20,atk:5,phr:[3,3],gap:.55,show:3,slot:.36,pats:['p1'],bg:'night',
+  note:{k:'note',n:'โน้ตหลง',hp:20,atk:4,xp:10,phr:[3,3],gap:.55,show:3,slot:.36,pats:['p1'],bg:'night',
     intro:[['note','♪… ข้าหลงจังหวะ… ข้าหลงทาง…'],['pob','โน้ตหลงตัวเล็ก ๆ ซ้อมมือกับมันก่อนก็ดี']]},
   boss:{k:'boss',n:'ท้าวเพี้ยนสุร',hp:80,atk:14,phr:[5,5],gap:.5,show:0,slot:.36,pats:['pk3','sd3'],bg:'field',boss:1}
 };
 for(const k in ENEMY){if(ENEMY[k].item==='drum')ENEMY[k].win=[['library','ชู่ว… หน้าทับ… กลับเข้าเล่มแล้ว… ขอบใจ…'],[null,'ได้กลองแขกคืนแล้ว! ปลดท่า “หน้าทับกลองแขก” สี่เสียง ติง โจ๊ะ ทั่ม จ๊ะ'],['maha','ตีหน้าทับให้ตรง ปีศาจจะหลบไม่ได้']];
   if(ENEMY[k].item==='ranad')ENEMY[k].win=[['dome','โด๊ม… เสียงจริงมีแค่หนึ่งเดียว… ข้าเข้าใจแล้ว…'],[null,'ได้ระนาดเอกคืนแล้ว! ปลดท่าไม้ตาย “รัวระนาด” ใช้ได้เมื่อเกจจังหวะเต็ม'],['pob','ครบสามชิ้น! ตามแผน ต่อไปคือสนามฟุตบอล']]}
-const BOSSPH=[{name:'ช่วงสามชั้น',slot:.36,gap:.5,phr:[5,5],atk:14,rate:3,pats:['pk3','sd3']},{name:'ช่วงสองชั้น',slot:.28,gap:.4,phr:[5,6],atk:16,rate:2,pats:['pk2','sd2','km2']},{name:'ช่วงชั้นเดียว',slot:.21,gap:.32,phr:[6,7],atk:18,rate:1,pats:['pk1','sd1','sm1','km1']}];
+const BOSSPH=[{name:'ช่วงสามชั้น',slot:.36,gap:.52,phr:[4,5],atk:10,show:2,rate:3,pats:['pk3','sd3']},{name:'ช่วงสองชั้น',slot:.29,gap:.44,phr:[5,5],atk:12,show:1,rate:2,pats:['pk2','sd2','km2']},{name:'ช่วงชั้นเดียว',slot:.23,gap:.38,phr:[5,6],atk:14,show:0,rate:1,pats:['pk1','sd1','sm1','km1']}];
 let BT=null;
 async function monEncounter(k){
   const e=ENEMY[k];busy=true;
   await talk(e.intro);
   const r=await battle(k);
-  if(r==='win'){S.beat[k]=1;if(e.item){S.got[e.item]=1;sfx.get()}S.hpMax=hpMaxCalc();S.hp=S.hpMax;save();hud();await talk(e.win);
+  if(r==='win'){S.beat[k]=1;if(e.item){S.got[e.item]=1;sfx.get()}S.hpMax=hpMaxCalc();S.hp=S.hpMax;save();hud();await talk(e.win);await gainXP(e.xp);
     if(nGot()===3&&!S.beat.allSaid){S.beat.allSaid=1;await talk([['maha','ครูตังค์ รอก่อนนะครับ'],[null,'ภารกิจใหม่: ไปกลางสนามฟุตบอล']])}}
   busy=false;
 }
-async function roamBattle(r){busy=true;await talk(ENEMY.note.intro);const res=await battle('note');if(res==='win'){S.beat[r.id]=1;S.hpMax=hpMaxCalc();S.hp=Math.min(S.hpMax,S.hp+10);save();hud();await say(null,'โน้ตหลงกลับเข้าจังหวะแล้ว · พลังวงสูงสุด +5')}busy=false}
+async function roamBattle(r){busy=true;if(!S.beat.roamSaid){S.beat.roamSaid=1;await talk(ENEMY.note.intro)}const res=await battle('note');if(res==='win'){S.beat[r.id]=Date.now();r.px=r.x*T+8;r.py=r.y*T+12;S.hp=Math.min(S.hpMax,S.hp+10);let msg='โน้ตหลงกลับเข้าจังหวะแล้ว (ได้ประสบการณ์ +'+ENEMY.note.xp+')';if(Math.random()<.5){const it=pick(['milk','milk','moo','yadom']);S.bag[it]++;msg+='\nมันทิ้ง '+ITEMS[it].ic+' '+ITEMS[it].n+' ไว้ให้'}save();hud();await say(null,msg);await gainXP(ENEMY.note.xp)}busy=false}
 async function bossGate(){
   busy=true;
-  if(nGot()<3){await talk([['pob','หยุด ๆ ๆ! ตามแผนเรายังเก็บเครื่องดนตรีไม่ครบ ('+nGot()+'/3)'],['pob','บุกตอนนี้ความเสี่ยงสูงเกินไป ผู้จัดการไม่อนุมัติครับ']]);encCool=performance.now()+2500;busy=false;return}
+  if(nGot()<3){await talk([['pob','หยุด ๆ ๆ! ตามแผนเรายังเก็บเครื่องดนตรีไม่ครบ ('+nGot()+'/3)'],['pob','บุกตอนนี้ความเสี่ยงสูงเกินไป ผู้จัดการไม่อนุมัติครับ']]);{const dx=S.x-BOSSPOS.x,dy=S.y-BOSSPOS.y-14,d=Math.hypot(dx,dy)||1;S.x=BOSSPOS.x+dx/d*44;S.y=BOSSPOS.y+14+dy/d*44}encCool=performance.now()+1500;busy=false;return}
   await talk([['boss','มาจนได้ เด็กมือฆ้องกับ… เด็กที่ปลุกข้า'],['boss','รู้ไหม ครูของพวกเจ้าเคยบอกว่าดนตรีไทยต้องฟังกัน… ไร้สาระ! เสียงใครดังกว่าคนนั้นชนะ!'],['tang','(เสียงอู้อี้จากในลูกแก้ว) มหาพราหมณ์… เพลงเถา… สามชั้น สองชั้น ชั้นเดียว… อย่าเร่งตาม ให้ฟังฉิ่ง…'],['maha','ครับครู'],['boss','งั้นมาเล่นเพลงเถาของข้า! ยิ่งเร็ว ยิ่งเพี้ยน!']]);
   const r=await battle('boss');
   if(r==='win'){S.beat.boss=1;S.done=1;save();await ending()}
@@ -819,7 +868,7 @@ function battle(kind){
     }
     $('#bui').classList.add('hide');$('#lanes').classList.add('hide');$('#menu').classList.add('hide');bmsg('');$('#quest').classList.remove('hide');$('#tbtn').classList.remove('hide');
     if(res==='lose'){
-      const again=await new Promise(r=>{$('#lose').classList.remove('hide');$('#lRetry').onclick=()=>{$('#lose').classList.add('hide');r(1)};$('#lRun').onclick=()=>{$('#lose').classList.add('hide');r(0)}});
+      const again=await new Promise(r=>{$('#lose').classList.remove('hide');$('#lRetry').onclick=()=>{$('#lose').classList.add('hide');r(1)};$('#lEasy').classList.toggle('hide',!!S.easy);$('#lEasy').onclick=()=>{S.easy=1;save();$('#lose').classList.add('hide');r(1)};$('#lRun').onclick=()=>{$('#lose').classList.add('hide');r(0)}});
       S.hp=S.hpMax;hud();
       if(again){BT=null;resolve(await battle(kind));return}
     }
@@ -837,36 +886,47 @@ async function afterDamage(){
 }
 async function enemyTurn(){
   if(BT.confused){BT.confused=0;bmsg('ปีศาจงงกับความป่วนของพบธรรม เสียตาไปหนึ่งตา!');await sleep(1500);return null}
-  const e=BT.e,len=ri(e.phr[0],e.phr[1]);const seq=[];
+  const e=BT.e,ez=!!S.easy,foc=!!BT.focus,len=ri(e.phr[0],e.phr[1]),seq=[];BT.focus=0;
   for(let i=0;i<len;i++){let g;do{g=ri(0,7)}while(seq.length&&g===seq[seq.length-1]&&Math.random()<.7);seq.push(g)}
-  const show=e.show;// จำนวนโน้ตแรกที่ไฟกระพริบช่วย (0 = ฟังอย่างเดียว)
-  bmsg(show>=len?e.n+' ตีทำนองเพี้ยน… จำให้ได้!':show?'ฟังให้ดี! ไฟจะช่วยแค่ '+show+' ลูกแรก':'ฟังด้วยหูอย่างเดียว! ไม่มีไฟช่วย');
-  buildGong();BT.padH=$('#lanes').offsetHeight;layoutBattle();
-  const btns=[...document.querySelectorAll('#lanes button')];btns.forEach(b=>b.disabled=true);
-  await sleep(700);
-  BT.eFx=performance.now();
-  const t0=AC.currentTime+.15;
-  seq.forEach((g,i)=>{TS.khong(GONGS[g],t0+i*e.gap,.95);if(i<show)setTimeout(()=>{btns[g].classList.add('lit');setTimeout(()=>btns[g].classList.remove('lit'),e.gap*700)},(.15+i*e.gap+lat())*1000)});
-  BT.singing={t0,gap:e.gap,n:len};
-  await sleep((len*e.gap+.4)*1000);BT.singing=null;
-  bmsg('ตาเรา! ตีตามทำนอง ('+len+' ลูก)');btns.forEach(b=>b.disabled=false);
-  let k=0,wrong=0;BT.echo={seq,k:0,res:[]};
+  const show=(ez||foc)?len:e.show,gap=e.gap*(ez?1.15:1),atk=Math.max(1,Math.round(e.atk*(ez?.5:1)));
+  BT.replays=(ez||foc)?99:2;
+  bmsg(foc?'🌿 ยาดมเข้าเต็มจมูก! หัวโล่ง ไฟช่วยครบทุกลูก':show>=len?e.n+' ตีทำนองเพี้ยน… จำให้ได้!':show?'ฟังให้ดี! ไฟจะช่วยแค่ '+show+' ลูกแรก':'ฟังด้วยหูอย่างเดียว! ไม่มีไฟช่วย');
+  buildGong();const rp=$('#replay');BT.padH=$('#lanes').offsetHeight;rp.style.bottom=(BT.padH+10)+'px';layoutBattle();
+  const btns=[...document.querySelectorAll('#lanes button')];
+  const updRep=()=>{rp.textContent='🔁 ฟังอีกครั้ง'+(BT.replays>20?'':' (เหลือ '+BT.replays+')');rp.disabled=BT.replays<=0||!!BT.singing};
+  const lit=(g,ms,c)=>{const b=btns[g];if(!b)return;b.classList.add('lit');if(c)b.style.outline='3px solid '+c;setTimeout(()=>{b.classList.remove('lit');b.style.outline=''},ms)};
+  async function sing(){
+    BT.singing=1;btns.forEach(b=>b.disabled=true);updRep();
+    BT.eFx=performance.now();const t0=AC.currentTime+.15;
+    seq.forEach((g,i)=>{TS.khong(GONGS[g],t0+i*gap,.95);if(i<show)setTimeout(()=>lit(g,gap*700),(.15+i*gap+lat())*1000)});
+    BT.singing={t0,gap,n:len};
+    await sleep((len*gap+.4)*1000);BT.singing=null;btns.forEach(b=>b.disabled=false);updRep();
+  }
+  rp.classList.remove('hide');updRep();
+  await sleep(700);await sing();
+  bmsg('ตาเรา! ตีตามทำนอง ('+len+' ลูก) · ฟังไม่ทันกด 🔁');
+  let k=0,wrong=0,miss=0;BT.echo={seq,k:0,res:[]};
   await new Promise(res=>{
-    let to=setTimeout(timeout,4500);
-    function timeout(){press(-1)}
-    function press(g){clearTimeout(to);
+    let to=null;const wait=ez?9000:6500;
+    const arm=()=>{clearTimeout(to);to=setTimeout(()=>press(-1),wait)};
+    BT.replay=async()=>{if(BT.replays<=0||BT.singing||!BT.gongPress)return;BT.replays--;clearTimeout(to);bmsg('ฟังอีกครั้ง… ตีต่อจากลูกที่ '+(k+1));await sing();arm()};
+    function press(g){
+      if(BT.singing)return;clearTimeout(to);
       if(g>=0)TS.khong(GONGS[g],0,.9);
-      if(g===seq[k]){BT.echo.res.push(1);pop('✓',150+k*10,BT.trackB-30,'#7ef08a');BT.sp=Math.min(100,BT.sp+2)}
-      else{BT.echo.res.push(0);wrong++;S.hp-=e.atk;hud();BT.pFx=performance.now();shake(220);sfx.bad();pop('-'+e.atk,70,H*.32,'#ff6a6a')}
-      k++;BT.echo.k=k;
-      if(k>=seq.length||S.hp<=0){BT.gongPress=null;res();return}
-      to=setTimeout(timeout,4500)}
-    BT.gongPress=press;
+      if(g===seq[k]){BT.echo.res[k]=miss?2:1;pop('✓',W/2-(len-1)*8+k*16-3,H*.56-10,'#7ef08a');BT.sp=Math.min(100,BT.sp+2);k++;miss=0}
+      else{wrong++;miss++;S.hp-=atk;hud();BT.pFx=performance.now();shake(220);sfx.bad();pop('-'+atk,70,H*.32,'#ff6a6a');
+        // บอกลูกที่ถูกให้ตีแก้
+        setTimeout(()=>{lit(seq[k],700,'#7ef08a');pop('ลูกที่ถูก: '+TS.KNOTE[GONGS[seq[k]]],W/2-40,H*.56-14,'#7ef08a')},120);
+        if(miss>=2||g<0){BT.echo.res[k]=0;k++;miss=0}}
+      BT.echo.k=k;
+      if(k>=seq.length||S.hp<=0){BT.gongPress=null;BT.replay=null;res();return}
+      arm()}
+    BT.gongPress=press;arm();
   });
-  BT.echo=null;$('#lanes').classList.add('hide');BT.padH=0;layoutBattle();
+  BT.echo=null;rp.classList.add('hide');$('#lanes').classList.add('hide');BT.padH=0;layoutBattle();
   if(S.hp<=0){await sleep(500);return'lose'}
   if(!wrong){const d=4+len;BT.hp-=d;BT.sp=Math.min(100,BT.sp+12);spbar();BT.eFx=performance.now();sfx.ok();bmsg('ตีตามได้ครบ! สวนกลับ '+d);pop('-'+d,240,H*.3,'#ffd34d');ebar();await sleep(1000);return await afterDamage()}
-  bmsg('ตีผิด '+wrong+' ลูก');await sleep(900);return await afterDamage();
+  bmsg('ตีผิด '+wrong+' ครั้ง');await sleep(900);return await afterDamage();
 }
 function buildGong(){
   const L=$('#lanes');L.className='gong';L.innerHTML=GONGS.map((g,i)=>'<button data-i="'+i+'">'+TS.KNOTE[g]+'</button>').join('');L.classList.remove('hide');
@@ -880,6 +940,7 @@ function chooseAction(){
     opts.push({id:'drum',t:'🥁 หน้าทับกลองแขก',s:S.got.drum?'แรงที่สุด ×1.8':'ยังไม่ได้คืน',on:S.got.drum});
     if(S.got.ranad)opts.push({id:'ranad',t:'🎶 รัวระนาด',s:BT.sp>=100?'ไม้ตาย พร้อมแล้ว!':'เกจ '+Math.floor(BT.sp)+'%',on:BT.sp>=100,hot:BT.sp>=100});
     opts.push({id:'pob',t:'🤹 พบธรรมช่วย',s:BT.pobCd?'อีก '+BT.pobCd+' ตา':'สุ่ม! บริหาร/ป่วน',on:!BT.pobCd});
+    const nb=Object.keys(ITEMS).reduce((a,k)=>a+(S.bag[k]||0),0);opts.push({id:'bag',t:'🎒 กระเป๋า',s:nb?'มีของ '+nb+' ชิ้น (ไม่เสียตา)':'ว่างเปล่า',on:nb>0});
     M.innerHTML=opts.map((o,i)=>'<button data-id="'+o.id+'" '+(o.on?'':'disabled')+' class="'+(o.hot?'hot':'')+'">'+(i+1)+'. '+o.t+'<small>'+o.s+'</small></button>').join('');
     M.classList.remove('hide');M.style.bottom='10px';
     const go=id=>{M.classList.add('hide');BT.menuKey=null;res(id)};
@@ -888,8 +949,18 @@ function chooseAction(){
     bmsg('ตาเรา! เลือกท่า');
   });
 }
+function bagMenu(){
+  return new Promise(res=>{
+    const M=$('#menu'),ks=Object.keys(ITEMS);
+    M.innerHTML=ks.map((k,i)=>'<button data-k="'+k+'" '+(S.bag[k]&&!(k==='yadom'&&BT.focus)?'':'disabled')+'>'+(i+1)+'. '+ITEMS[k].ic+' '+ITEMS[k].n+' ×'+(S.bag[k]||0)+'<small>'+ITEMS[k].d+'</small></button>').join('')+'<button data-k="back">4. ↩ กลับ<small>เลือกท่า</small></button>';
+    M.classList.remove('hide');bmsg('เลือกของจากกระเป๋า');
+    const go=k=>{M.classList.add('hide');BT.menuKey=null;if(k!=='back'&&useItem(k,true)){bmsg(ITEMS[k].ic+' ใช้'+ITEMS[k].n+'แล้ว!');pop(ITEMS[k].ic,70,H*.3,'#7ef08a')}setTimeout(res,k==='back'?0:700)};
+    M.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(b.disabled)return;sfx.blip();go(b.dataset.k)});
+    BT.menuKey=x=>{const b=M.querySelectorAll('button')[+x-1];if(b&&!b.disabled){sfx.blip();go(b.dataset.k)}};
+  });
+}
 async function playerTurn(){
-  const a=await chooseAction();bmsg('');
+  let a;while(true){a=await chooseAction();if(a!=='bag')break;await bagMenu()}bmsg('');
   if(BT.pobCd)BT.pobCd--;
   if(a==='pob'){BT.pobCd=3;return await pobHelp()}
   await rhythm(a);
@@ -910,13 +981,13 @@ function laneBtns(mode){
 }
 function rhythm(mode){
   return new Promise(async res=>{
-    const e=BT.e,sd=e.slot;let notes=[],back=[];
+    const e=BT.e,sd=e.slot*(S.easy?1.12:1);let notes=[],back=[];
     if(mode==='clap'){for(let i=1;i<16;i+=2)notes.push({s:i,l:0});for(let i=0;i<16;i++)if(i%4===3)back.push({s:i,ch:Math.floor(i/4)%2===0?1:2})}
     else if(mode==='ching'){for(let i=1;i<16;i+=2)notes.push({s:i,l:Math.floor(i/2)%2===0?1:0});const p=NATAB.get('p1');NATAB.timeline(p,{fill:4,end:false}).slice(0,16).forEach((x,i)=>x.l.forEach(l=>back.push({s:i,d:l})))}
     else if(mode==='drum'){const p=NATAB.get(pick(e.pats))||NATAB.get('p1');BT.patName=p.name;const tl=NATAB.timeline(p,{fill:4,end:false}).slice(0,16);
       tl.forEach((x,i)=>{x.l.forEach(l=>notes.push({s:i,l}));const ev=NATAB.RATE[e.rate||x.rate].ev;if(i%ev===ev-1)back.push({s:i,ch:Math.floor(i/ev)%2===0?1:2})})}
     else if(mode==='ranad'){for(let i=0;i<16;i++)notes.push({s:i*.5+2,l:0,g:3+Math.min(i,12)});BT.sp=0;spbar();for(let i=0;i<16;i+=2)back.push({s:i+1,ch:Math.floor(i/2)%2===0?1:2})}
-    const base={clap:3,ching:4.2,drum:5.4,ranad:6}[mode]*(BT.laugh?1.5:1)*(BT.e.boss&&BT.ph===2?1.5:1)*(e.boss?1:1);BT.laugh=0;
+    const base={clap:3,ching:4.2,drum:5.4,ranad:6}[mode]*(BT.laugh?1.5:1)*(BT.e.boss&&BT.ph===2?1.5:1)*(1+.08*((S.lv||1)-1));BT.laugh=0;
     laneBtns(mode);BT.padH=$('#lanes').offsetHeight;layoutBattle();
     const lead=4;const t0=AC.currentTime+.6+lead*sd;
     for(let i=-lead;i<0;i++)sfx.count(t0+i*sd);
@@ -926,7 +997,7 @@ function rhythm(mode){
     setTimeout(()=>bmsg(''),1400);
     const iv=setInterval(()=>{
       const now=AC.currentTime-lat(),R=BT.rh;
-      R.notes.forEach(n=>{if(!n.j&&now>n.t+.16)judge(n,'miss')});
+      R.notes.forEach(n=>{if(!n.j&&now>n.t+(S.easy?.25:.18))judge(n,'miss')});
       if(now>R.end+.35){clearInterval(iv);finish()}
     },30);
     async function finish(){
@@ -944,8 +1015,9 @@ function tapLane(l){
   // เสียงตามที่กด
   if(mode==='clap')sfx.clap();else if(mode==='ching')TS.ching(l===1,0,.85);else if(mode==='drum')TS.drum(l,0,1);else if(mode==='ranad')ranad(best&&bd<.2?best.g:ri(3,12),0,1);
   BT.lflash=BT.lflash||{};BT.lflash[l]=performance.now();
-  if(!best||bd>.2)return;
-  judge(best,bd<=.065?'perf':bd<=.13?'good':'ok');
+  const WN=S.easy?[.085,.16,.24]:[.065,.13,.2];
+  if(!best||bd>WN[2])return;
+  judge(best,bd<=WN[0]?'perf':bd<=WN[1]?'good':'ok');
 }
 function judge(n,j){
   const R=BT.rh;if(!R)return;n.j=j;
@@ -959,7 +1031,8 @@ function laneY(l){const R=BT.rh;const n=R?R.lanes:1,lh=Math.min(16,Math.floor((B
 function battleKey(k,e){
   if(dlgNext&&!$('#dlg').classList.contains('hide')){if(k===' '||k==='enter'||k==='z'){e.preventDefault();dlgNext()}return}
   if(!BT)return;
-  if(BT.menuKey&&/^[1-5]$/.test(k)){BT.menuKey(k);return}
+  if(BT.menuKey&&/^[1-6]$/.test(k)){BT.menuKey(k);return}
+  if(BT.replay&&(k==='r'||k==='0')){e.preventDefault();BT.replay();return}
   if(BT.gongPress){const i='12345678'.indexOf(k);const j='asdfghjk'.indexOf(k);const g=i>=0?i:j;if(g>=0){e.preventDefault();const b=document.querySelectorAll('#lanes button')[g];if(b){b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),90)}BT.gongPress(g)}return}
   if(BT.rh&&!e.repeat){const ls=LANE[BT.rh.mode];const l=ls.findIndex(x=>x.k.includes(k));if(l>=0){e.preventDefault();const b=document.querySelectorAll('#lanes button')[l];if(b)b.classList.add('dn');tapLane(l)}}
 }
@@ -1018,7 +1091,7 @@ function drawBattle(t){
     if(R.combo>2){cx.fillStyle='#ffd34d';cx.font='bold 10px Mitr';cx.fillText(R.combo+' คอมโบ',W-62,top-8)}
   }
   // ตาป้องกัน: จุดความคืบหน้า
-  if(BT.echo){const E=BT.echo,n=E.seq.length,y=Math.round(H*.56);for(let i=0;i<n;i++){const x=W/2-(n-1)*8+i*16;const r=E.res[i];disc(cx,'#140c1c',x,y,5);disc(cx,r===1?'#7ef08a':r===0?'#ff6a6a':i===E.k?'#f2c14e':'#4a3a60',x,y,4)}}
+  if(BT.echo){const E=BT.echo,n=E.seq.length,y=Math.round(H*.56);for(let i=0;i<n;i++){const x=W/2-(n-1)*8+i*16;const r=E.res[i];disc(cx,'#140c1c',x,y,5);disc(cx,r===1?'#7ef08a':r===2?'#ffd34d':r===0?'#ff6a6a':i===E.k?'#ffffff':'#4a3a60',x,y,4)}}
   // ตัวเลขลอย
   BT.pops=BT.pops.filter(p=>now-p.t<900);BT.pops.forEach(p=>{const k=(now-p.t)/900;cx.globalAlpha=1-k;cx.font='bold 11px Mitr';cx.fillStyle='#000';cx.fillText(p.txt,p.x+1,p.y-k*16+1);cx.fillStyle=p.c;cx.fillText(p.txt,p.x,p.y-k*16);cx.globalAlpha=1});
   cx.restore();
@@ -1039,7 +1112,7 @@ function drawTitleChars(){const c=$('#tcv'),g=c.getContext('2d');g.imageSmoothin
 function toTitle(){save();location.reload()}
 function startGame(cont){
   audio();$('#title').classList.add('hide');
-  if(cont&&load()){S=load();S.hpMax=hpMaxCalc();mode='world';prerenderRoom(S.intro>0);showHud(true);setPad(true);startMusic();if(S.map==='world'&&S.intro&&!S.beat.planSaid){S.beat.planSaid=1;setTimeout(planTalk,300)}return}
+  if(cont&&load()){S=fixSave(load());S.hpMax=hpMaxCalc();mode='world';prerenderRoom(S.intro>0);showHud(true);setPad(true);startMusic();if(S.map==='world'&&S.intro&&!S.beat.planSaid){S.beat.planSaid=1;setTimeout(planTalk,300)}return}
   S=fresh();save();showHud(false);setPad(true);startMusic();introScene();
 }
 $('#tNew').onclick=()=>{if(load()&&!confirm('เริ่มเรื่องใหม่? ความคืบหน้าเดิมจะหายไป'))return;startGame(false)};
@@ -1052,7 +1125,7 @@ buildSprites();buildSolid();prerenderWorld();prerenderRoom(false);resize();drawT
 if(load())$('#tCont').classList.remove('hide');else $('#tCont').classList.add('hide');
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{prerenderWorld();if(S)prerenderRoom(S.intro>0)});
 requestAnimationFrame(frame);
-window.__PS={get S(){return S},set S(v){S=v},battle,ENEMY,get BT(){return BT},runAct,startGame,tapLane,dlgNext,openMap,goWorld};
+window.__PS={SPR,drawChar,get S(){return S},set S(v){S=v},battle,ENEMY,get BT(){return BT},runAct,startGame,tapLane,dlgNext,openMap,goWorld};
 </script>
 </body>
 </html>
