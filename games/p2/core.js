@@ -193,14 +193,14 @@ const CHAR={
   pob:{wp:'pi',atk:'wave',ab:null,inst:'ปี่แน'},
   mateo:{wp:'mallet',atk:'slash',ab:'crawl',inst:'ฆ้องวงใหญ่',abn:'มุดทางแคบ'}};
 const ATK={
-  slash:{cd:.3,cost:5,dmg:10,box:[4,34,40,4],hit:.07,dur:.3},
-  heavy:{cd:.55,cost:9,dmg:19,box:[2,40,44,2],hit:.12,dur:.42,kb:220},
-  rapid:{cd:.15,cost:3,dmg:5,box:[4,28,36,6],hit:.04,dur:.16},
-  shot:{cd:.34,cost:6,dmg:9,proj:{sp:230,pierce:0,kind:'note'},hit:.06,dur:.26},
-  wave:{cd:.45,cost:8,dmg:8,proj:{sp:150,pierce:1,kind:'wave'},hit:.08,dur:.34},
-  parry:{cd:.3,cost:5,dmg:8,box:[2,30,38,4],hit:.05,dur:.3,parry:.28},
-  beam:{cd:.32,cost:7,dmg:7,beam:110,hit:.07,dur:.3},
-  quake:{cd:.5,cost:9,dmg:9,quake:76,hit:.1,dur:.36}};
+  slash:{cd:.28,cost:2,dmg:10,box:[4,34,40,4],hit:.07,dur:.3},
+  heavy:{cd:.5,cost:4,dmg:19,box:[2,40,44,2],hit:.12,dur:.42,kb:220},
+  rapid:{cd:.14,cost:1,dmg:5,box:[4,28,36,6],hit:.04,dur:.16},
+  shot:{cd:.32,cost:3,dmg:9,proj:{sp:230,pierce:0,kind:'note'},hit:.06,dur:.26},
+  wave:{cd:.42,cost:4,dmg:8,proj:{sp:150,pierce:1,kind:'wave'},hit:.08,dur:.34},
+  parry:{cd:.28,cost:2,dmg:8,box:[2,30,38,4],hit:.05,dur:.3,parry:.28},
+  beam:{cd:.3,cost:3,dmg:7,beam:110,hit:.07,dur:.3},
+  quake:{cd:.46,cost:4,dmg:9,quake:76,hit:.1,dur:.36}};
 /* ตัวละครอื่นในเรื่อง (สมมุติทั้งหมด ไม่อิงคนจริง) */
 const EXTRA={
   tang:null,
@@ -239,7 +239,7 @@ const groundAt=x=>!LV.haz.some(h=>x>h.x&&x<h.x+h.w);
    ผู้เล่นและทีม
    ==================================================================== */
 const K={},pressed={};
-const keymap={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',Space:'j',KeyW:'j',ArrowUp:'j',KeyK:'j',KeyJ:'a',KeyX:'a',KeyZ:'a',KeyE:'u',KeyS:'u',ArrowDown:'u',Enter:'u',KeyQ:'s',ShiftLeft:'s',ShiftRight:'s',KeyL:'s'};
+const keymap={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',Space:'j',KeyW:'j',ArrowUp:'j',KeyK:'j',KeyJ:'a',KeyX:'a',KeyZ:'a',KeyE:'u',KeyS:'u',ArrowDown:'u',Enter:'u',KeyQ:'s',ShiftLeft:'s',ShiftRight:'s',KeyL:'s',KeyC:'x',KeyI:'x'};
 addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(window.togglePause)togglePause();return}const k=keymap[e.code];if(!k||!['play','talk','cr','jam','cut'].includes(mode))return;e.preventDefault();if(!K[k])pressed[k]=1;K[k]=1;audio()});
 addEventListener('keyup',e=>{const k=keymap[e.code];if(k)K[k]=0});
 function bindBtn(id,k){const b=$(id);if(!b)return;const on=e=>{e.preventDefault();audio();if(!K[k])pressed[k]=1;K[k]=1;b.classList.add('on')},off=e=>{if(e)e.preventDefault();K[k]=0;b.classList.remove('on')};
@@ -247,12 +247,12 @@ function bindBtn(id,k){const b=$(id);if(!b)return;const on=e=>{e.preventDefault(
 function clearPressed(){for(const k in pressed)delete pressed[k]}
 const act=()=>TEAM[AI]||'me',C=()=>CHAR[act()]||CHAR.me;
 const maxHP=()=>100+20*(SAVE.up.hp||0),maxBR=()=>100+20*(SAVE.up.br||0);
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,on:1,hp:maxHP(),br:maxBR(),inv:0,atk:-1,ak:null,cd:0,coy:0,jb:0,pose:'idle',f:0,ft:0,hurt:0,cp:x,safe:x,low:0,lastQ:null,prasan:0,sw:0,climb:0,parry:0,frozen:0,carry:null}}
+function newPlayer(x){return {band:0,x,y:GY,vx:0,vy:0,face:1,on:1,hp:maxHP(),br:maxBR(),inv:0,atk:-1,ak:null,cd:0,coy:0,jb:0,pose:'idle',f:0,ft:0,hurt:0,cp:x,safe:x,low:0,lastQ:null,prasan:0,sw:0,climb:0,parry:0,frozen:0,carry:null}}
 function switchMember(dir){if(TEAM.length<2||P.frozen)return;const was=act();AI=(AI+(dir||1)+TEAM.length)%TEAM.length;
   const b=beat();if(P.lastHitT&&T-P.lastHitT<.7&&P.lastQ){P.prasan=1.2;pop(P.x,P.y-56,'ประสาน!','#9ff0c0');unity(1)}
   P.sw=.25;sparks(P.x,P.y-24,8,1,'#c69bff');sfx(t=>TS2.chab(2,t,.25));if(LV.onSwitch)LV.onSwitch(was,act())}
 function hb(){return C().ab==='crawl'?24:40}
-function hurt(d,dir){if(P.inv>0||mode!=='play'||window.__GOD)return;P.hp-=d;P.inv=1;P.hurt=.3;P.vx=dir*130;P.vy=-140;P.on=0;ST.combo=0;shake=.2;sfx(t=>TS2.thon(3,t,.5));sparks(P.x,P.y-24,6,0,'#ff6a6a');
+function hurt(d,dir){if(P.inv>0||mode!=='play'||window.__GOD)return;d=Math.max(3,Math.round(d*.6));P.hp-=d;P.inv=1.3;P.hurt=.3;P.vx=dir*130;P.vy=-140;P.on=0;ST.combo=0;shake=.2;sfx(t=>TS2.thon(3,t,.5));sparks(P.x,P.y-24,6,0,'#ff6a6a');
   if(P.hp<=0){ST.falls++;P.hp=0;unity(-1);P.frozen=1;setTimeout(()=>{respawn(P.cp);say('ไม่เป็นไร ลุกขึ้นมาใหม่ได้เสมอ เพื่อนรออยู่',1)},600)}}
 function respawn(x){P.x=x;P.y=GY;P.vx=0;P.vy=0;P.hp=maxHP();P.br=maxBR();P.inv=1.5;P.frozen=0;cam=clamp(x-W*.42,0,LV.w-W)}
 function rest(msg){P.hp=maxHP();P.br=maxBR();P.cp=P.x;if(msg)say(msg,1);for(let i=0;i<10;i++)LV.fx.push({x:P.x+rnd(-10,10),y:P.y-rnd(0,40),vx:0,vy:-rnd(10,30),t:0,life:1,c:'#9fe8a0',s:2})}
@@ -264,7 +264,7 @@ function star(i,why){const key=STAGE.id+':'+why;SAVE.starLog=SAVE.starLog||{};if
 /* ====================================================================
    อัปเดต
    ==================================================================== */
-const JC=12;
+const JC=5;
 function update(dt){
   T+=dt;sched();
   if(shake>0)shake-=dt;
@@ -280,21 +280,23 @@ function update(dt){
   if(LV.boss)bossTick(LV.boss,dt);
   shotsTick(dt);fxTick(dt);actorsTick(dt);
   LV.trig.forEach(t=>{if(!t.done&&P.x>=t.x&&(!t.cond||t.cond())){t.done=1;t.fn()}});
-  LV.items.forEach(it=>{if(it.got||it.hid&&!it.shown)return;if(Math.abs(P.x-it.x)<12&&Math.abs((P.y-20)-it.y)<24)collect(it)});
+  LV.items.forEach(it=>{if(it.got||it.hid&&!it.shown)return;if(it.kind==='coin'){const dx=P.x-it.x,dy=(P.y-20)-it.y,d=Math.hypot(dx,dy),mr=46+12*(SAVE.up.mag||0);if(d<mr){it.x+=dx/d*Math.min(d,260*dt);it.y+=dy/d*Math.min(d,260*dt)}if(d<12)collect(it);return}if(Math.abs(P.x-it.x)<12&&Math.abs((P.y-20)-it.y)<24)collect(it)});
+  if(P.on&&!LV.boss&&!LV.auto&&P.x>(LV.autoCp||0)+420&&groundAt(P.x)){LV.autoCp=P.x;P.cp=P.x}
   LV.cps.forEach(c=>{if(!c.used&&Math.abs(P.x-c.x)<16){c.used=1;P.cp=c.x;if(c.kind!=='shrine')rest('จุดพัก: '+(c.label||'บันทึกแล้ว'))}});
   camTick(dt);clearPressed();
 }
 function playerTick(dt){
   const p=P,c=C(),dir=p.frozen?0:(K.r?1:0)-(K.l?1:0);
   if(pressed.s&&!p.frozen)switchMember(1);
+  if(pressed.x)bandBlast();
   p.sw-=dt;p.prasan-=dt;
   const acc=p.on?900:620,max=104+(LV.speedUp||0);
   if(dir){p.vx+=dir*acc*dt;p.face=dir}else{const fr=(p.on?1100:300)*dt;p.vx=Math.abs(p.vx)<=fr?0:p.vx-Math.sign(p.vx)*fr}
   if(p.atk>=0&&p.on)p.vx*=.86;
   // ลม (ฉากอุโมงค์ไผ่): ลมแรงตอนฉับ
   p.vx=clamp(p.vx,-max,max);
-  if(LV.windAt&&!p.frozen){const wf=LV.windAt(p.x);if(wf)p.x+=wf*.12*dt}
-  if(p.on&&!dir&&p.atk<0)p.br=Math.min(maxBR(),p.br+38*dt);else if(p.on)p.br=Math.min(maxBR(),p.br+6*dt);
+  if(LV.windAt&&!p.frozen){const wf=LV.windAt(p.x);if(wf)p.x+=wf*.08*dt}
+  if(p.on&&!dir&&p.atk<0)p.br=Math.min(maxBR(),p.br+55*dt);else p.br=Math.min(maxBR(),p.br+(p.on?22:8)*dt);
   if(pressed.j&&!p.frozen)p.jb=.13;p.jb-=dt;p.coy-=dt;
   const jv=c.ab==='high'?-395:-318;
   if(p.jb>0&&p.coy>0){if(p.br>=JC){p.vy=jv;p.on=0;p.coy=0;p.jb=0;p.br-=JC;dust(p.x,p.y,4);p.ride=null}else{p.jb=0;lowBreath()}}
@@ -322,25 +324,30 @@ function playerTick(dt){
   if(p.y>H+30){const hz=LV.haz.find(z=>p.x>z.x-20&&p.x<z.x+z.w+20);hurtFall(hz&&hz.kind)}
   // โจมตี
   p.cd-=dt;
-  if(pressed.a&&p.cd<=0&&!p.frozen){const a=ATK[c.atk];if(p.br>=a.cost){p.br-=a.cost;p.atk=0;p.ak=a;p.cd=a.cd;ST.swings++;const b=beat();p.lastQ=Math.abs(b.d)<=.11?(b.chab?'chab':'ching'):null;p.hitDone=0;if(a.parry)p.parry=a.parry;
+  if(pressed.a&&p.cd<=0&&!p.frozen){const a=ATK[c.atk];if(p.br>=a.cost){p.br-=a.cost;p.atk=0;p.ak=a;p.cd=a.cd;ST.swings++;const b=beat();p.lastQ=Math.abs(b.d)<=.15?(b.chab?'chab':'ching'):null;p.hitDone=0;if(a.parry)p.parry=a.parry;
       sfx(t=>TS2.chab(p.lastQ==='chab'?0:2,t,p.lastQ? .45:.22))}else lowBreath()}
   if(p.atk>=0){p.atk+=dt;if(p.atk>p.ak.hit&&!p.hitDone){p.hitDone=1;doAttack(p)}if(p.atk>p.ak.dur)p.atk=-1}
   p.parry-=dt;p.inv-=dt;p.hurt-=dt;if(p.low>0)p.low-=dt;
   // จุดใช้งาน
-  const u=nearUse(),n=u?null:nearActor();const ub=$('#bUse');if(ub){ub.classList.toggle('show',!!(u||n));ub.textContent=u?(u.n.length>5?'ใช้':u.n):n?'คุย':'ใช้'}
+  const u=nearUse(),n=u?null:nearActor(),dr=u||n?null:LV.doors.find(d=>Math.abs(P.x-d.x)<d.w/2);const ub=$('#bUse');if(ub){ub.classList.toggle('show',!!(u||n||dr));ub.textContent=u?(u.n.length>5?'ใช้':u.n):n?'คุย':dr?'เข้า':'ใช้'}
   if(pressed.u&&!p.frozen){if(u)u.act(u);else if(n&&n.talk)n.talk(n);else{const d=LV.doors.find(d=>Math.abs(P.x-d.x)<d.w/2);if(d)d.enter(d)}}
   const pose=p.hurt>0?'hurt':p.atk>=0?'atk':!p.on&&!p.climb?'jump':Math.abs(p.vx)>12||p.climb?'run':'idle';
   if(pose!==p.pose){p.pose=pose;p.ft=0}p.ft+=dt;
   p.f=pose==='run'?Math.floor(p.ft*13)%6:pose==='idle'?Math.floor(p.ft*1.6)%2:pose==='jump'?(p.vy<0?0:1):pose==='atk'?(p.atk<p.ak.hit?0:p.atk<p.ak.dur*.6?1:2):0;
 }
-function hurtFall(kind){P.hp-=kind==='hot'?14:10;P.inv=1;sfx(t=>TS2.thon(3,t,.5));if(kind==='hot')say('ร้อน! น้ำพุร้อนห้ามลงไปนะ',1);else if(kind==='water')say('ตกน้ำ! ขึ้นมาก่อน',1);
+function bandBlast(){const p=P;if(p.band<100||p.frozen)return;p.band=0;p.bandTold=0;ST.blasts=(ST.blasts||0)+1;shake=.35;LV.flash={t:T};
+  sfx(t=>{TS.khong(0,t,.8);TS.khong(4,t,.6);TS2.ranadKey(17,t,.7);TS2.ranadKey(21,t+.08,.6);TS2.that(0,t,.9);TS2.taphon(0,t+.05,.7)});
+  LV.en.forEach(e=>{if(e.dead)return;const [ex]=ebox(e);if(Math.abs(ex-cam-W/2)<W/2+20){e.hp-=40;e.hit=.3;sparks(ex,ebox(e)[1],14,1);if(e.hp<=0)kill(e)}});
+  LV.eshots.forEach(s=>s.dead=1);if(LV.boss&&LV.boss.vuln){LV.boss.hp-=Math.round(LV.boss.max*.18);LV.boss.hit=.4;if(LV.boss.hp<1)LV.boss.hp=0}
+  banner('ท่าประสานวง!',TEAM.map(nameOf).join(' · '),1.4)}
+function hurtFall(kind){P.hp-=kind==='hot'?5:3;P.inv=1;sfx(t=>TS2.thon(3,t,.5));if(kind==='hot')say('ร้อน! น้ำพุร้อนห้ามลงไปนะ',1);else if(kind==='water')say('ตกน้ำ! ขึ้นมาก่อน',1);
   if(P.hp<=0){ST.falls++;respawn(P.cp);return}P.x=P.safe;P.y=GY-60;P.vy=0;P.vx=0;let tries=0;while(!groundAt(P.x)&&tries++<40)P.x-=8;if(LV.onFall)LV.onFall()}
 function lowBreath(){P.low=.6;if(!ST.lowTold){ST.lowTold=1;say('เหนื่อยแล้ว! ยืนนิ่ง ๆ สักครู่ ลมหายใจจะกลับมา',1)}}
 function mult(p){return (p.lastQ==='chab'?2:p.lastQ==='ching'?1.4:1)*(1+.15*(SAVE.up.atk||0))*(p.prasan>0?1.5:1)}
 function doAttack(p){
   const a=p.ak,m=mult(p),dmg=Math.round(a.dmg*m);let hitAny=0;
   if(p.prasan>0)p.prasan=0;
-  const hitE=(e,ex,ey)=>{if(e.guard){sparks(ex,ey,5,0,'#9ab0c0');pop(ex,ey-16,'สลับเพื่อนก่อน!','#bfe6ff');sfx(t=>TS2.chab(1,t,.3));return 0}if(e.shield&&!p.lastQ){sparks(ex,ey,5,0,'#9ab0c0');pop(ex,ey-16,'ต้องตีตรงจังหวะ!','#bfe6ff');sfx(t=>TS2.chab(1,t,.3));return 0}
+  const hitE=(e,ex,ey)=>{if(e.guard){sparks(ex,ey,5,0,'#9ab0c0');pop(ex,ey-16,'สลับเพื่อนก่อน!','#bfe6ff');sfx(t=>TS2.chab(1,t,.3));return 0}if(e.shield&&!p.lastQ){e.hp-=2;e.hit=.1;sparks(ex,ey,5,0,'#9ab0c0');pop(ex,ey-16,'ตีตรงจังหวะ โล่จะแตก!','#bfe6ff');sfx(t=>TS2.chab(1,t,.3));if(e.hp<=0&&!e.boss)kill(e);return 0}if(e.shield&&p.lastQ&&!e.boss){e.shield=0;pop(ex,ey-16,'โล่แตก!','#9ff0c0')}
     e.hp-=dmg;e.hit=.18;e.vx=p.face*(a.kb||(m>1?150:90));if(e.kind!=='float'&&!e.boss)e.vy=-60;sparks(ex,ey,m>1?14:7,m>1);if(e.hp<=0&&!e.boss)kill(e);return 1};
   const targets=()=>LV.en.filter(e=>!e.dead).concat(LV.boss&&LV.boss.vuln?[LV.boss]:[]);
   if(a.box){const [b0,bw,bh,by]=a.box;const x0=p.face>0?p.x+b0:p.x-b0-bw,x1=x0+bw,y0=p.y-bh-by,y1=p.y-by;
@@ -354,14 +361,15 @@ function doAttack(p){
   if(hitAny)registerHit(p,m);
   else if(p.lastQ)pop(p.x+p.face*16,p.y-46,p.lastQ==='chab'?'ฉับ':'ฉิ่ง','rgba(255,240,200,.7)');
 }
-function registerHit(p,m){ST.hits++;p.lastHitT=T;if(p.lastQ){ST.combo++;ST.best=Math.max(ST.best,ST.combo);if(p.lastQ==='chab')ST.onChab++;else ST.onChing++}else ST.combo=0;
+function registerHit(p,m){ST.hits++;p.lastHitT=T;p.band=Math.min(100,(p.band||0)+(p.lastQ?14:5));if(p.band>=100&&!p.bandTold){p.bandTold=1;say('พลังวงเต็มแล้ว! กด '+(isTouch()?'★':'C')+' เรียกทั้งวงมาช่วย',1)}if(ST.combo>0&&ST.combo%5===0&&p.lastQ)banner(ST.combo>=10?'สุดยอด! ตรงจังหวะ ×'+ST.combo:'เยี่ยม! ตรงจังหวะ ×'+ST.combo,'',1);if(p.lastQ){ST.combo++;ST.best=Math.max(ST.best,ST.combo);if(p.lastQ==='chab')ST.onChab++;else ST.onChing++}else ST.combo=0;
   hitstop=m>1.5? .07:.04;sfx(t=>{TS2.ranadKey(10+Math.min(ST.combo,10),t,.6);if(p.lastQ==='chab')TS.khong(5+(ST.combo%3),t+.01,.5)});
   pop(p.x+p.face*20,p.y-46,p.lastQ==='chab'?'ตรงฉับ! ×2':p.lastQ==='ching'?'ตรงฉิ่ง ×1.4':'',p.lastQ==='chab'?'#ffd86a':'#bfe6ff')}
 function nearUse(){return LV.uses.find(u=>!u.off&&Math.abs(P.x-u.x)<u.w/2&&(!u.y||Math.abs(P.y-u.y)<30))}
 function nearActor(){return LV.acts.find(a=>a.vis&&a.talk&&Math.abs(P.x-a.x)<22&&Math.abs(P.y-a.y)<30)}
-function collect(it){it.got=1;sfx(t=>{TS2.ranadKey(15,t,.5);TS2.ranadKey(19,t+.08,.5)});sparks(it.x,it.y,10,1);
+function collect(it){it.got=1;if(it.kind==='coin'){ST.coins=(ST.coins||0)+1;if(!it.drop)ST.coinsLv=(ST.coinsLv||0)+1;SAVE.coins=(SAVE.coins||0)+1;const k=T-(ST.lastCoin||0)<.5?(ST.cs=(ST.cs||0)+1):(ST.cs=0);ST.lastCoin=T;sfx(t=>TS2.ranadKey(12+(k%9),t,.28));LV.fx.push({x:it.x,y:it.y,vx:0,vy:-30,t:0,life:.3,c:'#fff2b0',s:2});return}
+  sfx(t=>{TS2.ranadKey(15,t,.5);TS2.ranadKey(19,t+.08,.5)});sparks(it.x,it.y,10,1);
   if(it.kind==='note'){if(!SAVE.notes.includes(it.id)){SAVE.notes.push(it.id);store()}banner('บันทึกความรู้',NOTES[it.id]?NOTES[it.id].t:'',2.2);if(!ST.noteStar&&SAVE.notes.length%3===0){ST.noteStar=1;star(3,'เก็บบันทึกความรู้')}}
-  else if(it.kind==='mat'){SAVE.mat[it.m]=(SAVE.mat[it.m]||0)+1;store();pop(it.x,it.y-12,'+'+MATN[it.m],'#9ff0c0')}
+  else if(it.kind==='mat'){SAVE.mat[it.m]=(SAVE.mat[it.m]||0)+1;SAVE.coins=(SAVE.coins||0)+10;ST.coins=(ST.coins||0)+10;store();pop(it.x,it.y-12,'+'+MATN[it.m]+' +10 โน้ตทอง','#9ff0c0')}
   else if(it.kind==='heal'){P.hp=Math.min(maxHP(),P.hp+30);pop(it.x,it.y-12,'+พลัง','#ff9aa8')}
   else if(it.kind==='lost'){ST.lost=it;say('เจอ'+it.n+'! ต้องเอาไปคืนเจ้าของ',1)}
   if(it.on)it.on(it)}
@@ -402,7 +410,7 @@ const LIES=[
 const TELL={'ทางลัด':'สัญญาทางลัด ของจริงต้องซ้อมทีละนิด','อยู่เหนือคนอื่น':'ล่อให้อยู่เหนือคนอื่น วงดนตรีไม่มีใครอยู่เหนือใคร','ความลับ':'ให้เก็บเป็นความลับหรือแยกจากเพื่อน เรื่องจริงบอกครูและเพื่อนได้เสมอ'};
 let lieI=0;
 function enemy(kind,x,y,o){const L=(o&&o.lie)||LIES[lieI++%LIES.length];
-  const e=Object.assign({kind,x,y:y||GY,x0:x,vx:0,vy:0,hp:{float:22,shout:26,dash:30,shield:30,echo:20,phone:18,mini:10,walk:30}[kind]||30,face:-1,t:Math.random()*6,hit:0,lie:L,told:0,dead:0,lastK:-1,sc:1},o||{});
+  const e=Object.assign({kind,x,y:y||GY,x0:x,vx:0,vy:0,hp:{float:14,shout:16,dash:18,shield:20,echo:12,phone:12,mini:7,walk:18}[kind]||18,face:-1,t:Math.random()*6,hit:0,lie:L,told:0,dead:0,lastK:-1,sc:1},o||{});
   if(kind==='shield')e.shield=1;e.max=e.hp;LV.en.push(e);return e}
 function ebox(e){if(e.boss)return [e.x,e.y-e.h/2,e.w/2,e.h/2];const s=e.sc||1;const cy=e.kind==='float'||e.kind==='phone'?e.y-30:e.y-16*s;return [e.x,cy,12*s,16*s]}
 function enemyTick(e,dt){
@@ -437,6 +445,7 @@ function kill(e){e.dead=1;ST.kills++;
   LV.debris.push({x:ex,y:ey,vx:rnd(-30,30),vy:-120,t:0,kind:e.kind==='phone'?'phone':'speaker'});
   sfx(t=>{TS2.chab(0,t,.45);TS2.that(0,t+.02,.45)});
   if(e.drop)item(ex,GY-12,e.drop.kind,e.drop);
+  for(let i=0;i<3;i++)item(ex+(i-1)*12,Math.min(GY-14,ey),'coin',{drop:1});if(Math.random()<.25)item(ex,GY-12,'heal');
   if(e.onKill)e.onKill(e);
   const n=ST.kills;if(n===1||Math.random()<.35)setTimeout(()=>say(n===1&&STAGE.id===1?'เห็นไหม ข้างในกลวง เหลือแต่ลำโพงเก่า ๆ':'“'+e.lie.t+'” คือ'+TELL[e.lie.k]),350)}
 /* บอส: ระยะ 1 สู้แบบแอ็กชัน */
@@ -474,7 +483,7 @@ const CRINST={khong:(l,t,v)=>TS.khong([1,4,7][l],t,v||.8),ranad:(l,t,v)=>TS2.ran
   sor:(l,t,v)=>TS2.sorou([257,344,429][l],t,.35,v||.8),harp:(l,t,v)=>TS2.harp([0,2,4][l],t,v||.9),klong:(l,t,v)=>l===0?TS2.klong(0,t,v||.9):l===1?TS2.klchab(0,t,v||.8):TS2.klmong(t,v||.8),
   pat:(l,t,v)=>patwaing([0,3,6][l],t,v||1),pinae:(l,t,v)=>TS2.pinae([351,470,619][l],t,.3,v||.8)};
 function callResponse(o){return new Promise(res=>{CR=Object.assign({rounds:3,len:3,inst:'khong',r:0,state:'intro',t:0,ph:[],i:0,flash:[-1,0],res,miss:0},o);mode='cr';CR.state='listen';crNew()})}
-function crNew(){const n=CR.len+CR.r;CR.ph=[];for(let i=0;i<n;i++)CR.ph.push(i&&Math.random()<.35?CR.ph[i-1]:Math.floor(Math.random()*3));crPlay()}
+function crNew(){const n=CR.len+Math.floor(CR.r/2);CR.ph=[];for(let i=0;i<n;i++)CR.ph.push(i&&Math.random()<.35?CR.ph[i-1]:Math.floor(Math.random()*3));crPlay()}
 function crPlay(){CR.state='listen';CR.i=0;CR.t=0;const b=nb()+BEAT;CR.ph.forEach((l,i)=>{const t=b+i*BEAT;sfx(()=>CRINST[CR.inst](l,t));setTimeout(()=>{if(CR)CR.flash=[l,T]},Math.max(0,(t-now())*1000))});
   setTimeout(()=>{if(CR){CR.state='play';CR.i=0}},Math.max(0,(b+CR.ph.length*BEAT-now())*1000))}
 function crTick(dt){if(!CR)return;CR.t+=dt;if(CR.state!=='play')return;let l=-1;if(pressed.l)l=0;else if(pressed.a||pressed.u)l=1;else if(pressed.r)l=2;if(l<0)return;
@@ -488,11 +497,11 @@ function crTick(dt){if(!CR)return;CR.t+=dt;if(CR.state!=='play')return;let l=-1;
 let JAM=null;
 function bandJam(o){return new Promise(res=>{const notes=[];const pat=o.pattern||[[0,1],[1,0],[2,2],[3,1],[4,0],[4.5,1],[5,2],[6,1],[7,0]];const bars=o.bars||2;
   for(let b=0;b<bars;b++)pat.forEach(([bt,l])=>notes.push({b:b*8+bt,l,st:0}));
-  const t0=nb()+BEAT*4;JAM=Object.assign({notes,t0,res,hit:0,perf:0,miss:0,inst:o.inst||['khong','ranad','khlui'],who:o.who||TEAM.slice(),title:o.title||'บรรเลงพร้อมกันทั้งวง',need:o.need||.5,count:0},o);mode='jam'})}
+  const t0=nb()+BEAT*4;JAM=Object.assign({notes,t0,res,hit:0,perf:0,miss:0,inst:o.inst||['khong','ranad','khlui'],who:o.who||TEAM.slice(),title:o.title||'บรรเลงพร้อมกันทั้งวง',need:o.need||.4,count:0},o);mode='jam'})}
 function jamTick(dt){if(!JAM)return;const tn=now()-lat();
   const lane=pressed.l?0:(pressed.a||pressed.u)?1:pressed.r?2:-1;
   if(lane>=0){let best=null,bd=1;JAM.notes.forEach(n=>{if(n.st||n.l!==lane)return;const d=Math.abs(JAM.t0+n.b*BEAT-tn);if(d<bd){bd=d;best=n}});
-    if(best&&bd<.17){best.st=bd<.07?2:1;JAM.hit++;if(best.st===2)JAM.perf++;const inst=JAM.inst[lane];sfx(t=>CRINST[inst](lane,t,.9));JAM.fl=[lane,T,best.st]}else{JAM.fl=[lane,T,0];sfx(t=>TS2.chab(2,t,.2))}}
+    if(best&&bd<.21){best.st=bd<.08?2:1;JAM.hit++;if(best.st===2)JAM.perf++;const inst=JAM.inst[lane];sfx(t=>CRINST[inst](lane,t,.9));JAM.fl=[lane,T,best.st]}else{JAM.fl=[lane,T,0];sfx(t=>TS2.chab(2,t,.2))}}
   JAM.notes.forEach(n=>{if(!n.st&&tn>JAM.t0+n.b*BEAT+.18){n.st=-1;JAM.miss++}});
   const last=JAM.notes[JAM.notes.length-1];if(tn>JAM.t0+last.b*BEAT+.6){const sc=JAM.hit/JAM.notes.length;const r=JAM.res;
     if(sc<JAM.need){JAM.notes.forEach(n=>n.st=0);JAM.t0=nb()+BEAT*4;JAM.hit=0;JAM.perf=0;JAM.miss=0;JAM.retry=(JAM.retry||0)+1;say('ฟังจังหวะฉับ แล้วลองอีกรอบ เพื่อน ๆ รอเล่นด้วยกัน',1)}
@@ -551,6 +560,7 @@ function draw(){
   // จุดพัก ของที่เก็บได้
   LV.cps.forEach(cp=>{if(cp.kind==='flag'){const x=cp.x-c;R(g,'#8a8a8a',x,GY-40,2,40);R(g,cp.used?'#9ff0c0':'#c69bff',x+2,GY-40,10,7)}});
   LV.items.forEach(it=>{if(it.got||(it.hid&&!it.shown))return;const x=it.x-c,y=it.y+Math.sin(T*3+it.t)*2;if(x<-20||x>W+20)return;
+    if(it.kind==='coin'){const sp=Math.abs(Math.sin(T*4+it.t));R(g,'#c89a3a',x-3*sp-1,y-4,6*sp+2,8);R(g,'#ffe08a',x-2*sp,y-3,4*sp+1,5);R(g,'#5a3a08',x+1,y-7,1,5);return}
     if(it.kind==='note'){R(g,'#fff6e0',x-5,y-6,10,12);R(g,'#c8b890',x-5,y-6,10,2);R(g,'#7a5a3a',x-3,y-2,6,1);R(g,'#7a5a3a',x-3,y+1,6,1);g.globalAlpha=.4+.3*Math.sin(T*5);disc(g,'#ffe08a',x,y,9);g.globalAlpha=1}
     else if(it.kind==='mat'){const col={bamboo:'#9ac85a',wood:'#8a5a30',hide:'#e8d8b0',wax:'#9a9aa8',string:'#f2f0e8'}[it.m]||'#fff';R(g,col,x-4,y-4,8,8);R(g,'#2a1830',x-4,y+4,8,1);g.globalAlpha=.35;disc(g,'#9ff0c0',x,y,8);g.globalAlpha=1}
     else if(it.kind==='heal'){R(g,'#ff5a6a',x-4,y-3,8,6);R(g,'#ffffff',x-1,y-2,2,4);R(g,'#ffffff',x-2,y-1,4,2)}
@@ -578,6 +588,7 @@ function draw(){
   if(Lr.fg)g.drawImage(Lr.fg,-Math.round(c*1.2),0);
   if(LV.dark){const [dc,dx]=darkLayer();g.drawImage(dc,0,0)}
   const u=mode==='play'?nearUse():null;if(u){const x=u.x-c;g.strokeStyle='rgba(242,193,78,'+(.5+.3*Math.sin(T*6))+')';g.lineWidth=1;g.strokeRect(x-u.w/2+.5,(u.y||GY)-4.5,u.w-1,4)}
+  if(LV.flash&&T-LV.flash.t<.5){g.fillStyle='rgba(255,236,160,'+(.6*(1-(T-LV.flash.t)/.5))+')';g.fillRect(-4,0,W+8,H)}
   if(FADE>0){g.fillStyle='rgba(8,4,12,'+FADE+')';g.fillRect(-4,0,W+8,H)}
   g.setTransform(1,0,0,1,0,0);
   drawUI(u);
@@ -628,6 +639,9 @@ function drawUI(u){
   ug.fillStyle='#3a2030';ug.fillRect(41,20,92,5);ug.fillStyle=p.hp>30?'#ff5a6a':'#ff2a3a';ug.fillRect(41,20,92*Math.max(0,p.hp)/maxHP(),5);
   ug.fillStyle='#1e2a40';ug.fillRect(41,28,92,4);ug.fillStyle=p.low>0&&Math.floor(T*10)%2?'#ff8a6a':'#6ac8ff';ug.fillRect(41,28,92*p.br/maxBR(),4);
   ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.7)';ug.fillText('ลมหายใจ',41,33);
+  {const bx=W-128,by=44,full=(p.band||0)>=100;ug.fillStyle='rgba(18,10,24,.6)';rr(bx,by,68,12,5);ug.fill();ug.fillStyle=full&&Math.floor(T*6)%2?'#ffd86a':'rgba(255,246,224,.8)';ug.fillText(full?'พลังวงเต็ม!':'พลังวง',bx+4,by+3);ug.fillStyle='#3a2a10';ug.fillRect(bx+34,by+4,30,4);ug.fillStyle='#f2c14e';ug.fillRect(bx+34,by+4,30*(p.band||0)/100,4);
+   ug.fillStyle='rgba(18,10,24,.6)';rr(bx,16,68,12,5);ug.fill();ug.fillStyle='#ffd86a';ug.font='600 6.5px '+FONT;ug.fillText('♪ '+(ST.coins||0)+(LV.coinTotal?' / '+LV.coinTotal:''),bx+5,18.5)}
+  {const bx=$('#bX');if(bx)bx.classList.toggle('show',(p.band||0)>=100)}
   if(TEAM.length>1){TEAM.forEach((id,i)=>{const x=8+i*20,y=43;ug.globalAlpha=i===AI?1:.55;ug.drawImage(setOf(id).face,x,y,17,17);ug.strokeStyle=i===AI?'#f2c14e':'rgba(255,246,224,.4)';ug.strokeRect(x,y,17,17);ug.globalAlpha=1});
     if(!isTouch()){ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.6)';ug.fillText('Q สลับตัว',10+TEAM.length*20,48)}}
   // ความสามัคคี

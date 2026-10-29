@@ -34,6 +34,8 @@ body.talking .pad{display:none!important}
 .pad .sm{width:50px;height:50px;font-size:13px}
 .pad .col{display:flex;flex-direction:column;gap:10px;align-items:center}
 #bUse{visibility:hidden}#bUse.show{visibility:visible;border-color:var(--gold)}
+#bX{display:none}#bX.show{display:block;border-color:var(--gold);background:rgba(242,193,78,.55);color:#2b1a05;animation:pulse .6s ease-in-out infinite alternate}@keyframes pulse{to{transform:scale(1.12)}}
+#bSkip{position:fixed;z-index:7;right:calc(12px + env(safe-area-inset-right));top:calc(54px + env(safe-area-inset-top));display:none;border:1px solid rgba(255,246,224,.4);background:rgba(20,10,28,.6);color:var(--ink);font:600 13px Mitr,sans-serif;border-radius:99px;padding:6px 12px}body.intalk #bSkip{display:block}
 .top{position:fixed;top:calc(8px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));display:none;gap:8px;z-index:6}
 body.play .top{display:flex}
 .top button{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,246,224,.3);background:rgba(20,10,28,.55);color:var(--ink);font-size:16px;padding:0}
@@ -105,7 +107,8 @@ window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reaso
 <div id="stage"><canvas id="cv"></canvas><canvas id="ui"></canvas></div>
 
 <div class="pad l"><button id="bL" aria-label="ซ้าย">◀</button><button id="bR" aria-label="ขวา">▶</button></div>
-<div class="pad r"><div class="col"><button id="bS" class="sm" aria-label="สลับตัว">⇄</button><button id="bUse" class="sm">ใช้</button></div><button id="bA" class="big" aria-label="ตี">ตี</button><button id="bJ" class="big" aria-label="กระโดด">⤒</button></div>
+<div class="pad r"><div class="col"><button id="bX" class="sm" aria-label="ท่าประสานวง">★</button><button id="bS" class="sm" aria-label="สลับตัว">⇄</button><button id="bUse" class="sm">ใช้</button></div><button id="bA" class="big" aria-label="ตี">ตี</button><button id="bJ" class="big" aria-label="กระโดด">⤒</button></div>
+<button id="bSkip">ข้าม ▸▸</button>
 <div class="top"><button id="bMute" aria-label="เสียง">🔊</button><button id="bPause" aria-label="พัก">⏸</button></div>
 
 <div id="title" class="scr on"><div class="card">
@@ -114,7 +117,7 @@ window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reaso
   <canvas id="tcv" width="240" height="48"></canvas>
   <p class="muted">เสียงลึกลับในโทรศัพท์แยกเพื่อนในวงออกไปทีละคน<br>ตามหาเจ็ดเสียงที่หายไป ทั่วโรงเรียนสรรพวิทยาคมและอำเภอแม่สอด</p>
   <div class="row" style="justify-content:center;margin-top:10px" id="tBtns"></div>
-  <p class="muted" style="margin-top:12px">คอม: ← → เดิน · Space กระโดด · J ตี · E ใช้ · Q สลับเพื่อน · Esc พัก<br>มือถือ: เล่นแนวนอน ปุ่มอยู่มุมล่างซ้ายและขวา</p>
+  <p class="muted" style="margin-top:12px">คอม: ← → เดิน · Space กระโดด · J ตี · E ใช้ · Q สลับเพื่อน · C ท่าประสานวง · Esc พัก<br>มือถือ: เล่นแนวนอน ปุ่มอยู่มุมล่างซ้ายและขวา</p>
   <div class="credit">ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div></div>
 

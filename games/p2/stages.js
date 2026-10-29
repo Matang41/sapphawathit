@@ -56,7 +56,7 @@ function drawBoss(b,c){const sx=b.x-c,cy=b.y-b.h/2;if(sx<-120||sx>W+120)return;g
   g.restore()}
 async function bossFight(o){
   LV.camLock=o.arena;P.x=clamp(P.x,o.arena[0]+30,o.arena[1]-30);
-  const b={boss:1,name:o.name,x:o.x,y:o.y||GY,w:o.w||70,h:o.h||90,hp:o.hp||160,t:0,hit:0,vuln:1,face:-1,sc:o.sc,look:o.look,opt:o.opt,say:o.say,bub:4,lastK:-1};b.max=b.hp;
+  const b={boss:1,name:o.name,x:o.x,y:o.y||GY,w:o.w||70,h:o.h||90,hp:Math.round((o.hp||160)*.7),t:0,hit:0,vuln:1,face:-1,sc:o.sc,look:o.look,opt:o.opt,say:o.say,bub:4,lastK:-1};b.max=b.hp;
   b.ai=bossAI(o);b.draw=drawBoss;LV.boss=b;banner(o.name,o.sub||'',2.2);sfx(t=>{TS.khong(0,t,.6);TS2.that(1,t+.05,.7)});
   const bubT=setInterval(()=>{if(!b.stun&&LV.boss===b&&!b.dead){b.bub=2.6;b.say=pick(o.words)}},6500);
   if(o.onStart)o.onStart(b);
@@ -134,6 +134,8 @@ STAGES[1]={id:1,name:'ห้อง 512',sub:'ห้องดนตรีไท�
     sceneEnd();
     say(isTouch()?'ปุ่ม ◀ ▶ เดิน · ⤒ กระโดด · ตี ใช้ไม้ตีฆ้อง':'← → เดิน · Space กระโดด · J ตี · E ใช้');
     trig(220,()=>say('ได้ยิน ฉิ่ง… ฉับ… ไหม? กดตีตอน “ฉับ” จะแรงเป็นสองเท่า',1));
+    trig(140,()=>say('เก็บโน้ตทองระหว่างทาง เอาไปแลกปรับเครื่องที่ร้านช่างในตัวเมืองได้',1));
+    trig(1260,()=>say('ตีตรงจังหวะบ่อย ๆ แถบ “พลังวง” จะเต็ม แล้วเรียกทั้งวงมาช่วยได้!',1));
     trig(260,()=>say('ในห้อง 512 เราไม่ข้ามหรือเหยียบเครื่องดนตรีนะ ยืนข้างหน้าแล้วกด “ใช้”',1));
     trig(880,()=>{say('ลำโพงเสียงตามสายมีเสียงแปลก ๆ … ระวังตัวไว้',1);[[957,'walk'],[980,'float']].forEach(([sx,k],i)=>setTimeout(()=>{const e=enemy(k,sx,k==='float'?GY:58);e.x0=sx-60;e.vy=0;for(let j=0;j<12;j++)LV.fx.push({x:957,y:56,vx:rnd(-60,60),vy:rnd(-20,60),g:200,t:0,life:.8,c:'#f2c14e',s:2})},i*900))});
     trig(1200,()=>{say('ต้นเสียงอยู่ที่หอกระจายข่าวกลางลาน! ระวังลมหายใจด้วย',1);[['walk',1500],['shout',1652,200],['walk',1820],['float',2010],['shout',2150,204],['walk',2320],['shield',2440]].forEach(([k,x,y])=>enemy(k,x,y))});
@@ -214,8 +216,8 @@ STAGES[3]={id:3,name:'ป่าเชิงเขา น้ำตกธารา
     LV.forks=[{x:620,ok:Math.random()<.5,next:900},{x:1450,ok:Math.random()<.5,next:1720},{x:2260,ok:Math.random()<.5,next:2480}];
     LV.forks.forEach(f=>wall(f.x+170,20,24,210,'thicket',{draw:(q,c)=>{const x=q.x-c;R(g,'#16261a',x-6,q.y,q.w+12,q.h);for(let i=0;i<14;i++)disc(g,i%2?'#1e3a24':'#264a2c',x+q.w/2+Math.sin(i*2.1)*12,q.y+10+i*15,12)}}));
     LV.forks.forEach((f,fi)=>{[0,1].forEach(side=>{const d={x:f.x+side*120,w:36,n:'เข้าทางนี้',side,f,fi,last:-9,
-      enter:dd=>{const right=(dd.side===0)===dd.f.ok;fade(1,.3).then(()=>{if(right){P.x=dd.f.next;P.cp=dd.f.next;say('ใช่แล้ว! ทำนองนี้แหละที่เช่ชอบเล่น',1);sfx(t=>TS2.ranadKey(17,t,.6))}else{P.x=dd.f.x-80;unity(-1);say('ทางนี้เสียงเพี้ยน… เป็นเสียงเลียนแบบ ฟังใหม่อีกที',1);enemy('echo',dd.f.x-20,GY,{quiet:1})}cam=clamp(P.x-W*.42,0,LV.w-W);fade(0,.3)})},
-      draw:(dd,c)=>{const x=dd.x-c;g.fillStyle='#14100c';g.beginPath();g.moveTo(x-16,GY);g.quadraticCurveTo(x-16,GY-60,x,GY-64);g.quadraticCurveTo(x+16,GY-60,x+16,GY);g.fill();blob(g,x,GY-66,16,['#1e3a24','#264a2c'],5,seeded(dd.x));}};LV.doors.push(d)})});
+      enter:dd=>{const right=(dd.side===0)===dd.f.ok;fade(1,.3).then(()=>{if(right){P.x=dd.f.next;P.cp=dd.f.next;say('ใช่แล้ว! ทำนองนี้แหละที่เช่ชอบเล่น',1);sfx(t=>TS2.ranadKey(17,t,.6))}else{dd.f.hint=1;P.x=dd.f.x-80;say('ทางนี้เสียงเพี้ยน… เป็นเสียงเลียนแบบ ฟังใหม่อีกที',1);enemy('echo',dd.f.x-20,GY,{quiet:1})}cam=clamp(P.x-W*.42,0,LV.w-W);fade(0,.3)})},
+      draw:(dd,c)=>{const x=dd.x-c;if(dd.f.hint&&((dd.side===0)===dd.f.ok)){g.fillStyle='rgba(255,224,120,'+(.25+.2*Math.sin(T*5))+')';g.beginPath();g.ellipse(x,GY-30,24,40,0,0,7);g.fill()}g.fillStyle='#14100c';g.beginPath();g.moveTo(x-16,GY);g.quadraticCurveTo(x-16,GY-60,x,GY-64);g.quadraticCurveTo(x+16,GY-60,x+16,GY);g.fill();blob(g,x,GY-66,16,['#1e3a24','#264a2c'],5,seeded(dd.x));}};LV.doors.push(d)})});
     LV.tick=dt=>{const now_=T;LV.doors.forEach(d=>{const dist=Math.abs(P.x-d.x);if(dist<110&&now_-d.last>BEAT*8){d.last=now_;const right=(d.side===0)===d.f.ok;phrase(right?REAL:FAKE,d.x,!right);pop(d.x,GY-80,right?'♪':'♪?','#ffe08a')}})};
     LV.dark=0;
   },
@@ -231,7 +233,7 @@ STAGES[3]={id:3,name:'ป่าเชิงเขา น้ำตกธารา
     trig(2680,()=>{if(!TEAM.includes('che'))say('ลังไม้นี้ต้องให้คนแรงเยอะช่วยดัน… เช่ดันได้แน่',1)});
     await reach(2950);LV.dark=.5;const c3=glowActor('che',3240,-1);
     await bossFight({name:'เงาไร้ค่า',sub:'ริมลำธารใต้น้ำตก',x:3180,arena:[2950,LV.w],hp:170,sc:3,words:['ไม่มีค่า!','ออกจากวงเถอะ!','เล่นเล่นไม่มีใครฟัง!'],acts:['clone','shoot','rain','clone','dash'],every:4,say:'เล่นเพื่อผ่อนคลายน่ะไม่มีค่า',
-      lineB:[['pian','เงาเริ่มจางแล้ว! ฟังเสียงระนาดแล้วตีตาม']],cr:{inst:'ranad',rounds:3,len:4},
+      lineB:[['pian','เงาเริ่มจางแล้ว! ฟังเสียงระนาดแล้วตีตาม']],cr:{inst:'ranad',rounds:3,len:3},
       preC:async()=>{c3.glow=0;await walk(c3,3120,50)},lineC:[['che','…ระนาดนี่… เพลงที่ผมเล่นเล่นตอนพักซ้อม'],['pian','เช่ ตีด้วยกันเลย!']],
       jam:{who:TEAM.concat(['che']),inst:['ranad','khong','sor'],pattern:PAT_A,bars:2,title:'บรรเลงพร้อมกัน: ระนาดเอกนำ'}});
     LV.dark=0;sceneStart(3100);
@@ -246,10 +248,10 @@ STAGES[3]={id:3,name:'ป่าเชิงเขา น้ำตกธารา
 const STONEC=['#e86a6a','#f2c14e','#6ac86a','#6ab0f0','#c69bff'],STONEK=[10,11,12,14,15];
 function stonePuzzle(x0,seqLen){const pz={x0,seq:[],idx:0,solved:0,stones:[]};let k=Math.random()<.5?0:1;for(let i=0;i<seqLen;i++){pz.seq.push(k);k=clamp(k+pick([-1,1,1,1,0]),0,4);if(pz.seq.length&&k===pz.seq[pz.seq.length-1]&&Math.random()<.5)k=clamp(k+1,0,4)}
   gap(x0,5*44+30,'hot');
-  for(let i=0;i<5;i++){const s=plat(x0+12+i*44,GY-6-((i%2)*12),26,{key:i,pz,draw:(q,c)=>{if(q.off)return;const lit=q.lit>T;g.fillStyle=lit?'#ffffff':STONEC[q.key];g.beginPath();g.ellipse(q.x-c+13,q.y+3,14,5,0,0,7);g.fill();R(g,'rgba(0,0,0,.25)',q.x-c+2,q.y+5,24,2)},
+  for(let i=0;i<5;i++){const s=plat(x0+12+i*44,GY-6-((i%2)*12),26,{key:i,pz,draw:(q,c)=>{if(q.off)return;const lit=q.lit>T||(q.pz.miss>=2&&!q.pz.solved&&q.pz.seq[q.pz.idx]===q.key&&Math.sin(T*8)>0);g.fillStyle=lit?'#ffffff':STONEC[q.key];g.beginPath();g.ellipse(q.x-c+13,q.y+3,14,5,0,0,7);g.fill();R(g,'rgba(0,0,0,.25)',q.x-c+2,q.y+5,24,2)},
     onLand:q=>{const p=q.pz;if(p.solved||q.sunk)return;TS2.ranadKey(STONEK[q.key],AC?AC.currentTime:0,.7);q.lit=T+.3;
       if(q.key===p.seq[p.idx]){p.idx++;if(p.idx>=p.seq.length){p.solved=1;sparks(q.x+13,q.y,16,1);say('ถูกทั้งทำนอง! หินทั้งแถวแข็งแรงแล้ว',1);sfx(t=>{[10,12,14,15,17].forEach((k,i)=>TS2.ranadKey(k,t+i*.09,.5))})}}
-      else{q.sunk=1;p.idx=0;pop(q.x+13,q.y-20,'ผิดเสียง!','#ffb0b0');setTimeout(()=>{q.off=1},250);setTimeout(()=>{q.off=0;q.sunk=0},1700)}}});pz.stones.push(s)}
+      else{q.sunk=1;p.idx=0;p.miss=(p.miss||0)+1;pop(q.x+13,q.y-20,p.miss>=2?'ไม่เป็นไร หินที่ถูกจะเรืองแสงให้':'ผิดเสียง!','#ffb0b0');if(p.miss===1)setTimeout(()=>p.play(),900);setTimeout(()=>{q.off=1},650);setTimeout(()=>{q.off=0;q.sunk=0},1800)}}});pz.stones.push(s)}
   pz.play=()=>{const b=nb();pz.idx=0;pz.seq.forEach((k,i)=>{const t=b+i*BEAT;sfx(()=>TS2.ranadKey(STONEK[k],t,.75));setTimeout(()=>{pz.stones[k].lit=T+.35},Math.max(0,(t-now())*1000))})};
   use(x0-20,36,'ฟังทำนองหิน',()=>pz.play());trig(x0-80,()=>{pz.play();say('ฟังทำนอง แล้วกระโดดเหยียบหินตามลำดับเสียง',1)});return pz}
 STAGES[4]={id:4,name:'บ่อน้ำร้อนแม่กาษา',sub:'น้ำพุร้อนและน้ำตกในป่า อ.แม่สอด',who:['maha','captain'],inst:'ฆ้องวงใหญ่ ตะโพน',bpm:100,w:3200,start:60,
@@ -280,7 +282,7 @@ STAGES[4]={id:4,name:'บ่อน้ำร้อนแม่กาษา',sub:'
     trig(2520,()=>[['shout',2620,192],['walk',2700],['mini',2760],['mini',2800]].forEach(([k,x,y])=>enemy(k,x,y)));
     await reach(2860);const m=glowActor('maha',3150,-1),cpt=glowActor('captain',3175,-1);
     await bossFight({name:'เงาอำนาจ',sub:'บัลลังก์ไอน้ำกลางบ่อ',x:3080,arena:[2860,LV.w],hp:190,sc:3.3,opt:{crown:1},words:['เหนือคนอื่น!','ทุกคนต้องฟังเธอ!','ศรัทธาฉัน!'],acts:['summon','slam','shoot','rain','slam'],every:4,minion:'walk',say:'ศรัทธาฉัน แล้วจะได้อำนาจเหนือคนอื่น',
-      lineB:[['pian','มงกุฎทองเริ่มร้าวแล้ว! ฝีมือจริงฟังออกด้วยหู ฟังทำนองฆ้องแล้วตีตาม']],cr:{inst:'khong',rounds:3,len:4},
+      lineB:[['pian','มงกุฎทองเริ่มร้าวแล้ว! ฝีมือจริงฟังออกด้วยหู ฟังทำนองฆ้องแล้วตีตาม']],cr:{inst:'khong',rounds:3,len:3},
       preC:async()=>{m.glow=0;cpt.glow=0;walk(m,3010,50);await walk(cpt,3040,50)},lineC:[['maha','ทำนองฆ้องนี้… ผมเป็นคนสอนน้อง ๆ เอง'],['captain','ขอผมตีตะโพนกำกับด้วย!']],
       jam:{who:TEAM.concat(['maha','captain']),inst:['khong','ranad','klong'],pattern:PAT_C,bars:2,title:'บรรเลงพร้อมกัน: ฆ้องวงใหญ่และตะโพน'}});
     sceneStart(3020);
@@ -378,7 +380,7 @@ STAGES[6]={id:6,name:'ชุมชนแม่โกนเกน',sub:'งาน
     await bossFight({name:'เงาแบ่งวง',sub:'กลางลานงานตานก๋วยสลาก',x:3900,arena:[3500,LV.w],hp:200,sc:3,opt:{shield:1},words:['เลือกข้างสิ!','อย่าเล่นด้วยกัน!','คนละวงกัน!'],acts:['shoot','slam','summon','dash','rain'],every:4,say:'ชมรมพื้นเมืองกับปี่พาทย์ไม่ควรอยู่ด้วยกัน',
       onStart:b=>{b.vuln=1;b.guard=1;LV.onSwitch=()=>{if(LV.boss===b){b.guard=0;b.opt={};pop(b.x,b.y-b.h-10,'โล่แตก!','#9ff0c0');clearTimeout(b.gt);b.gt=setTimeout(()=>{if(LV.boss===b&&b.vuln){b.guard=1;b.opt={shield:1}}},4000)}};
         const ai=b.ai;b.ai=(bb,dt,bt)=>{ai(bb,dt,bt);bb.shield=bb.guard};say('เงานี้มีโล่ ต้องสลับเพื่อนแล้วตีต่อกัน โล่ถึงจะแตก!',1)},
-      lineB:[['pian','เงาแบ่งวงเริ่มแตก! ฟังจังหวะกลองหลวงแล้วตีตาม']],cr:{inst:'klong',rounds:3,len:4},
+      lineB:[['pian','เงาแบ่งวงเริ่มแตก! ฟังจังหวะกลองหลวงแล้วตีตาม']],cr:{inst:'klong',rounds:3,len:3},
       preC:async()=>{LV.onSwitch=null;l.glow=0;pb.glow=0;walk(l,3720,50);await walk(pb,3750,50)},lineC:[['pob','ผมอยู่ทั้งสองชมรม เสียงนั่นบอกให้เลือกข้าง ผมเลยทะเลาะกับลู่วา'],['luwa','เราไม่ต้องเลือกข้าง มาเล่นด้วยกันในงานนี้เลย']],
       jam:{who:TEAM.concat(['luwa','pob']),inst:['klong','pinae','khong'],pattern:PAT_B,bars:2,title:'บรรเลงพร้อมกัน: กลองหลวง ปี่แน และฆ้อง'}});
     sceneStart(3750);const el2=actor('elder',3600,1);walk(el2,3680,50);
