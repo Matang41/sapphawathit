@@ -144,6 +144,10 @@ input[type=range]{width:100%}
 <script src="thaisound2.js"></script>
 <script src="../pixel.js"></script>
 <script>
+/* แสดงข้อผิดพลาดบนจอ ให้ถ่ายภาพส่งมาได้ทันที */
+function showErr(m){try{let d=document.getElementById('err');if(!d){d=document.createElement('div');d.id='err';d.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99;background:#5a1020;color:#fff;font:13px/1.5 sans-serif;padding:10px 12px;border-radius:10px;white-space:pre-wrap';document.body.appendChild(d)}d.textContent+='เกิดข้อผิดพลาด: '+m+'\n'}catch(e){}}
+window.addEventListener('error',e=>showErr((e.message||'')+' @'+(e.lineno||'')+':'+(e.colno||'')+' '+String(e.filename||'').split('/').pop()));
+window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reason.message||e.reason)));
 'use strict';
 /* ====================================================================
    0) พื้นฐาน
@@ -200,11 +204,11 @@ const PENTA=[10,11,12,14,15,17,18,19];let melI=3,melOn=1;
 function sched(){
   if(!AC||paused)return;const t1=AC.currentTime+.18;
   while(beatT0+nextBeat*BEAT<t1){const k=nextBeat,t=beatT0+k*BEAT,chab=k%2===1;
-    if(window.TS)TS.ching(!chab,t,chab?.32:.24,MUS);
+    if(window.TS)TS.ching(!chab,t,chab? .32:.24,MUS);
     // หน้าทับเบา ๆ ทุก 8 จังหวะ
     const b8=k%8;if(window.TS2&&TS2.ready()){if(b8===1||b8===5)TS2.thon(0,t,.18,MUS);if(b8===3)TS2.thon(2,t,.24,MUS);if(b8===6)TS2.thon(0,t+BEAT/2,.14,MUS);if(b8===7)TS2.thon(2,t,.26,MUS);
       // ระนาดเอกทำนองเพนทาโทนิกเบา ๆ ในห้อง 512
-      if(melOn&&Math.random()<.72){for(let s=0;s<2;s++){if(s&&Math.random()<.45)continue;melI=clamp(melI+pick([-2,-1,-1,0,1,1,2]),0,PENTA.length-1);TS2.ranadKey(PENTA[melI],t+s*BEAT/2,.13*(melOn===2?.55:1),MUS)}}}
+      if(melOn&&Math.random()<.72){for(let s=0;s<2;s++){if(s&&Math.random()<.45)continue;melI=clamp(melI+pick([-2,-1,-1,0,1,1,2]),0,PENTA.length-1);TS2.ranadKey(PENTA[melI],t+s*BEAT/2,.13*(melOn===2? .55:1),MUS)}}}
     nextBeat++}
 }
 function sfx(fn){if(AC&&window.TS2)try{fn(AC.currentTime)}catch(e){}}
@@ -484,7 +488,7 @@ function update(dt){
   // โจมตี
   p.cd-=dt;
   if(pressed.a&&p.cd<=0){if(p.br>=ACOST){p.br-=ACOST;p.atk=0;p.cd=.3;ST.swings++;const b=beat(),w=.11;p.lastQ=Math.abs(b.d)<=w?(b.chab?'chab':'ching'):null;p.hitDone=0;
-      sfx(t=>{TS2.chab(p.lastQ==='chab'?0:2,t,p.lastQ?.5:.25)})}else lowBreath()}
+      sfx(t=>{TS2.chab(p.lastQ==='chab'?0:2,t,p.lastQ? .5:.25)})}else lowBreath()}
   if(p.atk>=0){p.atk+=dt;if(p.atk>.07&&!p.hitDone){p.hitDone=1;swing(p)}if(p.atk>.3)p.atk=-1}
   p.inv-=dt;p.hurt-=dt;
   // ใช้งาน
@@ -515,7 +519,7 @@ function swing(p){
   for(const e of EN){if(e.dead)continue;const ey=e.kind==='float'?e.y-30:e.y-16;if(e.x+10>x0&&e.x-10<x1&&ey+14>y0&&ey-14<y1){e.hp-=dmg;e.hit=.18;e.vx=p.face*(mult>1?150:90);if(e.kind!=='float')e.vy=-60;hitAny=1;sparks(e.x,ey,mult>1?14:7,mult>1);if(e.hp<=0)kill(e)}}
   for(const s of SHOTS){if(s.x>x0-6&&s.x<x1+6&&s.y>y0-6&&s.y<y1+6){s.dead=1;hitAny=1;sparks(s.x,s.y,6,0);pop(s.x,s.y-8,'ตีทิ้ง!','#ffffff')}}
   if(hitAny){ST.hits++;if(p.lastQ){ST.combo++;ST.best=Math.max(ST.best,ST.combo);if(p.lastQ==='chab')ST.onChab++;else ST.onChing++}else ST.combo=0;
-    hitstop=mult>1?.07:.04;
+    hitstop=mult>1? .07:.04;
     sfx(t=>{TS2.ranadKey(10+Math.min(ST.combo,10),t,.7);if(p.lastQ==='chab')TS.khong(5+(ST.combo%3),t+.01,.55)});
     pop(p.x+p.face*20,p.y-46,p.lastQ==='chab'?'ตรงฉับ! ×2':p.lastQ==='ching'?'ตรงฉิ่ง ×1.4':'',p.lastQ==='chab'?'#ffd86a':'#bfe6ff')}
   else if(p.lastQ){pop(p.x+p.face*16,p.y-46,p.lastQ==='chab'?'ฉับ':'ฉิ่ง','rgba(255,240,200,.7)')}
@@ -632,7 +636,7 @@ function drawEnemy(e,c){
   const sx=e.x-c;if(sx<-40||sx>W+40)return;const cy=e.kind==='float'?e.y-30:e.y-16,w=e.t,dead=e.dead?Math.min(1,(e.dt||0)*2):0;
   g.save();g.globalAlpha=1-dead;if(e.hit>0)g.globalAlpha*=.6+.4*Math.sin(T*60);
   // เงาสีทองเกล็ดเสียง ดูสวยแต่ข้างในกลวง
-  const s=e.kind==='float'?.95:1.15,bw=13*s,bh=17*s;
+  const s=e.kind==='float'? .95:1.15,bw=13*s,bh=17*s;
   g.fillStyle='rgba(30,16,8,.25)';if(e.kind!=='float'){g.beginPath();g.ellipse(sx,e.y,10,2,0,0,7);g.fill()}
   g.fillStyle='rgba(212,160,48,.9)';g.beginPath();g.moveTo(sx-bw,cy+bh*.6);for(let i=0;i<=8;i++){const a=Math.PI+i/8*Math.PI;g.lineTo(sx+Math.cos(a)*bw*(1+.06*Math.sin(w*6+i)),cy+Math.sin(a)*bh)}g.lineTo(sx+bw,cy+bh*.6);
   for(let i=0;i<5;i++){g.lineTo(sx+bw-(i+.5)*bw*2/5,cy+bh*.6+(i%2?-3:4)+Math.sin(w*5+i)*2)}g.closePath();g.fill();
@@ -761,7 +765,9 @@ function loop(ts){const dt=Math.min(.033,(ts-last)/1000);last=ts;
 function init(){L.sky=buildSky();L.far=buildFar();L.world=buildWorld();L.fg=buildFG();fit();titleScreen();requestAnimationFrame(loop)}
 /* debug สำหรับทดสอบอัตโนมัติ */
 window.__P2={beat,get me(){return ME},get st(){return ST},get en(){return EN},get mode(){return mode},start,finish,K,pressed,say};
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(init);else init();
+/* เริ่มเมื่อฟอนต์พร้อม แต่ไม่รอเกิน 1.2 วินาที (เปิดจากไฟล์ในเครื่องหรือออฟไลน์ ฟอนต์อาจโหลดไม่ได้) */
+let inited=false;const boot=()=>{if(inited)return;inited=true;if(!window.PX){showErr('ไม่พบไฟล์ pixel.js (ต้องอยู่โฟลเดอร์เหนือ games/)');return}init()};
+setTimeout(boot,1200);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(boot,boot);else boot();
 </script>
 </body>
 </html>
