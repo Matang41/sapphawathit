@@ -5,7 +5,7 @@
    พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026
    ==================================================================== */
 'use strict';
-let W=480;const H=270,GY=230,WMAX=600;
+let W=480;const H=270,GY=230,WMAX=640;
 const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
 const cv=$('#cv'),g=cv.getContext('2d');cv.width=W;cv.height=H;
@@ -13,11 +13,23 @@ const ui=$('#ui'),ug=ui.getContext('2d');
 let SC=1,DPR=1;
 const isTouch=()=>document.body.classList.contains('touch');
 if((window.matchMedia&&matchMedia('(pointer:coarse)').matches)||'ontouchstart'in window)document.body.classList.add('touch');
-function fit(){const vw=innerWidth,vh=innerHeight;W=Math.round(clamp(H*vw/vh,480,WMAX));if(cv.width!==W){cv.width=W;g.imageSmoothingEnabled=false}
-  SC=Math.min(vw/W,vh/H);const st=$('#stage');st.style.width=Math.floor(W*SC)+'px';st.style.height=Math.floor(H*SC)+'px';
-  DPR=Math.min(2.5,window.devicePixelRatio||1);ui.width=Math.round(W*SC*DPR);ui.height=Math.round(H*SC*DPR);
+/* พอดีจอ: ใช้ visualViewport (iPhone Safari ซ่อน/แสดงแถบเครื่องมือ) และเว้นรอยบาก (safe area) */
+const SAFE=(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';document.documentElement.appendChild(d);return d})();
+let FITK='';
+function fit(){const v=window.visualViewport,vw=v?v.width:innerWidth,vh=v?v.height:innerHeight,ox=v?v.offsetLeft:0,oy=v?v.offsetTop:0;
+  const cs=getComputedStyle(SAFE),sl=parseFloat(cs.paddingLeft)||0,sr=parseFloat(cs.paddingRight)||0,stp=parseFloat(cs.paddingTop)||0,sb=parseFloat(cs.paddingBottom)||0;
+  const aw=Math.max(100,vw-sl-sr),ah=Math.max(100,vh-stp-sb);
+  W=Math.round(clamp(H*aw/ah,480,WMAX));if(cv.width!==W){cv.width=W;g.imageSmoothingEnabled=false}
+  SC=Math.min(aw/W,ah/H);const sw=Math.floor(W*SC),shh=Math.floor(H*SC),st=$('#stage');
+  st.style.width=sw+'px';st.style.height=shh+'px';st.style.left=Math.round(ox+sl+(aw-sw)/2)+'px';st.style.top=Math.round(oy+stp+(ah-shh)/2)+'px';
+  DPR=Math.min(2.5,window.devicePixelRatio||1);const uw=Math.round(W*SC*DPR),uh=Math.round(H*SC*DPR);if(ui.width!==uw||ui.height!==uh){ui.width=uw;ui.height=uh}
+  const r=document.documentElement.style;r.setProperty('--vw',vw+'px');r.setProperty('--vh',vh+'px');r.setProperty('--vt',oy+'px');r.setProperty('--vl',ox+'px');r.setProperty('--vb',Math.max(0,innerHeight-vh-oy)+'px');
+  FITK=[vw,vh,ox,oy,sl,sr].join(',');
   $('#rot').classList.toggle('on',isTouch()&&vh>vw)}
-addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));
+addEventListener('resize',fit);addEventListener('orientationchange',()=>{setTimeout(fit,200);setTimeout(fit,700)});
+if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualViewport.addEventListener('scroll',fit)}
+setInterval(()=>{const v=window.visualViewport;const k=[v?v.width:innerWidth,v?v.height:innerHeight,v?v.offsetLeft:0,v?v.offsetTop:0];if(!FITK.startsWith(k.join(',')))fit()},800);
+addEventListener('scroll',()=>{if(window.scrollY||window.scrollX)window.scrollTo(0,0)});
 function mk(w,h){const c=document.createElement('canvas');c.width=Math.max(1,w|0);c.height=Math.max(1,h|0);const x=c.getContext('2d');x.imageSmoothingEnabled=false;return [c,x]}
 function hex(h){const n=parseInt(h.slice(1),16);return [n>>16,(n>>8)&255,n&255]}
 function sh(h,f){if(!h||h[0]!=='#')return h;const [r,gg,b]=hex(h);const c=v=>Math.max(0,Math.min(255,Math.round(v*f)));return 'rgb('+c(r)+','+c(gg)+','+c(b)+')'}
@@ -639,13 +651,13 @@ function drawUI(u){
   ug.fillStyle='#3a2030';ug.fillRect(41,20,92,5);ug.fillStyle=p.hp>30?'#ff5a6a':'#ff2a3a';ug.fillRect(41,20,92*Math.max(0,p.hp)/maxHP(),5);
   ug.fillStyle='#1e2a40';ug.fillRect(41,28,92,4);ug.fillStyle=p.low>0&&Math.floor(T*10)%2?'#ff8a6a':'#6ac8ff';ug.fillRect(41,28,92*p.br/maxBR(),4);
   ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.7)';ug.fillText('ลมหายใจ',41,33);
-  {const bx=W-128,by=44,full=(p.band||0)>=100;ug.fillStyle='rgba(18,10,24,.6)';rr(bx,by,68,12,5);ug.fill();ug.fillStyle=full&&Math.floor(T*6)%2?'#ffd86a':'rgba(255,246,224,.8)';ug.fillText(full?'พลังวงเต็ม!':'พลังวง',bx+4,by+3);ug.fillStyle='#3a2a10';ug.fillRect(bx+34,by+4,30,4);ug.fillStyle='#f2c14e';ug.fillRect(bx+34,by+4,30*(p.band||0)/100,4);
+  {const bx=W-150,by=44,full=(p.band||0)>=100;ug.fillStyle='rgba(18,10,24,.6)';rr(bx,by,68,12,5);ug.fill();ug.fillStyle=full&&Math.floor(T*6)%2?'#ffd86a':'rgba(255,246,224,.8)';ug.fillText(full?'พลังวงเต็ม!':'พลังวง',bx+4,by+3);ug.fillStyle='#3a2a10';ug.fillRect(bx+34,by+4,30,4);ug.fillStyle='#f2c14e';ug.fillRect(bx+34,by+4,30*(p.band||0)/100,4);
    ug.fillStyle='rgba(18,10,24,.6)';rr(bx,16,68,12,5);ug.fill();ug.fillStyle='#ffd86a';ug.font='600 6.5px '+FONT;ug.fillText('♪ '+(ST.coins||0)+(LV.coinTotal?' / '+LV.coinTotal:''),bx+5,18.5)}
   {const bx=$('#bX');if(bx)bx.classList.toggle('show',(p.band||0)>=100)}
   if(TEAM.length>1){TEAM.forEach((id,i)=>{const x=8+i*20,y=43;ug.globalAlpha=i===AI?1:.55;ug.drawImage(setOf(id).face,x,y,17,17);ug.strokeStyle=i===AI?'#f2c14e':'rgba(255,246,224,.4)';ug.strokeRect(x,y,17,17);ug.globalAlpha=1});
     if(!isTouch()){ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.6)';ug.fillText('Q สลับตัว',10+TEAM.length*20,48)}}
   // ความสามัคคี
-  ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.75)';const ux=W-128;ug.fillStyle='rgba(18,10,24,.6)';rr(ux,30,68,12,5);ug.fill();ug.fillStyle='rgba(255,246,224,.8)';ug.fillText('สามัคคี',ux+4,33);ug.fillStyle='#2a3a2a';ug.fillRect(ux+28,34,36,4);ug.fillStyle='#9ff0c0';ug.fillRect(ux+28,34,36*(SAVE.unity||0)/100,4);
+  ug.font='5.5px '+FONT;ug.fillStyle='rgba(255,246,224,.75)';const ux=W-150;ug.fillStyle='rgba(18,10,24,.6)';rr(ux,30,68,12,5);ug.fill();ug.fillStyle='rgba(255,246,224,.8)';ug.fillText('สามัคคี',ux+4,33);ug.fillStyle='#2a3a2a';ug.fillRect(ux+28,34,36,4);ug.fillStyle='#9ff0c0';ug.fillRect(ux+28,34,36*(SAVE.unity||0)/100,4);
   // จังหวะ
   const b=beat(),cx0=W/2,isChabNext=((Math.floor(b.x)+1)%2+2)%2===1;
   ug.fillStyle='rgba(18,10,24,.6)';rr(cx0-40,6,80,20,6);ug.fill();

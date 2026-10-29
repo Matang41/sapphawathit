@@ -50,7 +50,7 @@
   };
   A.ACT.gamePlay = d => {
     const g = list().find(x => x.id === d.id); if (!g) return;
-    const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(g.title) + '</h3><button class="btn ghost sm" data-close>ปิดเกม</button></div><div class="gm-host"></div>', { full: true, sticky: true });
+    const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(g.title) + '</h3><button class="btn ghost sm" data-close>ปิดเกม</button></div><div class="gm-host"></div>', { full: true, sticky: true }); w.classList.add('gm-modal');
     const host = $('.gm-host', w);
     const cl = $('[data-close]', w); if (cl) cl.addEventListener('click', () => setTimeout(() => { try { A.rerender(); } catch (e) { } }, 60));
     if (g.src) { const me = (A.members() || {})[A.sid()] || {}, nm = A.teacher() ? 'คุณครู' : (me.first || A.myName() || ''); const url = g.src + (g.src.includes('?') ? '&' : '?') + 'name=' + encodeURIComponent(nm.trim());
