@@ -435,10 +435,12 @@ function setupWorld(){
     {x:97,w:60,n:'ไหว้ครู',act:()=>{rest('ไหว้ครูก่อนเล่นทุกครั้ง แล้วจะใจนิ่ง ตีแม่นขึ้น');sfx(t=>TS.khong&&TS.khong(5,t+.02,.4))}},
     {x:283,w:60,n:'ตีระนาดเอก',act:()=>sfx(t=>{const b=nb();[10,11,12,14,15,17,18,19].forEach((k,i)=>TS2.ranadKey(k,b+i*BEAT/4,.7))})},
     {x:363,w:60,n:'ตีระนาดทุ้ม',act:()=>sfx(t=>{const b=nb();[7,9,10,12,10,9,7].forEach((k,i)=>TS2.thum(k,b+i*BEAT/2,.8))})},
-    {x:448,w:50,n:'กลองทัด',act:()=>say('กลองทัดยังไม่มีเสียงในเกม รอพี่ ๆ อัดเสียงจริงจากห้องนี้ก่อนนะ')},
+    {x:448,w:50,n:'ตีกลองทัด',act:()=>sfx(t=>{const b=nb();[[0,0],[1,1],[2,0],[2.5,0],[3,1]].forEach(([d,k])=>TS2.that(k,b+d*BEAT,.85))})},
     {x:660,w:120,n:'ตีฆ้องวงใหญ่',act:()=>sfx(t=>{const b=nb();[3,4,5,7,5,4,3,0].forEach((k,i)=>TS.khong(k,b+i*BEAT/2,.75))})},
     {x:735,w:40,n:'อ่านบอร์ด',act:()=>board()},
-    {x:1110,w:80,n:'สีซอด้วง',act:()=>sfx(t=>{const b=nb(),F=[392,440,523,587,523,440];F.forEach((f,i)=>TS2.sor(f,b+i*BEAT/2,BEAT/2*.95,.55))})},
+    {x:943,w:30,n:'ตีตะโพน',act:()=>sfx(t=>{const b=nb();[[0,0],[.5,3],[1,2],[1.5,3],[2,1]].forEach(([d,k])=>TS2.taphon(k,b+d*BEAT,.8))})},
+    {x:1024,w:64,n:'สีซออู้',act:()=>sfx(t=>{const b=nb(),F=[229,257,289,344,289,257];F.forEach((f,i)=>TS2.sorou(f,b+i*BEAT/2,BEAT/2*.95,.6))})},
+    {x:1114,w:72,n:'สีซอด้วง',act:()=>sfx(t=>{const b=nb(),F=[392,440,523,587,523,440];F.forEach((f,i)=>TS2.sor(f,b+i*BEAT/2,BEAT/2*.95,.55))})},
     {x:1741,w:40,n:'ดื่มน้ำ พัก',act:()=>rest('ดื่มน้ำแล้วไปต่อ! บันทึกจุดนี้ไว้แล้ว')},
     {x:2614,w:60,n:'ไปต่อ',act:()=>finish()}];
   EN=[];SHOTS=[];FX=[];DEBRIS=[];POPS=[];
@@ -558,7 +560,7 @@ function kill(e){e.dead=1;ST.kills++;
   if(!ST.lies.find(l=>l.t===e.lie.t))ST.lies.push(e.lie);
   for(let i=0;i<22;i++)FX.push({x:e.x+rnd(-8,8),y:(e.kind==='float'?e.y-30:e.y-16)+rnd(-10,10),vx:rnd(-80,80),vy:rnd(-120,10),g:300,t:0,life:rnd(.5,1.1),c:pick(['#f2c14e','#ffe08a','#c89a3a']),s:2});
   DEBRIS.push({x:e.x,y:e.kind==='float'?e.y-30:e.y-16,vx:rnd(-30,30),vy:-120,t:0});
-  sfx(t=>{TS2.chab(0,t,.45);TS.khong(7,t+.04,.4)});
+  sfx(t=>{TS2.chab(0,t,.45);TS2.that(0,t+.02,.5)});
   const n=ST.kills;setTimeout(()=>say(n===1?'เห็นไหม ข้างในกลวง เหลือแต่ลำโพงเก่า ๆ':'คำว่า “'+e.lie.t+'” คือ'+TELL[e.lie.k]),350)}
 function sparks(x,y,n,gold,c){for(let i=0;i<n;i++)FX.push({x,y,vx:rnd(-110,110),vy:rnd(-110,40),g:240,t:0,life:rnd(.25,.5),c:c||(gold?pick(['#ffd86a','#fff2b0']):pick(['#ffffff','#bfe6ff'])),s:gold?2:1})}
 function dust(x,y,n){for(let i=0;i<n;i++)FX.push({x:x+rnd(-6,6),y:y-1,vx:rnd(-30,30),vy:rnd(-20,-5),t:0,life:.35,c:'rgba(230,220,200,.8)',s:2})}
