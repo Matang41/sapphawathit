@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b1628">
+<title>ถอดรหัสเสียงกลองหลวง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#5a3452;--bg2:#2b1628;--gold:#f2c14e;--cream:#fff6e0;--muted:#d9c3d4;--card:rgba(255,255,255,.07);--line:rgba(242,193,78,.35);--ok:#7fd99a;--bad:#ff8fa3;--drum:#e8845a;--chab:#f2c14e;--gong:#9ad0ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:860px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 48px}
+h1{font-family:Mitr;font-weight:500;margin:0;font-size:28px;color:var(--gold);text-align:center}
+.sub{color:var(--muted);font-size:14px;text-align:center;margin-top:2px}
+.card{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;margin-top:14px}
+.lb{font-family:Mitr;font-weight:500;color:var(--gold);font-size:16px;margin-bottom:8px;display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap}
+.lb small{font-family:Sarabun;font-weight:400;color:var(--muted);font-size:13px}
+.drop{display:block;border:2px dashed var(--line);border-radius:14px;padding:22px 12px;text-align:center;cursor:pointer}
+.drop.on{background:rgba(242,193,78,.12)}
+.drop b{font-family:Mitr;font-weight:500;font-size:18px;display:block;color:var(--gold)}
+.drop span{font-size:13.5px;color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:99px;padding:8px 16px;font-size:14.5px}
+.btn.g{background:var(--gold);color:#3b2205;border-color:var(--gold);font-family:Mitr}
+.btn:disabled{opacity:.45;cursor:default}
+.in{border:1px solid var(--line);background:rgba(0,0,0,.25);border-radius:10px;padding:8px 10px;min-width:0}
+.prog{height:8px;border-radius:99px;background:rgba(0,0,0,.3);overflow:hidden;margin-top:10px}.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .15s}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.st{background:rgba(0,0,0,.22);border-radius:12px;padding:10px 12px}
+.st .k{font-size:12.5px;color:var(--muted)}
+.st .v{font-family:Mitr;font-size:22px;color:var(--cream);line-height:1.25}
+.st .v small{font-size:13px;color:var(--muted);font-family:Sarabun}
+.st .d{font-size:12.5px;color:var(--muted)}
+.meter{height:6px;border-radius:99px;background:rgba(0,0,0,.35);margin-top:6px;overflow:hidden}.meter i{display:block;height:100%}
+canvas{display:block;width:100%;border-radius:10px;background:rgba(0,0,0,.28);touch-action:pan-y}
+.leg{display:flex;gap:14px;font-size:13px;color:var(--muted);flex-wrap:wrap;margin-top:6px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.pat{display:grid;grid-template-columns:62px repeat(8,1fr);gap:4px;font-size:13px;align-items:center}
+.pat .h{text-align:center;color:var(--muted);font-size:12px}
+.pat .c{height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#1b0f1a;font-weight:600}
+.pat .n{color:var(--cream);font-family:Mitr;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;vertical-align:top}
+th{color:var(--gold);font-family:Mitr;font-weight:500;font-size:13px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto}
+.note{font-size:13px;color:var(--muted);line-height:1.6}
+.hide{display:none!important}
+.x{border:none;background:none;color:var(--bad);padding:2px 6px}
+.chipsel{display:flex;gap:6px;flex-wrap:wrap}
+.chipsel button{border:1px solid var(--line);background:rgba(0,0,0,.2);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.chipsel button.on{background:var(--gold);color:#3b2205;border-color:var(--gold)}
+.foot{text-align:center;font-size:12px;color:var(--muted);margin-top:22px;opacity:.85}
+@media print{
+  body{background:#fff;color:#111}
+  .wrap{max-width:none;padding:0}
+  .card{border:1px solid #bbb;background:#fff;break-inside:avoid}
+  .lb,h1,th{color:#5a3452}
+  .st{background:#f4f0f3}.st .v{color:#111}.st .k,.st .d,.note,.sub,.leg{color:#555}
+  canvas{background:#f7f3f6}
+  .noprint{display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ถอดรหัสเสียงกลองหลวง</h1>
+  <div class="sub">อัปคลิปวงกลองหลวง แล้วดูความเร็ว แพตเทิร์น และความพร้อมเพรียงของกลอง ฉาบ ฆ้อง</div>
+
+  <section class="card noprint" id="inCard">
+    <label class="drop" id="drop"><input type="file" id="file" accept="audio/*,video/*" class="hide">
+      <b>🥁 เลือกคลิปเสียงหรือวิดีโอ</b>
+      <span>MP3 · M4A · WAV · MP4 · MOV (ประมวลผลในเครื่องนี้ ไม่ส่งไฟล์ขึ้นอินเทอร์เน็ต)</span></label>
+    <div class="row" style="margin-top:10px;justify-content:center">
+      <button class="btn" id="demo">ลองกับเสียงจำลองจากแพตเทิร์นจริง</button>
+    </div>
+    <div class="prog hide" id="prog"><i></i></div>
+    <div class="note" id="status" style="text-align:center;margin-top:6px"></div>
+  </section>
+
+  <div id="res" class="hide">
+    <section class="card">
+      <div class="lb">ผลการวิเคราะห์ <small id="fname"></small></div>
+      <div class="row noprint" style="margin-bottom:10px">
+        <input class="in" id="band" placeholder="ชื่อวง / ชุมชน (ใส่ก่อนบันทึก)" style="flex:1">
+        <button class="btn g" id="save">บันทึกเพื่อเทียบ</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="note" style="margin-top:10px">ตัวเลขเหล่านี้เป็น<b>ข้อมูลประกอบการพิจารณา</b> วัดจากเสียงในคลิปเท่านั้น คุณภาพการอัด ระยะไมค์ และเสียงรอบข้างมีผลต่อค่า ไม่ใช่คำตัดสินแทนกรรมการ</div>
+    </section>
+
+    <section class="card">
+      <div class="lb">เส้นเวลา <small>ลากหรือเลื่อนเพื่อดูช่วงอื่น</small></div>
+      <canvas id="tl" height="190"></canvas>
+      <input type="range" id="pos" min="0" max="1000" value="0" style="width:100%;margin-top:8px" class="noprint">
+      <div class="row noprint" style="justify-content:space-between">
+        <div class="leg"><span><i style="background:var(--drum)"></i>กลอง</span><span><i style="background:var(--chab)"></i>ฉาบ</span><span><i style="background:var(--gong)"></i>ฆ้อง</span><span><i style="background:rgba(255,255,255,.25)"></i>เส้นจังหวะย่อย</span></div>
+        <div class="row"><button class="btn" id="play">▶ ฟังพร้อมดู</button><select class="in" id="zoom"><option value="6">6 วิ</option><option value="12" selected>12 วิ</option><option value="30">30 วิ</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="lb">ความเร็วตลอดคลิป <small>จังหวะต่อนาที นับตามจังหวะกลองหลัก</small></div>
+      <canvas id="tempo" height="150"></canvas>
+    </section>
+
+    <section class="card">
+      <div class="lb">แพตเทิร์นหนึ่งรอบฆ้อง <small id="patInfo"></small></div>
+      <div class="pat" id="pat"></div>
+      <div class="note" id="patTxt" style="margin-top:10px"></div>
+    </section>
+
+    <section class="card noprint">
+      <div class="lb">ตั้งค่าการตรวจจับ</div>
+      <div class="note">ความถี่ของฆ้องแต่ละใบไม่เท่ากัน ระบบเลือกให้อัตโนมัติ ถ้าจับฆ้องได้น้อยผิดปกติ ลองเลือกความถี่อื่น</div>
+      <div class="chipsel" id="gsel" style="margin-top:8px"></div>
+    </section>
+  </div>
+
+  <section class="card" id="cmpCard">
+    <div class="lb">เปรียบเทียบหลายวง <small id="cmpN"></small></div>
+    <div class="tw"><table id="cmp"></table></div>
+    <div class="row noprint" style="margin-top:10px">
+      <button class="btn" id="csv">ส่งออก CSV</button>
+      <button class="btn" id="print">พิมพ์ / บันทึก PDF</button>
+    </div>
+  </section>
+
+  <section class="card note">
+    <div class="lb">อ่านค่ายังไง</div>
+    <b>ความเร็ว</b> นับจังหวะกลองหลักต่อนาที และดูว่าตีเร่งขึ้นหรือหน่วงลงจากต้นคลิปถึงท้ายคลิปกี่เปอร์เซ็นต์ การเร่งอย่างตั้งใจไม่ถูกหักคะแนน คะแนนดูแค่ว่าความเร็วแกว่งไปมารอบเส้นแนวโน้มมากแค่ไหน<br>
+    <b>ความนิ่งของกลอง</b> คือค่าเฉลี่ยที่กลองแต่ละตูมคลาดจากเส้นจังหวะย่อย ยิ่งน้อยยิ่งนิ่ง<br>
+    <b>ฆ้อง–กลอง</b> คือฆ้องกับกลองลงพร้อมกันแค่ไหน ค่าบวกแปลว่าฆ้องตามหลังกลอง ค่าลบแปลว่าฆ้องนำ<br>
+    <b>ความนิ่งของฉาบ</b> คือฉาบคลาดจากเส้นจังหวะย่อยเฉลี่ยกี่มิลลิวินาที<br>
+    <b>แพตเทิร์น</b> เอาทุกรอบฆ้องมาซ้อนกันแบ่งเป็น 8 ช่อง ช่องที่สีเข้มคือช่องที่ตีบ่อย เช่น กลองช่อง 4 คือตีตรง ช่อง 6 คือตีขัด<br>
+    <b>ดัชนีความพร้อมเพรียง</b> รวมสามค่าข้างบนเป็นคะแนน 0–100 สำหรับคุยกันในวงสัมมนา ยังไม่ใช่เกณฑ์ทางการ
+  </section>
+  <div class="foot">ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
+</div>
+<script src="thaisound.js"></script>
+<script src="thaisound2.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const KEY='sapphawathit_klongscan';
+let CANDON=[],AC=null,R=null,BUF=null,src=null,playT0=0,playOff=0,playing=false,viewT=0;
+const ctx=()=>AC||(AC=new (window.AudioContext||window.webkitAudioContext)());
+
+/* ---------- FFT (radix-2 ในที่) ---------- */
+function makeFFT(n){const lev=Math.log2(n)|0,rev=new Uint32Array(n),cs=new Float32Array(n/2),sn=new Float32Array(n/2);
+  for(let i=0;i<n;i++){let r=0,x=i;for(let j=0;j<lev;j++){r=(r<<1)|(x&1);x>>=1}rev[i]=r}
+  for(let i=0;i<n/2;i++){cs[i]=Math.cos(2*Math.PI*i/n);sn[i]=-Math.sin(2*Math.PI*i/n)}
+  return(re,im)=>{for(let i=0;i<n;i++){const j=rev[i];if(j>i){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+    for(let s=2;s<=n;s<<=1){const h=s>>1,st=n/s;for(let i=0;i<n;i+=s)for(let j=0,k=0;j<h;j++,k+=st){const a=i+j,b=a+h,tr=re[b]*cs[k]-im[b]*sn[k],ti=re[b]*sn[k]+im[b]*cs[k];re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti}}}}
+
+/* ---------- เครื่องมือสถิติ ---------- */
+const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+const median=a=>{if(!a.length)return 0;const b=Float64Array.from(a).sort();const m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
+const pct=(a,p)=>{if(!a.length)return 0;const b=Float64Array.from(a).sort();return b[Math.min(b.length-1,Math.floor(p*b.length))]};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const tick=()=>new Promise(r=>setTimeout(r,0));
+function setProg(f,txt){$('#prog').classList.remove('hide');$('#prog i').style.width=Math.round(f*100)+'%';if(txt!=null)$('#status').textContent=txt}
+
+/* หาจุดเริ่มเสียง: ค่าบวกของผลต่าง log พลังงาน > เกณฑ์ปรับตามช่วงเวลา และเว้นระยะขั้นต่ำ */
+function onsets(env,fps,gap,k,win){
+  const n=env.length,lg=new Float32Array(n),d=new Float32Array(n);
+  for(let i=0;i<n;i++)lg[i]=Math.log(env[i]+1e-7);
+  for(let i=1;i<n;i++)d[i]=Math.max(0,lg[i]-lg[i-1]+(i>1?.5*(lg[i-1]-lg[i-2]):0));
+  const W=Math.round((win||4)*fps),thr=new Float32Array(n);
+  // เกณฑ์ = ค่าเฉลี่ย + k·SD ในหน้าต่างเลื่อน
+  let s=0,s2=0,c=0;const add=v=>{s+=v;s2+=v*v;c++},rem=v=>{s-=v;s2-=v*v;c--};
+  for(let i=0;i<Math.min(n,W);i++)add(d[i]);
+  for(let i=0;i<n;i++){if(i+W<n)add(d[i+W]);if(i-W-1>=0)rem(d[i-W-1]);const m=s/c,sd=Math.sqrt(Math.max(0,s2/c-m*m));thr[i]=m+k*sd}
+  const cand=[];for(let i=2;i<n-2;i++)if(d[i]>thr[i]&&d[i]>=d[i-1]&&d[i]>=d[i+1]&&d[i]>=d[i-2]&&d[i]>=d[i+2])cand.push(i);
+  cand.sort((a,b)=>d[b]-d[a]);const G=gap*fps,taken=new Uint8Array(n),out=[];
+  for(const i of cand){let ok=true;for(let j=Math.max(0,Math.floor(i-G));j<=Math.min(n-1,Math.ceil(i+G));j++)if(taken[j]){ok=false;break}if(ok){taken[i]=1;out.push(i)}}
+  out.sort((a,b)=>a-b);return out.map(i=>({t:i/fps,s:d[i],lv:lg[Math.min(n-1,i+2)]}))}
+
+/* ---------- วิเคราะห์ ---------- */
+async function analyze(buf,name){
+  const sr=buf.sampleRate,L=buf.length;const x=new Float32Array(L);
+  for(let c=0;c<buf.numberOfChannels;c++){const d=buf.getChannelData(c);for(let i=0;i<L;i++)x[i]+=d[i]/buf.numberOfChannels}
+  const N=4096,H=512,fps=sr/H,nf=Math.max(0,Math.floor((L-N)/H)+1);
+  if(nf<fps*8)throw new Error('คลิปสั้นเกินไป ควรยาวอย่างน้อย 10 วินาที');
+  const fft=makeFFT(N),win=new Float32Array(N);for(let i=0;i<N;i++)win[i]=.5-.5*Math.cos(2*Math.PI*i/N);
+  const bin=f=>Math.round(f*N/sr),b30=bin(30),b250=bin(250),b6k=bin(6000),bTop=Math.min(bin(14000),N/2-1),gA=bin(450),gB=bin(3200),GW=gB-gA;
+  const low=new Float32Array(nf),cym=new Float32Array(nf),G=new Float32Array(nf*GW),avg=new Float64Array(GW);
+  const re=new Float32Array(N),im=new Float32Array(N);
+  for(let f=0;f<nf;f++){const o=f*H;for(let i=0;i<N;i++){re[i]=x[o+i]*win[i];im[i]=0}fft(re,im);
+    let a=0;for(let k=b30;k<=b250;k++)a+=Math.hypot(re[k],im[k]);low[f]=a;
+    a=0;for(let k=b6k;k<=bTop;k++)a+=Math.hypot(re[k],im[k]);cym[f]=a;
+    for(let k=0;k<GW;k++){const m=Math.hypot(re[gA+k],im[gA+k]);G[f*GW+k]=m;avg[k]+=m}
+    if(f%300===0){setProg(.05+.75*f/nf,'กำลังฟังคลิป… '+Math.round(100*f/nf)+'%');await tick()}}
+  setProg(.82,'กำลังหาจังหวะ…');await tick();
+  const drums=onsets(low,fps,.26,2.2,4),chabs=onsets(cym,fps,.12,1.6,3);
+  /* ---- ฆ้อง: หายอดเสียงค้างในช่วง 450–3200 Hz แล้วเลือกยอดที่จับการตีได้สม่ำเสมอที่สุด ---- */
+  const L10=Array.from(avg,v=>Math.log10(v/nf+1e-9)),cands=[];
+  for(let k=6;k<GW-6;k++){let isPk=true;for(let j=k-3;j<=k+3;j++)if(j!==k&&L10[j]>=L10[k])isPk=false;if(!isPk)continue;
+    const nb=[];for(let j=k-8;j<=k+8;j++)if(Math.abs(j-k)>2&&j>=0&&j<GW)nb.push(L10[j]);const pr=(L10[k]-median(nb))*20;if(pr>3)cands.push({k,f:(gA+k)*sr/N,pr})}
+  cands.sort((a,b)=>b.pr-a.pr);const top=cands.slice(0,8);
+  const gongFor=k=>{const r=new Float32Array(nf);for(let f=0;f<nf;f++){const o=f*GW;const e=G[o+k]+.5*(G[o+k-1]+G[o+k+1]),nb=.5*(G[o+k-4]+G[o+k+4]+G[o+k-5]+G[o+k+5]);r[f]=Math.log((e+1e-7)/(nb+1e-7))}
+    const d=new Float32Array(nf);for(let f=2;f<nf;f++)d[f]=(r[f]-r[f-2]);const out=[];let last=-1e9;
+    for(let f=2;f<nf-10;f++){if(d[f]>.9&&d[f]>=d[f-1]&&d[f]>=d[f+1]){let s=0;for(let j=f+2;j<f+9;j++)s+=r[j];s/=7;if(s>1.2&&f-last>.45*fps){out.push({t:f/fps,s:d[f]});last=f}}}
+    return out};
+  let best=null;for(const c of top){const on=gongFor(c.k);if(on.length<4){c.on=on;c.score=0;continue}const iv=[];for(let i=1;i<on.length;i++)iv.push(on[i].t-on[i-1].t);const md=median(iv);
+    const reg=iv.filter(v=>Math.abs(v-md)<.2*md||Math.abs(v-2*md)<.2*md).length/iv.length;c.on=on;c.score=on.length*reg*reg;
+    /* ยอดที่ขึ้นพร้อมกลองเกือบทุกตูมน่าจะเป็นเสียงของกลองเอง ไม่ใช่ฆ้อง */
+    const dt=drums.map(d=>d.t);const co=on.filter(g=>dt.some(t=>Math.abs(t-g.t)<.08)).length/on.length;if(on.length>.7*dt.length&&co>.6)c.score*=.15;if(!best||c.score>best.score)best=c}
+  setProg(.9,'กำลังสรุปผล…');await tick();
+  CANDON=top.map(c=>c.on||[]);
+  R=summarize({name,dur:L/sr,sr,drums,chabs,cands:top,gi:best?top.indexOf(best):-1});
+  $('#prog').classList.add('hide');$('#status').textContent='';return R}
+
+function summarize(o){
+  const gong=o.gi>=0?o.cands[o.gi].on:[];o.gong=gong;
+  const dT=o.drums.map(d=>d.t),cT=o.chabs.map(c=>c.t);
+  /* คาบจังหวะย่อย (หนึ่งในแปดของรอบฆ้อง ≈ ครึ่งจังหวะกลอง) จาก autocorrelation ของจุดเริ่มเสียงทั้งหมด */
+  const fr=100,n=Math.ceil(o.dur*fr)+2,oc=new Float32Array(n);dT.forEach(t=>oc[Math.round(t*fr)]+=1);cT.forEach(t=>oc[Math.round(t*fr)]+=.6);gong.forEach(g=>oc[Math.round(g.t*fr)]+=.8);
+  const sm=new Float32Array(n);for(let i=2;i<n-2;i++)sm[i]=oc[i-2]*.25+oc[i-1]*.6+oc[i]+oc[i+1]*.6+oc[i+2]*.25;
+  const ac=(a,b,lo,hi)=>{let bl=lo,bv=-1;for(let l=lo;l<=hi;l++){let s=0;for(let i=a;i<b-l;i++)s+=sm[i]*sm[i+l];s/=Math.max(1,b-a-l);if(s>bv){bv=s;bl=l}}return bl/fr};
+  /* ถ้ามีฆ้องมากพอ ใช้รอบฆ้อง/8 เป็นคาบอ้างอิง */
+  let E0;const gi=[];for(let i=1;i<gong.length;i++)gi.push(gong[i].t-gong[i-1].t);
+  const gMed=median(gi.filter(v=>v>.6&&v<4));
+  if(gong.length>=6&&gMed)E0=gMed/4;else E0=ac(0,n,Math.round(.25*fr),Math.round(.62*fr));
+  /* ความเร็วเฉพาะช่วง: หน้าต่าง 8 วินาที เลื่อนทีละ 2 วินาที */
+  const tempo=[];for(let t=0;t+6<=o.dur;t+=2){const a=Math.round(t*fr),b=Math.min(n,Math.round((t+8)*fr));const lo=Math.round(E0*.75*fr),hi=Math.round(E0*1.3*fr);const e=ac(a,b,lo,hi);tempo.push({t:t+Math.min(4,(o.dur-t)/2),E:e,bpm:60/(2*e)})}
+  // ทำให้เรียบ
+  for(let r=0;r<2;r++)for(let i=1;i<tempo.length-1;i++)tempo[i].bpm=median([tempo[i-1].bpm,tempo[i].bpm,tempo[i+1].bpm]);
+  const Eat=t=>{if(!tempo.length)return E0;let best=tempo[0];for(const p of tempo)if(Math.abs(p.t-t)<Math.abs(best.t-t))best=p;return 60/(2*best.bpm)};
+  /* ความนิ่งของกลอง: ช่วงห่างระหว่างตูมเทียบกับจำนวนเต็มเท่าของจังหวะย่อย */
+  const dErr=[];for(let i=1;i<dT.length;i++){const iv=dT[i]-dT[i-1],E=Eat(dT[i]),q=Math.round(iv/E);if(q>=1&&q<=4)dErr.push(Math.abs(iv-q*E))}
+  /* ฉาบ: ตำแหน่งเทียบตูมก่อนหน้า ปัดเข้าครึ่งจังหวะย่อย */
+  const cErr=[];let j=0;for(const t of cT){while(j+1<dT.length&&dT[j+1]<=t)j++;if(!dT.length||dT[j]>t)continue;const E=Eat(t),h=E/2,ph=(t-dT[j])%h;const e=Math.min(ph,h-ph);if(t-dT[j]<4*E)cErr.push(e)}
+  /* ฆ้อง–กลอง */
+  const gd=[];for(const g of gong){let bd=9;for(const t of dT){const v=g.t-t;if(Math.abs(v)<Math.abs(bd))bd=v}if(Math.abs(bd)<.2)gd.push(bd)}
+  const gAlign=gong.length?gd.length/gong.length:0;
+  /* แพตเทิร์น: ซ้อนทุกรอบฆ้องเป็น 8 ช่อง */
+  const hD=new Float32Array(8),hC=new Float32Array(8),rows={};let cyc=0;
+  for(let i=1;i<gong.length;i++){const a=gong[i-1].t,b=gong[i].t,len=b-a;if(gMed&&(len<.7*gMed||len>1.3*gMed))continue;cyc++;const rw=['·','·','·','·','·','·','·','·'];
+    const a2=a-len/16;dT.filter(t=>t>=a2&&t<b-len/16).forEach(t=>{const s=((Math.round((t-a)/len*8))%8+8)%8;hD[s]++;rw[s]='ตูม'});
+    const seen=new Set();cT.filter(t=>t>=a2&&t<b-len/16).forEach(t=>{const s=((Math.round((t-a)/len*8))%8+8)%8;if(!seen.has(s)){seen.add(s);hC[s]++}});
+    const key=rw.map(v=>v==='ตูม'?'ตูม':'·').join(' ');rows[key]=(rows[key]||0)+1}
+  const bpms=tempo.map(p=>p.bpm),bStart=mean(bpms.slice(0,3)),bEnd=mean(bpms.slice(-3));
+  /* ความแกว่งรอบเส้นแนวโน้ม (เร่งหรือหน่วงอย่างตั้งใจไม่ถูกหักคะแนน) */
+  let bpmRes=0;if(tempo.length>3){const tx=tempo.map(p=>p.t),mx=mean(tx),my=mean(bpms);let sxy=0,sxx=0;tx.forEach((t,i)=>{sxy+=(t-mx)*(bpms[i]-my);sxx+=(t-mx)**2});const sl=sxx?sxy/sxx:0;bpmRes=Math.sqrt(mean(tx.map((t,i)=>(bpms[i]-(my+sl*(t-mx)))**2)))}
+  const ms=v=>v*1000;
+  const res={name:o.name,dur:o.dur,at:Date.now(),
+    bpm:median(bpms),bStart,bEnd,drift:bStart?(bEnd-bStart)/bStart*100:0,bpmSD:Math.sqrt(mean(bpms.map(b=>(b-median(bpms))**2))),bpmRes,
+    nD:dT.length,nC:cT.length,nG:gong.length,gongHz:o.gi>=0?Math.round(o.cands[o.gi].f):0,
+    drumErr:ms(median(dErr)),chabErr:ms(median(cErr)),gongOff:ms(median(gd)),gongAbs:ms(median(gd.map(Math.abs))),gAlign,gCV:gMed?Math.sqrt(mean(gi.filter(v=>v>.6*gMed&&v<1.4*gMed).map(v=>(v-gMed)**2)))/gMed*100:0,
+    cyc,hD:Array.from(hD,v=>cyc?v/cyc:0),hC:Array.from(hC,v=>cyc?v/cyc:0),rows:Object.entries(rows).sort((a,b)=>b[1]-a[1]).slice(0,4),E0,
+    tempo,drums:o.drums,chabs:o.chabs,gong,cands:o.cands.map(c=>({f:Math.round(c.f),n:(c.on||[]).length})),gi:o.gi};
+  /* ดัชนี (ทดลอง): แต่ละด้าน 100·e^(−ค่าคลาด/τ) */
+  const sc=(v,tau)=>Math.round(100*Math.exp(-Math.max(0,v)/tau));
+  res.sDrum=sc(res.drumErr,60);res.sChab=sc(res.chabErr,50);res.sGong=gong.length>=4?Math.round(sc(res.gongAbs,50)*(.4+.6*gAlign)):null;res.sTempo=sc(res.bpmRes*6,40);
+  const parts=[res.sDrum,res.sChab,res.sGong,res.sTempo].filter(v=>v!=null);res.index=Math.round(mean(parts));
+  return res}
+
+/* ---------- แสดงผล ---------- */
+const fmt=(v,d)=>v==null||!isFinite(v)?'–':(+v).toFixed(d==null?0:d);
+const col=v=>v==null?'#888':v>=75?'var(--ok)':v>=50?'var(--gold)':'var(--bad)';
+function stat(k,v,d,score){return'<div class="st"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(d?'<div class="d">'+d+'</div>':'')+(score!=null?'<div class="meter"><i style="width:'+score+'%;background:'+col(score)+'"></i></div>':'')+'</div>'}
+function render(){
+  if(!R)return;$('#res').classList.remove('hide');$('#fname').textContent=R.name+' · '+fmt(R.dur,0)+' วินาที';
+  const dr=R.drift,dw=Math.abs(dr)<3?'ความเร็วคงที่':dr>0?'เร่งขึ้น '+fmt(dr,0)+'%':'หน่วงลง '+fmt(-dr,0)+'%';
+  $('#stats').innerHTML=
+    stat('ดัชนีความพร้อมเพรียง (ทดลอง)',fmt(R.index)+' <small>/ 100</small>','รวมความนิ่งกลอง ฉาบ ฆ้อง และความนิ่งของความเร็ว',R.index)+
+    stat('ความเร็วเฉลี่ย',fmt(R.bpm)+' <small>จังหวะ/นาที</small>','ต้นคลิป '+fmt(R.bStart)+' → ท้ายคลิป '+fmt(R.bEnd)+' · '+dw,R.sTempo)+
+    stat('ความนิ่งของกลอง','±'+fmt(R.drumErr)+' <small>มิลลิวินาที</small>','ตีได้ '+R.nD+' ตูม',R.sDrum)+
+    stat('ฆ้อง–กลอง',R.nG>=4?(R.gongOff>0?'+':'')+fmt(R.gongOff)+' <small>มิลลิวินาที</small>':'–',R.nG>=4?'ฆ้อง '+R.nG+' ครั้ง ลงพร้อมกลอง '+fmt(R.gAlign*100)+'% · '+(Math.abs(R.gongOff)<15?'ลงพร้อมกันดี':R.gongOff>0?'ฆ้องตามหลังกลอง':'ฆ้องนำกลอง'):'จับเสียงฆ้องได้น้อย ลองเปลี่ยนความถี่ด้านล่าง',R.sGong)+
+    stat('ความนิ่งของฉาบ','±'+fmt(R.chabErr)+' <small>มิลลิวินาที</small>','ตีได้ '+R.nC+' ครั้ง',R.sChab)+
+    stat('รอบฆ้อง',R.nG>=4?fmt(R.E0*8,2)+' <small>วินาที/รอบ</small>':'–',R.nG>=4?'ความแกว่งของรอบ '+fmt(R.gCV,1)+'%':'');
+  // pattern
+  let p='<div></div>'+[1,2,3,4,5,6,7,8].map(i=>'<div class="h">'+(i-1)+'</div>').join('');
+  const cell=(v,c)=>'<div class="c" style="background:'+c+';opacity:'+(.12+.88*clamp(v,0,1))+'">'+fmt(v*100)+'%</div>';
+  p+='<div class="n">กลอง</div>'+R.hD.map(v=>cell(v,'var(--drum)')).join('');
+  p+='<div class="n">ฉาบ</div>'+R.hC.map(v=>cell(v,'var(--chab)')).join('');
+  p+='<div class="n">ฆ้อง</div>'+[0,1,2,3,4,5,6,7].map(i=>cell(i===0&&R.cyc?1:0,'var(--gong)')).join('');
+  $('#pat').innerHTML=R.cyc?p:'<div class="note" style="grid-column:1/-1">ต้องจับเสียงฆ้องได้อย่างน้อย 4 ครั้งจึงจะซ้อนรอบได้</div>';
+  $('#patInfo').textContent=R.cyc?'ซ้อนได้ '+R.cyc+' รอบ · ช่องละ ≈ '+fmt(R.E0/2*1000)+' มิลลิวินาที':'';
+  const s4=R.hD[4]||0,s6=R.hD[6]||0;
+  $('#patTxt').innerHTML=R.cyc?('<b>รูปกลองที่พบบ่อย</b><br>'+R.rows.map(([k,c])=>k+'  <span style="color:var(--muted)">('+c+' รอบ)</span>').join('<br>')+'<br><br>กลองช่อง 4 (ตีตรง) '+fmt(s4*100)+'% · ช่อง 6 (ตีขัด) '+fmt(s6*100)+'%'+(s4>0&&s6>0?' · วงนี้สลับตีตรงกับตีขัด':'')):'';
+  $('#gsel').innerHTML=R.cands.length?R.cands.map((c,i)=>'<button data-i="'+i+'" class="'+(i===R.gi?'on':'')+'">'+c.f+' Hz · '+c.n+' ครั้ง</button>').join(''):'<span class="note">ไม่พบเสียงค้างที่น่าจะเป็นฆ้อง</span>';
+  $('#pos').max=Math.max(1,Math.round((R.dur-+$('#zoom').value)*10));drawTL();drawTempo();
+}
+function cv(c){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;const w=Math.max(10,r.width),h=+c.getAttribute('height');c.width=w*d;c.height=h*d;c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return{g,w,h}}
+function drawTL(cur){
+  if(!R)return;const {g,w,h}=cv($('#tl')),span=+$('#zoom').value,t0=viewT,t1=t0+span,X=t=>(t-t0)/span*w;
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // เส้นจังหวะย่อย จากฆ้องหรือจากกลอง
+  g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;
+  const anchors=R.gong.length>=4?R.gong.map(x=>x.t):R.drums.map(x=>x.t);
+  for(let i=0;i<anchors.length;i++){const a=anchors[i],b=anchors[i+1];if(b==null||b<t0||a>t1)continue;const len=b-a,div=R.gong.length>=4?8:Math.max(1,Math.round(len/(R.E0/2)));for(let k=0;k<div;k++){const x=X(a+len*k/div);g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke()}}
+  const lanes=[['กลอง',R.drums,css('--drum'),0],['ฉาบ',R.chabs,css('--chab'),1],['ฆ้อง',R.gong,css('--gong'),2]],lh=(h-22)/3;
+  lanes.forEach(([nm,arr,c,i])=>{const y=8+i*lh;g.fillStyle='rgba(255,255,255,.04)';g.fillRect(0,y,w,lh-6);g.fillStyle=c;
+    arr.forEach(o=>{if(o.t<t0-.1||o.t>t1)return;const x=X(o.t),k=i===0?clamp((o.s||1)/2,.35,1):1;g.globalAlpha=.55+.45*k;g.fillRect(x-1.5,y+(lh-6)*(1-k)*.5,3,(lh-6)*k);g.globalAlpha=1});
+    g.fillStyle='rgba(255,246,224,.75)';g.font='12px Sarabun, sans-serif';g.fillText(nm,6,y+14)});
+  g.fillStyle='rgba(255,246,224,.6)';g.font='11px Sarabun, sans-serif';for(let s=Math.ceil(t0);s<=t1;s+=span>20?5:span>8?2:1)g.fillText(s+'s',X(s)+2,h-4);
+  if(cur!=null&&cur>=t0&&cur<=t1){g.fillStyle='#fff';g.fillRect(X(cur)-1,0,2,h)}
+}
+function drawTempo(){
+  if(!R||!R.tempo.length)return;const {g,w,h}=cv($('#tempo')),T=R.tempo,b=T.map(p=>p.bpm),lo=Math.floor(Math.min(...b)-4),hi=Math.ceil(Math.max(...b)+4),X=t=>30+(t/R.dur)*(w-40),Y=v=>h-18-(v-lo)/(hi-lo)*(h-30);
+  g.strokeStyle='rgba(255,255,255,.1)';g.fillStyle='rgba(255,246,224,.6)';g.font='11px Sarabun, sans-serif';
+  for(let v=Math.ceil(lo/5)*5;v<=hi;v+=5){g.beginPath();g.moveTo(30,Y(v));g.lineTo(w-8,Y(v));g.stroke();g.fillText(v,4,Y(v)+4)}
+  for(let s=0;s<=R.dur;s+=R.dur>90?30:10)g.fillText(s+'s',X(s)-6,h-3);
+  g.strokeStyle='#f2c14e';g.lineWidth=2.5;g.beginPath();T.forEach((p,i)=>{i?g.lineTo(X(p.t),Y(p.bpm)):g.moveTo(X(p.t),Y(p.bpm))});g.stroke();
+  g.setLineDash([4,4]);g.strokeStyle='rgba(255,255,255,.45)';g.lineWidth=1;g.beginPath();g.moveTo(X(0),Y(R.bpm));g.lineTo(X(R.dur),Y(R.bpm));g.stroke();g.setLineDash([])}
+
+/* ---------- เล่นเสียงพร้อมเส้นเวลา ---------- */
+function stopPlay(){if(src){try{src.stop()}catch(e){}src=null}playing=false;$('#play').textContent='▶ ฟังพร้อมดู'}
+$('#play').onclick=()=>{if(!BUF)return;if(playing){stopPlay();return}const a=ctx();a.resume();src=a.createBufferSource();src.buffer=BUF;src.connect(a.destination);playOff=viewT;src.start(0,playOff);playT0=a.currentTime;playing=true;$('#play').textContent='■ หยุด';src.onended=()=>{if(playing)stopPlay()};loop()};
+function loop(){if(!playing)return;const t=playOff+(AC.currentTime-playT0),span=+$('#zoom').value;if(t>viewT+span*.85||t<viewT){viewT=clamp(t-span*.15,0,Math.max(0,R.dur-span));$('#pos').value=Math.round(viewT*10)}drawTL(t);requestAnimationFrame(loop)}
+$('#pos').oninput=e=>{viewT=+e.target.value/10;drawTL()};
+$('#zoom').onchange=()=>{$('#pos').max=Math.max(1,Math.round((R.dur-+$('#zoom').value)*10));viewT=clamp(viewT,0,Math.max(0,R.dur-+$('#zoom').value));drawTL()};
+{let dx=null,v0=0;const c=$('#tl');c.addEventListener('pointerdown',e=>{dx=e.clientX;v0=viewT});window.addEventListener('pointermove',e=>{if(dx==null||!R)return;const span=+$('#zoom').value;viewT=clamp(v0-(e.clientX-dx)/c.clientWidth*span,0,Math.max(0,R.dur-span));$('#pos').value=Math.round(viewT*10);drawTL()});window.addEventListener('pointerup',()=>dx=null)}
+window.addEventListener('resize',()=>{if(R){drawTL();drawTempo()}});
+$('#gsel').onclick=e=>{const b=e.target.closest('button');if(!b||!R)return;const i=+b.dataset.i;R=summarize({name:R.name,dur:R.dur,drums:R.drums,chabs:R.chabs,cands:R.cands.map((c,j)=>({f:c.f,on:CANDON[j]})),gi:i});render()};
+
+/* ---------- โหลดไฟล์ ---------- */
+async function loadFile(f){
+  stopPlay();$('#res').classList.add('hide');setProg(.02,'กำลังเปิดไฟล์ '+f.name+' …');
+  try{const ab=await f.arrayBuffer();setProg(.04,'กำลังถอดเสียงจากไฟล์…');const b=await new Promise((res,rej)=>{const p=ctx().decodeAudioData(ab,res,rej);if(p&&p.catch)p.catch(rej)});
+    await run(b,f.name.replace(/\.[^.]+$/,''))}
+  catch(e){console.error(e);$('#prog').classList.add('hide');$('#status').textContent='เปิดไฟล์นี้ไม่ได้ ('+(e&&e.message||'ไม่รู้จักรูปแบบไฟล์')+') ลองแปลงเป็น MP3 หรือ M4A ก่อน'}}
+async function run(b,name){BUF=b;viewT=0;$('#pos').value=0;await analyze(b,name);render();$('#band').value=name;$('#res').scrollIntoView({behavior:'smooth'})}
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value=''};
+const drop=$('#drop');['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('on')}));['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('on')}));
+drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f)});
+
+/* ---------- เสียงจำลองจากแพตเทิร์นที่วัดจากคลิปจริง (มีคลาดเคลื่อนแบบคนตีจริง และเร่งขึ้นช้า ๆ) ---------- */
+$('#demo').onclick=async()=>{
+  stopPlay();setProg(.02,'กำลังสร้างเสียงวงจำลอง…');
+  try{const sr=44100,dur=40,oc=new OfflineAudioContext(1,sr*dur,sr);TS2.init(oc,oc.destination);
+    for(let i=0;i<120&&!TS2.ready();i++)await new Promise(r=>setTimeout(r,100));
+    const drum=[[0,0,1],[4,1,.75],[8,0,1],[14,2,.8]],drumB=[[0,0,1],[4,1,.7],[6,1,.55],[8,0,1],[12,1,.75],[13,2,.6]],chab=[[0,0,.9],[2,1,.7],[3,1,.55],[4,0,.85],[6,1,.7]];
+    let t=.3,s=0,bar=0;const jit=v=>(Math.random()-.5)*v;
+    while(t<dur-1){const q=s%16;if(q===0)bar++;const sd=.215-.035*(t/dur);const fill=bar%4===0;
+      (fill?drumB:drum).forEach(([p,k,v])=>{if(p===q)TS2.klong(k,t+jit(.03),v*.9)});
+      if(q===0||q===8)TS2.klmong(t+.012+jit(.02),.7);
+      chab.forEach(([p,k,v])=>{if(p===q%8)TS2.klchab(k,t+jit(.04),v*.7)});
+      t+=sd;s++}
+    setProg(.3,'กำลังเรนเดอร์เสียง…');const b=await oc.startRendering();await run(b,'เสียงจำลอง (แพตเทิร์นกลองหลวงแม่สอด)')}
+  catch(e){console.error(e);$('#status').textContent='สร้างเสียงจำลองไม่สำเร็จ: '+e.message}};
+
+/* ---------- บันทึกและเปรียบเทียบ ---------- */
+const loadS=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}};
+const saveS=a=>{try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}};
+const FIELDS=[['ชื่อวง','name'],['ยาว (วิ)','dur',0],['จังหวะ/นาที','bpm',0],['เร่ง/หน่วง %','drift',1],['กลอง ±ms','drumErr',0],['ฉาบ ±ms','chabErr',0],['ฆ้อง–กลอง ms','gongOff',0],['ฆ้องตรงกลอง %','gAlign100',0],['ตีขัด (ช่อง 6) %','s6',0],['ดัชนี','index',0]];
+function slim(r,band){return{name:band||r.name,dur:r.dur,bpm:r.bpm,drift:r.drift,drumErr:r.drumErr,chabErr:r.chabErr,gongOff:r.nG>=4?r.gongOff:null,gAlign100:r.nG>=4?r.gAlign*100:null,s6:r.cyc?r.hD[6]*100:null,index:r.index,at:Date.now()}}
+function renderCmp(){const a=loadS();$('#cmpN').textContent=a.length?a.length+' วง (เก็บไว้ในเครื่องนี้)':'ยังไม่มีข้อมูล · วิเคราะห์คลิปแล้วกด “บันทึกเพื่อเทียบ”';
+  $('#cmp').innerHTML=a.length?'<tr>'+FIELDS.map(f=>'<th>'+f[0]+'</th>').join('')+'<th class="noprint"></th></tr>'+a.map((r,i)=>'<tr>'+FIELDS.map(([,k,d])=>k==='name'?'<td>'+esc(r[k])+'</td>':'<td class="num">'+fmt(r[k],d)+'</td>').join('')+'<td class="noprint"><button class="x" data-del="'+i+'" title="ลบ">✕</button></td></tr>').join(''):'';
+  $('#csv').disabled=!a.length}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('#save').onclick=()=>{if(!R)return;const a=loadS();a.push(slim(R,$('#band').value.trim()));saveS(a);renderCmp();$('#cmpCard').scrollIntoView({behavior:'smooth'})};
+$('#cmp').onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;const a=loadS();a.splice(+b.dataset.del,1);saveS(a);renderCmp()};
+async function saveBlob(blob,name){try{const P=window.parent;if(P&&P!==window&&P.MC&&P.MC.saveBlob){await P.MC.saveBlob(blob,name);return}}catch(e){}
+  try{const f=new File([blob],name,{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+$('#csv').onclick=()=>{const a=loadS();if(!a.length)return;const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv='﻿'+FIELDS.map(f=>q(f[0])).join(',')+'\n'+a.map(r=>FIELDS.map(([,k,d])=>q(k==='name'?r[k]:r[k]==null?'':(+r[k]).toFixed(d||0))).join(',')).join('\n');
+  saveBlob(new Blob([csv],{type:'text/csv'}),'ถอดรหัสกลองหลวง.csv')};
+$('#print').onclick=()=>window.print();
+renderCmp();
+window.__KS={get R(){return R},analyze,run,summarize};
+</script>
+</body>
+</html>

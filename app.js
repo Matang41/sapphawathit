@@ -369,7 +369,7 @@
     const isNew = !sid; const m = isNew ? { prefix: 'ด.ช.', type: 'start', inst: {} } : members()[sid]; const F = { photo: undefined, print: undefined };
     const teacher = can.manage();
     let h = '<h3>' + (isNew ? 'เพิ่มสมาชิก' : selfOnly ? 'แก้รูปและเบอร์โทร' : 'แก้ไขข้อมูลสมาชิก') + '</h3><form class="form" novalidate>';
-    h += '<div class="row" style="margin-bottom:6px"><span id="f-av">' + avatar(m, 'xl') + '</span><div class="grow">' + fld('รูปสมาชิก', '<input class="in" type="file" accept="image/*" id="f-photo">', 'ระบบย่อและครอปเป็นสี่เหลี่ยมจัตุรัสให้อัตโนมัติ') + '</div></div>';
+    h += '<div class="row" style="margin-bottom:6px"><span id="f-av">' + avatar(m, 'xl') + '</span><div class="grow">' + fld('รูปสมาชิก', '<input class="in" type="file" accept="image/*" id="f-photo">', 'ระบบย่อและครอปเป็นสี่เหลี่ยมจัตุรัสให้อัตโนมัติ') + (window.PX ? '<button type="button" class="btn ghost sm" id="f-px" style="margin-top:4px">🎮 ใช้อวตารพิกเซลแทนรูปถ่าย</button>' : '') + '</div></div>';
     if (!selfOnly) {
       h += (isNew ? fld('เลขประจำตัวนักเรียน', '<input class="in" id="f-sid" inputmode="numeric" autocomplete="off" required>', 'ใช้ผูกกับอีเมล เลขประจำตัว@' + esc(C.auth.domain) + ' แก้ภายหลังไม่ได้') : '<div class="kv"><span>เลขประจำตัว</span><b>' + esc(sid) + '</b></div>') +
         '<div class="g3">' + fld('คำนำหน้า', '<select class="in" id="f-prefix">' + opt(C.prefixes.map(p => [p, p]), m.prefix) + '</select>') + fld('ชื่อ', '<input class="in" id="f-first" value="' + esc(m.first || '') + '" required>') + fld('นามสกุล', '<input class="in" id="f-last" value="' + esc(m.last || '') + '" required>') + '</div>' +
@@ -385,6 +385,8 @@
       const f = e.target.files[0]; if (!f) return;
       try { F.photo = await M.fileToSquare(f, 160, 0.8); F.print = await M.fileToSquare(f, 640, 0.82); $('#f-av', w).innerHTML = '<img class="av xl" src="' + F.photo + '" alt="">'; } catch (er) { toast(er.message); }
     });
+    /* รุ่น 3.7: อวตารพิกเซลแบบตัวละครในเกมตำนานสรรพวาทิต (เก็บในช่องรูปเดิม ไม่ต้องแก้ฐานข้อมูล) */
+    const pxb = $('#f-px', w); if (pxb) pxb.addEventListener('click', async () => { const r = await window.PX.builder(); if (!r) return; F.photo = r.photo; F.print = r.print; $('#f-av', w).innerHTML = '<img class="av xl" src="' + F.photo + '" alt="" style="image-rendering:pixelated">'; });
     $('form', w).addEventListener('submit', e => {
       e.preventDefault(); const v = id => { const el = $(id, w); return el ? el.value.trim() : ''; };
       const err = t => { const el = $('#f-err', w); el.textContent = t; el.hidden = false; };
