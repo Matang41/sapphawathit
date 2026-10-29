@@ -5,7 +5,7 @@
      TS2.ranadKey(k,t,v)   ลูกระนาดลูกที่ k (0 = ซฺ ลูกทวน … 20 = ฟํ ลูกยอด) เสียงจริงไม่ปรับระดับ
      TS2.ranad(freq,t,v)   เลือกลูกที่ใกล้ความถี่นั้นที่สุด
      TS2.thum(k,t,v)       ระนาดทุ้ม (ลูกระนาดเอกต่ำลงหนึ่งช่วงทบ)
-     TS2.khlui(freq,t,dur,v) · TS2.sor(freq,t,dur,v) · TS2.klong(k,t,v) กลองหลวงแม่สอด (k 0–2) · TS2.klchab(k,t,v) ฉาบวงกลองหลวง (0 เปิด 1 ปิด) · TS2.klmong(t,v) ฆ้องวงกลองหลวง · TS2.thon(k,t,v) (k 0 ติง · 1 จ๊ง · 2 ทั่ม · 3 จ๊ะ) · TS2.chab(k,t,v) (k 0–2)
+     TS2.khlui(freq,t,dur,v) · TS2.sor(freq,t,dur,v) · TS2.klong(k,t,v) กลองหลวงแม่สอด (k 0–2) · TS2.klchab(k,t,v) ฉาบวงกลองหลวง (0 เปิด 1 ปิด) · TS2.klmong(t,v) ฆ้องวงกลองหลวง · TS2.thon(k,t,v) (k 0 ติง · 1 จ๊ง · 2 ทั่ม · 3 จ๊ะ) · TS2.chab(k,t,v) (k 0–2) · TS2.harp(k,t,v) เตหน่ากู (สังเคราะห์จากเสียงจริง)
    ระนาดเอก 21 ลูก (k0 ลูกทวน … k20 ลูกยอด) · ลูก k0 = ซฺ (ลูกทวน) · ชื่อโน้ต n (ด = 3) อยู่ที่ลูก n+7 · ระดับเสียงเดียวกับฆ้องวงใหญ่ (มฺ–ฟํ)
    ============================================================ */
 (function(){
@@ -50,5 +50,16 @@
     /* ฉาบและฆ้องของวงกลองหลวงแม่สอด สกัดจากคลิปซ้อมจริง: ฉาบ = สเปกตรัมเฉลี่ยจากการตีฉาบ 118 ครั้งที่ไม่ทับกลอง (เสียงคนเฉลี่ยหายไป) · ฆ้อง = ความถี่/ความดัง/การลดเสียงของ 12 โหมดที่วัดจากการตีฆ้อง 72 ครั้ง */
     klchab:(k,t,v,out)=>play(k?'kl_cC':'kl_cO',t,v,1,0,out),
     klmong:(t,v,out)=>play('kl_m',t,v,1,0,out),
-    chab:(k,t,v,out)=>play(CHAB[Math.max(0,Math.min(2,k|0))],t,v,1,0,out)};
+    chab:(k,t,v,out)=>play(CHAB[Math.max(0,Math.min(2,k|0))],t,v,1,0,out),
+    /* เตหน่ากู (พิณกะเหรี่ยง) สังเคราะห์จากคลิปนักเรียนกะเหรี่ยงดีดจริง: วัดระดับเสียงสายได้ 280 · 329 · 366 · 410 · 510 Hz แล้วซ้ำช่วงทบ (เพนทาโทนิก ไม่ใช่ระบบเสียงสากล)
+       สัดส่วนฮาร์มอนิกและเวลาเสียงจางวัดจากการดีด 11 ครั้งที่ไม่ทับเสียงพูด · k = ลำดับสาย 0 ขึ้นไป (5 สายต่อช่วงทบ) */
+    harp:(k,t,v,out)=>harp(k,t,v,out),HARPF:[280.4,329.3,366.0,409.5,509.5]};
+  const HARPF=window.TS2.HARPF;
+  const HH=[1,.56,.2,.29,.07,.1,.035,.06],HT=[.95,.7,.45,.4,.3,.28,.22,.2];
+  function harp(k,t,v,out){if(!AC)return false;k=Math.round(k||0);const o=Math.floor(k/5),f0=HARPF[((k%5)+5)%5]*Math.pow(2,o);t=Math.max(t||0,AC.currentTime);v=(v==null?1:v)*.32;
+    const g=AC.createGain();g.gain.value=v;g.connect(out||OUT);
+    HH.forEach((a,i)=>{const f=f0*(i+1)*(1+.0004*i*i);if(f>9000)return;const os=AC.createOscillator(),gg=AC.createGain();os.frequency.value=f;os.type='sine';
+      gg.gain.setValueAtTime(0,t);gg.gain.linearRampToValueAtTime(a,t+.004);gg.gain.setTargetAtTime(0,t+.004,HT[i]*(f0<330?1.15:.9));os.connect(gg);gg.connect(g);os.start(t);os.stop(t+HT[i]*5+.1)});
+    const n=AC.createBufferSource(),nb=AC.createBuffer(1,Math.floor(AC.sampleRate*.03),AC.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=f0*3;bp.Q.value=2;const ng=AC.createGain();ng.gain.value=.25;n.buffer=nb;n.connect(bp);bp.connect(ng);ng.connect(g);n.start(t);return true}
 })();

@@ -4,6 +4,7 @@
    • PX.avatar(spec, size, bg)    รูปโปรไฟล์สี่เหลี่ยม (dataURL PNG)
    • PX.builder(start)            หน้าต่างสร้างอวตาร → Promise<{photo, print, spec}|null>
    • PX.PRESETS                   ตัวละครจากเกม 14 ตัว ใช้เป็นแม่แบบ
+   • อวตารที่กด “ใช้รูปนี้” ล่าสุดเก็บไว้ที่ localStorage spw_px_spec ให้เกมภาค 2 ดึงไปใช้
    ============================================================ */
 (function () {
   'use strict';
@@ -156,7 +157,7 @@ function outline(c){
         else if (b.dataset.hs) spec.hs = b.dataset.hs;
         else if (b.dataset.of != null) { Object.assign(spec, OUTFIT[+b.dataset.of][1]); }
         else if (b.hasAttribute('data-x')) { close(); res(null); return; }
-        else if (b.hasAttribute('data-ok')) { const out = { photo: avatar(spec, 160, null, 1), print: avatar(spec, 640, null, 1), spec: Object.assign({}, spec) }; close(); res(out); return; }
+        else if (b.hasAttribute('data-ok')) { try { localStorage.setItem('spw_px_spec', JSON.stringify(spec)); } catch (x) { } const out = { photo: avatar(spec, 160, null, 1), print: avatar(spec, 640, null, 1), spec: Object.assign({}, spec) }; close(); res(out); return; }
         else return;
         Object.keys(spec).forEach(k => { if (spec[k] === 0) delete spec[k]; }); paint();
       });
@@ -172,5 +173,5 @@ function outline(c){
     '.px-chips{display:flex;gap:6px;flex-wrap:wrap}.px-chips button,.px-chips label{border:1px solid rgba(127,127,127,.35);background:none;border-radius:99px;padding:5px 11px;font-size:13px;cursor:pointer;color:inherit}.px-chips button.on{background:#f2c14e;color:#3b2205;border-color:#f2c14e}' +
     '.px-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:999}.px-card{background:#2b1628;color:#fff6e0;border-radius:16px;padding:16px;max-width:420px;width:92%;max-height:90vh;overflow:auto}';
   if (typeof document !== 'undefined' && !document.getElementById('px-css')) { const st = document.createElement('style'); st.id = 'px-css'; st.textContent = css; document.head.appendChild(st); }
-  window.PX = { sprite, avatar, avatarCanvas, builder, PRESETS, NAMES, SKIN, HAIR, OUTFIT };
+  window.PX = { sprite, avatar, avatarCanvas, builder, PRESETS, NAMES, SKIN, HAIR, HCOL, OUTFIT, BGS };
 })();
