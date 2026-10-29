@@ -39,14 +39,17 @@ $('#rGo').onclick=()=>{audio();if(!SAVE.done[1])travel(1);else mapScreen()};
 
 /* ---------- แผนที่แม่สอด ---------- */
 let SEL=1;
-function mapScreen(){show('#map');MUSIC=null;SEL=Math.min(SAVE.prog||1,7);if(SAVE.fin)SEL=7;drawMap();mapPanel()}
+/* แผนที่เปิด: ผ่านฉาก 1 แล้วไปฉาก 2–6 ลำดับไหนก็ได้ · ครบ 2–6 แล้วฉาก 7 จึงเปิด */
+const isOpen=n=>n===1||(SAVE.done[1]&&n<=6)||(n===7&&[2,3,4,5,6].every(k=>SAVE.done[k]));
+const nextOpen=()=>{for(let n=1;n<=7;n++)if(isOpen(n)&&!SAVE.done[n])return n;return 7};
+function mapScreen(){show('#map');MUSIC=null;if(!SEL||!isOpen(SEL))SEL=nextOpen();drawMap();mapPanel()}
 function drawMap(){const c=$('#mcv'),x=c.getContext('2d'),w=c.width,h=c.height;drawMapArt(x,w,h);
-  for(let n=1;n<=7;n++){const [px,py]=PINS[n],X=px*w,Y=py*h,open=n<=(SAVE.prog||1),done=SAVE.done[n];
+  for(let n=1;n<=7;n++){const [px,py]=PINS[n],X=px*w,Y=py*h,open=isOpen(n),done=SAVE.done[n];
     x.fillStyle=done?'#3a9a5a':open?'#c03040':'#8a8070';x.beginPath();x.arc(X,Y,n===SEL?14:11,0,7);x.fill();x.strokeStyle=n===SEL?'#ffd86a':'#fff6e0';x.lineWidth=n===SEL?3:2;x.stroke();
     x.fillStyle='#fff';x.font='600 12px '+FONT;x.textAlign='center';x.textBaseline='middle';x.fillText(open?String(n):'?',X,Y+1);x.fillStyle='#3a2a1a';x.font='600 10px '+FONT;x.fillText(open?PLACE[n]:'???',X,Y+(n===7?24:-22));if(SAVE.rate&&SAVE.rate[n]){x.fillStyle='#c8962a';x.font='600 10px '+FONT;x.fillText('★'.repeat(SAVE.rate[n]),X,Y+(n===7?36:16))}}
   const [sx,sy]=[.4*w,.66*h];x.fillStyle='#6a4a8a';x.fillRect(sx-9,sy-9,18,18);x.fillStyle='#fff';x.font='600 10px '+FONT;x.fillText('ช่าง',sx,sy);x.textAlign='left';x.textBaseline='alphabetic'}
 $('#mcv').addEventListener('click',e=>{const c=$('#mcv'),r=c.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*c.width,my=(e.clientY-r.top)/r.height*c.height;
-  for(let n=1;n<=7;n++){const [px,py]=PINS[n];if(Math.hypot(px*c.width-mx,py*c.height-my)<20&&n<=(SAVE.prog||1)){SEL=n;drawMap();mapPanel();return}}
+  for(let n=1;n<=7;n++){const [px,py]=PINS[n];if(Math.hypot(px*c.width-mx,py*c.height-my)<20&&isOpen(n)){SEL=n;drawMap();mapPanel();return}}
   if(Math.hypot(.4*c.width-mx,.66*c.height-my)<18)shopScreen()});
 function mapPanel(){const S=STAGES[SEL],pool=(SAVE.pool||[]);SAVE.team=(SAVE.team||[]).filter(id=>pool.includes(id)).slice(0,2);
   if(SAVE.team.length<2)pool.forEach(id=>{if(SAVE.team.length<2&&!SAVE.team.includes(id))SAVE.team.push(id)});
@@ -69,9 +72,9 @@ $('#sBody').addEventListener('click',e=>{const b=e.target.closest('[data-u]');if
 $('#sBack').onclick=()=>mapScreen();
 /* ---------- สมุดบันทึก ---------- */
 let BOOKTAB='lies';
-function bookScreen(){show('#book');const tabs=[['lies','สมุดจับคำลวง'],['notes','บันทึกความรู้'],['stars','ดาวคุณธรรม']];
+function bookScreen(){show('#book');const tabs=[['quests','เควสที่ทำสำเร็จ'],['notes','บันทึกความรู้'],['stars','ดาวคุณธรรม']];if(!tabs.some(t=>t[0]===BOOKTAB))BOOKTAB='quests';
   $('#kTabs').innerHTML=tabs.map(([k,n])=>'<button data-k="'+k+'" class="'+(BOOKTAB===k?'on':'')+'">'+n+'</button>').join('');
-  let h='';if(BOOKTAB==='lies'){h=SAVE.lies.length?'<ul class="lies">'+SAVE.lies.map(l=>'<li>“'+esc(l.t)+'”<span>'+esc(l.k)+'</span></li>').join('')+'</ul>':'<p class="muted">ยังไม่ได้จับคำลวง</p>';h+='<div class="lb">จุดสังเกตของคำลวง</div><ul class="lies">'+Object.keys(TELL).map(k=>'<li><b>'+k+'</b> — '+esc(TELL[k])+'</li>').join('')+'</ul>'}
+  let h='';if(BOOKTAB==='quests'){const L=SAVE.qlog||{},ks=Object.keys(L);h=ks.length?[1,2,3,4,5,6,7].map(n=>{const q=ks.filter(k=>k.split(':')[0]==n);return q.length?'<div class="lb">ฉากที่ '+n+' · '+esc(STAGES[n].name)+'</div><ul class="lies">'+q.map(k=>'<li>✓ '+esc(L[k])+'</li>').join('')+'</ul>':''}).join(''):'<p class="muted">ยังไม่มีเควสที่ทำสำเร็จ ลองคุยกับคนที่มีเครื่องหมาย “!” บนหัว</p>'}
   else if(BOOKTAB==='notes')h='<ul class="lies">'+Object.keys(NOTES).map(k=>'<li>'+(SAVE.notes.includes(k)?esc(NOTES[k].t):'<span class="muted">??? ยังไม่พบ</span>')+'</li>').join('')+'</ul>';
   else h='<p class="muted">ตามคุณลักษณะอันพึงประสงค์ 8 ประการ (ในเกมเท่านั้น ไม่ใช้ประเมินนักเรียนจริง)</p><ul class="lies">'+VIRTUE.map((v,i)=>'<li>'+esc(v)+' <span>★ '+(SAVE.stars[i]||0)+'</span></li>').join('')+'</ul>';
   $('#kBody').innerHTML=h}
@@ -87,15 +90,16 @@ function travelTick(dt){TRAV.t+=dt;const x=-(TRAV.t*140)%(TRAV.img.width-W);g.se
 
 /* ---------- โน้ตทองตามทาง: แถวบนพื้น โค้งข้ามหลุม และบนแพลตฟอร์ม ---------- */
 function scatterCoins(){const end=LV.w-460;let n=0;
-  for(let x=180;x<end;x+=120){const ok=[0,20,40].every(d=>groundAt(x+d))&&!LV.walls.some(q=>q.k!=='fence'&&x+48>q.x&&x-8<q.x+q.w&&q.y<GY);
+  const inWorld=x=>x<(LV.mainW||LV.w)-60||Object.values(LV.rooms).some(r=>x>r[0]+30&&x<r[1]-90);
+  for(let x=180;x<end;x+=120){if(!inWorld(x))continue;const ok=[0,20,40].every(d=>groundAt(x+d))&&!LV.walls.some(q=>q.k!=='fence'&&x+48>q.x&&x-8<q.x+q.w&&q.y<GY);
     if(ok){for(let i=0;i<3;i++){item(x+i*18,GY-16,'coin');n++}}else{for(let i=0;i<4;i++){item(x+i*16,GY-40-Math.sin(i/3*Math.PI)*24,'coin');n++}}}
   LV.plats.forEach(q=>{if(q.hid||q.w<30||q.y<60)return;for(let i=0;i<Math.min(3,Math.floor(q.w/20));i++){item(q.x+10+i*16,q.y-14,'coin');n++}});
   LV.coinTotal=n}
 /* ---------- เล่นฉาก ---------- */
 async function startStage(n){
   STAGE=STAGES[n];LV=newLevel(STAGE.w);lieI=n*2;
-  Object.assign(ST,{start:Date.now(),hits:0,onChab:0,onChing:0,swings:0,kills:0,best:0,combo:0,lies:[],falls:0,lowTold:0,lieTold:0,stars:0,unity:0,lost:null,helped:0,kuay:0,kuayDone:0,noteStar:0,crMiss:0,jam:0,coins:0,coinsLv:0,cs:0,blasts:0,rate:0,coinPct:0});
-  TEAM=['me'].concat(n===1?[]:(SAVE.team||[]).filter(id=>(SAVE.pool||[]).includes(id)&&!(STAGE.who.includes(id)&&!SAVE.done[n])).slice(0,2));AI=0;
+  for(const k in ST)delete ST[k];Object.assign(ST,{start:Date.now(),starList:[],noteList:[],hits:0,onChab:0,onChing:0,swings:0,kills:0,best:0,combo:0,lies:[],falls:0,lowTold:0,lieTold:0,stars:0,unity:0,lost:null,helped:0,kuay:0,kuayDone:0,noteStar:0,crMiss:0,jam:0,coins:0,coinsLv:0,cs:0,blasts:0,rate:0,coinPct:0});
+  TEAM=STAGE.team?STAGE.team.slice():['me'].concat((SAVE.team||[]).filter(id=>(SAVE.pool||[]).includes(id)&&!(STAGE.who.includes(id)&&!SAVE.done[n])).slice(0,2));AI=0;
   STAGE.build();scatterCoins();P=newPlayer(STAGE.start);cam=0;PAL.q=[];PAL.msg='';PAL.mt=0;PAL.x=P.x-30;PAL.y=GY-60;BAN=null;FADE=0;
   MUSIC=STAGE.music?STAGE.music.bind(STAGE):null;setTempo(STAGE.bpm);chingOn=true;musicOn=true;
   show(null);mode='play';banner('ฉากที่ '+n+' · '+STAGE.name,STAGE.sub,2.4);
@@ -108,9 +112,14 @@ async function startStage(n){
   if(res==='ending'){await ending();creditsScreen();return}
   resultScreen(n,sec)}
 function resultScreen(n,sec){show('#res');const on=ST.onChab+ST.onChing,acc=ST.hits?Math.round(100*on/ST.hits):0;
-  $('#eBody').innerHTML='<div style="font-size:34px;color:#ffd86a;letter-spacing:6px">'+'★'.repeat(ST.rate||1)+'<span style="opacity:.25">'+'★'.repeat(3-(ST.rate||1))+'</span></div><p class="muted">★ ผ่านฉาก · ★ เก็บโน้ตทอง 60% · ★ ตีตรงจังหวะ 40%</p><h2>ผ่านฉากที่ '+n+' · '+esc(STAGES[n].name)+'</h2><p>เสียงที่ '+n+' กลับมา: '+STAGES[n].who.map(nameOf).join(' ')+'</p><div class="stats"><div class="stat"><b>'+Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+'</b>เวลา</div><div class="stat"><b>♪ '+(ST.coinsLv||0)+'/'+LV.coinTotal+'</b>โน้ตทอง ('+ST.coinPct+'%)</div><div class="stat"><b>'+ST.kills+'</b>เงาคำลวงที่สลาย</div><div class="stat"><b>'+acc+'%</b>ตีโดนตรงจังหวะ</div><div class="stat"><b>×'+ST.best+'</b>ตรงจังหวะติดกันสูงสุด</div><div class="stat"><b>★ '+(ST.stars||0)+'</b>ดาวคุณธรรมในฉากนี้</div></div>'+
-    (ST.lies.length?'<div class="lb">คำลวงที่จับได้</div><ul class="lies">'+ST.lies.map(l=>'<li>“'+esc(l.t)+'”<span>'+esc(l.k)+'</span></li>').join('')+'</ul>':'');
-  $('#eNext').style.display=n<7?'':'none';$('#eNext').onclick=()=>{SEL=n+1;mapScreen()};$('#eMap').onclick=()=>mapScreen()}
+  $('#eBody').innerHTML='<div style="font-size:34px;color:#ffd86a;letter-spacing:6px">'+'★'.repeat(ST.rate||1)+'<span style="opacity:.25">'+'★'.repeat(3-(ST.rate||1))+'</span></div><p class="muted">★ ผ่านฉาก · ★ เก็บโน้ตทอง 60% · ★ ตีตรงจังหวะ 40%</p><h2>ผ่านฉากที่ '+n+' · '+esc(STAGES[n].name)+'</h2><p>เสียงที่ '+n+' กลับมา: '+STAGES[n].who.map(nameOf).join(' ')+'</p><div class="stats"><div class="stat"><b>'+Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+'</b>เวลา</div><div class="stat"><b>♪ '+(ST.coinsLv||0)+'/'+LV.coinTotal+'</b>โน้ตทอง ('+ST.coinPct+'%)</div><div class="stat"><b>'+ST.kills+'</b>เงาเพี้ยนที่สลาย</div><div class="stat"><b>'+acc+'%</b>ตีโดนตรงจังหวะ</div><div class="stat"><b>×'+ST.best+'</b>ตรงจังหวะติดกันสูงสุด</div><div class="stat"><b>★ '+(ST.stars||0)+'</b>ดาวคุณธรรมในฉากนี้</div></div>'+
+    learnBox();
+  $('#eNext').style.display=n<7?'':'none';$('#eNext').textContent=nextOpen()===7&&!isOpen(7)?'ไปแผนที่':'ฉากต่อไป';$('#eNext').onclick=()=>{SEL=nextOpen();mapScreen()};$('#eMap').onclick=()=>mapScreen()}
+/* สรุปสิ่งที่ได้เรียนรู้ในฉากนี้: เควส ดาวคุณธรรม และบันทึกความรู้ */
+function learnBox(){const q=LV.q.filter(q=>q.done),st=ST.starList||[],nt=Array.from(new Set(ST.noteList||[])).filter(k=>NOTES[k]);
+  return (q.length?'<div class="lb">เควสที่ทำสำเร็จ</div><ul class="lies">'+q.map(x=>'<li>'+(x.main?'◆ ':'◇ ')+esc(x.t.replace(/\s*\(\d+\/\d+\)$/,''))+'</li>').join('')+'</ul>':'')+
+    (st.length?'<div class="lb">ดาวคุณธรรมที่ได้</div><ul class="lies">'+st.map(([i,w])=>'<li>★ '+esc(VIRTUE[i])+'<span>'+esc(w)+'</span></li>').join('')+'</ul>':'')+
+    (nt.length?'<div class="lb">ความรู้ใหม่</div><ul class="lies">'+nt.map(k=>'<li>'+esc(NOTES[k].t)+'</li>').join('')+'</ul>':'')}
 function creditsScreen(){show('#credits');}
 $('#cMap').onclick=()=>mapScreen();
 
@@ -133,7 +142,7 @@ let last=performance.now();
 function loop(ts){const dt=Math.min(.033,(ts-last)/1000);last=ts;
   document.body.classList.toggle('talking',mode==='talk'||mode==='cut'||mode==='travel');document.body.classList.toggle('intalk',mode==='talk');
   try{if(mode==='travel'&&TRAV)travelTick(dt);
-  else if(LV&&P&&['play','talk','cr','jam','cut'].includes(mode)){update(dt);draw();$('#bS').style.display=TEAM.length>1?'':'none'}
+  else if(LV&&P&&['play','talk','cr','jam','cut','battle'].includes(mode)){update(dt);draw();$('#bS').style.display=TEAM.length>1?'':'none'}
   else if(mode==='build'&&bset){const c=$('#bcv').getContext('2d');c.clearRect(0,0,32,48);const f=Math.floor(ts/80)%6,cyc=Math.floor(ts/2400)%3;c.drawImage(cyc===1?bset.idle[Math.floor(ts/600)%2]:cyc===2?bset.atk[Math.floor(ts/140)%3]:bset.run[f],0,0)}}catch(e){showErr(e.message+' (loop)');mode='error'}
   requestAnimationFrame(loop)}
 function init(){fit();titleScreen();requestAnimationFrame(loop)}

@@ -11,7 +11,7 @@
 <!--
   ตำนานสรรพวาทิต ภาค เจ็ดเสียงที่หายไปในแม่สอด
   แอ็กชันเลื่อนข้าง 7 ฉากในโรงเรียนสรรพวิทยาคมและอำเภอแม่สอด · ความสามัคคี ความเชื่อใจครู และการรู้เท่าทันคำลวง
-  ไฟล์: p2/core.js (แกนเกม) · p2/art.js (ฉากหลัง) · p2/stages.js (เนื้อเรื่อง) · p2/ui.js (เมนู)
+  ไฟล์: p2/core.js (แกนเกม) · p2/battle.js (ประลองเสียงด้วยเครื่องดนตรีจริง) · p2/art.js (ฉากหลัง) · p2/stages.js (เนื้อเรื่อง) · p2/ui.js (เมนู)
   บันทึกในเครื่อง: localStorage spw_pisat2
   พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026
 -->
@@ -95,6 +95,52 @@ p{margin:6px 0;line-height:1.55}
 input[type=range]{width:100%}
 @media (max-height:460px){.pad button{width:54px;height:54px}.pad .big{width:62px;height:62px}.pad .sm{width:44px;height:44px;font-size:12px}.pad .col{gap:6px}.card{padding:10px 12px}h1{font-size:20px}.bwrap{grid-template-columns:140px 1fr}.bprev canvas{width:96px;height:144px}#map .card{grid-template-columns:1fr 1fr}}
 @media (max-width:620px){.bwrap{grid-template-columns:1fr}.bprev{position:static}#map .card{grid-template-columns:1fr}.clips{grid-template-columns:1fr}}
+
+/* ---------- หน้าจอประลองเสียง (battle.js) ---------- */
+#battle{position:fixed;left:var(--vl,0);top:var(--vt,0);width:var(--vw,100%);height:var(--vh,100%);z-index:8;display:none;pointer-events:none;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left))}
+#battle.on{display:flex}
+#battle::before{content:'';position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(180deg,rgba(18,10,24,0),rgba(18,10,24,.78) 38%,rgba(18,10,24,.92));pointer-events:none}
+#battle>*{position:relative}
+body.inbattle .pad,body.inbattle .top,body.inbattle #bSkip{display:none!important}
+.btop{display:flex;align-items:center;gap:10px;width:min(620px,100%);background:rgba(20,10,28,.72);border:1px solid var(--line);border-radius:14px;padding:6px 12px}
+.bnm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46%}
+.bbar{flex:1;height:12px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.bbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff7ab0,#c69bff);transition:width .3s}
+.bme{font-weight:600;font-size:14px;white-space:nowrap}.bmeh{color:#ff6a8a;margin-right:3px}
+.bmsg{margin-top:auto;margin-bottom:8px;max-width:min(640px,96%);text-align:center;font-size:14px;line-height:1.45;background:rgba(20,10,28,.7);border-radius:12px;padding:5px 12px}
+.bside{position:absolute!important;right:calc(10px + env(safe-area-inset-right));top:calc(54px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+.bsm{font:600 12px Mitr,sans-serif;border:1px solid rgba(255,246,224,.35);background:rgba(20,10,28,.7);color:var(--ink);border-radius:10px;padding:6px 10px}
+.bsm:disabled{opacity:.35}
+#battle.concert .bside{display:none}
+.bpads{display:flex;justify-content:center;align-items:flex-end;gap:6px;pointer-events:auto;width:100%;touch-action:none;--pw:min(84px,calc((var(--vw,100vw) - 60px) / var(--n,8) - 6px))}
+.bpads button{--pw:min(84px,calc((var(--vw,100vw) - 60px) / var(--n) - 6px));position:relative;width:var(--pw);height:calc(var(--pw) * 1.05);border:0;padding:0;font:600 15px Mitr,sans-serif;color:#2b1a05;touch-action:none;transition:transform .06s,filter .1s;flex:0 0 auto}
+.bpads button span{position:relative;z-index:2;pointer-events:none}
+.bpads button.dn{transform:scale(.9)}
+.bpads button.lit{filter:brightness(1.45) drop-shadow(0 0 10px #ffe08a)}
+.ring{position:absolute;left:50%;top:50%;width:70%;aspect-ratio:1;margin:0;translate:-50% -50%;border:3px solid #ffe08a;border-radius:50%;opacity:0;pointer-events:none;z-index:3;box-shadow:0 0 10px rgba(255,224,138,.8)}
+/* ฆ้อง: ลูกฆ้องทองเหลืองมีปุ่ม */
+.k-gong button{border-radius:50%;height:var(--pw);background:radial-gradient(circle at 50% 50%,#ffe9a0 0 17%,#b8862a 19% 24%,#e8b84e 26% 62%,#8a5a18 64% 70%,#d8a440 72%);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 3px 0 #5a3a10}
+/* ระนาด: ลูกระนาดไม้ ต่ำยาว สูงสั้น */
+.k-bar button{border-radius:6px;height:calc(var(--pw) * (1.35 - var(--i) * .06));background:linear-gradient(180deg,#a86a3a,#7a4420 60%,#5a3016);color:#fff2d8;box-shadow:inset 0 3px 0 rgba(255,220,170,.35),0 4px 0 #3a1e0c}
+.k-bar button::after{content:'';position:absolute;left:50%;bottom:8px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#2a1408}
+/* ขลุ่ย ปี่: รูนิ้วบนลำไม้ไผ่ */
+.k-hole{background:linear-gradient(180deg,#d8c070,#b89a48);border-radius:99px;padding:8px 18px;width:auto;max-width:100%;box-shadow:0 4px 0 #7a6020}
+.k-hole button{border-radius:50%;height:var(--pw);width:calc(var(--pw) * .9);background:radial-gradient(circle,#2a1a08 0 42%,#8a6a28 46%,#c8a858 60%);color:#fff2d8}
+.k-hole button span{font-size:13px}
+/* กลอง: หน้าหนัง */
+.k-face button{border-radius:50%;width:calc(var(--pw) * 1.15);height:calc(var(--pw) * 1.15);background:radial-gradient(circle at 50% 45%,#fbf1d8 0 55%,#e0caa0 62%,#8a3a20 66% 76%,#5a2010 78%);font-size:13px;box-shadow:0 4px 0 #3a1408}
+/* เครื่องสาย: สายขึงยาว */
+.k-string button{border-radius:8px;height:calc(var(--pw) * 1.5);background:linear-gradient(90deg,transparent 46%,#f0e0b0 47% 53%,transparent 54%),linear-gradient(180deg,#6a3a1e,#4a2412);color:#fff2d8;box-shadow:0 4px 0 #2a1408}
+.k-string button span{background:rgba(42,20,8,.75);border-radius:6px;padding:0 5px}
+/* ฉิ่ง: ถ้วยโลหะเล็ก */
+.k-cup button{border-radius:50% 50% 40% 40%;width:calc(var(--pw) * 1.3);height:calc(var(--pw) * .95);background:radial-gradient(ellipse at 50% 70%,#fff2c0 0 12%,#c89a3a 16% 60%,#8a6418 64%);box-shadow:0 4px 0 #5a3a10}
+/* ฉาบ */
+.k-cym button{border-radius:50%;width:calc(var(--pw) * 1.4);height:calc(var(--pw) * 1.05);background:radial-gradient(ellipse,#fff0b8 0 14%,#b8862a 18% 24%,#e8c060 28% 70%,#a8782a 74%);box-shadow:0 4px 0 #5a3a10}
+#battle.hurt::after{content:'';position:absolute;inset:0;background:rgba(255,60,90,.28);pointer-events:none}
+.blose{position:absolute!important;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,4,14,.7);pointer-events:auto}
+#battle.lose .blose{display:flex}
+.blose .card{max-width:420px;text-align:center}
+@media (max-height:460px){.btop{padding:4px 10px}.bmsg{font-size:12.5px;padding:3px 10px;margin-bottom:5px}.bpads button{--pw:min(70px,calc((var(--vw,100vw) - 60px) / var(--n) - 6px))}.k-string button{height:calc(var(--pw) * 1.25)}.k-bar button{height:calc(var(--pw) * (1.2 - var(--i) * .05))}}
 </style>
 <script>
 /* แสดงข้อผิดพลาดบนจอ ให้ถ่ายภาพส่งมาได้ทันที */
@@ -115,9 +161,9 @@ window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reaso
   <h1>ตำนานสรรพวาทิต</h1>
   <div style="font-size:17px;color:#fff6e0">ภาค เจ็ดเสียงที่หายไปในแม่สอด</div>
   <canvas id="tcv" width="240" height="48"></canvas>
-  <p class="muted">เสียงลึกลับในโทรศัพท์แยกเพื่อนในวงออกไปทีละคน<br>ตามหาเจ็ดเสียงที่หายไป ทั่วโรงเรียนสรรพวิทยาคมและอำเภอแม่สอด</p>
+  <p class="muted">จ้าวกับไอซ์เล่นซนจนเผลอตีกลองหลวงของครูโอ เสียงดังตูม! เสียงดนตรีทั้งวงกระจายไปทั่วแม่สอดและแม่ระมาด<br>ช่วยกันตามเสียงกลับมาให้ทันงานแสดง และช่วยครูตังค์หลบคำชวนไปงานเลี้ยงของครูโอ</p>
   <div class="row" style="justify-content:center;margin-top:10px" id="tBtns"></div>
-  <p class="muted" style="margin-top:12px">คอม: ← → เดิน · Space กระโดด · J ตี · E ใช้ · Q สลับเพื่อน · C ท่าประสานวง · Esc พัก<br>มือถือ: เล่นแนวนอน ปุ่มอยู่มุมล่างซ้ายและขวา</p>
+  <p class="muted" style="margin-top:12px">คอม: ← → เดิน · Space กระโดด · J ตี · E ใช้/คุย · Q สลับเพื่อน · C ท่าประสานวง · Esc พัก · ตอนประลองเสียง: กด 1–8 หรือ A–K<br>มือถือ: เล่นแนวนอน ปุ่มอยู่มุมล่างซ้ายและขวา</p>
   <div class="credit">ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div></div>
 
@@ -183,6 +229,7 @@ window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reaso
 <script src="thaisound2.js"></script>
 <script src="../pixel.js"></script>
 <script src="p2/core.js"></script>
+<script src="p2/battle.js"></script>
 <script src="p2/art.js"></script>
 <script src="p2/stages.js"></script>
 <script src="p2/ui.js"></script>

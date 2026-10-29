@@ -99,7 +99,8 @@ function drawRoom512(x,r,night){
   // มุมซ้ายสุดของห้อง
   R(x,'#d4d8da',0,30,10,192);R(x,'#c0c4c6',10,30,2,192);
   
-  if(night){x.save();x.globalCompositeOperation='source-atop';x.fillStyle='rgba(14,22,60,.62)';x.fillRect(0,0,ROOM_END,222);x.restore();
+  if(night==='eve'){x.save();x.globalCompositeOperation='source-atop';x.fillStyle='rgba(255,150,70,.16)';x.fillRect(0,0,ROOM_END,222);x.restore()}
+  else if(night){x.save();x.globalCompositeOperation='source-atop';x.fillStyle='rgba(14,22,60,.62)';x.fillRect(0,0,ROOM_END,222);x.restore();
     for(let lx=60;lx<ROOM_END;lx+=170)R(x,'#5a6080',lx+2,27,42,3)}
 }
 /* ลานต้นไม้หน้าอาคาร 5 (ภาพประตูข้างห้อง 512) */
@@ -147,17 +148,17 @@ function artBamboo(){const r=seeded(23);
 }
 /* ---------- ฉาก 3: ป่าเชิงเขาและน้ำตกธารารักษ์ (ภาพป่าและบึงน้ำใต้หน้าผาที่ครูส่ง) ---------- */
 function artForest(){const r=seeded(31);
-  LV.L.sky=skyCanvas([[0,'#3a2a5a'],[.45,'#c86a5a'],[.75,'#f2b070'],[1,'#f8d8a0']],'rgba(255,220,200,.35)',0,31);
+  LV.L.sky=skyCanvas([[0,'#f0a860'],[.5,'#ffd890'],[1,'#fff0c8']],'rgba(255,240,220,.7)',0,31);
   {const w=layerW(.3),[c,x]=mk(w,H);// หน้าผาหินปูน น้ำตก อ่างน้ำ เจดีย์ทองบนที่ราบด้านบน
-    hills(x,w,120,22,'#4a4a5e',8,16);
-    for(let i=0;i<w;i+=520){const fx=i+260;R(x,'#5a5a6e',fx-60,70,120,120);for(let y=70;y<190;y+=7)R(x,'#6a6a7e',fx-60+((y*7)%30),y,40,2);R(x,'rgba(220,240,255,.85)',fx-6,78,12,112);for(let y=80;y<190;y+=6)R(x,'#ffffff',fx-4+((y/6)%3)*3,y,2,4);
+    hills(x,w,120,22,'#8a7a8e',8,16);
+    for(let i=0;i<w;i+=520){const fx=i+260;R(x,'#a8948a',fx-60,70,120,120);for(let y=70;y<190;y+=7)R(x,'#b8a49a',fx-60+((y*7)%30),y,40,2);R(x,'rgba(220,240,255,.85)',fx-6,78,12,112);for(let y=80;y<190;y+=6)R(x,'#ffffff',fx-4+((y/6)%3)*3,y,2,4);
       R(x,'#d8a030',fx+30,52,10,18);x.fillStyle='#e8b840';x.beginPath();x.moveTo(fx+28,52);x.lineTo(fx+35,34);x.lineTo(fx+42,52);x.fill();R(x,'#f0d070',fx+34,30,2,5)}
-    blob(x,0,0,0,['#000'],0,r);for(let i=0;i<w;i+=16)blob(x,i,190+r()*10,16,['#2a3a2e','#344a36','#3a4a30'],2,r);R(x,'#4a6a6a',0,200,w,70);for(let i=0;i<w;i+=10)R(x,'rgba(255,200,150,.25)',i,205+((i*7)%20),6,1);LV.L.far=c}
-  {const w=layerW(.6),[c,x]=mk(w,H);for(let i=0;i<w;i+=34){const tw=4+r()*5;R(x,'#2a2426',i,0,tw,GY);R(x,'#3a3234',i+1,0,1,GY);blob(x,i,30+r()*40,30,['#1e2e22','#26382a','#2e4230'],4,r)}LV.L.mid=c}
+    blob(x,0,0,0,['#000'],0,r);for(let i=0;i<w;i+=16)blob(x,i,190+r()*10,16,['#4a7a3e','#5a8a46','#6a9a4a'],2,r);R(x,'#6aa8a0',0,200,w,70);for(let i=0;i<w;i+=10)R(x,'rgba(255,200,150,.25)',i,205+((i*7)%20),6,1);LV.L.far=c}
+  {const w=layerW(.6),[c,x]=mk(w,H);for(let i=0;i<w;i+=34){const tw=4+r()*5;R(x,'#5a4436',i,0,tw,GY);R(x,'#6a5446',i+1,0,1,GY);blob(x,i,30+r()*40,30,['#3e6a32','#4a7a3a','#5a8a44'],4,r)}LV.L.mid=c}
   const [c,x]=mk(LV.w,H);
-  for(let i=0;i<LV.w;i+=58+r()*30){const tw=8+r()*6;R(x,'#3a3030',i,0,tw,GY);R(x,'#4a3e3a',i+2,0,2,GY);for(let y=40;y<GY;y+=30)R(x,'#2a2222',i,y,tw,1);limb(x,i+tw/2,GY-120,i+tw/2+(r()-.5)*60,GY-150,2,'#3a3030')}
-  for(let i=0;i<LV.w;i+=12)blob(x,i,14,24,['#1e3a24','#264a2c','#2e5232'],2,r);
-  for(let i=0;i<LV.w;i+=26){x.fillStyle=['#2e5a30','#3a6a36'][Math.floor(r()*2)];x.beginPath();x.ellipse(i,GY-4,10+r()*8,6,0,Math.PI,0);x.fill()}
+  for(let i=0;i<LV.w;i+=58+r()*30){const tw=8+r()*6;R(x,'#6a5040',i,0,tw,GY);R(x,'#7a6050',i+2,0,2,GY);for(let y=40;y<GY;y+=30)R(x,'#5a4030',i,y,tw,1);limb(x,i+tw/2,GY-120,i+tw/2+(r()-.5)*60,GY-150,2,'#6a5040')}
+  for(let i=0;i<LV.w;i+=12)blob(x,i,14,24,['#3a6a30','#4a7a38','#5a8a40'],2,r);
+  for(let i=0;i<LV.w;i+=26){x.fillStyle=['#4a8a40','#5a9a46'][Math.floor(r()*2)];x.beginPath();x.ellipse(i,GY-4,10+r()*8,6,0,Math.PI,0);x.fill()}
   LV.L.world=c}
 function caveMouth(x,cx){// ถ้ำสีฟ้า: หินสีเทาฟ้าเป็นชั้นลายคลื่น (จุดพัก ไม่มีการต่อสู้)
   x.fillStyle='#6a7a90';x.beginPath();x.moveTo(cx-90,GY);x.quadraticCurveTo(cx-80,80,cx,70);x.quadraticCurveTo(cx+80,80,cx+90,GY);x.closePath();x.fill();
@@ -231,3 +232,35 @@ function drawMapArt(G,w,h,prog,done){const gr=G.createLinearGradient(0,0,0,h);gr
   G.strokeStyle='#b89a6a';G.lineWidth=4;G.beginPath();G.moveTo(w*.12,h*.55);G.lineTo(w*.45,h*.5);G.lineTo(w*.95,h*.45);G.stroke();G.beginPath();G.moveTo(w*.45,h*.5);G.lineTo(w*.6,h*.12);G.stroke();G.beginPath();G.moveTo(w*.45,h*.5);G.lineTo(w*.7,h*.9);G.stroke();
   G.fillStyle='#8a6a4a';G.font='600 9px '+FONT;G.fillText('ตัวเมืองแม่สอด',w*.4,h*.58);G.fillText('ทางหลวง 1090 →',w*.75,h*.4);
   for(let i=0;i<14;i++){G.fillStyle='rgba(80,130,70,.45)';G.beginPath();G.arc(w*(.62+((i*37)%30)/100),h*(.12+((i*53)%40)/100),8,0,7);G.fill()}}
+
+/* ---------- ห้องย่อยในโรงเรียน: โรงอาหาร และห้องสมุด ---------- */
+function drawCanteen(x,x0,x1){R(x,'#f4e8c8',x0,0,x1-x0,222);R(x,'#e8d8b0',x0,0,x1-x0,24);for(let i=x0;i<x1;i+=60)R(x,'#d8c8a0',i,24,3,198);R(x,'#c87a3a',x0,206,x1-x0,16);
+  for(let lx=x0+40;lx<x1;lx+=120){R(x,'#ffffff',lx,26,40,4)}
+  // เคาน์เตอร์ตักข้าว หม้อ ถาด
+  const cx=x0+40;R(x,'#b8c0c8',cx,170,180,8);R(x,'#9aa2aa',cx,178,180,44);for(let i=0;i<4;i++){R(x,'#7a828a',cx+12+i*42,150,30,20);R(x,'#5a626a',cx+10+i*42,148,34,4);R(x,['#e8c060','#c84a2a','#6aa84a','#f0f0e0'][i],cx+14+i*42,152,26,4)}
+  R(x,'#e85a3a',cx,96,180,30);R(x,'#ffffff',cx+10,104,160,14);for(let i=0;i<9;i++)R(x,'#c84a2a',cx+16+i*17,108,10,6);
+  // ตู้เย็นสูง
+  const fx=x1-90;R(x,'#e8eef4',fx,96,46,126);R(x,'#c8d0d8',fx,96,46,4);R(x,'#c8d0d8',fx,150,46,3);R(x,'#9aa2aa',fx+38,110,3,30);R(x,'#9aa2aa',fx+38,160,3,40);
+  // โต๊ะอาหาร
+  for(let tx=x0+260;tx<x1-120;tx+=110){R(x,'#d0a060',tx,196,70,6);R(x,'#a07040',tx+6,202,4,28);R(x,'#a07040',tx+60,202,4,28)}}
+function drawLibrary(x,x0,x1){R(x,'#3a2418',x0,0,x1-x0,222);R(x,'#4a2e1e',x0,0,x1-x0,30);
+  for(let sx=x0+20;sx<x1-40;sx+=90){R(x,'#5a3a24',sx,40,70,182);for(let s=0;s<5;s++){const y=50+s*34;R(x,'#6a4428',sx,y+28,70,4);for(let b=0;b<11;b++){const bh=18+((b*7+s*3)%9);R(x,['#a83a3a','#3a6aa8','#3aa86a','#d8a83a','#7a4aa8','#c8c0b0'][(b+s)%6],sx+3+b*6,y+28-bh,5,bh)}}}
+  R(x,'#f0e8d0',x0+(x1-x0)/2-40,34,80,14);R(x,'#3a2418',x0+(x1-x0)/2-30,39,60,4)}
+/* ---------- ห้วยขี้เท่อ อ.แม่ระมาด: สะพานไม้ข้ามลำห้วย โคมแดงเรียงแถว ป่ากล้วยเขียวครึ้ม (ภาพที่ครูส่ง) ---------- */
+function drawHuaiKhiThoe(x,x0,x1,r){for(let i=x0;i<x1;i+=14)blob(x,i,90+r()*60,26,['#2e6a30','#3a7a36','#4a8a3c','#5aa048'],3,r);
+  for(let i=x0;i<x1;i+=70){x.fillStyle='#5aa048';x.beginPath();x.moveTo(i,200);x.quadraticCurveTo(i+20,120,i+50,110);x.quadraticCurveTo(i+28,140,i+12,200);x.fill();R(x,'#3a7a36',i+10,150,2,60)}
+  // ซุ้มเหล็กดำแขวนโคมแดง
+  for(let fx=x0+30;fx<x1-20;fx+=110){R(x,'#2a2a2a',fx,40,4,182);R(x,'#2a2a2a',fx,40,60,3);for(let k=0;k<5;k++){const ly=56+k*30;R(x,'#2a2a2a',fx+30,ly-10,1,10);disc(x,'#d0202a',fx+31,ly+4,9);R(x,'#ff5a5a',fx+26,ly-2,3,10);R(x,'#e8b830',fx+28,ly-6,7,3);R(x,'#e8b830',fx+28,ly+13,7,2);R(x,'#f2c14e',fx+30,ly+15,2,6)}}
+  // ธงร้านกาแฟ (ไม่มีชื่อยี่ห้อ)
+  R(x,'#9a9a9a',x0+8,70,2,150);x.fillStyle='#d83a4a';x.beginPath();x.moveTo(x0+10,72);x.quadraticCurveTo(x0+36,76,x0+30,150);x.lineTo(x0+10,150);x.fill();R(x,'#ffffff',x0+14,90,12,4)}
+function drawLanternFG(c,x0,x1){for(let lx=x0+60;lx<x1;lx+=220){const x=lx-c*1;if(x<-30||x>W+30)continue;for(let k=0;k<2;k++){const ly=20+k*28;disc(g,'#d0202a',x,ly,8);R(g,'#ff6a6a',x-4,ly-4,2,8);R(g,'#e8b830',x-3,ly-9,7,2);R(g,'#f2c14e',x-1,ly+8,2,6)}}}
+/* ---------- กลองอาถรรพ์ (กลองหลวงเก่าของ ต.แม่จะเรา ที่ครูโอฝากไว้) ---------- */
+function drawOldDrum(G,x,y,glow){if(glow){G.fillStyle='rgba(255,200,80,'+(.2+.15*Math.sin(T*4))+')';G.beginPath();G.ellipse(x+40,y-16,52,26,0,0,7);G.fill()}
+  R(G,'#5a3a22',x+6,y-6,4,6);R(G,'#5a3a22',x+70,y-6,4,6);R(G,'#7a4a2a',x,y-8,80,3);
+  G.fillStyle='#8a5a30';G.beginPath();G.moveTo(x+4,y-32);G.lineTo(x+78,y-26);G.lineTo(x+78,y-12);G.lineTo(x+4,y-8);G.closePath();G.fill();
+  R(G,'#e8d8b0',x+1,y-33,4,26);R(G,'#c03030',x+30,y-30,14,20);R(G,'#e8c060',x+30,y-30,14,2);for(let i=8;i<76;i+=8)R(G,'#5a3418',x+i,y-29+(i/76)*4,1,18);
+  R(G,'#f4f0e0',x+48,y-48,26,14);R(G,'#c03030',x+50,y-45,22,2);R(G,'#3a2a20',x+50,y-41,18,1);R(G,'#3a2a20',x+50,y-38,14,1)}
+/* ---------- ครูโอปิ้งหมูกระทะ (ฉากมุกตลก) ---------- */
+function drawBBQ(G,x,y){R(G,'#6a4a2a',x,y-18,40,4);R(G,'#5a3a22',x+4,y-14,4,14);R(G,'#5a3a22',x+32,y-14,4,14);disc(G,'#3a3a3a',x+20,y-24,9);disc(G,'#7a7a7a',x+20,y-26,7);R(G,'#c8604a',x+15,y-28,4,2);R(G,'#c8604a',x+21,y-26,4,2);
+  for(let i=0;i<3;i++){G.fillStyle='rgba(255,255,255,'+(.4-i*.1)+')';G.beginPath();G.arc(x+20+Math.sin(T*3+i)*3,y-34-i*8-((T*10)%8),3+i,0,7);G.fill()}
+  R(G,'#e8b830',x+34,y-30,6,10);R(G,'#f2d070',x+35,y-29,4,4);R(G,'#ffffff',x+35,y-31,4,1)}
