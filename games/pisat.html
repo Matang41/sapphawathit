@@ -140,7 +140,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
         <div class="chb"><button class="btn g" id="c1C">▶ เล่นต่อ</button><button class="btn" id="c1N">✦ เริ่มใหม่</button></div></div>
       <div class="chc box"><div class="cht">บทที่ 2 · ระนาดต้องสาป</div><div class="chd">ลูกระนาด 21 ลูกหลุดกระจาย เสียงเพื่อนถูกขโมย เลือกตัวละครจัดทีมเอง ช่วยเพื่อนครบ 12 คน แล้วประชันวงกับขุนไม้เดี่ยว</div>
         <div class="chb"><button class="btn g" id="c2C">▶ เล่นต่อ</button><button class="btn" id="c2N">✦ เริ่มใหม่</button></div></div>
-      <div class="chc box"><div class="cht">บทที่ 3 · กลองหลวงปลุกผี</div><div class="chd">ชมรมเงินติดลบ ต้องยืมชมรมพื้นเมือง! ไปช่วยตีกลองหลวงงานตานก๋วยสลากที่ชุมชนแม่โกนเกน ริมแม่น้ำเมย เพื่อใช้หนี้ แต่หมอกควันกลืนเสียงวงไปหมด · ถึงคราวผงาดของพบธรรม</div>
+      <div class="chc box"><div class="cht">บทที่ 3 · กลองหลวงปลุกผี</div><div class="chd">ชมรมเงินติดลบ ต้องยืมชมรมพื้นเมือง! ไปช่วยตีกลองหลวงงานตานก๋วยสลากที่ชุมชนแม่โกนเกน ริมแม่น้ำเมย เพื่อใช้หนี้ แต่หมอกควันกลืนเสียงวงไปหมด · ถึงคราวผงาดของพบธรรม · <b>บทสุดท้ายของภาคแรก</b></div>
         <div class="chb"><button class="btn g" id="c3C">▶ เล่นต่อ</button><button class="btn" id="c3N">✦ เริ่มใหม่</button></div></div>
     </div>
     <div style="width:min(300px,86vw)"><button class="btn s" id="tHow">วิธีเล่น</button></div>
@@ -280,10 +280,10 @@ const SPEC={
   nurse:{skin:'#f0c8a8',hair:'#20140f',hs:'long',shirt:'#ffffff',shade:'#dcdce8',pants:'#ffffff',shoe:'#ddd',cap:'#ffffff',skirt:1},
   clerk:{skin:'#e8b48c',hair:'#2a1a12',hs:'short',shirt:'#2e8b57',shade:'#22704a',pants:'#333',shoe:'#111',cap:'#e6403a'},
   /* ตัวละครบทที่ 2 (ชุดนักเรียน ม.ต้น กางเกงสีกากี ถุงเท้าน้ำตาล · นักเรียนหญิงกระโปรงกรม) */
-  mateo:{skin:'#e6b48a',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22',small:1},
+  mateo:{skin:'#b07448',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22',small:1},
   che:{skin:'#c98d62',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22',chub:1},
-  jao:{skin:'#e2ad85',hair:'#15100e',hs:'bang',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22'},
-  captain:{skin:'#c89068',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#2a2a30',shorts:'#7a3a1a',shoe:'#111',pocket:'#3b5bb5'},
+  jao:{skin:'#e2ad85',hair:'#15100e',hs:'bang',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#1c1c22',shoe:'#0d0d12',pocket:'#3b5bb5'},
+  captain:{skin:'#f2cfae',hair:'#15100e',hs:'short',shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#2a2a30',shorts:'#7a3a1a',shoe:'#111',pocket:'#3b5bb5'},
   yum:{skin:'#e2ad85',hair:'#15100e',hs:'short',blush:'#d0706a',chub:1,shirt:'#f3f3ee',shade:'#c4c7d4',pants:'#b89868',shorts:'#7a3a1a',shoe:'#8a3a22'},
   kaimuk:{skin:'#f0c4a0',hair:'#1a1210',hs:'long',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,glass:'#6a5a8a',chub:1,bow:'#24305e'},
   ing:{skin:'#f2cbb0',hair:'#1a1210',hs:'long',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,bow:'#24305e'},
@@ -2122,9 +2122,32 @@ async function ending3(){
   await talk([['haze','…เสียง… ของคนที่อยู่ด้วยกัน… ข้าลอยต่อไปไม่ได้แล้ว…'],[null,'หมอกควันดำแตกเป็นสายลม ลอยหายไปเหนือแม่น้ำเมย ฟ้าเหนือลานวัดใสจนเห็นดาวดวงแรก ขบวนแห่ครัวตานก๋วยสลากเริ่มเดิน']]);
   S.phase=3;hud();
   await talk2([['elder','ลูก ๆ … ขอบใจมาก ปีนี้กลองหลวงดังที่สุดตั้งแต่พ่อหลวงจำความได้'],['elder','ปีหน้าชุมชนเราจะไถกลบซัง ไม่เผาแล้ว พ่อหลวงสัญญา'],['farmer','ลุงคนแรกเลย!'],['drummer','พบธรรม… มือเอ็งหนักแน่นดี ปีหน้ามาตีนำขบวนให้พ่อครูอีกนะ'],['pob','(ยืดอก น้ำตาคลอ) ครับพ่อครู!'],['M','พี่พบ… วันนี้พี่เท่มากจริง ๆ'],['pob','ผู้จัดการเท่ทุกวัน แค่วันนี้มีคนเห็น'],['kidG','พี่ลู่วา ฟ้อนด้วยกันนะคะ!'],['luwa','(ตีฉาบรับกลองหลวง ฉ่าง! ฉ่าง!) ได้เลยครับ!'],['luwa','แล้วก็… (เปิดสมุดหนี้ ขีดช่องสุดท้าย) หนี้ชมรมดนตรีไทยกับชมรมพื้นเมือง ชำระครบด้วยแรงงานแล้วครับ!'],['pob','ลู่วา… มานี่หน่อย'],['luwa','ครับพี่พบ! จะให้ถือกระเป๋าอีกใบเหรอครับ'],['pob','…ไม่ใช่ ขอบใจนะ ที่ตามผมมาตลอด นายไม่ใช่เบ๊ผมหรอก นายคือรองผู้จัดการ'],['luwa','…(น้ำตาซึม) ครับพี่พบ! แต่กระเป๋าผมถือให้เหมือนเดิมนะครับ'],['tang','(เดินมาจากรถสองแถว) ครูมารับแล้ว… ได้ยินเสียงกลองหลวงตั้งแต่ปากทางเข้าชุมชนเลย'],['tang','เก่งมากทุกคน หนี้ชมรมหมดแล้วด้วยใช่ไหม… ดนตรีไม่ได้อยู่แค่ในห้อง 512 นะ มันอยู่ที่ทุกคนมารวมกัน']]);
-  const cr=$('#credits .roll');if(cr)cr.innerHTML='<p>กลองหลวงชุมชนแม่โกนเกนดังก้องนำขบวนตานก๋วยสลาก<br>ฟ้าเหนือแม่น้ำเมยใส ชาวบ้านสัญญาว่าจะไถกลบแทนการเผา<br>หนี้ชมรมดนตรีไทยกับชมรมพื้นเมือง ชำระครบแล้ว</p><p><b>พบธรรม</b> · มือกลองหลวง (ผู้จัดการที่ได้ผงาดเสียที)<br><b>ลู่วา</b> · รองผู้จัดการ (ที่ยังถือกระเป๋าให้พบธรรม)<br>'+S.party.filter(k=>k!=='luwa'&&k!=='pob').map(k=>CAST[k].n).join(' · ')+(S.party.filter(k=>k!=='luwa'&&k!=='pob').length?' · ':'')+'ครูตังค์</p><p style="font-size:13px">ขอบคุณชุมชนแม่โกนเกน วัดห้วยมหาวงก์ และศาลเจ้าพ่อสามเงา ที่เป็นแรงบันดาลใจของฉาก</p><p style="color:#d8c8ff">โปรดติดตามตอนต่อไป</p><p style="font-size:13px;opacity:.8">เสียงกลองหลวง ฉาบ และฆ้อง สกัดจากคลิปซ้อมวงกลองหลวงแม่สอดจริง · ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</p>';
-  const h=$('#credits h2');if(h)h.textContent='จบบทที่ 3';const bb=$('#credits .btn');if(bb)bb.textContent='เดินเล่นในงานตานก๋วยสลากต่อ';
-  hud();$('#credits').classList.remove('hide');paused=true;sfx.get();busy=false}
+  await epilogue3();
+  showFinCredits();busy=false}
+/* ---------- ปิดภาคแรก: เช้าวันจันทร์ ห้อง 512 ---------- */
+async function epilogue3(){
+  flash('#000',600);await sleep(500);
+  S.map='room';prerenderRoom(false);S.x=7*T+8;S.y=8*T+12;S.dir='u';follow=[];
+  for(const k in ACT)delete ACT[k];
+  const extra=S.party.filter(k=>k!=='pob'&&k!=='luwa'&&k!=='maha'),spots=[[9,7],[10,6]];
+  ACT.tang={spr:'tang',x:7*T+8,y:3*T+14,dir:'d'};ACT.maha={spr:'maha',x:4*T+8,y:6*T+12,dir:'r'};ACT.pob={spr:'pob',x:6*T+8,y:6*T+12,dir:'u'};ACT.luwa={spr:'luwa',x:8*T+8,y:6*T+12,dir:'u'};
+  extra.slice(0,2).forEach((k,i)=>{ACT[k]={spr:k,x:spots[i][0]*T+8,y:spots[i][1]*T+12,dir:'l'}});
+  await say(null,'เช้าวันจันทร์ · ห้อง 512\nบนกระดาน ตัวเลขสีแดงใต้คำว่า “เงินชมรม” ถูกลบออก แล้วมีคนเขียนใหม่ด้วยชอล์กสีเหลืองว่า “0 · ไม่ติดลบแล้ว!”');
+  await talk2([['luwa','(ยื่นสมุดหนี้ที่มีตราประทับ “ชำระครบ”) ชมรมพื้นเมืองฝากมาครับ หนี้ชมรมดนตรีไทยหมดแล้วครับ'],['pob','ในนามผู้จัดการ… ขอประกาศว่า ชมรมสรรพวาทิตกลับมาเป็นศูนย์อย่างสง่างาม'],['maha','ศูนย์… ก็ยังไม่มีเงินอยู่ดีนะ'],['pob','แต่ไม่ติดลบ! นั่นแหละความสำเร็จของผู้บริหาร'],['tang','ครูขอพูดอะไรหน่อยนะ'],['tang','เทอมนี้พวกเธอเจอมาหมดแล้ว ปีศาจเสียงเพี้ยนที่ต้องฟังให้ดีถึงจะชนะ ขุนไม้เดี่ยวที่รอร่วมวงมาแปดสิบปี แล้วก็กลองหลวงที่ต้องตีพร้อมกันทั้งชุมชน'],['tang','ทั้งสามเรื่องสอนอย่างเดียวกัน… ดนตรีไม่ใช่ของคนเก่งคนเดียว มันคือการฟังกันและเล่นไปด้วยกัน'],['tang','ครูภูมิใจในตัวพวกเธอทุกคน… ทั้งชมรมดนตรีไทย และชมรมพื้นเมืองด้วย'],['luwa','ขอบคุณครับครู! (หันไปหาพบธรรม) พี่พบครับ วันนี้ให้ผมถือกระเป๋าไหมครับ'],['pob','วันนี้ผมถือเอง… รองผู้จัดการไปหยิบฉาบมา เราซ้อมเพลงกัน'],['M','ซ้อมเพลงอะไรครับ ปี่พาทย์หรือกลองหลวง'],['pob','ทั้งสองอย่าง! ผู้จัดการอนุมัติ'],[null,'แล้วห้อง 512 ก็ดังไปด้วยเสียงฆ้อง ระนาด ฉาบ และกลอง… เสียงของทุกคนที่มาเล่นด้วยกัน']]);
+  try{localStorage.setItem('spw_pisat_fin','1')}catch(e){}
+  S.beat.epi=1;save();
+}
+function showFinCredits(){
+  const cr=$('#credits .roll');if(cr)cr.innerHTML='<p><b>บทที่ 1 · ปีศาจเสียงเพี้ยน</b><br>ฟังให้ดีแล้วตีตาม ปีศาจกลายเป็น “เพี้ยนน้อย” มาสคอตห้อง 512</p><p><b>บทที่ 2 · ระนาดต้องสาป</b><br>ลูกระนาด 21 ลูกกลับคืน ขุนไม้เดี่ยวได้ร่วมวงเป็นครั้งแรก</p><p><b>บทที่ 3 · กลองหลวงปลุกผี</b><br>กลองหลวงแม่โกนเกนดังนำขบวนตานก๋วยสลาก หนี้ชมรมหมด พบธรรมได้ผงาด</p><p>มหาพราหมณ์ · พบธรรม · ลู่วา · มาเตโอ · ฟู · แว่น · จักร · เช่ · จ้าว · กัปตัน · ไข่มุก · อิ้ง · ไอซ์<br>และครูตังค์ ผู้ถือจังหวะของวง</p><p style="color:#ffe9a8">ขอบคุณที่เล่นจนจบภาคแรก</p><p style="font-size:13px">ขอบคุณชุมชนแม่โกนเกน วัดห้วยมหาวงก์ ศาลเจ้าพ่อสามเงา และวงกลองหลวงแม่สอด</p><p style="font-size:13px;opacity:.8">เสียงเครื่องดนตรีอัดจริงจากห้อง 512 และวงกลองหลวงแม่สอด · ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</p>';
+  const h=$('#credits h2');if(h)h.textContent='จบภาคแรก · ตำนานสรรพวาทิต';
+  const bb=$('#credits .btn');if(bb){bb.textContent='กลับไปเดินเล่นในงานตานก๋วยสลาก';bb.addEventListener('click',()=>{if(S&&S.ch===3&&S.map==='room'){for(const k in ACT)delete ACT[k];goVillage(30*T+8,17*T+12,'d')}},{once:true})}
+  hud();$('#credits').classList.remove('hide');paused=true;sfx.get();
+  markFin3();
+}
+function markFin3(){let fin=false;try{fin=localStorage.getItem('spw_pisat_fin')==='1'}catch(e){}
+  const t=$('#c3C')&&$('#c3C').closest('.chc');if(!t)return;const c=t.querySelector('.cht');
+  if(fin&&c&&!c.querySelector('.fin')){c.insertAdjacentHTML('beforeend',' <span class="fin" style="font-size:12px;color:#7ef08a">✓ จบภาคแรกแล้ว</span>')}}
+setTimeout(markFin3,0);
 
 /* ---------- ฉากเปิดบทที่ 3 ---------- */
 async function intro3(){
