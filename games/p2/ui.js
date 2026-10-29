@@ -110,6 +110,7 @@ async function startStage(n){
   {const on=ST.onChab+ST.onChing,acc=ST.hits?on/ST.hits:0,cr=LV.coinTotal?(ST.coinsLv||0)/LV.coinTotal:0;ST.rate=1+(cr>=.6?1:0)+(acc>=.4?1:0);SAVE.rate=SAVE.rate||{};SAVE.rate[n]=Math.max(SAVE.rate[n]||0,ST.rate);ST.coinPct=Math.round(cr*100)}
   SAVE.done[n]=1;SAVE.prog=Math.max(SAVE.prog||1,Math.min(7,n+1));const sec=Math.round((Date.now()-ST.start)/1000);SAVE.best[n]=SAVE.best[n]?Math.min(SAVE.best[n],sec):sec;store();
   try{parent.postMessage({type:'spw-game',game:'pisat2',stage:n,fin:n===7},'*')}catch(e){}
+  try{if(window.KT)KT.roll('pisat2',(ST.rate||1)>=2||n===7)}catch(e){}
   await waitS(1.2);
   if(res==='ending'){await ending();creditsScreen();return}
   resultScreen(n,sec)}

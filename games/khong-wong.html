@@ -186,6 +186,7 @@ h1,h2,h3{font-family:"Mitr","Sarabun",sans-serif;font-weight:500}
   <div class="panel" id="panel"></div>
 </div>
 
+<script src="khaotaen.js"></script>
 <script>
 (function(){
 "use strict";
@@ -435,6 +436,7 @@ function gameOver(){
   const best=getBest(mode),isNew=score>best.score;
   if(isNew)setBest(mode,{score,level});
   try{if(window.parent!==window)window.parent.postMessage({source:"sapphawathit-game",game:"khong-wong",mode,score,level,rank},"*")}catch(e){}
+  try{if(window.KT)KT.roll("khong-wong",level>=3)}catch(e){}
   $("#panel").innerHTML=`
     <div class="kru${level>=6?" happy":""}"><img src="${gKru.querySelector("img").src}" alt="ครู"></div>
     <div class="bubble">${isNew?"ทำสถิติใหม่ด้วย! ":""}${SAY.end[rank]}</div>

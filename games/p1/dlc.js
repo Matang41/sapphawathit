@@ -98,7 +98,7 @@ async function songFight(s,p){
   ENEMY.dlcSong=e;
   await talk([['library','ชู่ว… หนังสือเพลง “'+s.title+'” ของข้าหน้าหลุดหมด! ข้าจำได้แค่ทำนอง'],['library','ข้าจะตีให้ฟังทีละวรรค เจ้าตีตามให้ครบ แล้วข้าจะคืนเพลงให้ชมรม'],[null,'ท่อนที่ '+(p+1)+'/'+parts(s)+' · '+nph+' วรรค · วรรคแรก ๆ มีไฟช่วยครบ วรรคหลังไฟน้อยลง']]);
   const r=await battle('dlcSong');
-  if(r==='win'){const acc=tot?ok/tot:0,st=acc>=.9?3:acc>=.7?2:1,key=s.id+':'+p,first=!X.sb[key];X.sb[key]=Math.max(X.sb[key]||0,st);X.cnt.songs=(X.cnt.songs||0)+(first?1:0);xsave();
+  if(r==='win'){const acc=tot?ok/tot:0,st=acc>=.9?3:acc>=.7?2:1;try{if(window.KT)KT.roll('pisat',st>=3)}catch(e){}const key=s.id+':'+p,first=!X.sb[key];X.sb[key]=Math.max(X.sb[key]||0,st);X.cnt.songs=(X.cnt.songs||0)+(first?1:0);xsave();
     sticker('song1');if(st>=3)sticker('song3s');if(X.cnt.songs>=5)sticker('song5');qprog('song');
     await say(null,'คืนเพลง “'+s.title+'” ท่อนที่ '+(p+1)+' ได้แล้ว! '+'★'.repeat(st)+'☆'.repeat(3-st)+' (ตีถูกตั้งแต่ครั้งแรก '+Math.round(acc*100)+'%)');await gainXP(10+st*5)}}
 
@@ -177,7 +177,9 @@ window.nearest=function(){const b=_near();if(!S||!S.intro)return b;const fx=S.x,
 const _doAct=doAct;
 window.doAct=async function(n){if(n&&n.act==='dlcBoard')return boardScreen();if(n&&n.act==='dlcStand')return standScreen();if(n&&n.act==='dlcDaily')return dailyFight();return _doAct(n)};
 const _battle=battle;let depth=0;
-window.battle=function(k){depth++;return _battle(k).then(r=>{depth--;if(!depth&&r==='win'&&(k==='note'||k==='puff')){X.cnt.roam=(X.cnt.roam||0)+1;xsave();if(X.cnt.roam>=10)sticker('roam10');qprog('roam')}return r})};
+window.battle=function(k){depth++;return _battle(k).then(r=>{depth--;if(!depth&&r==='win'&&(k==='note'||k==='puff')){X.cnt.roam=(X.cnt.roam||0)+1;xsave();if(X.cnt.roam>=10)sticker('roam10');qprog('roam')}
+  /* ข้าวแต๋นฟรีจากครูตังค์: ลุ้นเมื่อชนะปีศาจตัวสำคัญ (ไม่นับโน้ตหลง/ควันน้อย) */
+  if(!depth&&r==='win'&&k!=='note'&&k!=='puff'&&k!=='dlcSong'){try{if(window.KT)KT.roll('pisat',true)}catch(e){}}return r})};
 const _upd=updateWorld;
 window.updateWorld=function(dt){_upd(dt);if(!S||busy||mode!=='world')return;
   if(findActive()){const p=findSpot();if(Math.hypot(S.x-p.x,S.y-p.y)<14){const q=qState();q.got=1;xsave();try{sfx.get()}catch(e){}banner('เจอ '+q.lost[1]+' '+q.lost[0]+' แล้ว! เอาไปคืนที่กระดานเควสในห้อง 512',3200)}}

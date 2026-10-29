@@ -11,7 +11,7 @@
 (function () {
   'use strict';
   const M = window.MC, A = window.APP, C = M.C;
-  const { $, esc, modal } = M; const { ic, chip } = A;
+  const { $, esc, modal, toast } = M; const { ic, chip } = A;
   Object.assign(A.ICON, { game: '<rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 11v4M6 13h4M16 12.5h.01M18 14.5h.01"/>' });
   A.GAMES = A.GAMES || [];
   A.NAVS.push({ id: 'games', label: 'เกม', icon: 'game', order: 37 });
@@ -41,8 +41,27 @@
   }
   if (!document.getElementById('gm-bd-css')) { const st = document.createElement('style'); st.id = 'gm-bd-css'; st.textContent = '.gm-badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.gm-bd{text-align:center;font-size:12px;opacity:.55;filter:grayscale(1)}.gm-bd.on{opacity:1;filter:none}.gm-bd img{width:64px;height:64px;border-radius:50%;image-rendering:pixelated;border:3px solid #c9a227;box-shadow:0 0 0 2px rgba(0,0,0,.15)}.gm-bd.on img{border-color:#f2c14e;box-shadow:0 0 0 3px rgba(242,193,78,.35)}.gm-bd b{display:block;font-size:13px;margin-top:4px}.gm-bd span{display:block;color:var(--muted,#888);line-height:1.35}'; document.head.appendChild(st); }
 
+  /* ---------- รุ่น 3.11: คูปอง “ข้าวแต๋นฟรีจากครูตังค์” (สุ่มได้ในเกม · ครูตัดคูปองที่นี่ · บันทึกการแลกที่ ktused/{รหัส}) ---------- */
+  function ktLoad() { return new Promise(r => { if (window.KT) return r(window.KT); const sc = document.createElement('script'); sc.src = 'games/khaotaen.js'; sc.onload = () => r(window.KT); sc.onerror = () => r(null); document.head.appendChild(sc); }); }
+  function ktHTML() {
+    const mine = (J('spw_khaotaen', { list: [] }).list || []), NM = (window.KT && window.KT.NAMES) || {};
+    let h = '<section class="card"><div class="lb">🍘 ข้าวแต๋นฟรีจากครูตังค์</div><div class="muted">เล่นเกมให้ดี ๆ มีโอกาสสุ่มได้คูปองข้าวแต๋น (วันละไม่เกิน 1 ใบต่อเครื่อง) เอารหัสไปแลกข้าวแต๋นจริงกับครูตังค์ที่ห้อง 512</div>' +
+      (mine.length ? '<div style="margin-top:8px">' + mine.slice(0, 12).map(x => '<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><b style="font-family:ui-monospace,monospace;letter-spacing:2px">' + esc(x.code) + '</b><span class="grow muted" style="text-align:right">' + esc(NM[x.game] || x.game) + ' · ' + esc(x.day) + '</span></div>').join('') + '</div>' : '<div class="muted" style="margin-top:6px">เครื่องนี้ยังไม่มีคูปอง</div>');
+    if (A.teacher()) h += '<div class="lb" style="margin-top:12px">สำหรับครู: ตรวจและตัดคูปอง</div><div class="row wrap"><input class="in grow" id="ktCode" placeholder="KT-XXXX-YY" style="text-transform:uppercase;min-width:140px"><input class="in grow" id="ktWho" placeholder="ชื่อผู้แลก (ไม่บังคับ)"><button class="btn sm" data-act="ktCheck">ตรวจ</button></div><div id="ktRes" class="muted" style="margin-top:6px"></div>';
+    return h + '</section>';
+  }
+  A.ACT.ktCheck = async () => {
+    const out = $('#ktRes'), raw = ($('#ktCode') || {}).value || '', who = (($('#ktWho') || {}).value || '').trim(); const KT = await ktLoad(); if (!KT || !out) return;
+    const code = KT.verify(raw); if (!code) { out.innerHTML = '<b style="color:#c03030">รหัสไม่ถูกต้อง</b> ตรวจตัวอักษรอีกครั้ง (รูปแบบ KT-XXXX-YY)'; return; }
+    out.textContent = 'กำลังตรวจ ' + code + ' …'; let used = null; try { used = await B.get('ktused/' + code); } catch (e) { }
+    if (used) { out.innerHTML = '<b style="color:#c03030">' + esc(code) + ' แลกไปแล้ว</b> เมื่อ ' + esc(new Date(used.at).toLocaleString('th-TH')) + (used.who ? ' · ' + esc(used.who) : '') + ' · ตัดโดย ' + esc(used.by || ''); return; }
+    out.innerHTML = '<b style="color:#2a8a3a">' + esc(code) + ' ใช้ได้</b> <button class="btn sm" data-act="ktUse" data-code="' + esc(code) + '" data-who="' + esc(who) + '">ยืนยันแลกข้าวแต๋นแล้ว</button>';
+  };
+  A.ACT.ktUse = d => { A.W(B.set('ktused/' + d.code, { at: Date.now(), by: A.myName(), who: d.who || '' })); A.log('khaotaen.use', '', d.code + (d.who ? ' · ' + d.who : '')); toast('ตัดคูปอง ' + d.code + ' แล้ว 🍘'); const o = $('#ktRes'); if (o) o.innerHTML = '<b>ตัดคูปอง ' + esc(d.code) + ' แล้ว</b>'; };
+  const B = window.B;
+
   A.V.games = function () {
-    const l = list(); let b = l.length ? badgesHTML() : '';
+    const l = list(); let b = l.length ? badgesHTML() + ktHTML() : '';
     if (!l.length) {
       b += '<section class="card" style="text-align:center;padding:32px 16px">' + ic('game', 56) + '<h3 style="margin:10px 0 4px">เกมกำลังจะมาเร็ว ๆ นี้</h3><div class="muted">ครูกำลังเตรียมเกมสนุก ๆ ให้สมาชิกชมรมเล่นและฝึกฝีมือ รอติดตามนะ</div></section>';
       if (A.teacher()) b += '<section class="card"><div class="lb">สำหรับครู: วิธีเพิ่มเกม</div><div class="muted">วางไฟล์เกม (HTML) ไว้ในโฟลเดอร์ <code>games/</code> แล้วเพิ่มรายการที่ <code>config.js</code> › <code>games</code> ดูตัวอย่างและวิธีเพิ่มเกมแบบโค้ด JS ได้ที่หัวไฟล์ <code>games.js</code></div></section>';

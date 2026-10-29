@@ -245,6 +245,7 @@ details textarea{margin-top:8px;min-height:70px;font-family:Mitr;letter-spacing:
 <div id="over" class="overlay hidden"><div class="panel" id="panel"></div></div>
 
 <script src="natab.js"></script>
+<script src="khaotaen.js"></script>
 <script>
 (function(){
 "use strict";
@@ -611,7 +612,7 @@ function finish(){
   $("#over").classList.remove("hidden");
   $("#panel").querySelectorAll("[data-r]").forEach(b=>b.addEventListener("click",()=>{$("#over").classList.add("hidden");b.dataset.r==="menu"?(show("#menu"),renderPicker()):startMode(b.dataset.r)}));
 }
-function post(d){try{if(window.parent!==window)window.parent.postMessage(Object.assign({source:"sapphawathit-game",game:"klong-khaek",pattern:curPat().id,speed:sel.spd},d),"*")}catch(e){}}
+function post(d){try{if(window.KT&&d&&d.acc!=null)KT.roll("klong-khaek",d.acc>=70)}catch(e){}try{if(window.parent!==window)window.parent.postMessage(Object.assign({source:"sapphawathit-game",game:"klong-khaek",pattern:curPat().id,speed:sel.spd},d),"*")}catch(e){}}
 
 /* ===================== สองเครื่อง (ใช้ Firebase ของแอป) ===================== */
 const NET={fb:null,db:null,off:0,ref:null,code:null,role:null,room:null,myFinal:null,startedAt:0,unsub:null};

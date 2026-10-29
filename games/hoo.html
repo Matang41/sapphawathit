@@ -103,6 +103,7 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:30px;color:var(--gold);te
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
 <script src="thaiinst.js"></script>
+<script src="khaotaen.js"></script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -184,7 +185,7 @@ function answer(b){if(G.done)return;G.done=true;const q=G.q,v=b.dataset.v,ok=Str
   if(ok)TI.perc('ching',1,AC.currentTime+.02,.6);else if(q.after)q.after(AC.currentTime+.3);
   G.i++;$('#next').textContent=G.i>=N?'ดูคะแนน ›':'ข้อต่อไป ›';$('#next').hidden=false}
 $('#next').onclick=nextQ;
-function finish(){const s=G.sc,k=G.m+G.lv,old=ST.best[k];if(old==null||s>old)ST.best[k]=s;save();show('end');
+function finish(){const s=G.sc,k=G.m+G.lv,old=ST.best[k];try{if(window.KT)KT.roll('hoo',s>=6)}catch(e){}if(old==null||s>old)ST.best[k]=s;save();show('end');
   $('#eMode').textContent=MODES[G.m].n+' · ระดับ'+LV[G.lv].n;$('#eSc').textContent=s+' / '+N;$('#eSt').textContent='★'.repeat(s>=9?3:s>=6?2:s>=3?1:0)+'☆'.repeat(3-(s>=9?3:s>=6?2:s>=3?1:0));
   $('#eTx').innerHTML=(s>=9?'สุดยอด! ลองระดับที่ยากขึ้นดูไหม':s>=6?'ดีมาก ฟังอีกสักรอบจะแม่นขึ้น':'ไม่เป็นไร ฟังบ่อย ๆ หูจะชินเอง')+(old!=null&&s>old?'<br>ทำลายสถิติเดิม ('+old+')':'')}
 $('#again').onclick=()=>start(G.m);$('#home2').onclick=()=>{homeUI();show('home')};$('#quit').onclick=()=>{homeUI();show('home')};

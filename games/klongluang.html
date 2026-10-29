@@ -91,6 +91,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:5px 4px;b
 
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
+<script src="khaotaen.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -219,6 +220,7 @@ function finish(){
   G.run=false;const tot=G.notes.length,acc=tot?Math.round((G.perf+G.good*.6)/tot*100):0,sc=Math.round(G.score),i=G.i;
   const grade=acc>=95?'S':acc>=85?'A':acc>=70?'B':acc>=60?'C':'D',title={S:'ยอดมือกลองหลวง!',A:'มือดีประจำขบวน',B:'ใช้ได้เลย',C:'ผ่านแล้ว ซ้อมอีกนิด',D:'ยังไม่พร้อมกัน ลองใหม่'}[grade];
   const o=ld();o.lb=o.lb||{};const L=o.lb[i]||[];const me={n:$('#nm').value.trim()||'ผู้เล่น',s:sc,a:acc,at:Date.now()};L.push(me);L.sort((a,b)=>b.s-a.s);o.lb[i]=L.slice(0,10);
+  try{if(window.KT)KT.roll('klongluang',acc>=70)}catch(e){}
   if(acc>=60){o.pass=o.pass||{};o.pass[i]=1}o.plays=(o.plays||0)+1;o.best=o.best||{};o.best[i]=Math.max(o.best[i]||0,sc);sv(o);
   const rank=o.lb[i].indexOf(me);
   $('#eLv').textContent='ด่าน '+(i+1)+' · '+G.lv.n;$('#eG').textContent=grade;$('#eT').textContent=title;$('#eS').textContent=sc.toLocaleString()+' คะแนน';
