@@ -27,7 +27,7 @@
     { n: 'หูทอง', d: 'หูทองสรรพวาทิต ระดับหูทอง ได้ 8/10 ขึ้นไป', px: 'kaimuk', bg: '#8a2a2a', ok: () => Object.entries(J('sapphawathit_hoo').best || {}).some(([k, v]) => /2$/.test(k) && v >= 8) },
     { n: 'นักแห่ครบวง', d: 'ผ่านด่าน “ครบวง” ในเกมแห่กลองหลวง', px: 'jao', bg: '#2a8a5a', ok: () => !!(J('sapphawathit_klongluang').pass || {})[2] },
     { n: 'ยอดมือกลองหลวง', d: 'ผ่านด่าน “แห่ยาวเร่งจังหวะ”', px: 'pob', bg: '#6a47a8', ok: () => !!(J('sapphawathit_klongluang').pass || {})[4] },
-    { n: 'เจ็ดเสียงครบวง', d: 'จบตำนานสรรพวาทิต ภาค เจ็ดเสียงที่หายไปในแม่สอด', px: 'mateo', bg: '#1e2a57', ok: () => !!J('spw_pisat2').fin },
+    { n: 'เจ็ดเสียงครบวง', d: 'จบตำนานสรรพวาทิต ภาค เจ็ดเสียงที่หายไปในแม่สอด', px: 'mateo', bg: '#1e2a57', ok: () => { const s = J('spw_pisat2'); return !!(s.fin || s.finOld); } },
     { n: 'นักถอดรหัสเสียง', d: 'บันทึกผลถอดรหัสเสียงกลองหลวงอย่างน้อย 1 วง', px: 'waen', bg: '#3a3a4a', ok: () => J('sapphawathit_klongscan', []).length > 0 }
   ];
   const medalCache = {};

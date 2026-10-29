@@ -10,7 +10,9 @@ const PLACE={1:'ห้อง 512',2:'อุโมงค์ไผ่ทิวไ�
 /* ---------- หน้าแรก ---------- */
 function titleScreen(){show('#title');MUSIC=null;
   const has=SAVE.spec&&SAVE.reason;$('#tBtns').innerHTML=has?'<button class="btn" id="tGo">เล่นต่อเป็น '+esc(SAVE.name||'สมาชิกใหม่')+'</button><button class="btn ghost" id="tNew">สร้างตัวละครใหม่</button>':'<button class="btn" id="tNew">เริ่มเป็นสมาชิกใหม่</button>';
-  if(has)$('#tGo').onclick=()=>{audio();mapScreen()};$('#tNew').onclick=()=>buildScreen();
+  if(has)$('#tGo').onclick=()=>{audio();mapScreen()};
+  $('#tNew').onclick=async()=>{if(has&&Object.keys(SAVE.done).length){const i=await choose('เริ่มเกมใหม่ตั้งแต่ฉากที่ 1? (โน้ตทอง การปรับเครื่อง และบันทึกความรู้ยังอยู่)',['เริ่มใหม่','ยกเลิก']);if(i!==0)return;resetStory(SAVE);store()}buildScreen()};
+  if(SAVE.migrated){delete SAVE.migrated;store();$('#tBtns').insertAdjacentHTML('afterend','<p class="muted" style="color:#ffd86a">ภาค 2 มีเนื้อเรื่องใหม่ทั้งหมด ความคืบหน้าเดิมจึงเริ่มฉากที่ 1 ใหม่ ตัวละคร โน้ตทอง และการปรับเครื่องยังอยู่ครบ</p>')}
   const tc=$('#tcv').getContext('2d');tc.imageSmoothingEnabled=false;tc.clearRect(0,0,240,48);['maha','pob','luwa','che','jao','tang','foo','waen','kaimuk','ice','mateo'].forEach((k,i)=>tc.drawImage(setOf(k).idle[0],i*20+4,0));tc.drawImage(MINI[0],224,12)}
 /* ---------- สร้างตัวละคร ---------- */
 let B=null,bset=null;
@@ -42,7 +44,7 @@ let SEL=1;
 /* แผนที่เปิด: ผ่านฉาก 1 แล้วไปฉาก 2–6 ลำดับไหนก็ได้ · ครบ 2–6 แล้วฉาก 7 จึงเปิด */
 const isOpen=n=>n===1||(SAVE.done[1]&&n<=6)||(n===7&&[2,3,4,5,6].every(k=>SAVE.done[k]));
 const nextOpen=()=>{for(let n=1;n<=7;n++)if(isOpen(n)&&!SAVE.done[n])return n;return 7};
-function mapScreen(){show('#map');MUSIC=null;if(!SEL||!isOpen(SEL))SEL=nextOpen();drawMap();mapPanel()}
+function mapScreen(){show('#map');MUSIC=null;if(!SEL||!isOpen(SEL)||SAVE.done[SEL])SEL=nextOpen();drawMap();mapPanel()}
 function drawMap(){const c=$('#mcv'),x=c.getContext('2d'),w=c.width,h=c.height;drawMapArt(x,w,h);
   for(let n=1;n<=7;n++){const [px,py]=PINS[n],X=px*w,Y=py*h,open=isOpen(n),done=SAVE.done[n];
     x.fillStyle=done?'#3a9a5a':open?'#c03040':'#8a8070';x.beginPath();x.arc(X,Y,n===SEL?14:11,0,7);x.fill();x.strokeStyle=n===SEL?'#ffd86a':'#fff6e0';x.lineWidth=n===SEL?3:2;x.stroke();

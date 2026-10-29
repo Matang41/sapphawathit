@@ -49,7 +49,11 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const KEY='spw_pisat2',LATK='sapphawathit_audio_lat';
 let SAVE=loadSave();
 function loadSave(){let s={};try{s=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
-  return Object.assign({prog:1,done:{},pool:[],team:[],stars:{},mat:{},up:{},notes:[],lies:[],unity:20,best:{},mute:0,fin:0},s)}
+  s=Object.assign({prog:1,done:{},pool:[],team:[],stars:{},mat:{},up:{},notes:[],lies:[],unity:20,best:{},mute:0,fin:0},s);
+  /* เนื้อเรื่องรุ่น 3.9 เปลี่ยนทั้งเรื่อง: ความคืบหน้าจากรุ่นเก่าเริ่มฉาก 1 ใหม่ แต่เก็บตัวละคร โน้ตทอง การปรับเครื่อง และบันทึกความรู้ไว้ */
+  if(s.sv!==2){if(Object.keys(s.done||{}).length){resetStory(s);s.migrated=1}s.sv=2}
+  return s}
+function resetStory(s){if(s.fin)s.finOld=1;Object.assign(s,{prog:1,done:{},pool:[],team:[],qdone:{},qlog:{},fin:0,best:{},rate:{},lies:[],stars:{},starLog:{},unity:20})}
 const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(SAVE))}catch(e){}};
 const userLat=()=>{try{return +(localStorage.getItem(LATK)||0)}catch(e){return 0}};
 const appSpec=()=>{try{const s=JSON.parse(localStorage.getItem('spw_px_spec'));return s&&s.skin?s:null}catch(e){return null}};
