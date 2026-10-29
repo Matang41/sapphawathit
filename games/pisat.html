@@ -1032,9 +1032,11 @@ async function enemyTurn(){
   if(BT.confused){BT.confused=0;bmsg(TM()?'ปีศาจงง เสียตาไปหนึ่งตา!':'ปีศาจงงกับความป่วนของพบธรรม เสียตาไปหนึ่งตา!');await sleep(1500);return null}
   if(inParty('ing')&&Math.random()<.2){bmsg('อิ้งยิ้มใส… ปีศาจใจอ่อน ไม่กล้าโจมตีตานี้');pop('♡',W-70,H*.25,'#ffb0d8');await sleep(1500);return null}
   if(BT.e.call)return await callTurn();
-  const e=BT.e,ez=!!S.easy,foc=!!BT.focus,len=Math.max(2,ri(e.phr[0],e.phr[1])-(inParty('captain')?1:0)),seq=[];BT.focus=0;
+  let e=BT.e,ez=!!S.easy,foc=!!BT.focus,len=Math.max(2,ri(e.phr[0],e.phr[1])-(inParty('captain')?1:0)),seq=[];BT.focus=0;
   for(let i=0;i<len;i++){let g;do{g=ri(0,7)}while(seq.length&&g===seq[seq.length-1]&&Math.random()<.7);seq.push(g)}
   if(e.seqFn)e.seqFn(seq,len);/* ส่วนเสริม p1/dlc.js: ทำนองจากเพลงในคลังโน้ต */
+  else if(window.SB&&!e.noReal){try{const ph=SB.randomPhrase(len);if(ph){seq.length=0;ph.forEach(g=>seq.push(g))}}catch(x){}}/* ปีศาจทั่วไป: ตีวรรคสั้น ๆ จากเพลงไทยจริง (songbook.js) */
+  len=seq.length||len;
   const inst=leadInst();let show=(ez||foc)?len:e.show;if(inParty('maha'))show=Math.min(len,show+2);const gap=e.gap*(ez?1.15:1),atk=Math.max(1,Math.round(e.atk*(ez?.5:1)));
   BT.replays=(ez||foc)?99:2;
   bmsg(foc?'🌿 ยาดมเข้าเต็มจมูก! หัวโล่ง ไฟช่วยครบทุกลูก':show>=len?e.n+' ตีทำนองเพี้ยน… จำให้ได้!':show?'ฟังให้ดี! ไฟจะช่วยแค่ '+show+' ลูกแรก':'ฟังด้วยหูอย่างเดียว! ไม่มีไฟช่วย');
@@ -2281,6 +2283,7 @@ requestAnimationFrame(frame);
 window.__PS={MON2,STAGE2,MON3,STAGE3,stage3,hazeFinal,intro3,goVillage,get VROAM(){return VROAM},finalShow,SPR,drawChar,teamSelect,stageEncounter,intro2,get S(){return S},set S(v){S=v},battle,ENEMY,get BT(){return BT},runAct,startGame,tapLane,dlgNext,openMap,goWorld};
 </script>
 <script src="khaotaen.js"></script>
+<script src="songbook.js"></script>
 <script src="p1/dlc.js"></script>
 <script src="p1/free.js"></script>
 </body>

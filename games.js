@@ -58,10 +58,27 @@
     out.innerHTML = '<b style="color:#2a8a3a">' + esc(code) + ' ใช้ได้</b> <button class="btn sm" data-act="ktUse" data-code="' + esc(code) + '" data-who="' + esc(who) + '">ยืนยันแลกข้าวแต๋นแล้ว</button>';
   };
   A.ACT.ktUse = d => { A.W(B.set('ktused/' + d.code, { at: Date.now(), by: A.myName(), who: d.who || '' })); A.log('khaotaen.use', '', d.code + (d.who ? ' · ' + d.who : '')); toast('ตัดคูปอง ' + d.code + ' แล้ว 🍘'); const o = $('#ktRes'); if (o) o.innerHTML = '<b>ตัดคูปอง ' + esc(d.code) + ' แล้ว</b>'; };
+  /* ---------- รุ่น 3.13: นำเข้าเพลงไทยเดิม (ทำนองจริงสำหรับตีกับผีและบอส) เข้าคลังความรู้ ---------- */
+  function sbLoad() { return new Promise(r => { if (window.SB) return r(window.SB); const sc = document.createElement('script'); sc.src = 'games/songbook.js'; sc.onload = () => r(window.SB); sc.onerror = () => r(null); document.head.appendChild(sc); }); }
+  function sbHTML() {
+    return '<section class="card"><div class="lb">🎼 เพลงไทยเดิมสำหรับเกม (ครู)</div><div class="muted">ผีลืมเพลง ปีศาจ และบอสในเกมตำนานสรรพวาทิตตีทำนองเพลงไทยจริง ๆ กดนำเข้าเพลงไทยเดิม 4 เพลง (ถอดจากโน้ตบนเว็บ เป็นฉบับร่าง ครูควรตรวจ) เข้าคลังความรู้ แล้วเปิดตรวจ/แก้ใน “บันทึกโน้ตเพลงไทย” ได้ เพลงที่ครูบันทึกเองจะขึ้นที่แท่นโน้ตในเกมอัตโนมัติ</div>' +
+      '<div class="row wrap" style="margin-top:8px"><button class="btn sm" data-act="sbImport">นำเข้าเพลงไทยเดิม 4 เพลงเข้าคลัง</button><span id="sbRes" class="muted"></span></div></section>';
+  }
+  A.ACT.sbImport = async () => {
+    const SB = await sbLoad(), out = $('#sbRes'); if (!SB) { if (out) out.textContent = 'โหลดคลังเพลงไม่สำเร็จ'; return; }
+    let n = 0; const lib = A.D.library || {};
+    for (const s of SB.builtin) {
+      const id = 'song_sb_' + s.key; if (lib[id]) continue;
+      const rec = { title: s.title, cat: 'โน้ตและเพลง', desc: 'โน้ตเพลง · อัตราสองชั้น · ทำนองเพลงไทยเดิม (ฉบับร่างถอดจากเว็บ ครูควรตรวจ) · นำเข้าโดย ' + A.myName(), kind: 'song', song: SB.toLibSong(s, { name: 'ทำนองเพลงไทยเดิม', sid: '' }), at: Date.now(), edited: Date.now(), by: 'ทำนองเพลงไทยเดิม', bySid: '', approvedBy: A.myName() };
+      await A.W(window.B.set('library/' + id, rec)); n++;
+    }
+    try { A.log('songbook.import', '', n + ' เพลง'); } catch (e) { }
+    toast(n ? 'นำเข้า ' + n + ' เพลงแล้ว 🎼' : 'มีครบแล้ว ไม่ต้องนำเข้าซ้ำ'); if (out) out.textContent = n ? 'นำเข้า ' + n + ' เพลง' : 'มีครบแล้ว';
+  };
   const B = window.B;
 
   A.V.games = function () {
-    const l = list(); let b = l.length ? badgesHTML() + ktHTML() : '';
+    const l = list(); let b = l.length ? badgesHTML() + ktHTML() + (A.teacher() ? sbHTML() : '') : '';
     if (!l.length) {
       b += '<section class="card" style="text-align:center;padding:32px 16px">' + ic('game', 56) + '<h3 style="margin:10px 0 4px">เกมกำลังจะมาเร็ว ๆ นี้</h3><div class="muted">ครูกำลังเตรียมเกมสนุก ๆ ให้สมาชิกชมรมเล่นและฝึกฝีมือ รอติดตามนะ</div></section>';
       if (A.teacher()) b += '<section class="card"><div class="lb">สำหรับครู: วิธีเพิ่มเกม</div><div class="muted">วางไฟล์เกม (HTML) ไว้ในโฟลเดอร์ <code>games/</code> แล้วเพิ่มรายการที่ <code>config.js</code> › <code>games</code> ดูตัวอย่างและวิธีเพิ่มเกมแบบโค้ด JS ได้ที่หัวไฟล์ <code>games.js</code></div></section>';

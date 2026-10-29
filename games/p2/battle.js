@@ -66,6 +66,8 @@ async function echoTurn(){
   if(inTeam('pob')&&Math.random()<.15){bMsg('พบธรรมแกล้งทำหน้าตลกใส่ เงาเพี้ยนหัวเราะจนงง!');bHit(6,'งง!');await sleep(1600);return}
   const [a,b]=BT.phr||[3,5];let len=Math.min(b,a+Math.floor(BT.turn/1.5));if(inTeam('captain'))len=Math.max(2,len-1);
   const seq=[];for(let i=0;i<len;i++){let g;do{g=Math.floor(Math.random()*np)}while(seq.length&&g===seq[seq.length-1]&&Math.random()<.75);seq.push(g)}
+  /* ทำนองจริง: ตีวรรคสั้น ๆ จากเพลงไทย (songbook.js) แปลงลงจำนวนปุ่มของเครื่องนี้ */
+  try{if(window.SB&&np>=4){const ph=SB.randomPhrase(len);if(ph&&ph.length===len){const m=ph.map(g=>Math.min(np-1,Math.round(g*(np-1)/7)));if(new Set(m).size>=2){seq.length=0;m.forEach(g=>seq.push(g))}}}}catch(e){}
   let show=BT.easy?len:(BT.show!=null?BT.show:2)+Math.floor(BT.turn/3)*0;if(inTeam('maha'))show+=2;if(BT.inst==='khlui'&&inTeam('jao'))show+=2;show=Math.min(len,show);
   const gap=(BT.gap||.48)*(BT.easy?1.2:1);let replays=(BT.easy?9:2)+(inTeam('foo')?1:0)+(inTeam('luwa')?1:0);
   const rp=$('#bRep');const upd=()=>{rp.textContent='🔁 ฟังอีกครั้ง'+(replays>8?'':' ('+replays+')');rp.disabled=replays<=0||BT.singing};

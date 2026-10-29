@@ -77,30 +77,50 @@ function qprog(id,n){const q=qState(),it=q.list.find(x=>x.id===id);if(!it||it.do
 const findSpot=()=>{const q=qState(),P=curPicks(),p=P[q.spot%P.length];return {x:p.x*T+8,y:p.y*T+12}};
 const findActive=()=>{const q=qState();return worldMap()&&q.list.some(x=>x.id==='find'&&!x.done)&&!q.got};
 
-/* ---------- เพลงจากคลังโน้ต ---------- */
-const PER=32,PL=4;
+/* ---------- เพลงจากคลังโน้ต (แบ่งวรรคตามห้องเพลง) ---------- */
+const BPP=8; /* ท่อนย่อยละ 8 ห้อง = 1 แถวของแผ่นโน้ต */
+const built={};
+function mk(raw){const k=raw.id+'|'+(raw.lines||[]).length;if(!built[k])built[k]=SB.build(raw);return built[k]}
 function libSongs(){
   try{const Pw=window.parent;const L=(Pw&&Pw!==window&&Pw.APP&&Pw.APP.D&&Pw.APP.D.library)||null;
-    if(L){const out=[];Object.keys(L).forEach(k=>{const x=L[k];if(!x||x.kind!=='song'||!x.song)return;const sg=x.song,ls=Array.isArray(sg.lines)?sg.lines:Object.values(sg.lines||{});const ns=[];
-        ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++)String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBarNotes(b).forEach(g=>{if(g!=null)ns.push(g)}))});
-        if(ns.length>=8)out.push({id:k,title:sg.title||x.title||'เพลง',by:x.by||'',n:ns.slice(0,480)})});
-      if(out.length){out.sort((a,b)=>a.title.localeCompare(b.title,'th'));X.songs=out.slice(0,60);xsave()}}}catch(e){}
-  return X.songs||[]}
-const parts=s=>Math.max(1,Math.ceil(s.n.length/PER));
-const fold=g=>{while(g>10)g-=7;while(g<3)g+=7;return g-3};
-async function songFight(s,p){
-  const ns=s.n.slice(p*PER,(p+1)*PER).map(fold);if(ns.length<PL)return;
-  const nph=Math.ceil(ns.length/PL);let ptr=0,ph=0,ok=0,tot=0;
-  const e=Object.assign({},ENEMY.library,{n:'ผีลืมเพลง · '+s.title,hp:100,atk:5,phr:[PL,PL],gap:.52,show:PL,slot:.32,echoOnly:1});
+    if(L){const out=[];Object.keys(L).forEach(k=>{const x=L[k];if(!x||x.kind!=='song'||!x.song)return;const sg=x.song,ls=Array.isArray(sg.lines)?sg.lines:Object.values(sg.lines||{});
+        const lines=ls.map(l=>({bars:String(l.bars||''),barsL:String(l.barsL||''),rep:+l.rep===2?2:0}));
+        const raw={id:k,title:sg.title||x.title||'เพลง',by:x.by||'',bpm:sg.bpm||160,lines};
+        if(SB.phrases(SB.build(raw)).length>=2)out.push(raw)});
+      if(out.length){out.sort((a,b)=>a.title.localeCompare(b.title,'th'));X.songs=out.slice(0,40);xsave()}}}catch(e){}
+  const lib=(X.songs||[]).filter(r=>r&&r.lines).map(mk);SB.setLib(lib);
+  const have=new Set(lib.map(s=>s.title.trim()));
+  return lib.concat(SB.builtin.filter(b=>!have.has(b.title.trim())))}
+const partList=s=>{const ph=SB.phrases(s),m={};ph.forEach(p=>{const q=Math.floor(p.b0/BPP);(m[q]=m[q]||[]).push(p)});return Object.keys(m).map(Number).sort((a,b)=>a-b).map(q=>({q,ph:m[q]}))};
+const parts=s=>partList(s).length;
+async function songFight(s,pi){
+  const pl=partList(s)[pi];if(!pl)return;const phr=pl.ph,nph=phr.length;let ph=0,ok=0,tot=0;
+  const e=Object.assign({},ENEMY.library,{n:'ผีลืมเพลง · '+s.title,hp:100,atk:5,phr:[4,4],gap:.52,show:4,slot:.32,echoOnly:1});
   ['item','item3','boss','final','haze','call','ghost'].forEach(k=>delete e[k]);
-  e.seqFn=(seq,len)=>{const q=[];for(let i=0;i<len;i++)q.push(ns[(ptr+i)%ns.length]);seq.length=0;q.forEach(g=>seq.push(g));ptr+=len;ph++;e.show=ph<=2?len:ph<=4?2:1;if(BT)bmsg('วรรคที่ '+ph+'/'+nph)};
-  e.onEcho=res=>{res.forEach(v=>{tot++;if(v===1)ok++});if(BT){BT.hp=Math.max(0,Math.round(BT.max*(1-Math.min(1,ptr/ns.length))));ebar();if(ptr>=ns.length)BT.songDone=1}};
+  e.seqFn=(seq,len)=>{const q=phr[Math.min(ph,nph-1)];seq.length=0;q.n.forEach(g=>seq.push(g));const b=q.b0+1,b2=q.b1+1;ph++;e.show=ph<=2?q.n.length:ph<=4?2:1;if(BT)bmsg('ห้องเพลงที่ '+(b===b2?b:b+'–'+b2)+' · วรรคที่ '+ph+'/'+nph)};
+  e.onEcho=res=>{res.forEach(v=>{tot++;if(v===1)ok++});if(BT){BT.hp=Math.max(0,Math.round(BT.max*(1-Math.min(1,ph/nph))));ebar();if(ph>=nph)BT.songDone=1}};
   ENEMY.dlcSong=e;
-  await talk([['library','ชู่ว… หนังสือเพลง “'+s.title+'” ของข้าหน้าหลุดหมด! ข้าจำได้แค่ทำนอง'],['library','ข้าจะตีให้ฟังทีละวรรค เจ้าตีตามให้ครบ แล้วข้าจะคืนเพลงให้ชมรม'],[null,'ท่อนที่ '+(p+1)+'/'+parts(s)+' · '+nph+' วรรค · วรรคแรก ๆ มีไฟช่วยครบ วรรคหลังไฟน้อยลง']]);
+  await talk([['library','ชู่ว… หนังสือเพลง “'+s.title+'” ของข้าหน้าหลุดหมด! ข้าจำได้แค่ทำนอง'],['library','ข้าจะตีให้ฟังทีละห้องเพลง เจ้าตีตามให้ครบ แล้วข้าจะคืนเพลงให้ชมรม'],[null,'ท่อนที่ '+(pi+1)+'/'+parts(s)+' · '+nph+' วรรค (วรรคละ 1 ห้องเพลง) · วรรคแรก ๆ มีไฟช่วยครบ วรรคหลังไฟน้อยลง · จบแล้วจะได้ฟังเพลงเต็มหนึ่งรอบ']]);
   const r=await battle('dlcSong');
-  if(r==='win'){const acc=tot?ok/tot:0,st=acc>=.9?3:acc>=.7?2:1;try{if(window.KT)KT.roll('pisat',st>=3)}catch(e){}const key=s.id+':'+p,first=!X.sb[key];X.sb[key]=Math.max(X.sb[key]||0,st);X.cnt.songs=(X.cnt.songs||0)+(first?1:0);xsave();
+  if(r==='win'){const acc=tot?ok/tot:0,st=acc>=.9?3:acc>=.7?2:1;try{if(window.KT)KT.roll('pisat',st>=3)}catch(e){}const key=s.id+':'+pi,first=!X.sb[key];X.sb[key]=Math.max(X.sb[key]||0,st);X.cnt.songs=(X.cnt.songs||0)+(first?1:0);xsave();
     sticker('song1');if(st>=3)sticker('song3s');if(X.cnt.songs>=5)sticker('song5');qprog('song');
-    await say(null,'คืนเพลง “'+s.title+'” ท่อนที่ '+(p+1)+' ได้แล้ว! '+'★'.repeat(st)+'☆'.repeat(3-st)+' (ตีถูกตั้งแต่ครั้งแรก '+Math.round(acc*100)+'%)');await gainXP(10+st*5)}}
+    await say(null,'คืนเพลง “'+s.title+'” ท่อนที่ '+(pi+1)+' ได้แล้ว! '+'★'.repeat(st)+'☆'.repeat(3-st)+' (ตีถูกตั้งแต่ครั้งแรก '+Math.round(acc*100)+'%)');await gainXP(10+st*5);
+    await say('library','เพลงกลับมาครบแล้ว! ข้าจะตีทวนให้ฟังทั้งเพลงหนึ่งรอบ นั่งฟังให้ชื่นใจนะ');await replaySong(s)}}
+
+/* ฟังเพลงเต็มหนึ่งรอบ (ตีทั้งสองมือตามโน้ตในคลัง) */
+async function replaySong(s){
+  if(!AC||!s||!s.bars.length)return;
+  const slot=clamp(60/(+s.bpm||160),.26,.42),nb=s.bars.length,bl=slot*4;let stop=0;
+  openOv('<h2>🎶 ฟังเพลง “'+esc(s.title)+'” ทั้งเพลง</h2><p id="rpB" style="font-size:15px;margin:6px 0">เตรียมตัว…</p><div class="rbar"><i id="rpF"></i></div><div id="rpN" class="rpn">&nbsp;</div><p style="font-size:12px;opacity:.7">'+nb+' ห้องเพลง · ฟังให้ครบแล้วเพลงจะถูกจดจำไว้</p><button class="btn s" data-a="skip">ข้ามไป ▶</button>');
+  DLC.onBtn=a=>{if(a==='skip')stop=1};
+  const t0=AC.currentTime+.4;let sched=0;
+  const names=bar=>{const a=['–','–','–','–'];bar.r.forEach(e=>{const t=Math.round(e.t);if(!e.sub&&t>=0&&t<4)a[t]=TS.KNOTE[Math.max(...e.g)]||'?'});return a.join('  ')};
+  const tick=()=>{const now=AC.currentTime;
+    while(sched<nb&&t0+sched*bl<now+.8){const bar=s.bars[sched],bt=t0+sched*bl;bar.r.forEach(ev=>ev.g.forEach(g=>playInst('gong',g,bt+ev.t*slot,.9)));bar.l.forEach(ev=>ev.g.forEach(g=>playInst('gong',g,bt+ev.t*slot,.6)));sched++}
+    const cur=Math.max(0,Math.min(nb-1,Math.floor((now-t0)/bl)));const B=document.getElementById('rpB');if(B&&now>=t0){B.textContent='ห้องเพลงที่ '+(cur+1)+' / '+nb;document.getElementById('rpF').style.width=Math.round((now-t0)/(nb*bl)*100)+'%';document.getElementById('rpN').textContent=names(s.bars[cur])}};
+  const timer=setInterval(tick,70);
+  await new Promise(res=>{const chk=setInterval(()=>{if(stop||AC.currentTime>t0+nb*bl+.8||ov.classList.contains('hide')){clearInterval(chk);res()}},120)});
+  clearInterval(timer);closeOv();DLC.onBtn=null}
 
 /* ---------- หน้าต่างของส่วนเสริม ---------- */
 const css=document.createElement('style');css.textContent=`
@@ -112,6 +132,7 @@ const css=document.createElement('style');css.textContent=`
 #dlcOv .stk b{display:block;font-size:26px;line-height:1.2}#dlcOv .stk .no{opacity:.35;filter:grayscale(1)}
 #dlcOv .row2{display:flex;gap:8px;flex-wrap:wrap}#dlcOv .row2 .btn{flex:1;min-width:120px}
 #dlcOv .opt{display:grid;gap:6px;margin-top:8px}#dlcOv .opt .btn{margin:0;font-size:20px;letter-spacing:4px}
+#dlcOv .rbar{height:10px;border-radius:5px;background:#22163a;border:2px solid #4a3570;overflow:hidden;margin:8px 0}#dlcOv .rbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd34d,#ff8a4d)}#dlcOv .rpn{font-size:22px;letter-spacing:2px;text-align:center;margin:8px 0;min-height:30px;color:#ffd34d}
 #dlcOv .sl .btn{text-align:left;font-size:14px}#dlcOv .sl .btn small{float:right;opacity:.8}
 `;document.head.appendChild(css);
 const ov=document.createElement('div');ov.id='dlcOv';ov.className='ov hide';ov.innerHTML='<div class="card box"></div>';(document.querySelector('#stage')||document.body).appendChild(ov);
@@ -160,11 +181,12 @@ async function earQuiz(){
 async function standScreen(){
   const L=libSongs();
   const inApp=(()=>{try{return !!(window.parent!==window&&window.parent.APP)}catch(e){return false}})();
-  const list=L.length?'<div class="sl">'+L.map((s,i)=>{const np=parts(s);let row='';for(let p=0;p<np&&p<6;p++){const st=X.sb[s.id+':'+p]||0;row+='<button class="btn" data-a="s'+i+':'+p+'">'+esc(s.title)+(np>1?' · ท่อน '+(p+1):'')+'<small>'+(st?'★'.repeat(st)+'☆'.repeat(3-st):'ใหม่')+'</small></button>'}return row}).join('')+'</div>'
-    :'<p>ยังไม่พบเพลงในคลังโน้ต'+(inApp?'':' (เปิดเกมจากในแอปชมรมหนึ่งครั้ง เกมจะจำรายการเพลงไว้)')+'</p><p style="font-size:13px;opacity:.8">ครูบันทึกเพลงด้วย “บันทึกโน้ตเพลง” ในแอป แล้วเพิ่มเข้าคลังความรู้ เพลงจะขึ้นที่แท่นนี้อัตโนมัติ</p>';
-  openOv('<h2>🎼 แท่นโน้ตเพลงของชมรม</h2><p style="font-size:13px">เลือกเพลง ผีลืมเพลงจะตีให้ฟังทีละวรรค ตีตามให้ครบเพื่อคืนเพลงให้ชมรม</p>'+list+'<button class="btn s" data-a="close">ปิด</button>');
-  DLC.onBtn=a=>{if(a==='close')closeOv();else if(a[0]==='s')closeOv(a.slice(1))};
-  const r=await wait();if(!r)return;const [i,p]=r.split(':').map(Number);busy=true;try{await songFight(L[i],p)}finally{busy=false}}
+  const list='<div class="sl">'+L.map((s,i)=>{const np=partList(s);let row='<div style="margin:8px 0 2px;font-size:13px;opacity:.85">'+esc(s.title)+(s.src==='sb'?' <small>(ทำนองเพลงไทยเดิม)</small>':'')+' · '+s.bars.length+' ห้อง</div>';
+      np.slice(0,8).forEach((pl,p)=>{const st=X.sb[s.id+':'+p]||0;row+='<button class="btn" data-a="s'+i+':'+p+'">ท่อน '+(p+1)+' · ห้อง '+(pl.q*BPP+1)+'–'+Math.min(s.bars.length,pl.q*BPP+BPP)+'<small>'+(st?'★'.repeat(st)+'☆'.repeat(3-st):'ใหม่')+'</small></button>'});
+      return row+'<button class="btn" data-a="h'+i+'" style="font-size:13px;opacity:.9">🔊 ฟังเพลงเต็มก่อน</button>'}).join('')+'</div>';
+  openOv('<h2>🎼 แท่นโน้ตเพลงของชมรม</h2><p style="font-size:13px">เลือกเพลง ผีลืมเพลงจะตีให้ฟังทีละห้องเพลง ตีตามให้ครบเพื่อคืนเพลงให้ชมรม จบแล้วฟังเพลงเต็มหนึ่งรอบ'+(inApp?'':' (เปิดเกมจากในแอปชมรมหนึ่งครั้ง เกมจะจำเพลงในคลังไว้)')+'</p>'+list+'<button class="btn s" data-a="close">ปิด</button>');
+  DLC.onBtn=a=>{if(a==='close')closeOv();else if(a[0]==='s'||a[0]==='h')closeOv(a)};
+  const r=await wait();if(!r)return;busy=true;try{if(r[0]==='h')await replaySong(L[+r.slice(1)]);else{const [i,p]=r.slice(1).split(':').map(Number);await songFight(L[i],p)}}finally{busy=false}}
 
 /* ---------- ต่อเข้ากับระบบเดิม ---------- */
 const BOARD=()=>({x:2*T,y:2*T+14,lb:'กระดานเควสชมรม',act:'dlcBoard'});
