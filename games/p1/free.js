@@ -83,9 +83,10 @@ function newF(){
 function bindS(){S=F[F.cur];S.ch=F.cur==='vil'?3:2;fixSave(S);if(S.ch===3){['luwa','pob'].forEach(k=>{if(!S.party.includes(k))S.party.unshift(k)});S.unlocked=CAST_ORDER3.slice()}else{S.unlocked=CAST_ORDER.slice();S.party=S.party.filter(k=>k!=='luwa');if(!S.party.length)S.party=['maha','pob','foo']}S.lead=S.party[0];S.hpMax=hpMaxCalc()}
 function startFree(){
   if(!c3done()){alert('ปลดล็อกเมื่อเล่นบทที่ 3 จบ');return}
-  audio();$('#title').classList.add('hide');F=fload()||newF();ON=true;bindS();F.lastPh=PH();applyOutfit();
+  audio();$('#title').classList.add('hide');F=fload()||newF();ON=true;bindS();if(window.LIFE)LIFE.onStart();F.lastPh=PH();applyOutfit();
   mode='world';prerenderInterior();showHud(true);setPad(true);startMusic();hud();
-  setTimeout(async()=>{if(!F.intro){F.intro=1;fsave();busy=true;await talk([[null,'โหมดเดินเล่นอิสระ · หลังงานตานก๋วยสลาก ชมรมสรรพวาทิตกลับมาใช้ชีวิตปกติ'],['pob','ผู้จัดการขอประกาศ! ต่อจากนี้เราไปไหนก็ได้ ทั้งโรงเรียนและแม่โกนเกน นั่งรถสองแถวไปมา'],['maha','ตกเย็นอาจมีคนมาถามหาครูตังค์… ส่วนกลางคืน รุ่นพี่บอกว่าอาคาร 2 อาคาร 3 กับอาคาร 5 มีตำนานอยู่'],[null,'เคล็ดลับ: คนที่มีเครื่องหมาย “!” มีเควสให้ · ป้ายรถสองแถวอยู่หน้าเซเว่นริมถนนใหญ่ · นอนพักข้ามเวลาได้ที่มุมห้อง 512 · เปิดสมุดตำนานและอัลบั้มได้จากเมนูพัก']]);busy=false}banner(placeName()+' · วันที่ '+F.day+' · '+hhmm())},400)}
+  setTimeout(async()=>{if(!F.intro){F.intro=1;fsave();busy=true;await talk([[null,'โหมดเดินเล่นอิสระ · หลังงานตานก๋วยสลาก ชมรมสรรพวาทิตกลับมาใช้ชีวิตปกติ'],['pob','ผู้จัดการขอประกาศ! ต่อจากนี้เราไปไหนก็ได้ ทั้งโรงเรียนและแม่โกนเกน นั่งรถสองแถวไปมา'],['maha','ตกเย็นอาจมีคนมาถามหาครูตังค์… ส่วนกลางคืน รุ่นพี่บอกว่าอาคาร 2 อาคาร 3 กับอาคาร 5 มีตำนานอยู่'],[null,'เคล็ดลับ: คนที่มีเครื่องหมาย “!” มีเควสให้ · ป้ายรถสองแถวอยู่หน้าเซเว่นริมถนนใหญ่ · นอนพักข้ามเวลาได้ที่มุมห้อง 512 · เปิดสมุดตำนานและอัลบั้มได้จากเมนูพัก']]);busy=false}banner(placeName()+' · '+dayLbl()+' · '+hhmm())},400)}
+const dayLbl=()=>window.LIFE?LIFE.dateShort():'วันที่ '+F.day;
 const placeName=()=>F.cur==='vil'?'ชุมชนแม่โกนเกน':'โรงเรียนสรรพวิทยาคม';
 
 /* ---------------- บันทึก: เขียนลงเซฟโหมดอิสระแทนเซฟบท ---------------- */
@@ -105,7 +106,7 @@ function close(v){ov.classList.add('hide');const r=ovRes;ovRes=null;if(r)r(v)}
 async function choose(title,opts,note){const v=await openOv('<h2>'+esc(title)+'</h2>'+(note?'<p style="font-size:14px">'+note+'</p>':'')+'<div class="lst">'+opts.map((o,i)=>'<button class="btn" data-a="'+i+'"'+(o.off?' disabled':'')+'>'+esc(o.t||o)+(o.s?'<small>'+esc(o.s)+'</small>':'')+'</button>').join('')+'</div>');return +v}
 
 /* ---------------- ตัวช่วยแผนที่ ---------------- */
-function spotNear(tx,ty){for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=(tx+dx)*T+8,y=(ty+dy)*T+12;if(!blocked(x,y))return {x,y}}return {x:tx*T+8,y:ty*T+12}}
+function spotNear(tx,ty){if(window.LIFE&&LIFE.freeReach){const p=LIFE.freeReach(tx,ty);if(p)return {x:p.x,y:p.y}}for(let r=0;r<8;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=(tx+dx)*T+8,y=(ty+dy)*T+12;if(!blocked(x,y))return {x,y}}return {x:tx*T+8,y:ty*T+12}}
 const SP={};function spot(key,tx,ty){if(!SP[key])SP[key]=spotNear(tx,ty);return SP[key]}
 const near=(p,r)=>Math.hypot(S.x-p.x,S.y-p.y)<(r||20);
 async function walkFlash(){flash('#000',300);await sleep(250)}
@@ -187,7 +188,7 @@ function newRQ(){const sp=rqSpots(),r=Math.random,i=Math.floor(r()*sp.length),po
 const nmOf=k=>(WHO[k]&&WHO[k].n)||'เพื่อน';
 
 function freeTargets(){const L=[];if(!ON||!S)return L;const room=S.map==='room';
-  if(room&&SCH()){L.push({...BED(),lb:'นอนพัก · ข้ามเวลา',act:'frBed'});const ws=F.ev.wk.st,ss=F.ev.sp.st;L.push({...TANG(),lb:'คุยกับครูตังค์',act:'frTang'})}
+  if(room&&!S.rm&&SCH()){L.push({...BED(),lb:'นอนพัก · ข้ามเวลา',act:'frBed'});const ws=F.ev.wk.st,ss=F.ev.sp.st;L.push({...TANG(),lb:'คุยกับครูตังค์',act:'frTang'})}
   if(!onWorld())return L;
   if(SCH()){L.push({...BUS_SCH(),lb:'ป้ายรถสองแถว · ไปแม่โกนเกน',act:'frBusS'});L.push({...TREE(),lb:'ต้นไม้ใหญ่ข้างป้อมยาม',act:'frTree'});
     const ph=PH();Object.keys(GH).forEach(k=>{const p=spot(k,GH[k].tx,GH[k].ty);if(ph===2)L.push({...p,lb:F.ghosts[k]?'คุยกับ'+GH[k].n:'มีบางอย่างอยู่ตรงนั้น…',act:'frGhost',k})});
@@ -214,15 +215,15 @@ async function busTrip(to){
   F.cur=to;Object.assign(F[to],sh);bindS();S.hp=S.hpMax;
   if(to==='vil')goVillage(22*T+8,38*T+4,'u');else{goWorld(BUS_SCH().x,BUS_SCH().y+16,'d')}
   prerenderInterior();hud();startMusic();busy=false;banner(placeName()+' · '+hhmm()+' '+PHN[PH()]);fsave()}
-function skipTo(min){if(F.clock%1440>=min){F.day++}F.clock=min;F.lastPh=-1;if(S&&S.ch===2)S.phase=PH();fsave();flash('#000',400);try{sfx.heal()}catch(e){}S.hp=S.hpMax;hud();banner('วันที่ '+F.day+' · '+hhmm()+' '+PHN[PH()],2600)}
+function skipTo(min){if(F.clock%1440>=min){F.day++}F.clock=min;F.lastPh=-1;if(S&&S.ch===2)S.phase=PH();fsave();flash('#000',400);try{sfx.heal()}catch(e){}S.hp=S.hpMax;hud();banner(dayLbl()+' · '+hhmm()+' '+PHN[PH()],2600)}
 async function bed(){const v=await choose('นอนพักที่มุมห้อง 512',[{t:'☀️ ตื่นตอนเช้า (07:00)'},{t:'🌇 ตื่นตอนเย็น (16:30)'},{t:'🌙 ตื่นตอนค่ำ (19:30)'},{t:'ยกเลิก'}],'ฟื้นพลังเต็มและข้ามเวลา · เหตุการณ์บางอย่างเกิดแค่บางช่วงเวลา');if(v===0)skipTo(7*60);if(v===1)skipTo(16*60+30);if(v===2)skipTo(19*60+30)}
 
 async function tangTalk(){
-  if(await evTang())return;
-  const v=await choose('ครูตังค์',[{t:'💬 คุยเล่น'},{t:'🛒 ร้านสหกรณ์ชมรม',s:'ซื้อของด้วยเหรียญชมรม'},{t:'👕 ตู้เสื้อผ้าชมรม',s:'เปลี่ยนชุดทั้งวง'},{t:'📜 สมุดตำนาน'},{t:'🖼️ อัลบั้มภาพที่ระลึก'},{t:'✅ ความคืบหน้า 100%'},{t:'ปิด'}]);
+  if(await evTang())return;if(window.LIFE&&await LIFE.npcHook('tang'))return;
+  const v=await choose('ครูตังค์'+(window.LIFE?' '+LIFE.hstr('tang'):''),[{t:'💬 คุยเล่น'},{t:'🛒 ร้านสหกรณ์ชมรม',s:'ซื้อของด้วยเหรียญชมรม และของขวัญ'},{t:'👕 ตู้เสื้อผ้าชมรม',s:'เปลี่ยนชุดทั้งวง'},{t:'📜 สมุดตำนาน'},{t:'🖼️ อัลบั้มภาพที่ระลึก'},{t:'✅ ความคืบหน้า 100%'},{t:'🎁 ให้ของขวัญครูตังค์'},{t:'ปิด'}]);if(v===6&&window.LIFE){await LIFE.giftTo('tang');return}
   if(v===0)await talk([['tang',pick(['ตอนเย็นถ้ามีใครมาถามหาครู… บอกว่าครูซ้อมอยู่นะ','กลางคืนอย่าเดินแถวอาคาร 2 คนเดียวนะ รุ่นพี่เล่ากันมาเยอะ','ข้าวแต๋นที่ครูแจก… ครูไม่ได้ทอดเองหรอก แต่ใจเต็มร้อยจริง','ปรัชญาโรงเรียนเรา “ขนฺตี หิตสุขาวหา” ความอดทนนำมาซึ่งประโยชน์และความสุข ซ้อมทุกวันก็คือความอดทนนะ'])]]);
   if(v===1)await shop('สหกรณ์ชมรม · ห้อง 512');if(v===2)await wardrobe();if(v===3)await loreBook();if(v===4)await album();if(v===5)await progress()}
-async function shop(name){while(true){const ks=Object.keys(SHOPI);const v=await choose(name+' · 🪙 '+F.coins,ks.map(k=>({t:ITEMS[k].ic+' '+ITEMS[k].n+' · 🪙 '+SHOPI[k],s:ITEMS[k].d+' · มีอยู่ '+(S.bag[k]||0),off:F.coins<SHOPI[k]})).concat([{t:'เสร็จแล้ว'}]));
+async function shop(name){if(window.LIFE)return LIFE.shop(name);while(true){const ks=Object.keys(SHOPI);const v=await choose(name+' · 🪙 '+F.coins,ks.map(k=>({t:ITEMS[k].ic+' '+ITEMS[k].n+' · 🪙 '+SHOPI[k],s:ITEMS[k].d+' · มีอยู่ '+(S.bag[k]||0),off:F.coins<SHOPI[k]})).concat([{t:'เสร็จแล้ว'}]));
   if(v>=ks.length||isNaN(v))return;const k=ks[v];F.coins-=SHOPI[k];S.bag[k]=(S.bag[k]||0)+1;save();hud();try{sfx.get()}catch(e){}}}
 async function wardrobe(){const ks=Object.keys(OUTFITS);const v=await choose('ตู้เสื้อผ้าชมรม · 🪙 '+F.coins,ks.map(k=>({t:(F.outfit===k?'✔ ':'')+OUTFITS[k].n+(F.own[k]?'':' · 🪙 '+OUTFITS[k].c),s:F.own[k]?'กดเพื่อใส่ทั้งวง':'ซื้อแล้วใส่ได้ตลอด',off:!F.own[k]&&F.coins<OUTFITS[k].c})).concat([{t:'ปิด'}]));
   if(v>=ks.length||isNaN(v))return;const k=ks[v];if(!F.own[k]){F.coins-=OUTFITS[k].c;F.own[k]=1}F.outfit=k;applyOutfit();fsave();banner('ทั้งวงเปลี่ยนเป็น '+OUTFITS[k].n,2400)}
@@ -244,9 +245,10 @@ async function rqTalk(){const q=F.rq[F.cur];if(!q)return;const g=q.g.k;
 async function rqDone(n){F.rq[F.cur]=null;F.rqN=(F.rqN||0)+1;fsave();coins(n,'เควสสำเร็จ');await gainXP(10);if(F.rqN%3===0)try{if(window.KT)KT.roll('pisat',true)}catch(e){}}
 
 /* ---------------- ครูโอ ---------------- */
-async function kruoTalk(){F.met.kruoDay=F.day;fsave();
+async function kruoTalk(){F.met.kruoDay=F.day;fsave();if(window.LIFE&&await LIFE.npcHook('kruo'))return;
   await talk([['kruo',pick(['อ้าว เด็ก ๆ ! เห็นครูตังค์ไหม ครูโอซื้อหมูกระทะมาเผื่อสามชุด','ตังค์อยู่ไหนน้า… เย็นนี้น้ำสีอำพันเย็นเจี๊ยบเลย','ครูโอแวะมาจากแม่จะเรา ตั้งใจมาชวนตังค์ไปงานเลี้ยงริมเมย!'])]]);
-  const v=await choose('ครูโอมาถามหาครูตังค์',[{t:'บอกความจริง: ครูตังค์ซ้อมกับพวกเราอยู่'},{t:'ชวนครูโอมาตีกลองหลวงด้วยกันแทน'},{t:'ชี้ไปทางโรงอาหาร (แกล้ง)'}]);
+  const v=await choose('ครูโอมาถามหาครูตังค์',[{t:'บอกความจริง: ครูตังค์ซ้อมกับพวกเราอยู่'},{t:'ชวนครูโอมาตีกลองหลวงด้วยกันแทน'},{t:'ชี้ไปทางโรงอาหาร (แกล้ง)'},{t:'🎁 ให้ของขวัญครูโอ'}]);
+  if(v===3&&window.LIFE){await LIFE.giftTo('kruo');await talk([['kruo','ครูโอไปหาตังค์ต่อละนะ! ฝากบอกด้วยว่าคืนนี้หมูกระทะ!']]);return}
   if(v===0){await talk([['kruo','ซ้อมอีกแล้ว! ตังค์นี่ขยันจริง… งั้นครูโอฝากข้าวแต๋นไปให้แทนก็ได้ ไว้วันหลังค่อยชวนใหม่'],['pob','ครูโอครับ ผมขอส่วนแบ่งค่าขนส่งข้าวแต๋นด้วย'],['kruo','ฮ่า ๆ ๆ เจ้าเด็กผู้จัดการนี่!']]);coins(15,'ครูโอฝากขนม')}
   else if(v===1){await talk([['kruo','ตีกลองหลวง? ได้เลย! ครูโอตีตั้งแต่ตัวเท่าก๋วยสลาก ตามจังหวะครูโอให้ทันนะ']]);const r=await fight('frKruo',Object.assign({},ENEMY.note,{k:'kruoB',n:'ครูโอตีกลองหลวงท้าประลอง',hp:70,atk:6,phr:[4,5],show:2,bg:'night'}));
     if(r==='win'){await talk([['kruo','โอ้โห! พวกเอ็งตีกลองหลวงได้ดีกว่าครูอีก งั้นวันนี้ไม่ชวนตังค์แล้ว ชวนพวกเอ็งไปกินข้าวแทน!'],[null,'ครูโอเลี้ยงข้าวเหนียวหมูปิ้งทั้งวง']]);S.bag.moo=(S.bag.moo||0)+2;save();hud();coins(25,'ประลองกับครูโอ')}}
@@ -336,9 +338,11 @@ async function parFinish(ok){const p=PAR;PAR=null;if(!ok){await say(null,'เพ
   const r=await fight('frSp2',Object.assign({},ENEMY.whistle,{n:'นกหวีดกรรมการเพี้ยน (ป่วนกีฬาสี)',hp:120,call:1,ghost:1,atk:10,bg:'court'}));if(r!=='win'){F.ev.sp.st=3;fsave();await say(null,'นกหวีดยังป่วนอยู่ ลองเริ่มขบวนใหม่');return}
   F.ev.sp.st=9;fsave();await talk([[null,'นกหวีดเพี้ยนสงบลง กลายเป็นนกหวีดกรรมการธรรมดา เป่าเสียงเดียวตรงจังหวะพอดี'],[null,'ประธานกีฬาสีประกาศรางวัลพิเศษ “ขวัญใจทุกสี” ให้วงดนตรีไทยสรรพวาทิต'],['tang','จะสีไหนก็คนสรรพวิทยาคมเหมือนกัน วันนี้พวกเธอทำให้ทุกสีเดินไปด้วยกันได้'],['pob','ผู้จัดการขอประกาศ… ม่วง–เหลืองหนึ่งเดียว!']]);
   lore('L11');snap('ขบวนพาเหรดกีฬาสี');coins(70,'กีฬาสี');await gainXP(60);try{if(window.KT)KT.roll('pisat',true)}catch(e){}check100()}
+const wkOpen=()=>{if(!window.LIFE)return F.day>=2;const c=LIFE.cal();return c.y>1||c.mi>=8};
+const spOpen=()=>{if(!window.LIFE)return F.ev.wk.st>=9&&F.day>=(F.ev.sp.from||0)+2;const c=LIFE.cal();return c.y>1||c.mi>=2};
 async function evNotice(){const w=F.ev.wk,s=F.ev.sp;if(busy||!onWorld()&&S.map!=='room')return;
-  if(w.st===0&&SCH()&&F.day>=2&&PH()===0){w.st=1;fsave();busy=true;await talk([[null,'ประกาศหน้าเสาธงตอนเช้า: “พฤหัสบดีนี้ โรงเรียนจัดพิธีไหว้ครู ขอให้ทุกชั้นเตรียมพานไหว้ครู”'],['maha','ครูตังค์น่าจะมีงานให้ชมรมเราแน่ ไปหาครูที่ห้อง 512 กัน']]);busy=false;return}
-  if(s.st===0&&w.st>=9&&SCH()&&F.day>=(s.from||0)+2&&PH()===0){s.st=1;fsave();busy=true;await talk([[null,'เวลาผ่านไปหลายเดือน… ใกล้ปลายภาคเรียนแล้ว ป้ายผ้าหน้าโรงเรียนเขียนว่า “กีฬาสีสรรพวิทยาคม”'],['?ice','กีฬาสีมาแล้ว! ไอซ์อยู่สีเดียวกับอิ้งด้วย!'],['maha','ครูตังค์เรียกประชุมชมรมที่ห้อง 512 ด่วน']]);busy=false}}
+  if(w.st===0&&SCH()&&wkOpen()&&PH()===0){w.st=1;fsave();busy=true;await talk([[null,'ประกาศหน้าเสาธงตอนเช้า: “พฤหัสบดีนี้ โรงเรียนจัดพิธีไหว้ครู ขอให้ทุกชั้นเตรียมพานไหว้ครู”'],['maha','ครูตังค์น่าจะมีงานให้ชมรมเราแน่ ไปหาครูที่ห้อง 512 กัน']]);busy=false;return}
+  if(s.st===0&&SCH()&&spOpen()&&PH()===0){s.st=1;fsave();busy=true;await talk([[null,'เดือนธันวาคม… ป้ายผ้าหน้าโรงเรียนเขียนว่า “กีฬาสีสรรพวิทยาคม”'],['?ice','กีฬาสีมาแล้ว! ไอซ์อยู่สีเดียวกับอิ้งด้วย!'],['maha','ครูตังค์เรียกประชุมชมรมที่ห้อง 512 ด่วน']]);busy=false}}
 async function finale(){F.fin=1;fsave();busy=true;await walkFlash();
   await talk([[null,'กลางคืนที่สนามฟุตบอล ใต้แสงดาวเต็มฟ้า… มีวงดนตรีวงใหญ่ตั้งรออยู่กลางสนาม'],['tang','มาแล้วเหรอ ทุกคนรอพวกเธออยู่'],[null,'ผียามถือไฟฉายส่องเวทีให้ คุณตานั่งตั้งซอ นางรำยืนรอรำ ขุนไม้เดี่ยวนั่งที่ระนาด เพี้ยนน้อยเกาะอยู่บนฆ้อง'],
     ['kruo','(วิ่งมาพร้อมข้าวแต๋นเต็มตะกร้า) ตังค์! วันนี้หนีไม่ได้แล้ว คอนเสิร์ตจบเลี้ยงข้าวแต๋นทั้งสนาม!'],['tang','(หัวเราะ) วันนี้ครูไม่หนีแล้วครับ'],['pob','ผู้จัดการขอประกาศ… คอนเสิร์ตใต้แสงดาว ชมรมสรรพวาทิต ทุกรุ่น ทุกคน ทุกตำนาน!']]);
@@ -365,7 +369,7 @@ window.doAct=async function(n){const a=n&&n.act;if(ON){
 const _upd=updateWorld;
 window.updateWorld=function(dt){_upd(dt);if(!ON||!S)return;if(mode==='world'&&!busy&&!paused&&$('#dlg').classList.contains('hide')){
   F.clock+=dt*2;if(F.clock>=1440){F.clock-=1440;F.day++;F.lastPh=-1}const p=PH();if(S.ch===2)S.phase=p;
-  if(p!==F.lastPh){const first=F.lastPh===undefined;F.lastPh=p;if(!first)banner(['☀️ เช้าแล้ว · วันที่ '+F.day,'🌇 ตกเย็นแล้ว · อาจมีคนมาถามหาครูตังค์','🌙 กลางคืนแล้ว · ระวังตำนานผีโรงเรียน…'][p],3000);evNotice()}
+  if(p!==F.lastPh){const first=F.lastPh===undefined;F.lastPh=p;if(!first)banner(['☀️ เช้าแล้ว · '+(window.LIFE?LIFE.dateText():'วันที่ '+F.day),'🌇 ตกเย็นแล้ว · อาจมีคนมาถามหาครูตังค์','🌙 กลางคืนแล้ว · ระวังตำนานผีโรงเรียน…'][p],3000);evNotice()}
   if(!F.rq[F.cur]&&onWorld()&&Math.random()<dt*.05)newRQ();
   const q=F.rq[F.cur];if(q&&q.type==='find'&&q.st===1&&Math.hypot(S.x-q.t.x,S.y-q.t.y)<14){q.st=2;fsave();try{sfx.get()}catch(e){}banner('เจอ'+q.lost+'แล้ว! เอาไปคืน'+nmOf(q.g.k),2600)}
   if(onWorld())(SCRAPS[F.cur]||[]).forEach(([id,tx,ty])=>{if(F.lore[id])return;const p=spot('scr'+id,tx,ty);if(Math.hypot(S.x-p.x,S.y-p.y)<14){try{sfx.get()}catch(e){}lore(id)}});
@@ -376,7 +380,7 @@ window.drawWorld=function(t){_draw(t);if(!ON||!S)return;const cX=Math.round(camX
   const spr=(k,x,y,dir,f)=>{const s=SPR[k];if(s)cx.drawImage(s[dir||'d'][f||0],Math.round(x-8-cX),Math.round(y-24-cY))};
   const bang=(x,y,c)=>{cx.fillStyle=c||'#ffd34d';cx.font='bold 10px Mitr,sans-serif';cx.fillText('!',Math.round(x-2-cX),Math.round(y-30-cY+Math.sin(t*5)*2))};
   const spark=(x,y)=>{const k=(Math.sin(t*6)+1)/2;cx.fillStyle='rgba(255,240,160,'+(.35+.4*k)+')';cx.beginPath();cx.arc(x-cX,y-4-cY,5+k*2,0,7);cx.fill();cx.fillStyle='#fff';cx.fillRect(x-1-cX,y-12-k*3-cY,2,2)};
-  if(S.map==='room'&&SCH()){const p=TANG();spr('tang',p.x,p.y,'d',0);if(F.ev.wk.st===1||F.ev.sp.st===1||(F.ev.wk.st===2&&Object.keys(WKI).every(k=>F.ev.wk[k]))||(F.ev.sp.st===2&&F.ev.sp.cheer&&F.ev.sp.sign))bang(p.x,p.y);
+  if(S.map==='room'&&!S.rm&&SCH()){const p=TANG();spr('tang',p.x,p.y,'d',0);if(F.ev.wk.st===1||F.ev.sp.st===1||(F.ev.wk.st===2&&Object.keys(WKI).every(k=>F.ev.wk[k]))||(F.ev.sp.st===2&&F.ev.sp.cheer&&F.ev.sp.sign))bang(p.x,p.y);
     const b=BED();cx.fillStyle='#4a6ab0';cx.fillRect(b.x-12-cX,b.y-10-cY,24,12);cx.fillStyle='#e8e0d0';cx.fillRect(b.x-12-cX,b.y-10-cY,7,6)}
   if(!onWorld())return;
   if(SCH()){const b=BUS_SCH();cx.fillStyle='#2a8a86';cx.fillRect(b.x-2-cX,b.y-26-cY,3,22);cx.fillStyle='#ffffff';cx.fillRect(b.x-8-cX,b.y-30-cY,16,8);cx.fillStyle='#2a8a86';cx.font='bold 6px Mitr,sans-serif';cx.fillText('รถ',b.x-6-cX,b.y-24-cY);
@@ -395,8 +399,8 @@ window.drawVillageSky=function(cX,cY,t){if(ON&&PH()!==2)return;return _vsky(cX,c
 const _quest=quest;
 window.quest=function(){if(!ON)return _quest();const w=F.ev.wk,s=F.ev.sp;let hint='';
   if(w.st===1)hint='ไปหาครูตังค์ที่ห้อง 512';else if(w.st===2)hint='เตรียมพานไหว้ครู '+Object.keys(WKI).filter(k=>w[k]).length+'/4';else if(w.st===3||w.st===2.5)hint='ซ้อมเพลงกับครูตังค์';else if(w.st===4)hint=F.day<w.day?'พรุ่งนี้เช้าพิธีไหว้ครู':'ไปโดมกิจกรรมตอนเช้า';
-  else if(s.st===1)hint='ครูตังค์เรียกประชุม';else if(s.st===2)hint='ซ้อมเชียร์ '+(s.cheer?'✓':'·')+' ทำป้าย '+(s.sign?'✓':'·');else if(s.st===3)hint='ขบวนพาเหรดที่สนาม';
-  return 'วันที่ '+F.day+' · '+hhmm()+' '+PHN[PH()]+' · 🪙 '+F.coins+' · '+placeName()+(hint?' · '+hint:'')};
+  else if(s.st===1)hint='ครูตังค์เรียกประชุม';else if(w.st===0&&s.st===0&&window.LIFE)hint='ไหว้ครูเดือน มิ.ย. · กีฬาสีเดือน ธ.ค.';else if(s.st===2)hint='ซ้อมเชียร์ '+(s.cheer?'✓':'·')+' ทำป้าย '+(s.sign?'✓':'·');else if(s.st===3)hint='ขบวนพาเหรดที่สนาม';
+  return dayLbl()+' · '+hhmm()+' '+PHN[PH()]+' · 🪙 '+F.coins+' · '+placeName()+(hint?' · '+hint:'')};
 const _pause=fillPause;
 window.fillPause=function(){_pause();if(!ON)return;const c=document.querySelector('#pause .card');if(c&&!c.querySelector('#pFree')){const d=document.createElement('div');d.id='pFree';
     d.innerHTML='<button class="btn" data-f="lore">📜 สมุดตำนาน</button><button class="btn" data-f="alb">🖼️ อัลบั้มภาพ</button><button class="btn" data-f="prog">✅ ความคืบหน้า</button>';
@@ -405,8 +409,8 @@ window.fillPause=function(){_pause();if(!ON)return;const c=document.querySelecto
 
 /* ---------------- การ์ดบนหน้าแรก ---------------- */
 function titleCard(){const chs=document.querySelector('#title .chs');if(!chs||document.querySelector('#cFree'))return;const ok=c3done();
-  const d=document.createElement('div');d.className='chc box';d.innerHTML='<div class="cht">โหมดเดินเล่นอิสระ'+(ok?'':' 🔒')+'</div><div class="chd">'+(ok?'เดินทางไปมาระหว่างโรงเรียนกับแม่โกนเกน กลางวัน–กลางคืน เควสสุ่ม ครูโอ ตำนานผีโรงเรียน วันไหว้ครู กีฬาสี และความลับอีกมาก':'ปลดล็อกเมื่อเล่นบทที่ 3 จบ')+'</div><div class="chb"><button class="btn g" id="cFree"'+(ok?'':' disabled')+'>▶ เดินเล่นอิสระ</button>'+(ok&&fload()?'<button class="btn" id="cFreeN">✦ เริ่มใหม่</button>':'')+'</div>';
+  const d=document.createElement('div');d.className='chc box';d.innerHTML='<div class="cht">โหมดเดินเล่นอิสระ'+(ok?'':' 🔒')+'</div><div class="chd">'+(ok?'ชีวิตโรงเรียนครบหนึ่งปี เข้าได้ทุกอาคาร หัวใจความสนิท ผอ. ครูอินโฟ งานประจำปี เควสสุ่ม ตำนานผีโรงเรียน และความลับอีกมาก':'ปลดล็อกเมื่อเล่นบทที่ 3 จบ')+'</div><div class="chb"><button class="btn g" id="cFree"'+(ok?'':' disabled')+'>▶ เดินเล่นอิสระ</button>'+(ok&&fload()?'<button class="btn" id="cFreeN">✦ เริ่มใหม่</button>':'')+'</div>';
   chs.appendChild(d);$('#cFree').onclick=startFree;const n=$('#cFreeN');if(n)n.onclick=()=>{if(!confirm('เริ่มโหมดอิสระใหม่? ความคืบหน้าในโหมดอิสระจะหายไป (บทที่ 1–3 ไม่เปลี่ยน)'))return;try{localStorage.removeItem(FK)}catch(e){}startFree()}}
 buildExtraSprites();titleCard();
-window.FREE={get F(){return F},get on(){return ON},startFree,PH,skipTo,newRQ,ghostMeet,finale,GH,spot,BUS_SCH,TANG,BED,FIELDC,DOME,STANDS,INDUS,PFLAGS,WKI,EL4,TREE,kruoPos,miniPos,CHEDI,applyOutfit,evNotice};
+window.FREE={api:{fsave,coins,choose,openOv,snap:c=>snap(c),lore,album,walkFlash,TRIVIA,spotNear},get F(){return F},get on(){return ON},startFree,PH,skipTo,newRQ,ghostMeet,finale,GH,spot,BUS_SCH,TANG,BED,FIELDC,DOME,STANDS,INDUS,PFLAGS,WKI,EL4,TREE,kruoPos,miniPos,CHEDI,applyOutfit,evNotice};
 })();

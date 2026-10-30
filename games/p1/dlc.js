@@ -49,7 +49,8 @@ const DLINES={
   stove:['ควันโขมงรอบค่ำ! ใครทนได้มาประลอง!'],log:['ข้าลอยทวนน้ำกลับมาท้าอีกรอบ!'],ember:['ถ่านข้ายังแดงอยู่นะ!'],bell:['เก๊ง! เก๊ง! หมดคาบแล้วแต่ข้ายังไม่เลิกดัง!']};
 const worldMap=()=>S&&S.intro&&(S.map==='world'||S.map==='village');
 function dState(){const ch=S.ch||1,d=today();let o=X.daily[ch];if(!o||o.day!==d){const r=hsh(d+':'+ch),pool=DPOOL[ch]||DPOOL[1];o=X.daily[ch]={day:d,base:pool[r%pool.length],mod:MODS[(r>>>5)%MODS.length].id,spot:(r>>>9)%curRoam().length,beaten:0};xsave()}return o}
-function dSpot(){const o=dState(),r=curRoam()[o.spot%curRoam().length];return {x:r.x*T+8,y:r.y*T+12}}
+const rp=(x,y)=>{try{if(window.LIFE&&S&&(S.map==='world'||S.map==='village')){const p=LIFE.reachNear(S.map==='village'?'village':'world',x,y);if(p)return {x:p.x,y:p.y}}}catch(e){}return {x:x*T+8,y:y*T+12}};
+function dSpot(){const o=dState(),r=curRoam()[o.spot%curRoam().length];return rp(r.x,r.y)}
 const dActive=()=>worldMap()&&ENEMY[dState().base]&&!dState().beaten;
 async function dailyFight(){
   const o=dState(),src=ENEMY[o.base],mod=MODS.find(m=>m.id===o.mod)||MODS[0];
@@ -74,7 +75,7 @@ function qprog(id,n){const q=qState(),it=q.list.find(x=>x.id===id);if(!it||it.do
   if(it.p>=QDEF[id].need){it.done=1;xsave();sticker('q_first');setTimeout(()=>banner('เควสสำเร็จ! '+QDEF[id].n+' · ไปรับรางวัลที่กระดานห้อง 512',3200),900);
     if(q.list.every(x=>x.done)){const y=yday();X.streak=X.lastAll===y?(X.streak||0)+1:(X.lastAll===today()?X.streak||1:1);X.lastAll=today();sticker('q_all');if(X.streak>=3)sticker('streak3');if(X.streak>=7)sticker('streak7')}}
   xsave()}
-const findSpot=()=>{const q=qState(),P=curPicks(),p=P[q.spot%P.length];return {x:p.x*T+8,y:p.y*T+12}};
+const findSpot=()=>{const q=qState(),P=curPicks(),p=P[q.spot%P.length];return rp(p.x,p.y)};
 const findActive=()=>{const q=qState();return worldMap()&&q.list.some(x=>x.id==='find'&&!x.done)&&!q.got};
 
 /* ---------- เพลงจากคลังโน้ต (แบ่งวรรคตามห้องเพลง) ---------- */
@@ -193,7 +194,7 @@ const BOARD=()=>({x:2*T,y:2*T+14,lb:'กระดานเควสชมรม'
 const STAND=()=>({x:12*T+8,y:7*T+10,lb:'แท่นโน้ตเพลงของชมรม',act:'dlcStand'});
 const _near=nearest;
 window.nearest=function(){const b=_near();if(!S||!S.intro)return b;const fx=S.x,fy=S.y-6;let best=b,bd=b?(b.x!=null?Math.hypot(b.x-fx,b.y-fy):12):99;
-  const c=[];if(S.map==='room'){c.push(BOARD(),STAND())}
+  const c=[];if(S.map==='room'&&!S.rm){c.push(BOARD(),STAND())}
   if(dActive()){const p=dSpot();c.push({x:p.x,y:p.y,lb:'ท้าประลองปีศาจหลังเลิกเรียน',act:'dlcDaily'})}
   c.forEach(o=>{const d=Math.hypot(o.x-fx,o.y-fy);if(d<22&&d<bd){bd=d;best=o}});return best};
 const _doAct=doAct;
@@ -208,7 +209,7 @@ window.updateWorld=function(dt){_upd(dt);if(!S||busy||mode!=='world')return;
   if(worldMap()&&!DLC.toldDay&&dActive()){DLC.toldDay=1;setTimeout(()=>banner('มีปีศาจหลังเลิกเรียนโผล่มาแล้ว! มองหาวงแหวนทอง · เควสวันนี้ดูที่กระดานห้อง 512',3600),1500)}};
 const _draw=drawWorld;
 window.drawWorld=function(t){_draw(t);if(!S||!S.intro)return;const cX=Math.round(camX),cY=Math.round(camY);
-  if(S.map==='room'){const b=BOARD(),s=STAND();
+  if(S.map==='room'&&!S.rm){const b=BOARD(),s=STAND();
     // กระดานไม้ก๊อกบนผนัง
     cx.fillStyle='#6a4426';cx.fillRect(T+2-cX,3-cY,2*T+4,24);cx.fillStyle='#c89a5a';cx.fillRect(T+4-cX,5-cY,2*T,20);
     [['#fff3a0',T+7,8],['#ffb0c8',T+19,10],['#a8e0ff',T+29,7]].forEach(([c,x,y])=>{cx.fillStyle=c;cx.fillRect(x-cX,y-cY,9,9);cx.fillStyle='#d03030';cx.fillRect(x+4-cX,y-cY,2,2)});
