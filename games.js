@@ -26,6 +26,7 @@
     { n: 'ตำนานภาคแรก', d: 'เล่นตำนานสรรพวาทิตจบภาคแรก', px: 'tang', bg: '#d0a030', ok: () => { try { return localStorage.getItem('spw_pisat_fin') === '1'; } catch (e) { return false; } } },
     { n: 'หูทอง', d: 'หูทองสรรพวาทิต ระดับหูทอง ได้ 8/10 ขึ้นไป', px: 'kaimuk', bg: '#8a2a2a', ok: () => Object.entries(J('sapphawathit_hoo').best || {}).some(([k, v]) => /2$/.test(k) && v >= 8) },
     { n: 'นักแห่ครบวง', d: 'ผ่านด่าน “ครบวง” ในเกมแห่กลองหลวง', px: 'jao', bg: '#2a8a5a', ok: () => !!(J('sapphawathit_klongluang').pass || {})[2] },
+    { n: 'มือกลองปู่เจ่', d: 'ผ่านด่าน “ครบสามเสียง ตึ้ง เป้ง ปิ๊ก” ในเกมแห่กลองปู่เจ่', px: 'jao', bg: '#8a1f3a', ok: () => !!(J('sapphawathit_pujae').pass || {})[3] },
     { n: 'ยอดมือกลองหลวง', d: 'ผ่านด่าน “แห่ยาวเร่งจังหวะ”', px: 'pob', bg: '#6a47a8', ok: () => !!(J('sapphawathit_klongluang').pass || {})[4] },
     { n: 'นักสะสมสติกเกอร์', d: 'สะสมสติกเกอร์ในส่วนเสริมหลังเลิกเรียนของตำนานสรรพวาทิตครบ 10 แบบ', px: 'foo', bg: '#2a6a8a', ok: () => Object.keys(J('spw_pisat_x').stk || {}).length >= 10 },
     { n: 'เพื่อนรักทั้งโรงเรียน', d: 'มีเพื่อนสนิท 5 หัวใจอย่างน้อย 5 คน ในโหมดเดินเล่นอิสระของตำนานสรรพวาทิต', px: 'ing', bg: '#c0407a', ok: () => { const f = J('spw_pisat_free'); const a = (f.life && f.life.aff) || {}; return Object.values(a).filter(v => v >= 250).length >= 5; } },

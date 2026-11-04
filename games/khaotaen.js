@@ -18,7 +18,7 @@ const chk=b=>{const h=h32(b+SALT);return AB[h%32]+AB[(h>>>5)%32]};
 function make(){let b='';const r=new Uint32Array(4);try{crypto.getRandomValues(r)}catch(e){for(let i=0;i<4;i++)r[i]=Math.random()*1e9}for(let i=0;i<4;i++)b+=AB[r[i]%32];return 'KT-'+b+'-'+chk(b)}
 /* ตรวจรหัส: คืน รหัสมาตรฐาน หรือ null */
 function verify(code){const c=String(code||'').toUpperCase().replace(/[^0-9A-Z]/g,'');const m=c.match(/^KT([0-9A-Z]{4})([0-9A-Z]{2})$/);if(!m)return null;return chk(m[1])===m[2]?'KT-'+m[1]+'-'+m[2]:null}
-const NAMES={'khong-wong':'ฆ้องวงใหญ่แสนกล','klong-khaek':'กลองแขกคู่ขวัญ',hoo:'หูทองสรรพวาทิต',klongluang:'แห่กลองหลวง',pisat:'ตำนานสรรพวาทิต ภาคแรก',pisat2:'ตำนานสรรพวาทิต ภาค 2'};
+const NAMES={'khong-wong':'ฆ้องวงใหญ่แสนกล','klong-khaek':'กลองแขกคู่ขวัญ',hoo:'หูทองสรรพวาทิต',klongluang:'แห่กลองหลวง',pujae:'แห่กลองปู่เจ่',pisat:'ตำนานสรรพวาทิต ภาคแรก',pisat2:'ตำนานสรรพวาทิต ภาค 2'};
 const LINES=['ครูตังค์ทอดข้าวแต๋นเองกับมือ… ไหม้นิดหน่อย แต่ใจเต็มร้อย','ข้าวแต๋นแผ่นนี้ราดน้ำแตงโมเคี่ยวสูตรลับ ห้ามบอกครูโอ เดี๋ยวมาขอ','เก่งขนาดนี้ ครูตังค์ขอให้ข้าวแต๋นหนึ่งแผ่น! (ครูกินไปแล้วครึ่งแผ่นระหว่างทาง)',
   'รางวัลแห่งความขยัน: ข้าวแต๋นกรอบ ๆ หนึ่งแผ่น เคี้ยวเป็นจังหวะฉิ่ง–ฉับได้ด้วย','พบธรรมบอกว่าจะบริหารข้าวแต๋นให้… ครูเลยเอามาให้เองดีกว่า','ข้าวแต๋นแผ่นนี้ผ่านการไหว้ครูมาแล้ว อร่อยขึ้น 15 เปอร์เซ็นต์ (ครูวัดเอง)'];
 const css=`#ktOv{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(12,6,18,.78);font-family:Mitr,Sarabun,system-ui,sans-serif;padding:14px;-webkit-user-select:text;user-select:text}

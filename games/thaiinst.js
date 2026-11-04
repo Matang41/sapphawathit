@@ -6,7 +6,7 @@
      TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง โน้ตเกินช่วงเสียงจริงทบช่วงให้
      TI.label(inst, i)                  ชื่อโน้ต (ตรงกันทุกเครื่อง)
      TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum · klong (กลองหลวง k 0–2) · mong (ฆ้องวงกลองหลวง) · klchab (ฉาบวงกลองหลวง k 0 เปิด 1 ปิด)
-                                        · pujae (กลองปู่เจ่ k 0 ต่ำ 1 กลาง 2 สูง) · pjchab (ฉาบวงปู่เจ่ k 0 เปิด 1 ปิด) · khongrao (ฆ้องราว เสียงเดียว ลูกใหญ่) · sabat (กลองสะบัดชัย k 0 หน้ากลอง 1 ขอบ)
+                                        · pujae (กลองปู่เจ่ k 0 ตึ้ง 1 เป้ง 2 ปิ๊ก) · pjchab (ฉาบวงปู่เจ่ k 0 เปิด 1 ปิด) · khongrao (ฆ้องราว เสียงเดียว ทุกลูกลงพร้อมกันด้วยกลไก) · sabat (กลองสะบัดชัย k 0 หน้ากลอง 1 ขอบ)
      TI.songs()                         เพลงจากสื่อของชมรม + ร่างในเครื่อง
      TI.timeline(packedSong)            ช่องโน้ตทั้งเพลง พร้อมฉิ่งและหน้าทับของแต่ละช่อง
    ============================================================ */
@@ -74,7 +74,7 @@
     else if (kind === 'sabat') { const T4 = window.TS4; if (!(T4 && T4.sabat(k, t, v, out))) perc(k ? 'ching' : 'klong', k ? 2 : 0, t, v, out); }
     else if (kind === 'klchabF') { if (!(T2 && T2.chab(k, t, v * .6, out))) TS.ching(false, t, v * .4, out); }
   }
-  const KHRF = [259];   /* ฆ้องราวที่อัดไว้มีลูกเดียว (ลูกใหญ่ 259 Hz) ไม่แปลงระดับเสียงให้เพี้ยนอีกต่อไป */
+  const KHRF = [259];   /* ฆ้องราว: ทุกลูกตีพร้อมกันด้วยกลไก เป็นเสียงเดียว (ยอดเสียง 259 Hz) */
   /* ---------- เพลงจากบันทึกโน้ตเพลงไทย ---------- */
   function readToks(str) { const out = []; let i = 0; while (i < str.length) { const c = str[i]; if (c === '-') { out.push([]); i++ } else if (c === '(') { const j = str.indexOf(')', i); out.push(str.slice(i + 1, j).split('').map(x => x.charCodeAt(0) - 97).filter(x => x >= 0 && x < 16)); i = j + 1 } else { const v = c.charCodeAt(0) - 97; out.push(v >= 0 && v < 16 ? [v] : []); i++ } } return out }
   function decBars(str) {

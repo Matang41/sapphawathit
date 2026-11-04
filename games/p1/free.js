@@ -116,14 +116,12 @@ function egg(id){if(F.eggs[id])return;F.eggs[id]=1;fsave();setTimeout(()=>banner
 function snap(cap){try{const src=$('#cv');const c=document.createElement('canvas');c.width=240;c.height=Math.round(240*src.height/src.width);c.getContext('2d').drawImage(src,0,0,c.width,c.height);F.album=(F.album||[]).filter(a=>a.cap!==cap);F.album.push({cap,img:c.toDataURL('image/jpeg',.72),day:F.day});F.album=F.album.slice(-14);fsave();setTimeout(()=>banner('🖼️ เก็บภาพที่ระลึก: '+cap,2600),900)}catch(e){}}
 async function fight(key,def){ENEMY[key]=def;return await battle(key)}
 
-/* ---------------- ฟังแล้วตีตามทำนองตายตัว (ใช้กับซ้อมเพลงในเหตุการณ์) ---------------- */
-async function echoSong(base,name,ns,show){
-  ns=ns.map(g=>clamp(g-3,0,7));/* ลูกฆ้อง 3–10 (ด–ดํ) → แป้น 0–7 */
-  const PL=4;let ptr=0,ph=0,ok=0,tot=0;const nph=Math.ceil(ns.length/PL);
-  const e=Object.assign({},ENEMY[base]||ENEMY.note,{k:base,n:name,hp:100,atk:4,phr:[PL,PL],gap:.55,show:show||PL,slot:.32,echoOnly:1});['item','item3','boss','final','haze','call','ghost'].forEach(k=>delete e[k]);
-  e.seqFn=(seq,len)=>{seq.length=0;for(let i=0;i<len;i++)seq.push(ns[(ptr+i)%ns.length]);ptr+=len;ph++;e.show=ph<=2?len:show||2;if(BT)bmsg('วรรคที่ '+ph+'/'+nph)};
-  e.onEcho=res=>{res.forEach(v=>{tot++;if(v===1)ok++});if(BT){BT.hp=Math.max(0,Math.round(BT.max*(1-Math.min(1,ptr/ns.length))));ebar();if(ptr>=ns.length)BT.songDone=1}};
-  const r=await fight('frSong',e);return r==='win'?(tot?ok/tot:1):-1}
+/* ---------------- ซ้อมเพลงในเหตุการณ์: ตีตามเพลงจริงทีละบรรทัด (บรรทัดละ 8 ห้อง) ---------------- */
+async function echoSong(base,name,key,b0,nb){
+  const song=(window.SB&&(SB.builtin.find(b=>b.key===key)||SB.builtin[0]))||null;if(!song)return 1;
+  const L=SB.lines(song).filter(l=>l.b0>=(b0||0)&&l.b0<(b0||0)+(nb||16));
+  const acc=await lineFight({key:'frSong',base:ENEMY[base]||ENEMY.note,over:{k:base,n:name+' · '+song.title,atk:4,gap:.55},lines:L});
+  return acc}
 
 /* ---------------- ผีโรงเรียน: ภาพ ---------------- */
 const GH={
@@ -306,9 +304,9 @@ function evTargets(L){const w=F.ev.wk,s=F.ev.sp;
 async function evTang(){const w=F.ev.wk,s=F.ev.sp;
   if(w.st===1){w.st=2;fsave();await talk([['tang','มาพอดี! พฤหัสบดีนี้วันไหว้ครู ชมรมเราได้หน้าที่บรรเลงในพิธี แล้วก็ช่วยทำพานไหว้ครูของชั้นด้วย'],['tang','พานไหว้ครูต้องมีดอกไม้สี่อย่าง หญ้าแพรก ดอกเข็ม ดอกมะเขือ และข้าวตอก แต่ละอย่างมีความหมายนะ'],['tang','หญ้าแพรกกับดอกเข็มมีในโรงเรียน ดอกมะเขือต้องไปขอที่ไร่ลุงชาวนาแม่โกนเกน ส่วนข้าวตอก แม่อุ๊ยร้านข้าวคั่วเก่งที่สุด'],['pob','รับทราบ! ผู้จัดการขอแบ่งงานเป็นสองสาย… (ทุกคนเดินไปหมดแล้ว)']]);return true}
   if(w.st===2&&['yaprak','khem','makhuea','khaotok'].every(k=>w[k])){w.st=3;fsave();await talk([['tang','ครบสี่อย่าง! มาจัดพานกัน'],[null,'ทุกคนช่วยกันจัดพาน หญ้าแพรกรองพื้น ดอกเข็มเรียงเป็นแถว ดอกมะเขือวางตรงกลาง โรยข้าวตอกรอบ ๆ'],['tang','ทีนี้ซ้อมเพลงก่อนพิธีกัน ครูตีให้ฟังทีละวรรค ตีตามให้ครบนะ']]);
-    const acc=await echoSong('mini','ซ้อมเพลงก่อนพิธีไหว้ครู',[3,4,5,7,5,4,3,4,5,7,8,7,5,7,8,10,8,7,5,4,3,4,5,3]);if(acc<0){w.st=2.5;fsave();await say(null,'ยังไม่ครบ ไว้กลับมาซ้อมกับครูตังค์ใหม่นะ');return true}
+    const acc=await echoSong('mini','ซ้อมเพลงก่อนพิธีไหว้ครู','laodamnoen',0,16);if(acc<0){w.st=2.5;fsave();await say(null,'ยังไม่ครบ ไว้กลับมาซ้อมกับครูตังค์ใหม่นะ');return true}
     w.st=4;w.day=F.day+1;fsave();await talk([['tang','ดีมาก! พรุ่งนี้เช้าพิธีที่โดมกิจกรรม ใส่ชุดให้เรียบร้อย มาก่อนเวลานะ'],[null,'(นอนพักที่มุมห้อง แล้วตื่นตอนเช้า เพื่อไปพิธีที่โดมกิจกรรม)']]);lore('L10');return true}
-  if(w.st===2.5){const acc=await echoSong('mini','ซ้อมเพลงก่อนพิธีไหว้ครู',[3,4,5,7,5,4,3,4,5,7,8,7,5,7,8,10,8,7,5,4,3,4,5,3]);if(acc>=0){w.st=4;w.day=F.day+1;fsave();await talk([['tang','ผ่านแล้ว! พรุ่งนี้เช้าพิธีที่โดมกิจกรรมนะ']])}return true}
+  if(w.st===2.5){const acc=await echoSong('mini','ซ้อมเพลงก่อนพิธีไหว้ครู','laodamnoen',0,16);if(acc>=0){w.st=4;w.day=F.day+1;fsave();await talk([['tang','ผ่านแล้ว! พรุ่งนี้เช้าพิธีที่โดมกิจกรรมนะ']])}return true}
   if(w.st===2){const left=Object.keys(WKI).filter(k=>!w[k]).map(k=>WKI[k][0]);await talk([['tang','พานยังขาด '+left.join(' ')+' นะ']]);return false}
   if(s.st===1){s.st=2;fsave();await talk([['tang','ข่าวใหญ่! กีฬาสีปีนี้ วงดนตรีไทยของเราได้นำขบวนพาเหรดของทุกสี'],['tang','ทุกสีแข่งกันก็จริง แต่ขบวนเราต้องเดินนำทุกสีเข้าสนาม ต้องซ้อมเพลงเชียร์ที่อัฒจันทร์ กับทำป้ายนำขบวนที่อาคารอุตสาหกรรม'],['tang','แล้วนี่… ชุดกีฬาสีม่วง สีของโรงเรียน ครูซื้อให้ทั้งวง'],[null,'ได้ชุดกีฬาสีม่วง! เปลี่ยนชุดได้ที่ตู้เสื้อผ้า (คุยกับครูตังค์)']]);F.own.purple=1;F.outfit='purple';applyOutfit();fsave();return true}
   if(s.st===2&&s.cheer&&s.sign){s.st=3;fsave();await talk([['tang','พร้อมแล้ว! ไปสนามฟุตบอล เริ่มขบวนพาเหรดกัน (ตอนกลางวันหรือตอนเย็น)']]);return true}
@@ -334,8 +332,8 @@ async function spSign(){await talk([[null,'อาคารอุตสาหก�
    ถอดจังหวะจากคลิป “รวมวง” ที่ครูอัดไว้ (วัดจริง): หนึ่งรอบ ≈ 1.22 วินาที (ประมาณ 98 ครั้ง/นาที)
    แบ่งเป็น 4 ช่วงย่อย ช่วงละ ≈ 0.306 วินาที
      ฉาบ   : ลงช่วง 0 (เปิด) และช่วง 1 (ปิด) แล้วเว้นสองช่วง  ← “ฉับ–ฉับ–เงียบ–เงียบ” ตรงกับที่วัดได้
-     กลอง  : ลงหนักช่วง 0 (ใบใหญ่) · ลงกลางช่วง 2 (ครึ่งรอบ) · บางรอบมีลูกขัดช่วง 1/3
-     ฆ้องราว: ลงต้นรอบ รอบเว้นรอบ (ของจริงฆ้องตีห่างกว่ากลอง)
+     กลอง  : กลองปู่เจ่ใบเดียว · เสียงตึ้ง (สันกำปั้นที่ขอบ) ลงช่วง 0 และ 2 · ลูกขัดเป้ง (ฝ่ามือ) / ปิ๊ก (ปลายนิ้ว) ช่วง 1/3
+     ฆ้องราว: ยืนจังหวะ ตีย้ำต้นรอบทุกรอบ (ตามเอกสาร: ฆ้องตียืน/ย้ำจังหวะให้ขบวนพร้อมเพรียง)
    ทุกสี่รอบจะมีลูกรัวสั้น ๆ ให้เหมือนคนตีจริง ไม่ใช่จังหวะเครื่องจักร */
 const PJ_BAR=1.22;                       /* หนึ่งรอบขบวน (วินาที) */
 let PROC=null;
@@ -346,7 +344,7 @@ function procTick(){if(!PROC||!AC)return;const sd=PROC.sd;
   while(PROC.next<AC.currentTime+.4){
     const n=PROC.k,k=n%4,cyc=(n/4)|0,t=PROC.next,sw=(Math.random()-.5)*.012;  /* ขยับเวลานิดหน่อยให้เป็นคนตี */
     if(window.TS4&&TS4.ready()){
-      if(k===0){TS4.pujae(0,t+sw,.95,SFX);TS4.chab(0,t+sw,.6,SFX);if(cyc%2===0)TS4.khongrao(t+sw,.55,SFX)}
+      if(k===0){TS4.pujae(0,t+sw,.95,SFX);TS4.chab(0,t+sw,.6,SFX);TS4.khongrao(t+sw,cyc%2?.45:.55,SFX)}
       else if(k===1){TS4.chab(1,t+sw,.5,SFX);if(cyc%2===1)TS4.pujae(1,t+sw,.45,SFX)}
       else if(k===2){TS4.pujae(0,t+sw,.72,SFX)}
       else{if(cyc%4===3){TS4.pujae(1,t+sw,.5,SFX);TS4.pujae(2,t+sd*.5+sw,.42,SFX)}   /* ลูกขัดท้ายรอบ */

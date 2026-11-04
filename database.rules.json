@@ -258,6 +258,44 @@
         },
         "$other": {
          ".validate": false
+        },
+        "k": {
+         "$k": {
+          ".validate": "$k.matches(/^(ear|rhythm|melody|inst)$/) && newData.hasChildren(['n','s'])",
+          "n": {
+           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+          },
+          "s": {
+           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000"
+          },
+          "$other": {
+           ".validate": false
+          }
+         }
+        }
+       }
+      },
+      "sk": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+       "$k": {
+        ".validate": "$k.matches(/^(ear|rhythm|melody|inst)$/) && newData.hasChildren(['n','s','l','t'])",
+        "n": {
+         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
+        },
+        "s": {
+         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+        },
+        "b": {
+         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+        },
+        "l": {
+         ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+        },
+        "t": {
+         ".validate": "newData.isNumber() && newData.val() <= now + 600000"
+        },
+        "$other": {
+         ".validate": false
         }
        }
       }
@@ -323,7 +361,7 @@
    }
   },
   "rulesProbe": {
-   "v10": {
+   "v11": {
     ".read": true
    }
   },

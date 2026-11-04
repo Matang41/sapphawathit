@@ -112,6 +112,7 @@ body.inbattle .pad,body.inbattle .top,body.inbattle #bSkip{display:none!importan
 .bsm{font:600 12px Mitr,sans-serif;border:1px solid rgba(255,246,224,.35);background:rgba(20,10,28,.7);color:var(--ink);border-radius:10px;padding:6px 10px}
 .bsm:disabled{opacity:.35}
 #battle.concert .bside{display:none}
+.bntl{margin:0 auto 6px;max-width:98%;flex-wrap:nowrap}
 .bpads{display:flex;justify-content:center;align-items:flex-end;gap:6px;pointer-events:auto;width:100%;touch-action:none;--pw:min(84px,calc((var(--vw,100vw) - 60px) / var(--n,8) - 6px))}
 .bpads button{--pw:min(84px,calc((var(--vw,100vw) - 60px) / var(--n) - 6px));position:relative;width:var(--pw);height:calc(var(--pw) * 1.05);border:0;padding:0;font:600 15px Mitr,sans-serif;color:#2b1a05;touch-action:none;transition:transform .06s,filter .1s;flex:0 0 auto}
 .bpads button span{position:relative;z-index:2;pointer-events:none}
@@ -232,6 +233,7 @@ window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reaso
 <script src="../pixel.js"></script>
 <script src="p2/core.js"></script>
 <script src="songbook.js"></script>
+<script src="skill.js"></script>
 <script src="p2/battle.js"></script>
 <script src="p2/art.js"></script>
 <script src="p2/stages.js"></script>

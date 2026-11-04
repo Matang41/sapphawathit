@@ -189,6 +189,7 @@ const NP={
   h3:[['drummer','พ่อครูเรียนกลองหลวงจากพ่อ พ่อเรียนจากปู่ เรียนต่อกันมาแบบนี้'],['drummer','ไม่มีโน้ต มีแต่หูกับใจ… แต่ลูกจดโน้ตได้ ก็ดี จะได้ไม่หาย']],
   h5:[['drummer','ไม้ตีกลองหลวงคู่นี้ของพ่อครูสมัยหนุ่ม ให้ลูกเก็บไว้'],[null,'พ่อครูยื่นไม้ตีพันผ้าเก่าสีซีดแต่แข็งแรง']],r5:{coins:40,inv:{stick:1}},lv:'ไม้ตีใหม่! ดีมากลูก พ่อครูจะพันผ้าให้'}
 };
+if(window.LIFE2&&LIFE2.np)Object.assign(NP,LIFE2.np);   /* ตัวละครเพิ่มจาก p1/life2.js (เวกัส) */
 const CLUB=['maha','pob','mateo','foo','waen','yum','che','jao','captain','kaimuk','ing','ice','luwa'];
 const TEACH=['tang','kruo','dir','dir2','info'];
 const JOKES=['ทำไมระนาดไม่เคยเหงา… เพราะมีลูกตั้งยี่สิบเอ็ดลูก! ฮ่า ๆ ๆ','ฉิ่งกับฉาบทะเลาะกัน… สุดท้ายก็ต้องกลับมาตีคู่กันอยู่ดี','ทำไมกลองแขกต้องมีสองใบ… เพราะใบเดียวมันเหงา ต้องมีแขกมาเยี่ยม!',
@@ -306,6 +307,7 @@ const FEST=[
  {id:'sci',mi:10,wd:1,nm:'สัปดาห์วิทยาศาสตร์ · ทดลองเรื่องเสียง',at:['sch','rm:b3lab',[6,5]],h:[8,15],lb:'สัปดาห์วิทย์ · ทดลองเรื่องเสียง'},
  {id:'mom',mi:10,wd:4,nm:'วันแม่ (12 ส.ค.) · ให้ดอกมะลิได้ใจสามเท่า',at:['sch','512',[7,6]],h:[8,18],lb:'วันแม่ · ทำการ์ดกับครูตังค์'},
  {id:'retire',mi:11,wd:6,nm:'งานเกษียณ ผอ.อับดุลเราะห์มาน (โดมกิจกรรม)',at:['sch','rm:dome',[7,4]],h:[9,15],lb:'งานมุทิตาจิต ผอ.',once:1}];
+if(window.LIFE2&&LIFE2.fest){FEST.push(...LIFE2.fest);FEST.sort((a,b)=>a.mi-b.mi||a.wd-b.wd)}
 const NEWS=[{cap:'สนามฟุตบอลยามเย็น',at:['sch','w',[30,20]],h:[16,19]},{cap:'ป้อมยามยามเช้า',at:['sch','w',[36,12]],h:[6,10]},{cap:'โรงอาหารพักเที่ยง',at:['sch','rm:cant',[7,5]],h:[11,14]},
   {cap:'มุมอ่านหนังสือในห้องสมุด',at:['sch','rm:lib',[7,7]]},{cap:'ห้อง 512 ตอนซ้อม',at:['sch','512',[8,5]],h:[15,20]},{cap:'วัดห้วยมหาวงก์',at:['vil','w',[29,16]]},
   {cap:'แม่น้ำเมยยามเย็น',at:['vil','w',[8,22]],h:[16,19]},{cap:'ลานหน้าอาคาร 1',at:['sch','w',[30,30]]},{cap:'ห้องนาฏศิลป์',at:['sch','rm:b5dance',[7,6]]},{cap:'ห้องศิลปะของครูตังค์',at:['sch','rm:b6art',[6,6]]}];
@@ -452,18 +454,24 @@ const XSPEC={
   stuC:{skin:'#c98d62',hair:'#15100e',hs:'curly',shirt:'#7a3ab0',shade:'#5a2a88',pants:'#2a2238',shoe:'#eee',polo:'#f2c14e'},
   stuD:{skin:'#efc0a0',hair:'#1a1410',hs:'long',shirt:'#f6f4f8',shade:'#d4d0e0',pants:'#24305e',shoe:'#111',skirt:1,glass:'#6a5a8a'},
   villM:{skin:'#b07048',hair:'#2a2420',hs:'short',shirt:'#3a6ab0',shade:'#2a4a80',pants:'#3a3a2a',shoe:'#2a1a10'},
-  villF:{skin:'#d9a07a',hair:'#14100e',hs:'long',shirt:'#c8602a',shade:'#a04a20',pants:'#5a2a3a',shoe:'#2a1a10',skirt:1}};
+  villF:{skin:'#d9a07a',hair:'#14100e',hs:'long',shirt:'#c8602a',shade:'#a04a20',pants:'#5a2a3a',shoe:'#2a1a10',skirt:1},
+  vegas:{skin:'#d9a07a',hair:'#14100e',hs:'bang',shirt:'#1f8a3a',shade:'#13301f',pants:'#1a1820',shoe:'#111',polo:'#111'},
+  vegasF:{skin:'#d9a07a',hair:'#14100e',hs:'bang',shirt:'#8a1f3a',shade:'#6a1730',pants:'#1a1820',shoe:'#111',cap:'#f3f3ee'}};
 const XWHO={dir:'ผอ.อับดุลเราะห์มาน',dir2:'ผอ.ศิริพร',info:'ครูอินโฟ',cook:'ป้าแดงแม่ครัว',vendor:'บังเล็กร้านโรตี',lib:'ครูบรรณารักษ์',tchM:'คุณครู',tchF:'คุณครู',stuA:'นักเรียน',stuB:'นักเรียน',stuC:'นักเรียน',stuD:'นักเรียน',villM:'ชาวบ้าน',villF:'ชาวบ้าน'};
 function post(k,g,dir){const P=(c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(x,y,w||1,h||1)};
   if(k==='dir'){if(dir==='d'){P('#e6e6e6',4,10,8,2);P('#7a3a30',7,10,2,1);P('#f6f6f2',3,1,10,3)}else if(dir==='r'){P('#e6e6e6',8,10,4,2);P('#f6f6f2',4,1,8,3)}}
   if(k==='info'){if(dir==='d'){P('#141418',5,7,3,2);P('#141418',8,7,3,2);P('#141418',8,7,1,1);P('#f2c14e',3,9,1,2);P('#f2c14e',12,9,1,2);P('#2a2a3a',12,14,2,3);P('#5ab0e0',12,14,1,1)}else if(dir==='r'){P('#141418',9,7,3,2);P('#f2c14e',7,9,1,2)}}
-  if(k==='cook'&&dir==='d'){P('#ffffff',5,13,6,6);P('#e8e8e8',5,18,6,1)}}
+  if(k==='cook'&&dir==='d'){P('#ffffff',5,13,6,6);P('#e8e8e8',5,18,6,1)}
+  if(k==='vegas'&&dir==='d'){P('#f4f4f0',5,12,1,6);P('#f4f4f0',10,12,1,6)}
+  if(k==='vegasF'){P('#d8b24a',3,16,10,1);if(dir==='d'){P('#16161a',9,14,6,4);P('#d8c8a0',14,14,1,4);P('#c03030',9,14,1,4)}else if(dir==='r'){P('#16161a',4,14,8,4);P('#d8c8a0',11,14,1,4)}}}
 function buildLifeSprites(){
   Object.keys(XSPEC).forEach(k=>{SPEC[k]=XSPEC[k];SPR[k]={};
     for(const dir of ['d','u','r','l']){SPR[k][dir]=[0,1,2].map(f=>{const c=document.createElement('canvas');c.width=16;c.height=24;const g=c.getContext('2d');if(dir==='l'){g.translate(16,0);g.scale(-1,1)}
       const b=dir==='l'?'r':dir;drawChar(g,XSPEC[k],b,f);post(k,g,b);g.setTransform(1,0,0,1,0,0);return outline(c)})}
     if(!WHO[k])WHO[k]={n:XWHO[k]}});
-  WHO.dir={n:'ผอ.อับดุลเราะห์มาน'};WHO.dir2={n:'ผอ.ศิริพร'};WHO.info={n:'ครูอินโฟ'};WHO.cook={n:'ป้าแดงแม่ครัว'}}
+  WHO.dir={n:'ผอ.อับดุลเราะห์มาน'};WHO.dir2={n:'ผอ.ศิริพร'};WHO.info={n:'ครูอินโฟ'};WHO.cook={n:'ป้าแดงแม่ครัว'};
+  const P2=window.PORT2||{};WHO.vegas={n:'เวกัส',img:P2.vegas};WHO.vegasS={n:'เวกัส',img:P2.vegasS||P2.vegas};WHO.vegasH={n:'เวกัส',img:P2.vegasH||P2.vegas};WHO.vegasF={n:'เวกัส',img:P2.vegas};
+  SPR.vegasN=SPR.vegas;SPR.vegasS=SPR.vegas;SPR.vegasH=SPR.vegas}
 
 /* ---------------- ห้องปัจจุบัน / ทางเข้าออก ---------------- */
 const inRm=()=>!!(S&&S.map==='room'&&S.rm&&ROOMS[S.rm]);
@@ -490,6 +498,7 @@ const GEN_S=['ได้ยินวงดนตรีไทยซ้อมทุ
 const GEN_V=['ลมจากแม่น้ำเมยเย็นสบายนะลูก','ปีนี้มะม่วงออกลูกดก เก็บไปกินได้เลย','เสียงกลองหลวงซ้อมตอนเย็น ฟังแล้วใจฟู','ริมน้ำมีหินสวย ๆ เยอะ ระวังลื่นนะ'];
 function hintLine(R0){const ks=Object.keys(NP).filter(k=>NP[k].love&&NP[k].love.length);const k=ks[Math.floor(R0()*ks.length)],it=NP[k].love[Math.floor(R0()*NP[k].love.length)];return 'ได้ยินว่า'+NP[k].n+'ชอบ'+GI[it][0]+'มากเลยนะ'}
 function buildEnts(pl){
+  if(SPR.vegasN&&SPR.vegasF){const c0=cal();SPR.vegas=festToday(c0).length||(window.LIFE2&&LIFE2.festDress&&LIFE2.festDress(c0))?SPR.vegasF:SPR.vegasN}
   const F=F_(),c=cal(),h=hourF(),L=LF(),occ=new Set(),list=[],key=keyOf(pl),isRoom=pl.indexOf(':rm:')>0,rid=isRoom?pl.split(':rm:')[1]:null,D=rid?ROOMS[rid]:null;
   const take=p=>{if(p)occ.add(p.tx+','+p.ty);return p};
   const roomSpot=(k,own)=>{if(own)return take({x:own[0]*T+8,y:own[1]*T+12,tx:own[0],ty:own[1]});const r=reach(key);if(!r)return null;const R0=rng(hsh(k+pl+F.day));return take(reachRand(key,R0,occ,(x,y)=>y>=2))};
@@ -545,18 +554,20 @@ function festMarks(){const pl=placeNow();if(!pl)return [];const c=cal(),h=hourF(
   const p=pl==='sch:512'?{x:t[0]*T+8,y:t[1]*T+12}:(reachNear(key,t[0],t[1])||{x:t[0]*T+8,y:t[1]*T+12});return {f,x:p.x,y:p.y}})}
 function newsMark(){const L=LF(),F=F_();const n=L.news;if(!n||n.day!==F.day||n.done)return null;const N=NEWS[n.i],pl=placeNow();if(!N||plOf(N.at)!==pl)return null;const h=hourF();if(N.h&&(h<N.h[0]||h>=N.h[1]))return null;
   const key=keyOf(pl),t=N.at[2];const p=pl==='sch:512'?{x:t[0]*T+8,y:t[1]*T+12}:(reachNear(key,t[0],t[1])||{x:t[0]*T+8,y:t[1]*T+12});return {N,x:p.x,y:p.y}}
-async function bandSong(title,s,b0,nb,bg){const phr=SB.phrases(s).filter(p=>p.b0>=b0&&p.b0<b0+nb);if(!phr.length)return 1;let ph=0,ok=0,tot=0;const nph=phr.length;
-  const e=Object.assign({},ENEMY.note,{k:'mini',n:title,hp:100,atk:3,phr:[4,4],gap:.52,show:4,slot:.32,echoOnly:1});if(bg)e.bg=bg;['item','item3','boss','final','haze','call','ghost','pats'].forEach(k=>delete e[k]);
-  e.seqFn=seq=>{const q=phr[Math.min(ph,nph-1)];seq.length=0;q.n.forEach(g=>seq.push(g));ph++;e.show=ph<=2?q.n.length:ph<=4?2:1;if(BT)bmsg('ห้องเพลงที่ '+(q.b0+1)+' · วรรคที่ '+ph+'/'+nph)};
-  e.onEcho=res=>{res.forEach(v=>{tot++;if(v===1)ok++});if(BT){BT.hp=Math.max(0,Math.round(BT.max*(1-Math.min(1,ph/nph))));ebar();if(ph>=nph)BT.songDone=1}};
-  ENEMY.lfSong=e;const r=await battle('lfSong');return r==='win'?(tot?ok/tot:1):-1}
+/* วงชมรมบรรเลงในเทศกาล: ตีตามทีละบรรทัด (บรรทัดละ 8 ห้อง) ตั้งแต่ห้อง b0 ไป nb ห้อง */
+async function bandSong(title,s,b0,nb,bg){const L=SB.lines(s).filter(l=>l.b0>=b0&&l.b0<b0+nb);
+  const acc=await lineFight({key:'lfSong',base:ENEMY.note,over:Object.assign({k:'mini',n:title,atk:3},bg?{bg}:{}),lines:L});
+  return acc}
 const song=k=>SB.builtin.find(b=>b.key===k)||SB.builtin[0];
 const partyAff=n=>(S.party||[]).forEach(k=>{if(NP[k])aff(k,n)});
 async function quiz(qs,title){let ok=0;for(let i=0;i<qs.length;i++){const q=qs[i],ord=[0,1,2].sort(()=>Math.random()-.5);const v=await choose(title+' ข้อ '+(i+1)+'/'+qs.length,ord.map(j=>({t:q[1][j]})),esc(q[0]));
   if(ord[v]===0){ok++;await say(null,'ถูกต้อง! '+(q[2]||''))}else await say(null,'ยังไม่ใช่ · คำตอบคือ “'+q[1][0]+'” '+(q[2]||''))}return ok}
-async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.id+':'+(f.once?1:c.y)]=1;fsave()};const snap=api().snap;
+async function runFest(f){const c=cal(),L=LF();const mark=()=>{L.fest[f.id+':'+(f.once?1:c.y)]=1;fsave()};
+  const X=window.LIFE2;if(X&&X.run&&X.run[f.id]){await X.run[f.id](f,mark);return}
+  await runFest0(f);if(X&&X.after&&X.after[f.id]&&festDone(f,c))await X.after[f.id](f)}
+async function runFest0(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.id+':'+(f.once?1:c.y)]=1;fsave()};const snap=api().snap;
   if(f.id==='camp'){await talk([['tang','ค่ายดนตรีไทยปิดภาคเรียนเริ่มแล้ว! วันนี้ซ้อมเพลงไทยเดิมกันเต็มวัน'],['pob','ผู้จัดการเตรียมขนมไว้สามลัง… กินไปแล้วสองลัง'],['tang','เพลงแรก '+song('laojoi').title+' ครูตีให้ฟังทีละห้อง ตีตามนะ']]);
-    const a=await bandSong('ค่ายดนตรี · '+song('laojoi').title,song('laojoi'),0,8);if(a<0){await say(null,'ยังไม่จบเพลง ไว้กลับมาซ้อมใหม่ได้ทั้งวัน');return}
+    const a=await bandSong('ค่ายดนตรี · '+song('laojoi').title,song('laojoi'),0,16);if(a<0){await say(null,'ยังไม่จบเพลง ไว้กลับมาซ้อมใหม่ได้ทั้งวัน');return}
     mark();await talk([['tang','เยี่ยม! ค่ายปีนี้ทุกคนเก่งขึ้นเยอะ'],[null,'ทุกคนนั่งกินข้าวเหนียวหมูปิ้งด้วยกันในห้อง 512']]);CLUB.forEach(k=>aff(k,4));coins(30,'ค่ายดนตรี');snap('ค่ายดนตรีไทยปิดภาคเรียน');return}
   if(f.id==='loy'){await talk2([[null,'คืนวันเพ็ญเดือนสิบสอง น้ำในลำห้วยใส แสงจันทร์สะท้อนเป็นเส้นทอง'],['luwa','กระทงใบตองของแม่อุ๊ยครับ ใบนี้ของพี่'],['?kaimuk','อธิษฐานก่อนลอยนะ']]);
     const v=await choose('อธิษฐานว่า…',[{t:'ขอให้วงเราเล่นเพลงได้จบทุกเพลง'},{t:'ขอให้ทุกคนในวงสุขภาพดี'},{t:'ขอให้ได้กินข้าวแต๋นทุกวัน'}]);
@@ -568,7 +579,7 @@ async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.i
     invAdd('snack',2);invAdd('khaotaen');mark();aff(d,6);coins(10,'วันเด็ก');snap('วันเด็กที่สนาม');return}
   if(f.id==='exam'){await talk([[null,'สอบปลายภาค · ห้องเรียน ม.4/2 เงียบกริบ มีแต่เสียงปากกา'],['tchM','ข้อสอบห้าข้อ ตั้งใจทำนะ']]);const TR=api().TRIVIA.slice().sort(()=>Math.random()-.5).slice(0,5).map(t=>[t[0],[t[1][t[2]]].concat(t[1].filter((_,i)=>i!==t[2]))]);
     const ok=await quiz(TR,'สอบปลายภาค');mark();coins(ok*6,'สอบปลายภาค');if(ok>=5){invAdd('notebook');await say(null,'เต็มห้าคะแนน! ได้สมุดโน้ตเพลงเล่มใหม่เป็นรางวัล')}else await say(null,'ได้ '+ok+'/5 คะแนน');return}
-  if(f.id==='farewell'){await talk([[null,'ปัจฉิมนิเทศพี่ ม.6 · โดมกิจกรรมเต็มไปด้วยดอกไม้และน้ำตา'],['tang','ชมรมเราบรรเลงส่งพี่ ๆ นะ']]);const a=await bandSong('ส่งพี่ ม.6 · '+song('khaekmon').title,song('khaekmon'),0,8,'dome');
+  if(f.id==='farewell'){await talk([[null,'ปัจฉิมนิเทศพี่ ม.6 · โดมกิจกรรมเต็มไปด้วยดอกไม้และน้ำตา'],['tang','ชมรมเราบรรเลงส่งพี่ ๆ นะ']]);const a=await bandSong('ส่งพี่ ม.6 · '+song('khaekmon').title,song('khaekmon'),0,16,'dome');
     if(a<0){await say(null,'ยังบรรเลงไม่จบ ลองใหม่ได้ก่อนเที่ยง');return}mark();CLUB.forEach(k=>aff(k,3));coins(25,'ปัจฉิมนิเทศ');snap('บรรเลงส่งพี่ ม.6');return}
   if(f.id==='songkran'){await talk([[null,'สงกรานต์ที่แม่โกนเกน · ลานวัดเต็มไปด้วยเสียงหัวเราะและน้ำเย็น ๆ'],['elder','มารดน้ำดำหัวพ่อหลวงกับแม่อุ๊ยหน่อยลูก'],[null,'ทุกคนรินน้ำอบลงบนมือผู้ใหญ่ ขอพรปีใหม่ไทย'],['auntie','ขอให้ลูก ๆ เรียนเก่ง ตีกลองดัง ใจดีแบบนี้ตลอดไปนะ'],['pob','(สาดน้ำใส่ฟู) สุขสันต์วันสงกรานต์!']]);
     mark();aff('elder',15);aff('auntie',15);aff('drummer',8);aff('farmer',8);partyAff(5);coins(20,'สงกรานต์');snap('สงกรานต์แม่โกนเกน');return}
@@ -576,7 +587,7 @@ async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.i
     mark();aff(d,6);coins(10);return}
   if(f.id==='candle'){await talk([[null,'วันเข้าพรรษา · ชาวแม่โกนเกนแห่ต้นเทียนพรรษาไปวัดห้วยมหาวงก์'],['drummer','วงกลองปู่เจ่กับกลองหลวงตีนำขบวนนะลูก ตามจังหวะพ่อครู']]);
     api().procStart();await sleep(3800);api().procStop();
-    const a=await bandSong('แห่เทียนพรรษา · '+song('talebaa').title,song('talebaa'),0,8);
+    const a=await bandSong('แห่เทียนพรรษา · '+song('talebaa').title,song('talebaa'),0,16);
     if(a<0){await say(null,'ขบวนยังรอที่ลานวัด ลองตีนำอีกครั้ง');return}mark();aff('drummer',10);aff('elder',6);aff('luwa',6);coins(25,'แห่เทียนพรรษา');snap('แห่เทียนพรรษาแม่โกนเกน');return}
   if(f.id==='sci'){await talk([[null,'สัปดาห์วิทยาศาสตร์ · ห้องวิทย์ตั้งส้อมเสียง ขวดน้ำ และลูกระนาดไว้ให้ทดลอง'],['tchM','วันนี้เราจะทดลองว่า “เสียงสูงต่ำเกิดจากอะไร” ตอบคำถามสามข้อนะ']]);const ok=await quiz(SCIQ.slice().sort(()=>Math.random()-.5).slice(0,3),'ทดลองเรื่องเสียง');
     mark();coins(ok*8,'สัปดาห์วิทยาศาสตร์');aff('waen',6);if(ok===3)await say('waen','สามข้อเต็ม! พี่เข้าใจฟิสิกส์ของดนตรีไทยแล้วครับ');return}
@@ -586,7 +597,7 @@ async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.i
 async function retireEvent(){const L=LF(),F=F_();await api().walkFlash();
   await talk([[null,'30 กันยายน · โดมกิจกรรมประดับดอกไม้สีม่วง–เหลือง ป้ายผ้าเขียนว่า “มุทิตาจิต ผอ.อับดุลเราะห์มาน · ด้วยรักและผูกพัน”'],['info','(ถือกล้องสองตัว) ทุกคนยิ้ม! ครูอินโฟไลฟ์สดลงเพจอยู่นะจ๊ะ'],
     ['dir','(ถือไมค์กลับหัว) ฮัลโหล ๆ… เอ๊ะ ทำไมไม่ดัง… อ้อ ถือกลับหัว ฮ่า ๆ ๆ'],['dir','ผอ.อยู่โรงเรียนนี้นานจนจำได้ทุกต้นไม้ ทุกห้อง… แต่จำชื่อนักเรียนสลับทุกวันเลย ขอโทษนะลูก'],['tang','ชมรมสรรพวาทิตขอบรรเลงเพลงไทยเดิม ส่ง ผอ. ครับ']]);
-  const s=song('laodamnoen');await bandSong('บรรเลงส่ง ผอ. · '+s.title,s,0,8,'dome');
+  const s=song('laodamnoen');await bandSong('บรรเลงส่ง ผอ. · '+s.title,s,0,16,'dome');
   const W=Object.keys(L.wish||{}).filter(k=>NP[k]&&NP[k].wish);
   if(W.length)await talk([['info','ก่อนจบ… ครูอินโฟมีคลิปพิเศษ! เด็ก ๆ ช่วยกันเก็บคำอวยพรมาให้ ผอ.']].concat(W.slice(0,8).map(k=>[k,NP[k].wish])));
   await talk([['dir','(เช็ดตา) ผอ.ไม่ได้ร้องไห้นะ… ฝุ่นเข้าตา… ฝุ่นในโดมเยอะจัง'],...(hearts('dir')>=3?[['dir','ลูกน่ะ… ทำให้ ผอ.รู้ว่าวงดนตรีไทยของเรามีอนาคต ขอบใจนะ']]:[]),
@@ -607,6 +618,7 @@ function ctxLines(k,c){const L=LF(),out=[];
   if(k==='dir'&&L.gen<2&&c.y===1&&c.mi>=10)out.push(c.mi===11?'สิ้นเดือนนี้ ผอ.ก็เกษียณแล้ว… ผอ.จะคิดถึงเสียงฆ้องตอนเย็นนะลูก':'อีกไม่กี่เดือน ผอ.ก็จะเกษียณแล้วนะ อายุหกสิบพอดี เร็วจังเลย');
   if(k==='dir'&&L.gen>=2&&NP.dir.tr)out.push(NP.dir.tr[Math.floor(Math.random()*NP.dir.tr.length)]);
   if(k==='dir2'&&!L.met2){L.met2=1;out.unshift('สวัสดีจ้ะ ผอ.ศิริพร ผอ.คนใหม่ของสรรพวิทยาคม ผอ.เราะห์มานเล่าเรื่องชมรมเธอให้ฟังเยอะเลย ฝากตัวด้วยนะ')}
+  if(window.LIFE2&&LIFE2.ctx){try{const x=LIFE2.ctx(k,c,hourF());if(x)out.push(...[].concat(x))}catch(e){}}
   if(k==='info'&&c.y===1&&c.mi===11&&L.gen<2&&!L.wishOn){L.wishOn=1;fsave();out.push('ครูกำลังทำคลิปงานเกษียณ ผอ.! ช่วยเก็บคำอวยพรจากคนในโรงเรียนให้หน่อย อย่างน้อยห้าคนนะจ๊ะ ใครมีปุ่ม 💌 ก็ขอได้เลย')}
   return out}
 async function npcTalk(k,ent){const N=NP[k];if(!N)return;if(ent)faceTo(ent);const c=cal();
@@ -734,6 +746,7 @@ window.updateWorld=function(dt){_upd(dt);if(!ON())return;const F=F_(),L=LF();
   ents().forEach(e=>{if(e.fixed||e.mon)return;e.tm=(e.tm||Math.random()*3)-dt;if(e.tm<=0){e.tm=1.5+Math.random()*3;const r=Math.random();e.vx=0;e.vy=0;if(r<.45){const d=[[1,0],[-1,0],[0,1],[0,-1]][Math.floor(Math.random()*4)];e.vx=d[0]*16;e.vy=d[1]*16;e.dir=d[0]>0?'r':d[0]<0?'l':d[1]>0?'d':'u'}else if(r<.7)e.dir=['d','l','r','u'][Math.floor(Math.random()*4)]}
     if(e.vx||e.vy){const nx=e.x+e.vx*dt,ny=e.y+e.vy*dt;if(Math.hypot(nx-e.bx,ny-e.by)>14||blocked(nx,ny)||Math.hypot(nx-S.x,ny-S.y)<12){e.vx=e.vy=0}else{e.x=nx;e.y=ny;e.wf=(e.wf||0)+dt}}});
   // เก็บของ
+  if(window.LIFE2&&LIFE2.tick)try{LIFE2.tick(dt)}catch(e){console.warn(e)}
   fgHere().forEach(it=>{if(Math.hypot(S.x-it.x,S.y-it.y)<14){it.got=1;fsave();if(it.it==='coin'){coins(3+hsh(it.id+':'+F.day)%6,'เก็บเหรียญตกได้')}else{invAdd(it.it);try{sfx.get()}catch(e){}banner('เก็บได้ '+GI[it.it][1]+' '+GI[it.it][0]+' · ใช้เป็นของขวัญได้',2600)}}})};
 const _draw=drawWorld;
 window.drawWorld=function(t){_draw(t);if(!ON())return;const cX=Math.round(camX),cY=Math.round(camY);
@@ -746,6 +759,7 @@ window.drawWorld=function(t){_draw(t);if(!ON())return;const cX=Math.round(camX),
   const bang=(x,y,txt,c)=>{cx.fillStyle=c||'#ffd34d';cx.font='bold 10px Mitr,sans-serif';cx.fillText(txt,Math.round(x-4-cX),Math.round(y-26-cY+Math.sin(t*5)*2))};
   festMarks().forEach(m=>{cx.fillStyle='rgba(255,211,77,'+(.35+.3*Math.sin(t*4))+')';cx.beginPath();cx.ellipse(m.x-cX,m.y-cY,10,4,0,0,7);cx.fill();bang(m.x,m.y,'🎉')});
   const nm0=newsMark();if(nm0){cx.fillStyle='rgba(120,200,255,'+(.35+.3*Math.sin(t*4))+')';cx.beginPath();cx.ellipse(nm0.x-cX,nm0.y-cY,9,4,0,0,7);cx.fill();bang(nm0.x,nm0.y,'📷')}
+  if(window.LIFE2&&LIFE2.draw)try{LIFE2.draw(cx,cX,cY,t)}catch(e){}
   if(inRm()&&S.y>7*T){cx.fillStyle='rgba(255,255,255,.7)';cx.font='bold 7px Mitr,sans-serif';cx.fillText('▼ ออก',Math.round(7*T-3-cX),Math.round(9*T+8-cY))}};
 const _pre=prerenderInterior;
 window.prerenderInterior=function(){if(ON()&&inRm()){const b=built(S.rm);ROOM=b.c;RSOLID=b.sol;return}return _pre()};
@@ -769,4 +783,6 @@ async function lifeIntro(){for(let i=0;i<120&&(busy||!$('#dlg').classList.contai
 function freeReach(tx,ty){const F=F_();if(!F)return null;const key=F.cur==='vil'?'village':'world';return reachNear(key,tx,ty)}
 const LIFE=window.LIFE={_ents:null,hstr,spotAct,xbldNear,SPOTS,cal,dateText,dateShort,termText,school,onStart,reachNear,freeReach,reach,shop,giftTo,npcHook,npcTalk,NP,ROOMS,FEST,GI,hearts,aff,invAdd,invN,enterRoom,exitRoom,ents,fgHere,fgToday,festToday,festMarks,runFest,calendarScreen,friendBook,bagScreen,inRm,dayOf,built,newsTask,LF,retireEvent};
 buildLifeSprites();
+if(window.LIFE2&&LIFE2.init)LIFE2.init({cal,hearts,aff,coins,choose,openOv,invAdd,invN,LF,fsave,placeNow,plOf,keyOf,hourF,school,TERM,isBd,reachNear,reachRand,reach,nm,hstr,NP,FEST,festToday,festDone,dayOf,MN,WD,GI,CLUB,ents,inRm,enterRoom,song,bandSong,partyAff,
+  snap:c=>api().snap(c),procStart:b=>api().procStart(b),procStop:()=>api().procStop(),walkFlash:()=>api().walkFlash(),api});
 })();

@@ -1,6 +1,13 @@
 /* ====================================================================
    songbook.js — คลังทำนองเพลงไทยจริง ใช้ร่วมกันทุกเกม (ตำนานสรรพวาทิต ภาค 1 ใช้ตีกับผี/บอส/ผีลืมเพลง)
-   · ห้องเพลง 1 ห้อง = 4 ช่อง (ตรงกับ “บันทึกโน้ตเพลงไทย” ของชมรม)
+   · หลักการบันทึกโน้ตเพลงไทยที่ใช้แบ่งวรรคในทุกเกม
+       1 ห้องเพลง = 4 หน่วยเคาะ (ลูกตกอยู่ที่ตัวที่ 4 ของห้อง)
+       4 ห้องเพลง = 1 จังหวะหน้าทับ (อัตราสองชั้น)
+       1 บรรทัด  = 8 ห้องเพลง = วรรคหน้า 4 ห้อง + วรรคหลัง 4 ห้อง
+     เกมใช้ “1 บรรทัด” เป็นหน่วยวรรคเพลง ไม่ตัดกลางห้อง ไม่ข้ามบรรทัด
+     บรรทัดนับใหม่ทุกครั้งที่ขึ้นท่อนใหม่ในคลังโน้ต (บรรทัดสุดท้ายของท่อนอาจสั้นกว่า 8 ห้อง)
+     ที่มา: DLTV วิชาดนตรีไทย “ในหนึ่งบรรทัดจะประกอบด้วยห้องเพลงทั้งหมด 8 ห้องเพลง”
+            trueplookpanya “ในหนึ่งห้อง แบ่งออกได้เป็น 4 จังหวะ” · วิทยานิพนธ์ จุฬาฯ “หนึ่งประโยคมีสี่ห้องเพลงหรือหนึ่งจังหวะหน้าทับ”
    · เพลงในคลังความรู้ของชมรม (kind:"song") ถอดเป็นห้อง ๆ ได้ด้วย SB.build()
    · เพลงติดตัว (builtin) เป็นทำนองเพลงไทยเดิม ถอดจากโน้ตที่เผยแพร่บนเว็บ แล้วแปลงเป็นลูกฆ้อง
      ระบบเดาช่วงเสียง (สูง/ต่ำ) จากการเคลื่อนที่ของทำนองที่ใกล้ที่สุด เพราะโน้ตบนเว็บไม่ระบุช่วงเสียง
@@ -49,23 +56,34 @@ function decBar(b){
 }
 /* raw = {id,title,by,bpm,lines:[{bars,barsL,rep}]} (รูปแบบเดียวกับที่ “บันทึกโน้ตเพลงไทย” เก็บ) */
 function build(raw){
-  const bars=[];
-  (raw.lines||[]).forEach(l=>{
+  const bars=[],sec=[];
+  (raw.lines||[]).forEach((l,li)=>{
     const R=String(l.bars||'').trim().split(/\s+/).filter(Boolean),L=String(l.barsL||'').trim().split(/\s+/).filter(Boolean);
-    for(let rep=0;rep<(+l.rep===2?2:1);rep++)R.forEach((b,i)=>bars.push({r:decBar(b),l:L[i]?decBar(L[i]):[]}));
+    for(let rep=0;rep<(+l.rep===2?2:1);rep++){const b0=bars.length;
+      R.forEach((b,i)=>bars.push({r:decBar(b),l:L[i]?decBar(L[i]):[]}));
+      if(bars.length>b0)sec.push({b0,b1:bars.length-1,label:(l.label||('ท่อน '+(li+1)))+(rep?' (ซ้ำ)':'')})}
   });
-  return {id:raw.id,title:raw.title||'เพลง',by:raw.by||'',bpm:+raw.bpm||160,bars,src:raw.src||'lib'};
+  return {id:raw.id,title:raw.title||'เพลง',by:raw.by||'',bpm:+raw.bpm||160,bars,sec,src:raw.src||'lib'};
 }
-/* ห้องเพลงเป็นวรรค: ห้องที่มีโน้ตตั้งแต่ 2 ตัวขึ้นไปเป็น 1 วรรค · ห้องที่มีตัวเดียวควบกับห้องถัดไป · ห้องเงียบข้าม */
+/* ---------- แบ่งเพลงเป็นบรรทัด (หน่วยวรรคเพลงของทุกเกม) ----------
+   คืนรายการบรรทัด {b0,b1,nb,label,sec, ev:[{b,t,g}], n:[g], bars}
+   b = ห้องที่ 0–7 ในบรรทัด · t = หน่วยเคาะ 0–3 ในห้อง · g = ปุ่ม 0–7 (ด–ดํ) */
+const LINE=8,HALF=4;
 const topOf=bar=>bar.r.filter(e=>!e.sub).map(e=>fold(Math.max(...e.g)));
-function phrases(s){
-  if(s._ph)return s._ph;
-  const out=[];let acc=[],b0=-1;
-  s.bars.forEach((bar,i)=>{const n=topOf(bar);if(!n.length)return;if(b0<0)b0=i;acc=acc.concat(n);
-    if(acc.length>=2){out.push({n:acc,b0,b1:i});acc=[];b0=-1}});
-  if(acc.length){if(out.length){const l=out[out.length-1];l.n=l.n.concat(acc);l.b1=s.bars.length-1}else out.push({n:acc,b0:Math.max(0,b0),b1:s.bars.length-1})}
-  return s._ph=out;
+function lines(s){
+  if(s._ln)return s._ln;
+  const out=[],secs=(s.sec&&s.sec.length)?s.sec:[{b0:0,b1:s.bars.length-1,label:''}];
+  secs.forEach((c,ci)=>{
+    for(let a=c.b0;a<=c.b1;a+=LINE){
+      const b1=Math.min(c.b1,a+LINE-1),ev=[];
+      for(let b=a;b<=b1;b++)s.bars[b].r.forEach(e=>{if(!e.sub)ev.push({b:b-a,t:Math.max(0,Math.min(3,Math.round(e.t))),g:fold(Math.max(...e.g))})});
+      ev.sort((x,y)=>x.b-y.b||x.t-y.t);
+      if(ev.length)out.push({b0:a,b1,nb:b1-a+1,label:c.label,sec:ci,ev,n:ev.map(x=>x.g),bars:s.bars.slice(a,b1+1)});
+    }});
+  return s._ln=out;
 }
+/* เดิมเกมเรียก phrases() — ตอนนี้ “วรรค” = 1 บรรทัด */
+const phrases=lines;
 
 /* ---------- เพลงติดตัว: ทำนองเพลงไทยเดิม ---------- */
 const RAW=[
@@ -92,7 +110,7 @@ const RAW=[
   '-มมม ซมรด รดลด -ร-ฟ ซฟลซ ลฟซร ฟรซฟ ซรฟด '+
   'ซลทด รดทล ซฟซล ซลทด รรรซ รฟรด ทดซล ทรดท'}
 ];
-const builtin=RAW.map(r=>({id:'sb:'+r.key,key:r.key,title:r.title,by:'ทำนองเพลงไทยเดิม (ฉบับร่างจากเว็บ)',bpm:144,bars:thai(r.text),src:'sb'}));
+const builtin=RAW.map(r=>{const bars=thai(r.text);return {id:'sb:'+r.key,key:r.key,title:r.title,by:'ทำนองเพลงไทยเดิม (ฉบับร่างจากเว็บ)',bpm:144,bars,sec:[{b0:0,b1:bars.length-1,label:r.title}],src:'sb'}});
 
 /* แปลงเป็นรูปแบบเพลงในคลังความรู้ (ให้ครูเปิดแก้ใน “บันทึกโน้ตเพลงไทย” ได้) */
 function toLibSong(s,author){
@@ -106,22 +124,47 @@ function toLibSong(s,author){
     author:author||{name:'ทำนองเพลงไทยเดิม',sid:''},hands:true,west:{tr:0,chords:true},lines,at:Date.now()};
 }
 
-/* ---------- ทำนองสั้นสุ่มจากเพลงจริง ไว้ให้ศัตรูในเกมตี ---------- */
+/* ---------- บรรทัดเพลงสุ่มจากเพลงจริง ไว้ให้ศัตรูในเกมตี ----------
+   ศัตรูตีเต็มบรรทัดเสมอ (8 ห้อง) · ความยากของศัตรูเดิม (len) ใช้เป็น “จำนวนลูกท้ายบรรทัดที่ต้องจำเอง”
+   เกมจะแสดงโน้ตบรรทัดนั้นบนจอ ลูกต้น ๆ มีชื่อโน้ตให้อ่าน ลูกท้าย ๆ ซ่อนไว้ให้ฟังแล้วจำ
+   คืนอาร์เรย์ปุ่ม และติด .unit = บรรทัด (มี title) ไว้ให้เกมวาดแถบโน้ตและเล่นตามจังหวะจริง */
 let LIB=[];
 function setLib(list){LIB=(list||[]).filter(s=>s&&s.bars&&s.bars.length)}
 function pool(){return builtin.concat(LIB)}
-function randomPhrase(len){
-  len=Math.max(2,Math.min(8,len|0||3));
-  const ps=pool();if(!ps.length)return null;
-  for(let t=0;t<8;t++){
-    const s=ps[Math.floor(Math.random()*ps.length)],ph=phrases(s);if(!ph.length)continue;
-    let i=Math.floor(Math.random()*ph.length),n=[];
-    for(let k=0;k<ph.length&&n.length<len;k++){n=n.concat(ph[(i+k)%ph.length].n)}
-    n=n.slice(0,len);
-    if(n.length>=2&&new Set(n).size>=2)return n;
-  }
-  return null;
+function randomLine(len,maxN){
+  const ps=pool();if(!ps.length)return null;const all=[];
+  ps.forEach(s=>lines(s).forEach(u=>{if(u.n.length>=3&&new Set(u.n).size>=2&&(!maxN||u.n.length<=maxN))all.push([s,u])}));
+  if(!all.length)return null;
+  const [s,u]=all[Math.floor(Math.random()*all.length)];
+  const r=u.n.slice();r.unit=Object.assign({title:s.title},u);return r;
 }
+const randomPhrase=len=>randomLine(len);
 
-window.SB={builtin,build,phrases,fold,topOf,decBar,toLibSong,setLib,randomPhrase,thai};
+/* ---------- แถบโน้ตบรรทัด (ใช้ร่วมทุกเกม) ----------
+   ntl(unit, labels, {show, res, k}) → HTML 8 ห้อง ห้องละ 4 ช่อง เว้นช่องระหว่างวรรคหน้า–วรรคหลัง
+   labels[i] = ชื่อโน้ตลูกที่ i (ลูกที่ i ≥ show แสดงเป็น • ให้จำเอง) */
+function ntl(u,labels,o){
+  o=o||{};const show=o.show==null?999:o.show,res=o.res||[],k=o.k==null?-1:o.k,at={};
+  u.ev.forEach((e,i)=>at[e.b*4+e.t]=i);
+  let h='';
+  for(let b=0;b<u.nb;b++){
+    if(b===HALF)h+='<i class="sbn-gap"></i>';
+    h+='<span class="sbn-bar">';
+    for(let q=0;q<4;q++){const i=at[b*4+q];
+      if(i==null){h+='<b class="sbn-c sbn-r">-</b>';continue}
+      const r=res[i],seen=i<show||r!=null,cls='sbn-c'+(seen?'':' sbn-h')+(r===1?' sbn-ok':r===2?' sbn-ok2':r===0?' sbn-bad':'')+(i===k?' sbn-cur':'')+(q===3?' sbn-tk':'');
+      h+='<b class="'+cls+'">'+(seen?(labels[i]||'?'):'•')+'</b>'}
+    h+='</span>'}
+  return h;
+}
+(function css(){if(typeof document==='undefined'||document.getElementById('sbnCss'))return;const st=document.createElement('style');st.id='sbnCss';
+  st.textContent='.sbn{display:flex;align-items:center;justify-content:center;gap:3px;font-family:Mitr,sans-serif;pointer-events:none}'+
+  '.sbn-bar{display:inline-flex;border:1px solid #7a6aa0;border-radius:4px;background:rgba(18,10,30,.88);overflow:hidden}'+
+  '.sbn-c{display:inline-block;width:var(--cw,18px);text-align:center;font-weight:600;font-size:var(--fs,12px);line-height:1.75;color:#ffe9a8;border-right:1px solid rgba(255,255,255,.07)}'+
+  '.sbn-c:last-child{border-right:0}.sbn-r{color:#5a4a72;font-weight:400}.sbn-h{color:#a898c8}.sbn-tk{box-shadow:inset 0 -2px 0 rgba(255,233,168,.35)}'+
+  '.sbn-ok{background:#2f6a3a;color:#eaffea}.sbn-ok2{background:#7a6a1a;color:#fff6c8}.sbn-bad{background:#8a2a2a;color:#ffe0e0}.sbn-cur{outline:2px solid #fff;outline-offset:-2px}'+
+  '.sbn-gap{display:inline-block;width:8px}';
+  (document.head||document.documentElement).appendChild(st)})();
+
+window.SB={builtin,build,lines,phrases,fold,topOf,decBar,toLibSong,setLib,randomPhrase,randomLine,ntl,LINE,HALF,thai};
 })();

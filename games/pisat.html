@@ -86,6 +86,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
 .leg b{color:var(--gold)}
 #credits{text-align:center}
 #credits .roll{font-size:15px;line-height:1.8}
+#ntl{position:absolute;left:50%;transform:translateX(-50%);max-width:98%;z-index:3}
 #replay{position:absolute;left:50%;transform:translateX(-50%);pointer-events:auto;padding:6px 16px;color:var(--cream);font-family:Mitr;font-size:14px;cursor:pointer}
 #replay:disabled{opacity:.4}
 .bag{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.bag button{flex:1;min-width:120px;padding:8px;color:var(--cream);background:#2b1f40;border:2px solid var(--cream);border-radius:6px;font-size:13px}.bag button:disabled{opacity:.4}
@@ -127,6 +128,7 @@ button{font-family:"Mitr",sans-serif;cursor:pointer}
     <div id="menu" class="hide"></div>
     <div id="lanes" class="hide"></div>
     <button id="replay" class="box hide">🔁 ฟังอีกครั้ง</button>
+    <div id="ntl" class="sbn hide"></div>
   </div>
   <div id="dlg" class="box hide"><img id="dP" alt=""><div style="flex:1;min-width:0"><div class="nm" id="dN"></div><div class="tx" id="dT"></div></div><div class="more">▼</div></div>
   <div id="flash"></div>
@@ -1223,6 +1225,7 @@ function battle(kind){
     audio();stopMusic();const e=Object.assign({},ENEMY[kind]);
     BT={e,kind,hp:e.hp,max:e.hp,ph:0,sp:0,pops:[],notes:[],lanes:0,pobCd:0,confused:0,laugh:0,hitFx:0,eFx:0,pFx:0,trackB:H-80,padH:0,act:'',t0:performance.now(),resolve};
     if(e.boss)Object.assign(e,BOSSPH[0]);
+    $('#ntl').classList.add('hide');
     mode='battle';showHud(true);$('#quest').classList.add('hide');$('#tbtn').classList.add('hide');setPad(false);$('#hint').classList.add('hide');$('#bub').classList.add('hide');
     $('#bui').classList.remove('hide');ebar();spbar();layoutBattle();
     flash('#fff',100);sfx.glitch();
@@ -1281,10 +1284,21 @@ async function enemyTurn(){
   if(BT.e.call)return await callTurn();
   let e=BT.e,ez=!!S.easy,foc=!!BT.focus,len=Math.max(2,ri(e.phr[0],e.phr[1])-(inParty('captain')?1:0)),seq=[];BT.focus=0;
   for(let i=0;i<len;i++){let g;do{g=ri(0,7)}while(seq.length&&g===seq[seq.length-1]&&Math.random()<.7);seq.push(g)}
+  const len0=len;
   if(e.seqFn)e.seqFn(seq,len);/* ส่วนเสริม p1/dlc.js: ทำนองจากเพลงในคลังโน้ต */
-  else if(window.SB&&!e.noReal){try{const ph=SB.randomPhrase(len);if(ph){seq.length=0;ph.forEach(g=>seq.push(g))}}catch(x){}}/* ปีศาจทั่วไป: ตีวรรคสั้น ๆ จากเพลงไทยจริง (songbook.js) */
+  else if(window.SB&&!e.noReal){try{const ph=SB.randomPhrase(len);if(ph){seq.length=0;ph.forEach(g=>seq.push(g));seq.unit=ph.unit}}catch(x){}}/* ปีศาจทั่วไป: ตีวรรคสั้น ๆ จากเพลงไทยจริง (songbook.js) */
   len=seq.length||len;
   const inst=leadInst();let show=(ez||foc)?len:e.show;if(inParty('maha'))show=Math.min(len,show+2);const gap=e.gap*(ez?1.15:1),atk=Math.max(1,Math.round(e.atk*(ez?.5:1)));
+  /* วรรคเพลง = 1 บรรทัด (8 ห้อง) · ศัตรูทั่วไปซ่อนเฉพาะลูกท้ายบรรทัดเท่ากับความยากเดิม ลูกที่เหลือมีชื่อโน้ตให้อ่านบนแถบโน้ต */
+  const U=seq.unit&&seq.unit.ev&&seq.unit.ev.length===len?seq.unit:null;
+  if(U&&!e.seqFn&&!(ez||foc)){const hid=Math.max(0,Math.min(len,len0-(e.show||0)-(inParty('maha')?2:0)));show=len-hid}
+  let TMS=null;if(U){const sl=Math.max(.2,Math.min(.34,gap*.56)),f=U.ev[0].b*4+U.ev[0].t;TMS=U.ev.map(x=>(x.b*4+x.t-f)*sl)}
+  const tOf=i=>TMS?TMS[i]:i*gap,dur=()=>tOf(len-1)+(TMS?.5:gap)+.1;
+  const lbl=seq.map(g=>TS.KNOTE[GONGS[g]]);
+  const ntlDraw=(k,res)=>{const N=$('#ntl');if(!U){N.classList.add('hide');return}
+    const stw=$('#stage').offsetWidth||W*SC,cw=Math.max(13,Math.min(30,Math.floor((stw*.95-14)/(U.nb*4)-1)));
+    N.style.setProperty('--cw',cw+'px');N.style.setProperty('--fs',Math.round(cw*.62)+'px');
+    N.innerHTML=SB.ntl(U,lbl,{show,res,k});N.style.bottom=((BT.padH||0)+50)+'px';N.classList.remove('hide')};
   BT.replays=(ez||foc)?99:2;
   bmsg(foc?'🌿 ยาดมเข้าเต็มจมูก! หัวโล่ง ไฟช่วยครบทุกลูก':show>=len?e.n+' ตีทำนองเพี้ยน… จำให้ได้!':show?'ฟังให้ดี! ไฟจะช่วยแค่ '+show+' ลูกแรก':'ฟังด้วยหูอย่างเดียว! ไม่มีไฟช่วย');
   buildGong();const rp=$('#replay');BT.padH=$('#lanes').offsetHeight;rp.style.bottom=(BT.padH+10)+'px';layoutBattle();
@@ -1294,14 +1308,16 @@ async function enemyTurn(){
   async function sing(){
     BT.singing=1;btns.forEach(b=>b.disabled=true);updRep();
     BT.eFx=performance.now();const t0=AC.currentTime+.15;
-    seq.forEach((g,i)=>{playInst(inst,GONGS[g],t0+i*gap,.95);if(i<show)setTimeout(()=>lit(g,gap*700),(.15+i*gap+lat())*1000)});
-    BT.singing={t0,gap,n:len};
-    await sleep((len*gap+.4)*1000);BT.singing=null;btns.forEach(b=>b.disabled=false);updRep();
+    seq.forEach((g,i)=>{playInst(inst,GONGS[g],t0+tOf(i),.95);if(i<show)setTimeout(()=>lit(g,Math.min(gap,.4)*700),(.15+tOf(i)+lat())*1000)});
+    BT.singing={t0,gap:dur()/len,n:len};
+    await sleep((dur()+.3)*1000);BT.singing=null;btns.forEach(b=>b.disabled=false);updRep();
   }
-  rp.classList.remove('hide');updRep();
+  rp.classList.remove('hide');updRep();ntlDraw(-1,[]);
+  if(U&&!foc&&!e.seqFn)bmsg((U.title?'“'+U.title+'” ':'')+'ห้อง '+(U.b0+1)+'–'+(U.b1+1)+(show<len?' · ลูก • ท้ายบรรทัดต้องฟังแล้วจำเอง':' · อ่านโน้ตตามได้ทุกลูก'));
   await sleep(700);await sing();
-  bmsg(inParty('waen')?'แว่นจดโน้ตให้: '+seq.map(g=>TS.KNOTE[GONGS[g]]).join(' '):'ตาเรา! ตีตามทำนอง ('+len+' ลูก) · ฟังไม่ทันกด 🔁');
-  let k=0,wrong=0,miss=0;BT.echo={seq,k:0,res:[]};
+  if(inParty('waen')&&U)show=len;
+  bmsg(U?'ตาเรา! ตีตามบรรทัดเพลง '+U.nb+' ห้อง ('+len+' ลูก)'+(show<len?' · ลูก • ต้องฟังแล้วจำเอง':''):inParty('waen')?'แว่นจดโน้ตให้: '+seq.map(g=>TS.KNOTE[GONGS[g]]).join(' '):'ตาเรา! ตีตามทำนอง ('+len+' ลูก) · ฟังไม่ทันกด 🔁');
+  let k=0,wrong=0,miss=0;BT.echo={seq,k:0,res:[],unit:U};ntlDraw(0,[]);
   await new Promise(res=>{
     let to=null;const wait=ez?9000:6500;
     const arm=()=>{clearTimeout(to);to=setTimeout(()=>press(-1),wait)};
@@ -1309,23 +1325,40 @@ async function enemyTurn(){
     function press(g){
       if(BT.singing)return;clearTimeout(to);
       if(g>=0)playInst(inst,GONGS[g],0,.9);
-      if(g===seq[k]){BT.echo.res[k]=miss?2:1;pop('✓',W/2-(len-1)*8+k*16-3,H*.56-10,'#7ef08a');BT.sp=Math.min(100,BT.sp+2);k++;miss=0}
+      if(g===seq[k]){BT.echo.res[k]=miss?2:1;if(!U)pop('✓',W/2-(len-1)*8+k*16-3,H*.56-10,'#7ef08a');BT.sp=Math.min(100,BT.sp+2);k++;miss=0}
       else{wrong++;miss++;if(inParty('mateo')&&Math.random()<.25)pop('มาเตโอมึน ๆ หลบได้!',40,H*.32,'#7ef08a');else{S.hp-=atk;pop('-'+atk,70,H*.32,'#ff6a6a')}hud();BT.pFx=performance.now();shake(220);sfx.bad();
         // บอกลูกที่ถูกให้ตีแก้
         setTimeout(()=>{lit(seq[k],700,'#7ef08a');pop('ลูกที่ถูก: '+TS.KNOTE[GONGS[seq[k]]],W/2-40,H*.56-14,'#7ef08a')},120);
         if(miss>=2||g<0){BT.echo.res[k]=0;k++;miss=0}}
-      BT.echo.k=k;
+      BT.echo.k=k;if(U)ntlDraw(k,BT.echo.res);
       if(k>=seq.length||S.hp<=0){BT.gongPress=null;BT.replay=null;res();return}
       arm()}
     BT.gongPress=press;arm();
   });
   if(e.onEcho&&BT.echo)e.onEcho(BT.echo.res.slice(),wrong);
-  BT.echo=null;rp.classList.add('hide');$('#lanes').classList.add('hide');BT.padH=0;layoutBattle();
+  try{if(window.SKILL&&BT.echo&&len)SKILL('melody',BT.echo.res.filter(v=>v===1).length/len,{game:'pisat'})}catch(x){}
+  if(U)await sleep(500);
+  BT.echo=null;rp.classList.add('hide');$('#ntl').classList.add('hide');$('#lanes').classList.add('hide');BT.padH=0;layoutBattle();
   if(S.hp<=0){await sleep(500);return'lose'}
   if(e.echoOnly){bmsg(wrong?'ตีผิด '+wrong+' ครั้ง ไม่เป็นไร ไปวรรคต่อไป':'ตีตามได้ครบทั้งวรรค!');if(!wrong)sfx.ok();await sleep(900);return BT.songDone?'win':null}
-  if(!wrong){const d=4+len;BT.hp-=d;BT.sp=Math.min(100,BT.sp+12);spbar();BT.eFx=performance.now();sfx.ok();bmsg('ตีตามได้ครบ! สวนกลับ '+d);pop('-'+d,240,H*.3,'#ffd34d');ebar();await sleep(1000);return await afterDamage()}
+  if(!wrong){const d=4+(U&&!e.seqFn?len0+Math.round(len/4):len);BT.hp-=d;BT.sp=Math.min(100,BT.sp+12);spbar();BT.eFx=performance.now();sfx.ok();bmsg('ตีตามได้ครบ! สวนกลับ '+d);pop('-'+d,240,H*.3,'#ffd34d');ebar();await sleep(1000);return await afterDamage()}
   bmsg('ตีผิด '+wrong+' ครั้ง');await sleep(900);return await afterDamage();
 }
+/* ---------- ตีตามเพลงทีละบรรทัด (1 บรรทัด = 8 ห้อง = วรรคหน้า + วรรคหลัง) ----------
+   ใช้ร่วมกันโดย ผีลืมเพลง (p1/dlc.js) · วงชมรมในเทศกาล (p1/life.js) · ซ้อมเพลงในเหตุการณ์ (p1/free.js)
+   o = {key, base (ศัตรูต้นแบบ), over (ค่าที่ทับ), lines (จาก SB.lines), hint (ข้อความหัวบรรทัด)}
+   บรรทัดแรก ๆ เห็นชื่อโน้ตครบ บรรทัดถัดไปเห็นครึ่งแรก ครึ่งหลังต้องฟังแล้วจำเอง · คืนค่าความแม่นยำ 0–1 หรือ -1 ถ้าแพ้ */
+async function lineFight(o){
+  const L=(o.lines||[]).filter(l=>l&&l.n&&l.n.length);if(!L.length)return 1;
+  let ph=0,ok=0,tot=0;const nph=L.length;
+  const e=Object.assign({},o.base||ENEMY.note,{hp:100,atk:4,phr:[4,4],gap:.52,show:99,slot:.32},o.over||{},{echoOnly:1});
+  ['item','item3','boss','final','haze','call','ghost','pats'].forEach(k=>delete e[k]);
+  e.seqFn=seq=>{const q=L[Math.min(ph,nph-1)];seq.length=0;q.n.forEach(g=>seq.push(g));seq.unit=q;ph++;
+    e.show=ph<=(o.full||2)?q.n.length:Math.ceil(q.n.length/2);
+    if(BT)bmsg((o.hint?o.hint+' · ':'')+'บรรทัดที่ '+ph+'/'+nph+' · ห้อง '+(q.b0+1)+'–'+(q.b1+1))};
+  e.onEcho=res=>{res.forEach(v=>{tot++;if(v===1)ok++});if(BT){BT.hp=Math.max(0,Math.round(BT.max*(1-Math.min(1,ph/nph))));ebar();if(ph>=nph)BT.songDone=1}};
+  const key='lf_'+(o.key||'song');ENEMY[key]=e;const r=await battle(key);delete ENEMY[key];
+  return r==='win'?(tot?ok/tot:1):-1}
 function buildGong(){
   const L=$('#lanes');L.className='gong';L.innerHTML=GONGS.map((g,i)=>'<button data-i="'+i+'">'+TS.KNOTE[g]+'</button>').join('');L.classList.remove('hide');
   L.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',ev=>{ev.preventDefault();if(b.disabled)return;b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),90);if(BT&&BT.gongPress)BT.gongPress(+b.dataset.i);else playInst(leadInst(),GONGS[+b.dataset.i],0,.6)}));
@@ -1431,6 +1464,7 @@ function rhythm(mode,who){
       const tot=R.notes.filter(n=>!n.ghost).length;bmsg('เป๊ะ '+R.perf+' · ดี '+R.good+' · พลาด '+R.miss+' / '+tot+' → ความเสียหาย '+Math.round(R.dmg));
       if(R.perf===tot&&R.mode!=='follow'&&R.mode!=='klongF'){BT.hp-=8;chabS(2,0,.8);ebar();pop('PERFECT +8',200,H*.25,'#ffd34d')}
       if(R.mode==='follow'||R.mode==='klongF')BT.lastRatio=(R.perf+R.good)/Math.max(1,tot);
+      try{if(window.SKILL&&tot)SKILL('rhythm',(R.perf+R.good*.7)/tot,{game:'pisat'})}catch(e){}
       if(R.mode==='voice'){BT.buff=2;if(Math.random()<.3){BT.confused=1;await say('kaimuk','(ร้องเพี้ยนคีย์ไปครึ่งเสียง) …อ๊ะ');bmsg('ปีศาจหัวเราะจนท้องแข็ง เสียตาหน้า!')}else bmsg('ไข่มุกร้องนำวง! ทั้งทีมตีแรงขึ้น ×1.3 อีก 2 ตา')}
       if(R.mode==='pinae'){const r=Math.min(6,Math.max(1,Math.round(S.hp)-1));S.hp-=r;hud();pop('ทีมหูอื้อ -'+r,40,H*.3,'#ff9a7a')}
       await sleep(1300);bmsg('');res();
@@ -1556,7 +1590,7 @@ function drawBattle(t){
     cx.fillStyle='rgba(10,6,20,.8)';cx.fillRect(20,y-14,W-40,34);cx.fillStyle='#7ee081';cx.fillRect(24,y-10,(W-48)*Math.min(1,M.n/(M.kc*1.3)),10);cx.fillStyle='#7fd8ff';cx.fillRect(24,y+4,(W-48)*Math.min(1,kn/(M.kc*1.3)),10);
     cx.font='bold 10px Mitr';cx.fillStyle='#fff';cx.fillText('เรา '+M.n,26,y-1);cx.fillText('ขุนไม้เดี่ยว '+kn,26,y+13);cx.fillText(Math.max(0,Math.ceil((1-el)*6))+' วิ',W-50,y-1)}
   // ตาป้องกัน: จุดความคืบหน้า
-  if(BT.echo){const E=BT.echo,n=E.seq.length,y=Math.round(H*.56);for(let i=0;i<n;i++){const x=W/2-(n-1)*8+i*16;const r=E.res[i];disc(cx,'#140c1c',x,y,5);disc(cx,r===1?'#7ef08a':r===2?'#ffd34d':r===0?'#ff6a6a':i===E.k?'#ffffff':'#4a3a60',x,y,4)}}
+  if(BT.echo&&!BT.echo.unit){const E=BT.echo,n=E.seq.length,y=Math.round(H*.56);for(let i=0;i<n;i++){const x=W/2-(n-1)*8+i*16;const r=E.res[i];disc(cx,'#140c1c',x,y,5);disc(cx,r===1?'#7ef08a':r===2?'#ffd34d':r===0?'#ff6a6a':i===E.k?'#ffffff':'#4a3a60',x,y,4)}}
   // ตัวเลขลอย
   BT.pops=BT.pops.filter(p=>now-p.t<900);BT.pops.forEach(p=>{const k=(now-p.t)/900;cx.globalAlpha=1-k;cx.font='bold 11px Mitr';cx.fillStyle='#000';cx.fillText(p.txt,p.x+1,p.y-k*16+1);cx.fillStyle=p.c;cx.fillText(p.txt,p.x,p.y-k*16);cx.globalAlpha=1});
   cx.restore();
@@ -1768,10 +1802,15 @@ function codePuzzle(){
 }
 function orderPuzzle(){
   return new Promise(res=>{
-    const mel=songMelody();const ns=mel.notes.slice(0,16).map(n=>n.g);while(ns.length<16)ns.push(pick([5,7,8,10]));
-    const frags=[0,1,2,3].map(i=>({id:i,n:ns.slice(i*4,i*4+4)}));const shuf=frags.slice().sort(()=>Math.random()-.5);window.__PZ={order:shuf.map(f=>f.id)};
+    /* โน้ตฉีกเป็น 4 ชิ้นตามห้องเพลง: 1 บรรทัด (8 ห้อง) ชิ้นละ 2 ห้อง ไม่ตัดกลางห้อง */
+    const mel=songMelody();let frags=null;
+    {const byL={};mel.notes.forEach(n=>{const L=Math.floor(n.s/32);(byL[L]=byL[L]||[]).push(n)});
+      for(const L of Object.keys(byL).map(Number).sort((x,y)=>x-y)){const q=[0,1,2,3].map(i=>byL[L].filter(n=>Math.floor((n.s-L*32)/8)===i).map(n=>n.g));
+        if(q.every(x=>x.length>=2&&x.length<=7)){frags=q.map((n,i)=>({id:i,n}));break}}}
+    if(!frags){const ns=mel.notes.slice(0,16).map(n=>n.g);while(ns.length<16)ns.push(pick([5,7,8,10]));frags=[0,1,2,3].map(i=>({id:i,n:ns.slice(i*4,i*4+4)}))}
+    const ns=[].concat(...frags.map(f=>f.n));const shuf=frags.slice().sort(()=>Math.random()-.5);window.__PZ={order:shuf.map(f=>f.id)};
     let pickd=[];
-    puz('📖 เรียงหน้าโน้ตที่ฉีกขาด','สมุดโน้ตขาดเป็น 4 ชิ้น กด “ฟังต้นฉบับ” เพื่อฟังทำนองเต็ม แล้วแตะชิ้นโน้ตเรียงจากต้นไปท้าย<br><small>แตะชิ้นซ้ำเพื่อฟัง · ทำนองจาก'+(mel.src==='gen'?'ทำนองชั่วคราว (ยังไม่พบเพลงแขกบรเทศในสื่อชมรม)':'เพลง'+mel.title+'ในสื่อของชมรม')+'</small>');
+    puz('📖 เรียงหน้าโน้ตที่ฉีกขาด','สมุดโน้ตขาดเป็น 4 ชิ้น (ชิ้นละ 2 ห้องเพลง รวม 1 บรรทัด) กด “ฟังต้นฉบับ” เพื่อฟังทำนองเต็ม แล้วแตะชิ้นโน้ตเรียงจากต้นไปท้าย<br><small>แตะชิ้นซ้ำเพื่อฟัง · ทำนองจาก'+(mel.src==='gen'?'ทำนองชั่วคราว (ยังไม่พบเพลงแขกบรเทศในสื่อชมรม)':'เพลง'+mel.title+'ในสื่อของชมรม')+'</small>');
     const A=$('#puzA');A.className='frags';
     const playN=(arr,gap)=>{if(!AC)return;const t0=AC.currentTime+.08;arr.forEach((g,i)=>ranad(g,t0+i*(gap||.26),.9))};
     function render(){A.innerHTML=shuf.map((f,i)=>{const k=pickd.indexOf(f.id);return'<button data-i="'+i+'" class="'+(k>=0?'on':'')+'">'+(k>=0?'<b>'+(k+1)+'</b>':'')+'ชิ้นที่ '+'กขคง'[i]+'<small>'+f.n.map(()=>'♪').join('')+'</small></button>'}).join('');
@@ -1797,14 +1836,16 @@ function songMelody(){
   try{const P=window.parent;const L=(P&&P!==window&&P.APP&&P.APP.D&&P.APP.D.library)||{};
     const k=Object.keys(L).find(k=>{const x=L[k];return x&&x.kind==='song'&&x.song&&/แขก\s*บรเทศ/.test((x.song.title||'')+' '+(x.title||''))});
     if(k){const sg=L[k].song,ls=Array.isArray(sg.lines)?sg.lines:Object.values(sg.lines||{});const out=[];let slot=0;
-      ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++)String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBarNotes(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++}))});
-      if(out.length>=12){MELC={notes:out,src:'lib',title:sg.title||L[k].title||'แขกบรเทศ'};try{localStorage.setItem('spw_pisat_khaek',JSON.stringify(MELC))}catch(e){}return MELC}}}catch(e){}
-  try{const c=JSON.parse(localStorage.getItem('spw_pisat_khaek')||'null');if(c&&c.notes&&c.notes.length){MELC=c;MELC.src='cache';return MELC}}catch(e){}
+      /* ขึ้นท่อนใหม่ = ขึ้นบรรทัดใหม่ (บรรทัดละ 8 ห้อง = 32 หน่วยเคาะ) */
+      ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++){slot=Math.ceil(slot/32)*32;String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBarNotes(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++}))}});
+      if(out.length>=12){MELC={notes:out,src:'lib',title:sg.title||L[k].title||'แขกบรเทศ'};try{localStorage.setItem('spw_pisat_khaek2',JSON.stringify(MELC))}catch(e){}return MELC}}}catch(e){}
+  try{const c=JSON.parse(localStorage.getItem('spw_pisat_khaek2')||'null');if(c&&c.notes&&c.notes.length){MELC=c;MELC.src='cache';return MELC}}catch(e){}
   const out=[];const P=[3,4,5,7,8,10,11,12];let j=3;for(let s=0;s<64;s++){if(s%4===1||s%4===3||Math.random()<.3){j=clamp(j+pick([-2,-1,0,1,1,2]),0,7);out.push({s,g:P[j]})}}
   return{notes:out,src:'gen',title:'ทำนองชั่วคราว'};
 }
-function melChunks(){const m=songMelody();const ns=m.notes;if(!ns.length)return[];const s0=ns[0].s;const ch=[];
-  for(let c=0;c<12&&ch.length<3;c++){const a=s0+c*16,b=a+16;const part=ns.filter(n=>n.s>=a&&n.s<b).map(n=>({s:n.s-a,g:n.g}));if(part.length>=4)ch.push(part)}
+/* ร่วมวงทีละบรรทัด: 1 บรรทัด = 8 ห้อง = 32 หน่วยเคาะ (ไม่ตัดกลางห้อง ไม่ข้ามบรรทัด) */
+function melChunks(){const m=songMelody();const ns=m.notes;if(!ns.length)return[];const s0=Math.floor(ns[0].s/32)*32;const ch=[];
+  for(let c=0;c<12&&ch.length<3;c++){const a=s0+c*32,b=a+32;const part=ns.filter(n=>n.s>=a&&n.s<b).map(n=>({s:n.s-a,g:n.g}));if(part.length>=4)ch.push(part)}
   return ch}
 
 /* ---- ลานหมอก: เสียงขลุ่ยบอกทิศ ---- */
@@ -1891,7 +1932,7 @@ async function finalR3(){
   for(let c=0;c<ch.length;c++){
     let ok=false;
     while(!ok){
-      const a=await new Promise(res=>{const M=$('#menu');M.innerHTML='<button data-id="f" class="hot">1. 🤝 รับทาง<small>เล่นตามทำนองท่อนที่ '+(c+1)+'/'+ch.length+'</small></button><button data-id="x">2. ⚔️ โจมตีต่อ<small>ประชันให้ชนะ</small></button>';M.classList.remove('hide');bmsg('ยกที่ 3 · เลือก');
+      const a=await new Promise(res=>{const M=$('#menu');M.innerHTML='<button data-id="f" class="hot">1. 🤝 รับทาง<small>เล่นตามทำนองบรรทัดที่ '+(c+1)+'/'+ch.length+' (8 ห้อง)</small></button><button data-id="x">2. ⚔️ โจมตีต่อ<small>ประชันให้ชนะ</small></button>';M.classList.remove('hide');bmsg('ยกที่ 3 · เลือก');
         const go=id=>{M.classList.add('hide');BT.menuKey=null;res(id)};M.querySelectorAll('button').forEach(b=>b.onclick=()=>{sfx.blip();go(b.dataset.id)});BT.menuKey=k=>{if(k==='1')go('f');if(k==='2')go('x')}});
       bmsg('');
       if(a==='x'){sfx.glitch();shake(400);await talk([['khun','ฮ่า! อยากชนะนักใช่ไหม! (ระนาดดังกลบทุกเสียง)']]);await talk2([['ing','…เพลงเพี้ยนไปหมดเลย เขาไม่ได้อยากแพ้นะ เขาอยากมีวง'],['L','จริงด้วย ลองใหม่']]);continue}
@@ -2624,8 +2665,11 @@ window.__PS={freeSpotNear,placeSafe,unstick,MON2,STAGE2,MON3,STAGE3,stage3,hazeF
 </script>
 <script src="khaotaen.js"></script>
 <script src="songbook.js"></script>
+<script src="skill.js"></script>
 <script src="p1/dlc.js"></script>
 <script src="p1/free.js"></script>
+<script src="p1/ports2.js"></script>
+<script src="p1/life2.js"></script>
 <script src="p1/life.js"></script>
 </body>
 </html>

@@ -170,7 +170,7 @@ textarea{min-height:66px;font-family:Mitr;letter-spacing:1px}
       <button class="sw" data-m="drumF"></button><label>กลองตัวเมีย <small style="color:var(--f1)">ทั่ม จ๊ะ · ซ้าย</small></label><input type="range" min="0" max="100" data-v="drumF">
       <button class="sw" data-m="thon"></button><label>โทน–รำมะนา <small style="color:var(--gold)">เสียงจริง · ทางเดียวกับหน้าทับ</small></label><input type="range" min="0" max="100" data-v="thon">
       <button class="sw" data-m="chab"></button><label>ฉาบเล็ก <small style="color:var(--gold)">เสียงจริง · ตีตามฉิ่ง</small></label><input type="range" min="0" max="100" data-v="chab">
-      <button class="sw" data-m="pujae"></button><label>กลองปู่เจ่ <small style="color:var(--gold)">เสียงจริง · ตีตามหน้าทับ</small></label><input type="range" min="0" max="100" data-v="pujae">
+      <button class="sw" data-m="pujae"></button><label>กลองปู่เจ่ <small style="color:var(--gold)">เสียงจริง (ตึ้ง เป้ง ปิ๊ก) · ใช้แทนหน้าทับเพื่อฝึก วงจริงไม่ได้ตีหน้าทับ</small></label><input type="range" min="0" max="100" data-v="pujae">
       <button class="sw" data-m="pjchab"></button><label>ฉาบวงปู่เจ่ <small style="color:var(--gold)">เสียงจริง · เปิดที่ฉิ่ง ปิดที่ฉับ</small></label><input type="range" min="0" max="100" data-v="pjchab">
       <button class="sw" data-m="khongrao"></button><label>ฆ้องราว <small style="color:var(--gold)">เสียงจริง · ลงทุกจังหวะฉับ</small></label><input type="range" min="0" max="100" data-v="khongrao">
       <button class="sw" data-m="click"></button><label>เสียงเคาะทุกตัว</label><input type="range" min="0" max="100" data-v="click">
@@ -323,7 +323,7 @@ function schedule(){
     if(S.mix.thon&&window.TS2)sl.l.forEach(l=>TS2.thon(l,nextT,.9,bus.thon));
     if(sl.ch)ching(sl.ch===1,nextT);
     if(sl.ch&&S.mix.chab&&window.TS2)TS2.chab(sl.ch===1?1:0,nextT,.8,bus.chab);
-    /* วงกลองปู่เจ่: กลองตีตามหน้าทับ (ทั่ม–จ๊ะ = เสียงต่ำ · โจ๊ะ = กลาง · ติง = สูง) ฉาบตามฉิ่ง–ฉับ ฆ้องราวลงที่ฉับ */
+    /* วงกลองปู่เจ่ (โหมดฝึก): ยืมหน้าทับมาให้กลองตี ทั่ม–จ๊ะ → ตึ้ง · โจ๊ะ → เป้ง · ติง → ปิ๊ก · ฉาบตามฉิ่ง–ฉับ ฆ้องราวลงที่ฉับ (วงจริงตีกระสวนของตัวเองและด้นลีลาหน้ากลอง) */
     if(S.mix.pujae&&window.TS4)sl.l.forEach(l=>TS4.pujae(l>=2?0:l===1?1:2,nextT,.95,bus.pujae));
     if(sl.ch&&S.mix.pjchab&&window.TS4)TS4.chab(sl.ch===1?0:1,nextT,.85,bus.pjchab);
     if(sl.ch===2&&S.mix.khongrao&&window.TS4)TS4.khongrao(0,nextT,.9,bus.khongrao);

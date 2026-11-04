@@ -24,12 +24,12 @@ const INST={
   pinae:{n:'ปี่แน',k:'hole',pads:['ด','ร','ม','ซ','ล','ดํ'],play:(i,t,v)=>TS2.pinae(TS2.PINAEF[[1,2,3,5,6,8][i]],t,.32,v)},
   pat:{n:'ปัตวาย่ง',k:'gong',pads:['1','2','3','4','5','6'],play:(i,t,v)=>patwaing(i,t,(v||1)*1.4,SFX)},
   /* วงกลองปู่เจ่และกลองสะบัดชัยของชมรม (เสียงอัดจริง thaisound4.js) */
-  pujae:{n:'กลองปู่เจ่',k:'face',pads:['ตุ้ม','ป๊ะ','แต๊ะ'],play:(i,t,v)=>TS4.pujae(i,t,v)},
+  pujae:{n:'กลองปู่เจ่',k:'face',pads:['ตึ้ง','เป้ง','ปิ๊ก'],play:(i,t,v)=>TS4.pujae(i,t,v)},
   khongrao:{n:'ฆ้องราว–ฉาบ',k:'gong',pads:['ฆ้องราว','ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>i===0?TS4.khongrao(t,v):TS4.chab(i-1,t,v)},
   sabat:{n:'กลองสะบัดชัย',k:'face',pads:['หน้ากลอง','ขอบกลอง','ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>i<2?TS4.sabat(i,t,v):TS4.chab(i-2,t,v)}};
 const inTeam=id=>TEAM.includes(id);
 let BT=null;
-function bEl(){let d=$('#battle');if(!d){d=document.createElement('div');d.id='battle';d.innerHTML='<div class="btop"><div class="bnm"></div><div class="bbar"><i></i></div><div class="bme"><span class="bmeh">♥</span><b></b></div></div><div class="bmsg"></div><div class="bside"><button id="bRep" class="bsm">🔁 ฟังอีกครั้ง</button><button id="bLv" class="bsm">ยอมแพ้</button></div><div class="bpads"></div><div class="blose"><div class="card"><h2>ยังไม่ไหว…</h2><p class="muted">เงาเพี้ยนยังไม่ยอม ลองใหม่ได้ทันที</p><div class="row" style="justify-content:center"><button class="btn" data-r="1">ลองใหม่</button><button class="btn ghost" data-r="2">ลองใหม่แบบง่าย</button></div></div></div>';document.body.appendChild(d)}return d}
+function bEl(){let d=$('#battle');if(!d){d=document.createElement('div');d.id='battle';d.innerHTML='<div class="btop"><div class="bnm"></div><div class="bbar"><i></i></div><div class="bme"><span class="bmeh">♥</span><b></b></div></div><div class="bmsg"></div><div class="bside"><button id="bRep" class="bsm">🔁 ฟังอีกครั้ง</button><button id="bLv" class="bsm">ยอมแพ้</button></div><div id="bNtl" class="sbn bntl" style="display:none"></div><div class="bpads"></div><div class="blose"><div class="card"><h2>ยังไม่ไหว…</h2><p class="muted">เงาเพี้ยนยังไม่ยอม ลองใหม่ได้ทันที</p><div class="row" style="justify-content:center"><button class="btn" data-r="1">ลองใหม่</button><button class="btn ghost" data-r="2">ลองใหม่แบบง่าย</button></div></div></div>';document.body.appendChild(d)}return d}
 function bUI(){const d=bEl();d.querySelector('.bnm').textContent=BT.name+' · '+INST[BT.inst].n;d.querySelector('.bbar i').style.width=Math.max(0,BT.hp/BT.max*100)+'%';d.querySelector('.bme b').textContent=Math.max(0,Math.round(P.hp))}
 function bMsg(t){const m=bEl().querySelector('.bmsg');m.textContent=t||'';m.style.display=t?'':'none'}
 function bPads(inst){const I=INST[inst],d=bEl().querySelector('.bpads');d.className='bpads k-'+I.k;
@@ -71,22 +71,29 @@ async function echoTurn(){
   const [a,b]=BT.phr||[3,5];let len=Math.min(b,a+Math.floor(BT.turn/1.5));if(inTeam('captain'))len=Math.max(2,len-1);
   const seq=[];for(let i=0;i<len;i++){let g;do{g=Math.floor(Math.random()*np)}while(seq.length&&g===seq[seq.length-1]&&Math.random()<.75);seq.push(g)}
   /* ทำนองจริง: ตีวรรคสั้น ๆ จากเพลงไทย (songbook.js) แปลงลงจำนวนปุ่มของเครื่องนี้ */
-  try{if(window.SB&&np>=4){const ph=SB.randomPhrase(len);if(ph&&ph.length===len){const m=ph.map(g=>Math.min(np-1,Math.round(g*(np-1)/7)));if(new Set(m).size>=2){seq.length=0;m.forEach(g=>seq.push(g))}}}}catch(e){}
+  /* วรรคเพลง = 1 บรรทัด (8 ห้อง) จากเพลงไทยจริง · ความยากเดิม = จำนวนลูกท้ายบรรทัดที่ต้องจำเอง */
+  const len0=len;let U=null;
+  try{if(window.SB&&np>=4){const ph=SB.randomPhrase(len);if(ph){const m=ph.map(g=>Math.min(np-1,Math.round(g*(np-1)/7)));if(new Set(m).size>=2){seq.length=0;m.forEach(g=>seq.push(g));U=ph.unit;len=seq.length}}}}catch(e){}
   let show=BT.easy?len:(BT.show!=null?BT.show:2)+Math.floor(BT.turn/3)*0;if(inTeam('maha'))show+=2;if(BT.inst==='khlui'&&inTeam('jao'))show+=2;show=Math.min(len,show);
-  const gap=(BT.gap||.48)*(BT.easy?1.2:1);let replays=(BT.easy?9:2)+(inTeam('foo')?1:0)+(inTeam('luwa')?1:0);
+  if(U&&!BT.easy)show=len-Math.max(0,Math.min(len,len0-show));
+  const gap=(BT.gap||.48)*(BT.easy?1.2:1);
+  let TMS=null;if(U){const sl=Math.max(.2,Math.min(.34,gap*.56)),f=U.ev[0].b*4+U.ev[0].t;TMS=U.ev.map(x=>(x.b*4+x.t-f)*sl)}
+  const tOf=i=>TMS?TMS[i]:i*gap,dur=()=>tOf(len-1)+(TMS?.5:gap)-.1;
+  const res=[];const ntl=k=>{const N=$('#bNtl');if(!N)return;if(!U){N.style.display='none';return}const w=Math.min(innerWidth,900),cw=Math.max(13,Math.min(28,Math.floor((w*.92-14)/(U.nb*4)-1)));
+    N.style.setProperty('--cw',cw+'px');N.style.setProperty('--fs',Math.round(cw*.62)+'px');N.innerHTML=SB.ntl(U,seq.map(g=>I.pads[g]),{show,res,k});N.style.display=''};let replays=(BT.easy?9:2)+(inTeam('foo')?1:0)+(inTeam('luwa')?1:0);
   const rp=$('#bRep');const upd=()=>{rp.textContent='🔁 ฟังอีกครั้ง'+(replays>8?'':' ('+replays+')');rp.disabled=replays<=0||BT.singing};
-  const sing=async()=>{BT.singing=1;upd();const t0=AC?AC.currentTime+.15:0;seq.forEach((g,i)=>{sfx(()=>I.play(g,t0+i*gap,.95));if(i<show)setTimeout(()=>bLit(btns,g,gap*700),(.15+i*gap+lat())*1000)});if(LV.boss)LV.boss.sing=T;await sleep((len*gap+.35)*1000);BT.singing=0;upd()};
+  const sing=async()=>{BT.singing=1;upd();const t0=AC?AC.currentTime+.15:0;seq.forEach((g,i)=>{sfx(()=>I.play(g,t0+tOf(i),.95));if(i<show)setTimeout(()=>bLit(btns,g,Math.min(gap,.4)*700),(.15+tOf(i)+lat())*1000)});if(LV.boss)LV.boss.sing=T;await sleep((dur()+.45)*1000);BT.singing=0;upd()};
   bMsg(BT.inst==='klong'||BT.inst==='taphon'||BT.inst==='thon'||BT.inst==='ching'||BT.inst==='chab'?BT.name+' ตี'+I.n+' '+len+' ครั้ง… จำให้ได้!':BT.name+' เล่น'+I.n+' '+len+' เสียง… ฟังให้ดี!');
-  await sleep(700);await sing();
-  BT.seq=seq;BT.bk=0;bMsg('ตาเรา! ตีตามให้ครบ '+len+' เสียง'+(inTeam('waen')?' · แว่นจดให้: '+seq.map(g=>I.pads[g]).join(' '):''));
+  ntl(-1);await sleep(700);await sing();
+  BT.seq=seq;BT.bk=0;ntl(0);bMsg('ตาเรา! ตีตามให้ครบ '+len+' เสียง'+(U?' · บรรทัดเพลง '+U.nb+' ห้อง':'')+(inTeam('waen')?' · แว่นจดให้: '+seq.map(g=>I.pads[g]).join(' '):''));
   let k=0,wrong=0;
   await new Promise(done=>{
     rp.onclick=async()=>{if(replays<=0||BT.singing)return;replays--;bMsg('ฟังอีกครั้ง… ตีต่อจากเสียงที่ '+(k+1));await sing()};
     BT.press=g=>{if(g===-9){BT.press=null;done();return}if(BT.singing)return;sfx(t=>I.play(g,t,.9));
-      if(g===seq[k]){k++;bLit(btns,g,160,'#7ef08a');if(k>=len){BT.press=null;done()}}
-      else{wrong++;bLit(btns,g,220,'#ff6a6a');bHurt(BT.atk||6);if(P.hp<=0){BT.press=null;done()}else bMsg('เพี้ยน! ลองต่อจากเสียงที่ '+(k+1)+(replays>0?' · กด 🔁 ฟังใหม่ได้':''))}}});
-  rp.onclick=null;if(BT.quit||P.hp<=0)return;
-  const dmg=Math.round((8+3*len)*(wrong?0.7:1)*(1+.15*(SAVE.up.atk||0)));bHit(dmg,wrong?'':'สวนกลับ!');sfx(t=>{TS2.chab(0,t,.5);TS.khong(10,t+.05,.5)});
+      if(g===seq[k]){res[k]=res[k]===0?2:1;k++;ntl(k);bLit(btns,g,160,'#7ef08a');if(k>=len){BT.press=null;done()}}
+      else{wrong++;res[k]=0;ntl(k);bLit(btns,g,220,'#ff6a6a');bHurt(BT.atk||6);if(P.hp<=0){BT.press=null;done()}else bMsg('เพี้ยน! ลองต่อจากเสียงที่ '+(k+1)+(replays>0?' · กด 🔁 ฟังใหม่ได้':''))}}});
+  rp.onclick=null;try{if(window.SKILL&&!BT.quit&&len)SKILL('melody',res.filter(v=>v===1).length/len,{game:'pisat2'})}catch(e){}{const N=$('#bNtl');if(N)setTimeout(()=>{N.style.display='none'},500)}if(BT.quit||P.hp<=0)return;
+  const dmg=Math.round((8+3*(U?len0+Math.round(len/5):len))*(wrong?0.7:1)*(1+.15*(SAVE.up.atk||0)));bHit(dmg,wrong?'':'สวนกลับ!');sfx(t=>{TS2.chab(0,t,.5);TS.khong(10,t+.05,.5)});
   if(inTeam('yum')&&P.hp<maxHP()){P.hp=Math.min(maxHP(),P.hp+8);bMsg('ตีตามครบ! จักรแบ่งขนมให้ +8');}else bMsg(wrong?'ตีตามได้ แต่เพี้ยนไป '+wrong+' ครั้ง':'ตีตามได้ครบไม่มีพลาด! สวนกลับแรง');
   await sleep(1100)}
 
@@ -94,7 +101,7 @@ async function echoTurn(){
 function rhythmNotes(inst,n){const I=INST[inst],np=I.pads.length,out=[];
   const drumPat={klong:[[0,0],[1,1],[1.5,2],[2,0],[2.5,1],[3,3],[4,0],[5,1],[5.5,2],[6,0],[7,3]],taphon:[[0,0],[1,2],[1.5,2],[2,1],[3,0],[4,2],[5,0],[5.5,2],[6,1],[7,0]],thon:[[0,1],[1,0],[2,1],[2.5,2],[3,0],[4,1],[5,3],[6,0],[7,2]],ching:[[0,0],[1,1],[2,0],[3,1],[4,0],[5,1],[6,0],[6.5,0],[7,1]],chab:[[0,0],[1,1],[1.5,1],[2,0],[3,1],[4,0],[5,1],[6,0],[7,1]]};
   if(drumPat[inst])return drumPat[inst].map(([b,p])=>({b,p}));
-  const song=gameSongChunk(np);if(song&&song.length>=6)return song.slice(0,n||10);
+  const song=gameSongChunk(np);if(song&&song.length>=6)return song;
   let j=Math.floor(np/2);for(let b=0;b<8;b+=(Math.random()<.3?.5:1)){j=clamp(j+pick([-2,-1,-1,1,1,2]),0,np-1);out.push({b,p:j})}return out}
 async function rhythmTurn(){
   const I=INST[BT.inst],btns=bPads(BT.inst),notes=rhythmNotes(BT.inst,10);
@@ -110,6 +117,7 @@ async function rhythmTurn(){
     notes.forEach(n=>{if(!n.st&&tn>n.t+.22)n.st=-1});
     if(tn>end){btns.forEach(b=>b.querySelector('.ring').style.opacity='0');done();return}requestAnimationFrame(f)};f()});
   BT.press=null;if(BT.quit)return;
+  try{if(window.SKILL&&notes.length)SKILL('rhythm',(perf+(hit-perf)*.7)/notes.length,{game:'pisat2'})}catch(e){}
   const mul=(1+.15*(SAVE.up.atk||0))*(inTeam('che')?1.3:1);const dmg=Math.round((hit*2.6+perf*1.6)*mul);
   if(dmg>0)bHit(dmg,perf>=notes.length*.6?'สุดยอด!':'');bMsg('ตีโดน '+hit+'/'+notes.length+(perf?' · ตรงเป๊ะ '+perf:''));P.band=Math.min(100,(P.band||0)+hit*3);
   await sleep(1000)}
@@ -125,14 +133,15 @@ function gameSong(){if(GSONG)return GSONG;
   try{const Pw=window.parent;const D=(Pw&&Pw!==window&&Pw.APP&&Pw.APP.D)||{},L=Object.assign({},D.libsub||{},D.library||{});
     const k=Object.keys(L).find(k=>{const x=L[k];return x&&x.kind==='song'&&x.song&&/เพลงเกม/.test((x.song.title||'')+' '+(x.title||''))});
     if(k){const sg=L[k].song,ls=Array.isArray(sg.lines)?sg.lines:Object.values(sg.lines||{});const out=[];let slot=0;
-      ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++)String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBar(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++}))});
-      if(out.length>=8){GSONG={notes:out,src:'lib',title:sg.title||L[k].title,bpm:+sg.bpm||0};try{localStorage.setItem('spw_pisat2_song',JSON.stringify(GSONG))}catch(e){}return GSONG}}}catch(e){}
-  try{const c=JSON.parse(localStorage.getItem('spw_pisat2_song')||'null');if(c&&c.notes&&c.notes.length){GSONG=c;return GSONG}}catch(e){}
+      ls.forEach(l=>{for(let r=0;r<(+l.rep===2?2:1);r++){slot=Math.ceil(slot/32)*32;String(l.bars||'').trim().split(/\s+/).filter(Boolean).forEach(b=>decBar(b).forEach(g=>{if(g!=null)out.push({s:slot,g});slot++}))}});
+      if(out.length>=8){GSONG={notes:out,src:'lib',title:sg.title||L[k].title,bpm:+sg.bpm||0};try{localStorage.setItem('spw_pisat2_song2',JSON.stringify(GSONG))}catch(e){}return GSONG}}}catch(e){}
+  try{const c=JSON.parse(localStorage.getItem('spw_pisat2_song2')||'null');if(c&&c.notes&&c.notes.length){GSONG=c;return GSONG}}catch(e){}
   const P8=[3,4,5,7,8,10];const out=[];let j=2;for(let s=0;s<64;s++){if(s%2===1||Math.random()<.25){j=clamp(j+pick([-1,-1,0,1,1,2,-2]),0,5);out.push({s,g:P8[j]})}}
   GSONG={notes:out,src:'gen',title:'ทำนองชั่วคราว (รอ “เพลงเกม” ในคลังโน้ต)'};return GSONG}
 /* แปลงช่วงหนึ่งของเพลงเป็นโน้ตบนแป้น 8 ลูก (ด–ดํ = ลูกฆ้อง 3–10) */
-function gameSongChunk(np){const s=gameSong();if(!s||!s.notes.length)return null;const base=s.notes[0].s,nc=Math.max(1,Math.ceil((s.notes[s.notes.length-1].s-base+1)/16)),c=(BT?BT.turn:0)%nc,a=base+c*16;
-  const part=s.notes.filter(n=>n.s>=a&&n.s<a+16);if(part.length<4)return null;
+/* ตัดเพลงทีละบรรทัด: 1 บรรทัด = 8 ห้อง = 32 หน่วยเคาะ (เริ่มตรงต้นบรรทัดเสมอ) */
+function gameSongChunk(np){const s=gameSong();if(!s||!s.notes.length)return null;const base=Math.floor(s.notes[0].s/32)*32,nc=Math.max(1,Math.ceil((s.notes[s.notes.length-1].s-base+1)/32)),c=(BT?BT.turn:0)%nc,a=base+c*32;
+  const part=s.notes.filter(n=>n.s>=a&&n.s<a+32);if(part.length<4)return null;
   /* พับเสียงที่เกินช่วงแป้นกลับเข้าคู่แปด (ลูกฆ้อง 3–10 = ด–ดํ) แป้นที่น้อยกว่า 8 ลูก ย่อสัดส่วนลง */
   return part.map(n=>{let v=n.g;while(v>10)v-=7;while(v<3)v+=7;return {b:(n.s-a)/2,p:np>=8?v-3:clamp(Math.round((v-3)*(np-1)/7),0,np-1)}})}
 

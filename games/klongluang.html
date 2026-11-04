@@ -93,6 +93,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:5px 4px;b
 <script src="thaisound2.js"></script>
 <script src="thaisound4.js"></script>
 <script src="khaotaen.js"></script>
+<script src="skill.js"></script>
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -135,7 +136,7 @@ const LV=[
   {n:'ครบวง',d:'ตูม ฉาบ ฆ้อง ครบทั้งวง',lanes:[1,1,1],bars:7,sd:.22,acc:0,mk:b=>({d:b%2?PAT.drumX:PAT.drum,c:PAT.chab,g:PAT.gong})},
   {n:'กลองขัด',d:'กลองตีขัดแบบวงแม่สอด ฉาบมีลูกเก็บ',lanes:[1,1,1],bars:8,sd:.215,acc:0,mk:b=>({d:b%2?PAT.drumB:PAT.drumX,c:b%2?PAT.chabF:PAT.chab,g:PAT.gong})},
   {n:'แห่ยาวเร่งจังหวะ',d:'แห่จริง! ยิ่งตียิ่งเร็วขึ้นเหมือนในคลิป',lanes:[1,1,1],bars:12,sd:.225,acc:.045,mk:b=>({d:b%4===3?PAT.drumB:b%2?PAT.drumX:PAT.drum,c:b%2?PAT.chabF:PAT.chab,g:PAT.gong})},
-  {n:'ขบวนกลองปู่เจ่',snd:'pj',d:'เสียงวงกลองปู่เจ่ของชมรม · กลองตีด้วยมือสามเสียง ฉาบ และฆ้องราว',lanes:[1,1,1],bars:8,sd:.235,acc:.02,mk:b=>({d:b%2?PAT.drumX:PAT.drum,c:PAT.chab,g:PAT.gong})},
+  {n:'ขบวนกลองปู่เจ่',snd:'pj',d:'เสียงวงกลองปู่เจ่ของชมรม · กลองใบเดียวตีด้วยมือสามเสียง (ตึ้ง เป้ง ปิ๊ก) ฉาบ และฆ้องราว',lanes:[1,1,1],bars:8,sd:.235,acc:.02,mk:b=>({d:b%2?PAT.drumX:PAT.drum,c:PAT.chab,g:PAT.gong})},
   {n:'สะบัดชัยรับขบวน',snd:'sb',d:'กลองสะบัดชัยใบใหญ่ ตีหน้ากลองสลับขอบ ฉาบกับฆ้องราวรับ',lanes:[1,1,1],bars:9,sd:.225,acc:.03,mk:b=>({d:b%3===2?PAT.drumB:b%2?PAT.drumX:PAT.drum,c:b%2?PAT.chabF:PAT.chab,g:PAT.gong})}
 ];
 const LN=[{n:'ตูม',s:'D',c:'#e8845a',k:['d','s','a']},{n:'ฉาบ',s:'F',c:'#f2c14e',k:['f','g']},{n:'ฆ้อง',s:'J',c:'#9ad0ff',k:['j','k','l']}];
@@ -240,7 +241,8 @@ function finish(){
   $('#next').classList.toggle('hide',!(acc>=60&&i<LV.length-1));
   stage($('#eStage'),grade==='D'?['luwa']:['pob','luwa','kidG','dancer']);
   show('end');gong(0,.8);if(acc>=60){drum(0,AC.currentTime+.25,1);chab(0,AC.currentTime+.45,.8)}
-  try{parent.postMessage({type:'spw-game',game:'klongluang',level:i+1,score:sc,acc},'*')}catch(e){}}
+  try{parent.postMessage({type:'spw-game',game:'klongluang',level:i+1,score:sc,acc},'*')}catch(e){}
+  try{if(window.SKILL)SKILL('rhythm',acc/100,{game:'klongluang'})}catch(e){}}
 $('#again').onclick=()=>start(lastLv);
 $('#home').onclick=()=>{G=null;show('title');renderTitle()};
 $('#next').onclick=()=>start(lastLv+1);
