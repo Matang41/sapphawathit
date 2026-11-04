@@ -326,6 +326,45 @@ const choose=(t,o,n)=>api().choose(t,o,n);
 const openOv=(h,f)=>api().openOv(h,f);
 async function reward(r){if(!r)return;if(r.coins)coins(r.coins,'ของขวัญจากเพื่อน');if(r.inv)Object.keys(r.inv).forEach(k=>invAdd(k,r.inv[k]));if(r.perk){LF().perk[r.perk]=1;fsave()}if(r.snap)api().snap(r.snap)}
 
+/* ---------------- จุดโต้ตอบบนแผนที่โรงเรียน (รุ่น 3.15) ---------------- */
+const SPOTS=[
+  {a:'flag',x:31,y:26,lb:'เสาธงโรงเรียน',sch:1},
+  {a:'pond',x:18,y:31,lb:'สระน้ำ · ให้อาหารปลา',sch:1},
+  {a:'plot',x:5,y:31,lb:'แปลงเกษตรนักเรียน · รดน้ำผัก',sch:1},
+  {a:'court',x:45,y:30,lb:'สนามวอลเลย์บอล',sch:1},
+  {a:'bball',x:40,y:30,lb:'สนามบาสเกตบอล',sch:1},
+  {a:'carpark',x:42,y:13,lb:'ลานจอดรถครู',sch:1}];
+function xbldNear(){const L=[];if(!ON()||inRm()||S.map!=='world')return L;
+  XBLD.forEach(b=>{if(!b.act)return;L.push({x:b.x*T+b.w*T/2,y:(b.y+b.h)*T+6,lb:b.lb||b.nm,act:'lfX',a:b.act,b})});
+  SPOTS.forEach(o=>{if(o.sch)L.push({x:o.x*T+8,y:o.y*T+12,lb:o.lb,act:'lfX',a:o.a})});
+  return L}
+async function spotAct(a,b){const L=LF(),F=F_(),c=cal(),day=k=>{if(L.day[k]===F.day)return false;L.day[k]=F.day;fsave();return true};
+  if(a==='budd'){await say(null,'ศาลาพระพุทธสรรพวิทย์ · พระพุทธรูปประจำโรงเรียน กราบสามครั้งแล้วตั้งจิตอธิษฐาน');
+    if(day('budd')){coins(5,'ทำบุญเช้า');await say(null,'ใจสงบขึ้นมาก พลังวงเต็ม')}S.hp=S.hpMax;hud();save();try{sfx.heal()}catch(e){}return}
+  if(a==='spirit'){await say(null,'ศาลพระภูมิหน้าโรงเรียน มีพวงมาลัยกับน้ำแดงวางอยู่ · ยกมือไหว้หนึ่งครั้ง');if(day('spirit'))coins(3,'ไหว้ศาลพระภูมิ');return}
+  if(a==='bikepark'){await say(null,pick(['โรงจอดรถจักรยานยนต์นักเรียน · เรียงเป็นแถวเต็มโรง มีคันหนึ่งติดสติกเกอร์ “สรรพวาทิต”',
+    'มีคนลืมถอดกุญแจอีกแล้ว… ฝากไว้กับลุงยามดีกว่า','ตอนเย็นตรงนี้จะแน่นมาก ใครมาช้าต้องจอดนอกโรง']));
+    if(day('bike')){coins(4,'ช่วยจัดแถวรถให้ตรง')}return}
+  if(a==='nursery'){await say(null,'เรือนเพาะชำ · ต้นกล้าผักกาดกับดาวเรืองเรียงเป็นแถว มีสายยางม้วนอยู่ข้าง ๆ');
+    if(day('nurs')){invAdd('flower');banner('+1 🌼 ดอกไม้ป่า',2000);coins(4,'ช่วยรดต้นกล้า')}return}
+  if(a==='stall'){return shop('ซุ้มขายของหน้าโรงอาหาร','cant')}
+  if(a==='gaz'){S.hp=Math.min(S.hpMax,S.hp+S.hpMax*.45);hud();save();try{sfx.heal()}catch(e){}
+    await say(null,pick(['นั่งพักใต้ศาลา ลมเย็นสบาย มองเห็นเพื่อน ๆ เดินไปมา','นั่งพักใต้ศาลา ได้ยินเสียงวงซ้อมแว่ว ๆ จากห้อง 512','ใต้ศาลามีคนจดโน้ตทิ้งไว้แผ่นหนึ่ง “ฉิ่งคุมวง ฆ้องคุมทาง”']));return}
+  if(a==='flag'){const h=hourF();
+    if(h>=7&&h<8.2&&school(c)){await talk([[null,'ลานหน้าเสาธง · นักเรียนเข้าแถวเต็มลาน เพลงชาติกำลังจะขึ้น'],[null,'ยืนตรง… เคารพธงชาติ'],[null,'ร้องเพลงชาติจนจบ แล้วสวดมนต์ พิจารณาตัวเอง']]);
+      if(day('flag')){coins(6,'เข้าแถวเคารพธงชาติ');partyAff(2)}return}
+    await say(null,'เสาธงโรงเรียน · ธงไตรรงค์โบกอยู่กลางลาน ตอนเช้าวันเรียนทั้งโรงเรียนมาเข้าแถวตรงนี้');return}
+  if(a==='pond'){await say(null,pick(['สระน้ำหลังอาคารสรรพการ · ปลานิลกับปลาทับทิมว่ายขึ้นมาฮุบอากาศ','น้ำในสระใส เห็นเงาต้นไม้สะท้อน มีปลาตัวใหญ่ซ่อนอยู่ใต้ใบบัว']));
+    if(day('pond')){coins(4,'ให้อาหารปลา');await say(null,'โปรยอาหารปลาลงไป น้ำแตกเป็นวงเต็มสระ')}return}
+  if(a==='plot'){if(day('plot')){coins(6,'รดน้ำแปลงผัก');await say(null,'แปลงเกษตรนักเรียน · รดน้ำผักกาด คะน้า และต้นหอมจนทั่วแปลง ดินหอมกลิ่นน้ำ');
+      if(Math.random()<.45){invAdd('snack');banner('ครูเกษตรให้ขนมมาหนึ่งชิ้น',2400)}return}
+    await say(null,'แปลงเกษตรนักเรียน · วันนี้รดน้ำไปแล้ว ผักกำลังงาม');return}
+  if(a==='court'||a==='bball'){S.hp=Math.min(S.hpMax,S.hp+S.hpMax*.3);hud();
+    await say(null,a==='court'?pick(['สนามวอลเลย์บอล · ตบลูกข้ามเน็ตไปสองสามลูก เหงื่อออกกำลังดี','มีรุ่นพี่ชวนเล่นวอลเลย์บอล เล่นไปสามเกมรวด']):pick(['สนามบาสเกตบอล · ชู้ตลงห่วงติดกันสามลูก!','ไอซ์ท้าแข่งชู้ตลูกโทษ… เสมอกันพอดี']));
+    if(day('sport'))coins(5,'ออกกำลังกาย');return}
+  if(a==='carpark'){await say(null,pick(['ลานจอดรถครู · รถกระบะของครูตังค์จอดอยู่ท้ายแถว ท้ายรถมีฆ้องวงใหญ่คลุมผ้าไว้',
+    'รถ ผอ. จอดอยู่ช่องแรก กระจกหลังติดสติกเกอร์ “โรงเรียนสรรพวิทยาคม”','มีคนลืมปิดกระจกรถ… โชคดีที่วันนี้ฝนไม่ตก']));return}}
+
 /* ---------------- การเดินถึง (flood fill) ---------------- */
 function gridOf(key){
   if(key==='world')return SOLID?{g:SOLID,w:MW,h:MH}:null;
@@ -535,7 +574,9 @@ async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.i
     mark();aff('elder',15);aff('auntie',15);aff('drummer',8);aff('farmer',8);partyAff(5);coins(20,'สงกรานต์');snap('สงกรานต์แม่โกนเกน');return}
   if(f.id==='open'){const d=LF().gen>=2?'dir2':'dir';await talk([[null,'เปิดภาคเรียนที่ 1 · หน้าเสาธงตอนเช้า นักเรียนเข้าแถวเต็มสนาม'],[d,d==='dir'?'(ถือโทรโข่ง) ยินดีต้อนรับเปิดเทอม! ปีนี้ ผอ.ขอสามข้อ ข้อหนึ่ง ตั้งใจเรียน ข้อสอง… เอ่อ ข้อสองคืออะไรนะ… ข้อสาม กินข้าวให้หมดจาน!':'ยินดีต้อนรับเปิดเทอม ปีนี้ ผอ.ตั้งเป้าให้ทุกชมรมได้แสดงผลงาน วงดนตรีไทยเปิดงานเลยนะ'],['maha','(กระซิบ) ข้อสองคือมาเรียนให้ตรงเวลาครับ ผอ.'],[null,'ทั้งสนามหัวเราะพร้อมกัน']]);
     mark();aff(d,6);coins(10);return}
-  if(f.id==='candle'){await talk([[null,'วันเข้าพรรษา · ชาวแม่โกนเกนแห่ต้นเทียนพรรษาไปวัดห้วยมหาวงก์'],['drummer','วงกลองหลวงตีนำขบวนนะลูก ตามจังหวะพ่อครู']]);const a=await bandSong('แห่เทียนพรรษา · '+song('talebaa').title,song('talebaa'),0,8);
+  if(f.id==='candle'){await talk([[null,'วันเข้าพรรษา · ชาวแม่โกนเกนแห่ต้นเทียนพรรษาไปวัดห้วยมหาวงก์'],['drummer','วงกลองปู่เจ่กับกลองหลวงตีนำขบวนนะลูก ตามจังหวะพ่อครู']]);
+    api().procStart(100);await sleep(2600);api().procStop();
+    const a=await bandSong('แห่เทียนพรรษา · '+song('talebaa').title,song('talebaa'),0,8);
     if(a<0){await say(null,'ขบวนยังรอที่ลานวัด ลองตีนำอีกครั้ง');return}mark();aff('drummer',10);aff('elder',6);aff('luwa',6);coins(25,'แห่เทียนพรรษา');snap('แห่เทียนพรรษาแม่โกนเกน');return}
   if(f.id==='sci'){await talk([[null,'สัปดาห์วิทยาศาสตร์ · ห้องวิทย์ตั้งส้อมเสียง ขวดน้ำ และลูกระนาดไว้ให้ทดลอง'],['tchM','วันนี้เราจะทดลองว่า “เสียงสูงต่ำเกิดจากอะไร” ตอบคำถามสามข้อนะ']]);const ok=await quiz(SCIQ.slice().sort(()=>Math.random()-.5).slice(0,3),'ทดลองเรื่องเสียง');
     mark();coins(ok*8,'สัปดาห์วิทยาศาสตร์');aff('waen',6);if(ok===3)await say('waen','สามข้อเต็ม! พี่เข้าใจฟิสิกส์ของดนตรีไทยแล้วครับ');return}
@@ -667,13 +708,14 @@ window.nearest=function(){
   if(best&&best.act==='sign'&&S.map==='world'&&NEWDOORS.some(d=>Math.hypot(d.x*T+8-fx,d.y*T+8-fy)<22))bd=99;
   if(S.map==='world')NEWDOORS.forEach(d=>c({x:d.x*T+8,y:d.y*T+8,lb:d.lb,act:d.act,door:1}));
   ents().forEach(e=>c({x:e.x,y:e.y,lb:'คุยกับ'+(e.named?nm(e.k):(WHO[e.k]&&WHO[e.k].n)||'เพื่อน')+(e.named?' '+hstr(e.k):''),act:'lfNpc',e}));
+  xbldNear().forEach(o=>c(o));
   festMarks().forEach(m=>c({x:m.x,y:m.y,lb:'🎉 '+m.f.lb,act:'lfFest',f:m.f}));const nm0=newsMark();if(nm0)c({x:nm0.x,y:nm0.y,lb:'📷 ถ่ายภาพ “'+nm0.N.cap+'”',act:'lfNews',m:nm0});
   if(best&&best.act&&DLB[best.act]&&((F_().cur==='vil'?DOORS_V:DOORS_S)[best.act]))best=Object.assign({},best,{lb:DLB[best.act]});
   if(best&&best.act==='npc'&&best.p&&NP[best.p.k])best=Object.assign({},best,{lb:'คุยกับ'+nm(best.p.k)+' '+hstr(best.p.k)});
   return best};
 const _doAct=doAct;
 window.doAct=async function(n){const a=n&&n.act;if(ON()){
-  if(a==='lfExit'){exitRoom();return}if(a==='lfAct')return roomAct(n.a);if(a==='lfFest')return runFest(n.f);if(a==='lfNews')return shootNews(n.m);
+  if(a==='lfExit'){exitRoom();return}if(a==='lfAct')return roomAct(n.a);if(a==='lfX')return spotAct(n.a,n.b);if(a==='lfFest')return runFest(n.f);if(a==='lfNews')return shootNews(n.m);
   if(a==='lfNpc'){const e=n.e;if(e.named)return npcTalk(e.k,e);if(e.base==='khun')return khunTalk();if(e.base==='nurse'){faceTo(e);await say('nurse',(e.lines||['พักก่อนนะ'])[Math.floor(Math.random()*3)%e.lines.length]);S.hp=S.hpMax;hud();return}return crowdTalk(e)}
   if(a==='npc'&&n.p&&NP[n.p.k])return npcTalk(n.p.k);
   if(!inRm()&&(S.map==='world'||S.map==='village')&&await doorTo(a))return;}
@@ -725,6 +767,6 @@ async function lifeIntro(){for(let i=0;i<120&&(busy||!$('#dlg').classList.contai
     ['info','คุยกับเพื่อน ๆ ทุกวัน ให้ของขวัญที่เขาชอบ หัวใจความสนิทจะเพิ่มขึ้น ครบ 3 กับ 5 ดวงมีเรื่องพิเศษนะจ๊ะ ของขวัญซื้อได้ตามร้าน หรือเก็บดอกไม้ มะม่วง หินสวยตามทาง'],
     ['info','แล้วก็… ผอ.อับดุลเราะห์มานจะเกษียณวันที่ 30 กันยายน สิ้นปีงบประมาณนี้ ใช้เวลาที่เหลือให้คุ้มนะ ดูปฏิทินกับสมุดเพื่อนได้ที่ปุ่ม ☰']])}finally{busy=false}}
 function freeReach(tx,ty){const F=F_();if(!F)return null;const key=F.cur==='vil'?'village':'world';return reachNear(key,tx,ty)}
-const LIFE=window.LIFE={_ents:null,hstr,cal,dateText,dateShort,termText,school,onStart,reachNear,freeReach,reach,shop,giftTo,npcHook,npcTalk,NP,ROOMS,FEST,GI,hearts,aff,invAdd,invN,enterRoom,exitRoom,ents,fgHere,fgToday,festToday,festMarks,runFest,calendarScreen,friendBook,bagScreen,inRm,dayOf,built,newsTask,LF,retireEvent};
+const LIFE=window.LIFE={_ents:null,hstr,spotAct,xbldNear,SPOTS,cal,dateText,dateShort,termText,school,onStart,reachNear,freeReach,reach,shop,giftTo,npcHook,npcTalk,NP,ROOMS,FEST,GI,hearts,aff,invAdd,invN,enterRoom,exitRoom,ents,fgHere,fgToday,festToday,festMarks,runFest,calendarScreen,friendBook,bagScreen,inRm,dayOf,built,newsTask,LF,retireEvent};
 buildLifeSprites();
 })();

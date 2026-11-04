@@ -70,7 +70,7 @@ function audio(){
   const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
   AC=new C();MASTER=AC.createGain();MASTER.gain.value=SAVE.mute?0:1;MASTER.connect(AC.destination);
   MUS=AC.createGain();MUS.gain.value=.6;MUS.connect(MASTER);SFX=AC.createGain();SFX.connect(MASTER);
-  if(window.TS)TS.init(AC,SFX);if(window.TS2)TS2.init(AC,SFX);beatT0=AC.currentTime+.3;nextBeat=0}
+  if(window.TS)TS.init(AC,SFX);if(window.TS2)TS2.init(AC,SFX);if(window.TS4)TS4.init(AC,SFX);beatT0=AC.currentTime+.3;nextBeat=0}
 const now=()=>AC?AC.currentTime:performance.now()/1000-perf0;
 const lat=()=>AC?Math.max(0,(AC.outputLatency||0)+(AC.baseLatency||0)+userLat()/1000):0;
 function setTempo(bpm){BPM=bpm;BEAT=60/bpm;beatT0=now()+.25;nextBeat=0}

@@ -60,6 +60,7 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:22px;color:var(--gold)}
 
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
+<script src="thaisound4.js"></script>
 <script src="natab.js"></script>
 <script src="thaiinst.js"></script>
 <script>
@@ -83,7 +84,10 @@ const INSTS=[
   {id:'thon',n:'โทน–รำมะนา',pads:[{n:'ทั่ม',k:2},{n:'ติง',k:0},{n:'จ๊ะ',k:3},{n:'จ๊ง',k:1}]},
   {id:'klong',n:'กลองหลวงแม่สอด',pads:[{n:'กลองหลวง',k:'k0'},{n:'กลองหลวง',k:'k2'},{n:'ฆ้อง',k:'m'},{n:'ฉาบเปิด',k:'x0'},{n:'ฉาบปิด',k:'x1'}]},
   {id:'drum',n:'กลองแขก',pads:[{n:'ติง',k:0},{n:'โจ๊ะ',k:1},{n:'ทั่ม',k:2},{n:'จ๊ะ',k:3}]},
-  {id:'ching',n:'ฉิ่ง · ฉาบ',pads:[{n:'ฉิ่ง',k:'c1'},{n:'ฉับ',k:'c2'},{n:'ฉาบเปิด',k:'b1'},{n:'ฉาบปิด',k:'b0'},{n:'ฉาบกระทบ',k:'b2'}]}
+  {id:'ching',n:'ฉิ่ง · ฉาบ',pads:[{n:'ฉิ่ง',k:'c1'},{n:'ฉับ',k:'c2'},{n:'ฉาบเปิด',k:'b1'},{n:'ฉาบปิด',k:'b0'},{n:'ฉาบกระทบ',k:'b2'}]},
+  /* วงกลองปู่เจ่ของชมรม (อัดจริง 3 พ.ย. 2569) */
+  {id:'pujae',n:'วงกลองปู่เจ่',pads:[{n:'ปู่เจ่ ตุ้ม',k:'p0'},{n:'ปู่เจ่ ป๊ะ',k:'p1'},{n:'ปู่เจ่ แต๊ะ',k:'p2'},{n:'ฉาบเปิด',k:'q0'},{n:'ฉาบปิด',k:'q1'},{n:'ฆ้องราว 1',k:'g0'},{n:'ฆ้องราว 2',k:'g1'},{n:'ฆ้องราว 3',k:'g2'},{n:'ฆ้องราว 4',k:'g3'}]},
+  {id:'sabat',n:'กลองสะบัดชัย',pads:[{n:'หน้ากลอง',k:'s0'},{n:'ขอบกลอง',k:'s1'},{n:'ฉาบเปิด',k:'q0'},{n:'ฉาบปิด',k:'q1'},{n:'ฆ้องราว',k:'g0'}]}
 ];
 INSTS.forEach(x=>{if(x.melo){x.lo=TI.RANGE[x.id][0];x.hi=TI.RANGE[x.id][1]}});
 let cur=INSTS[0];try{const v=JSON.parse(localStorage.getItem('sapphawathit_play')||'null');if(v)cur=INSTS.find(x=>x.id===v.i)||cur}catch(e){}
@@ -99,7 +103,10 @@ function sound(key,id){audio();
   else{const p=key;
     if(cur.id==='thon')TI.perc('thon',p,0,1);else if(cur.id==='drum')TI.perc('drum',p,0,1);
     else if(p==='m')TI.perc('mong',0,0,1);else if(/^x\d$/.test(p))TI.perc('klchab',+p[1],0,1);else if(/^k\d$/.test(p))TI.perc('klong',+p[1],0,1.1);
-    else if(p==='c1')TI.perc('ching',1,0,1);else if(p==='c2')TI.perc('ching',2,0,1);else TI.perc('chab',+p.slice(1),0,1.2);
+    else if(p==='c1')TI.perc('ching',1,0,1);else if(p==='c2')TI.perc('ching',2,0,1);
+    else if(/^p\d$/.test(p))TI.perc('pujae',+p[1],0,1);else if(/^q\d$/.test(p))TI.perc('pjchab',+p[1],0,1);
+    else if(/^g\d$/.test(p))TI.perc('khongrao',+p[1],0,1);else if(/^s\d$/.test(p))TI.perc('sabat',+p[1],0,1);
+    else TI.perc('chab',+p.slice(1),0,1.2);
     show((cur.pads.find(x=>x.k===p)||{}).n||'')}
   if(recOn)recBuf.push({t:performance.now()-recT0,inst:cur.id,key})}
 function release(id){const st=held[id];if(st){st.stop();delete held[id]}}

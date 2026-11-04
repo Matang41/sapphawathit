@@ -1,11 +1,12 @@
 /* ============================================================
    thaiinst.js — ชั้นกลางของเสียงเครื่องดนตรีไทยและเพลงในสื่อของชมรม
    ใช้ร่วมกันโดย บันทึกโน้ต · แทร็กซ้อมวง · เครื่องดนตรีจำลอง · ฝึกหู
-   ต้องโหลด thaisound.js, thaisound2.js และ natab.js ก่อน
+   ต้องโหลด thaisound.js, thaisound2.js, thaisound4.js และ natab.js ก่อน
      TI.init(audioContext, outputNode)
      TI.note(inst, i, t, v, dur, out)   i = ลูกฆ้อง 0–15 (ซฺ ลฺ ทฺ ด ร ม ฟ ซ ล ท ดํ รํ มํ ฟํ ซํ ลํ) ใช้ระดับเสียงเดียวกันทุกเครื่อง โน้ตเกินช่วงเสียงจริงทบช่วงให้
      TI.label(inst, i)                  ชื่อโน้ต (ตรงกันทุกเครื่อง)
      TI.perc(kind, k, t, v, out)        kind: ching (k 1=ฉิ่ง 2=ฉับ) · chab · thon · drum · klong (กลองหลวง k 0–2) · mong (ฆ้องวงกลองหลวง) · klchab (ฉาบวงกลองหลวง k 0 เปิด 1 ปิด)
+                                        · pujae (กลองปู่เจ่ k 0 ต่ำ 1 กลาง 2 สูง) · pjchab (ฉาบวงปู่เจ่ k 0 เปิด 1 ปิด) · khongrao (ฆ้องราว k 0–3 ใหญ่→เล็ก) · sabat (กลองสะบัดชัย k 0 หน้ากลอง 1 ขอบ)
      TI.songs()                         เพลงจากสื่อของชมรม + ร่างในเครื่อง
      TI.timeline(packedSong)            ช่องโน้ตทั้งเพลง พร้อมฉิ่งและหน้าทับของแต่ละช่อง
    ============================================================ */
@@ -19,7 +20,7 @@
   const RANGE = { ranad: [-7, 13], thum: [-9, 7], khong: [-2, 13], khongS: [3, 20], khlui: [3, 17], sor: [7, 21], sorU: [3, 17] };
   function fold(i, inst) { const r = RANGE[inst]; if (!r) return i; while (i < r[0]) i += 7; while (i > r[1]) i -= 7; return clamp(i, r[0], r[1]) }
   let AC = null, OUT = null;
-  function init(ac, out) { AC = ac; OUT = out || ac.destination; TS.init(ac, OUT); if (window.TS2) TS2.init(ac, OUT); }
+  function init(ac, out) { AC = ac; OUT = out || ac.destination; TS.init(ac, OUT); if (window.TS2) TS2.init(ac, OUT); if (window.TS3) TS3.init(ac, OUT); if (window.TS4) TS4.init(ac, OUT); }
   const INST = {
     khong: { n: 'ฆ้องวงใหญ่', s: 'ฆ้อง', hold: false },
     khongS: { n: 'ฆ้องวงเล็ก', s: 'ฆ้องเล็ก', hold: false },
@@ -60,8 +61,15 @@
     else if (kind === 'drum') TS.drum(k, t, v, out);
     else if (kind === 'klong') { if (T2 && T2.klong) T2.klong(k, t, v, out); }
     else if (kind === 'mong') { if (!(T2 && T2.klmong && T2.klmong(t, v * .8, out))) mongF(TS.F(-9), t, v, out); }
-    else if (kind === 'klchab') { if (!(T2 && T2.klchab && T2.klchab(k, t, v * .7, out))) perc('chab', k ? 0 : 1, t, v, out); }
+    else if (kind === 'klchab') { if (!(T2 && T2.klchab && T2.klchab(k, t, v * .7, out))) perc('klchabF', k, t, v, out); }
+    /* วงกลองปู่เจ่และกลองสะบัดชัย (thaisound4.js) — ถ้ายังโหลดไม่เสร็จใช้เสียงใกล้เคียงแทนไปก่อน */
+    else if (kind === 'pujae') { const T4 = window.TS4; if (!(T4 && T4.pujae(k, t, v, out))) perc('thon', [2, 0, 3][clamp(k | 0, 0, 2)], t, v, out); }
+    else if (kind === 'pjchab') { const T4 = window.TS4; if (!(T4 && T4.chab(k, t, v * .9, out))) perc('chab', k ? 0 : 1, t, v, out); }
+    else if (kind === 'khongrao') { const T4 = window.TS4; if (!(T4 && T4.khongrao(k, t, v, out))) mongF(KHRF[clamp(k | 0, 0, 3)], t, v, out); }
+    else if (kind === 'sabat') { const T4 = window.TS4; if (!(T4 && T4.sabat(k, t, v, out))) perc(k ? 'ching' : 'klong', k ? 2 : 0, t, v, out); }
+    else if (kind === 'klchabF') { if (!(T2 && T2.chab(k, t, v * .6, out))) TS.ching(false, t, v * .4, out); }
   }
+  const KHRF = [259, 345, 435, 518];
   /* ---------- เพลงจากบันทึกโน้ตเพลงไทย ---------- */
   function readToks(str) { const out = []; let i = 0; while (i < str.length) { const c = str[i]; if (c === '-') { out.push([]); i++ } else if (c === '(') { const j = str.indexOf(')', i); out.push(str.slice(i + 1, j).split('').map(x => x.charCodeAt(0) - 97).filter(x => x >= 0 && x < 16)); i = j + 1 } else { const v = c.charCodeAt(0) - 97; out.push(v >= 0 && v < 16 ? [v] : []); i++ } } return out }
   function decBars(str) {
@@ -109,5 +117,5 @@
   /* ความถี่ของลูกที่ i ตามเสียงวงของชมรม (ระนาดเอกที่อัดไว้ ลูก i+5) */
   function freq(i) { const F = window.TS2 && TS2.RANADF; let k = i + 7, r = 1; if (F) { while (k > 21) { k -= 7; r *= 2 } while (k < 0) { k += 7; r /= 2 } if (F[k]) return F[k] * r } return TS.F(i) }
   const THON = (window.TS2 && TS2.THON_NAMES) || ['ติง', 'จ๊ง', 'ทั่ม', 'จ๊ะ'];
-  window.TI = { init, INST, RANGE, fold, THON, note, perc, songs, timeline, decBars, noteName, label, freq, KNOTE: () => TS.KNOTE };
+  window.TI = { init, INST, RANGE, fold, THON, note, perc, songs, timeline, decBars, noteName, label, freq, KHRF, KNOTE: () => TS.KNOTE };
 })();

@@ -102,6 +102,7 @@ h1{font-family:Mitr;font-weight:500;margin:0;font-size:30px;color:var(--gold);te
 <script src="natab.js"></script>
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
+<script src="thaisound4.js"></script>
 <script src="thaiinst.js"></script>
 <script src="khaotaen.js"></script>
 <script>
@@ -121,10 +122,12 @@ function waitReady(ms){return new Promise(r=>{const t0=Date.now();(function chk(
 const MEL=['khong','khongS','ranad','thum','khlui','sor'];
 const INSTS=[
   {id:'ranad',n:'ระนาดเอก'},{id:'thum',n:'ระนาดทุ้ม'},{id:'khong',n:'ฆ้องวงใหญ่'},{id:'khongS',n:'ฆ้องวงเล็ก'},
-  {id:'khlui',n:'ขลุ่ย'},{id:'sor',n:'ซอด้วง'},{id:'thon',n:'โทน–รำมะนา'},{id:'drum',n:'กลองแขก'},{id:'ching',n:'ฉิ่ง'},{id:'chab',n:'ฉาบเล็ก'}
+  {id:'khlui',n:'ขลุ่ย'},{id:'sor',n:'ซอด้วง'},{id:'thon',n:'โทน–รำมะนา'},{id:'drum',n:'กลองแขก'},{id:'ching',n:'ฉิ่ง'},{id:'chab',n:'ฉาบเล็ก'},
+  /* เครื่องของวงกลองปู่เจ่และกลองสะบัดชัย (อัดจริงจากของชมรม) */
+  {id:'pujae',n:'กลองปู่เจ่'},{id:'khongrao',n:'ฆ้องราว'},{id:'sabat',n:'กลองสะบัดชัย'},{id:'klong',n:'กลองหลวง'}
 ];
 /* ระดับง่ายใช้เครื่องที่เสียงต่างกันชัด */
-const INST_LV=[['ranad','khong','khlui','sor','thon','ching'],['ranad','thum','khong','khlui','sor','thon','drum','ching','chab'],INSTS.map(x=>x.id)];
+const INST_LV=[['ranad','khong','khlui','sor','thon','ching'],['ranad','thum','khong','khlui','sor','thon','drum','ching','chab','pujae','khongrao'],INSTS.map(x=>x.id)];
 function phraseFor(id){/* ทำนองสั้น 4–5 เสียง ตามช่วงเสียงของเครื่อง */
   const base=id==='thum'?rnd(4)+1:id==='khongS'?rnd(4)+4:rnd(5)+3,steps=[0,1,2,-1,1,2,-2,3,4];const out=[base];
   for(let k=0;k<4;k++)out.push(Math.max(0,Math.min(15,out[out.length-1]+pick(steps))));return out}
@@ -133,7 +136,11 @@ function playInst(id,ph,t){const u=.36;
   if(id==='thon'){[2,1,0,3,2,1].forEach((l,k)=>TI.perc('thon',l,t+k*u*.75,.95));return t+6*u*.75}
   if(id==='drum'){[2,1,0,3,2,0].forEach((l,k)=>TI.perc('drum',l,t+k*u*.75,.95));return t+6*u*.75}
   if(id==='ching'){[2,1,2,1].forEach((c,k)=>TI.perc('ching',c,t+k*u*1.2,1));return t+4*u*1.2}
-  if(id==='chab'){[1,0,1,2].forEach((c,k)=>TI.perc('chab',c,t+k*u*1.2,1));return t+4*u*1.2}}
+  if(id==='chab'){[1,0,1,2].forEach((c,k)=>TI.perc('chab',c,t+k*u*1.2,1));return t+4*u*1.2}
+  if(id==='pujae'){[0,2,1,0,2,2,1].forEach((l,k)=>TI.perc('pujae',l,t+k*u*.7,.95));return t+7*u*.7}
+  if(id==='khongrao'){[0,1,2,1].forEach((l,k)=>TI.perc('khongrao',l,t+k*u*1.4,1));return t+4*u*1.4}
+  if(id==='sabat'){[0,1,1,0,1,0].forEach((l,k)=>TI.perc('sabat',l,t+k*u*.8,1));return t+6*u*.8}
+  if(id==='klong'){[0,1,2,0].forEach((l,k)=>TI.perc('klong',l,t+k*u*1.1,1));return t+4*u*1.1}}
 
 /* ---------- หน้าทับ ---------- */
 const NATAB_LV=[['pk2','sm2','km2','lao'],['pk2','sm2','sd2','km2','lao','mon','khaek1','pk1','sm1'],['pk3','pk2','pk1','sm3','sm2','sm1','sd3','sd2','sd1','km3','km2','km1','lao','mon','khaek1','lukmod']];

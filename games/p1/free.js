@@ -174,7 +174,7 @@ function applyOutfit(){const ks=CAST_ORDER3.slice();if(!SPEC0){SPEC0={};ks.forEa
 const BUS_SCH=()=>spot('busS',44,9),TANG=()=>({x:11*T+8,y:3*T+14}),BED=()=>({x:2*T+8,y:8*T+4});
 const TREE=()=>spot('tree',42,11),EL4=()=>spot('el4',37,22),DOME=()=>spot('dome',19,22),FIELDC=()=>spot('fieldc',30,18),STANDS=()=>spot('stands',25,18),INDUS=()=>spot('indus',6,13);
 const CHEDI=()=>spot('chedi',33,15),FARM=()=>spot('farm',38,18);
-const SCRAPS={sch:[['L1',22,31],['L3',18,11],['L5',46,30]],vil:[['L4',8,24],['L6',30,21]]};
+const SCRAPS={sch:[['L1',19,32],['L3',18,11],['L5',46,30]],vil:[['L4',8,24],['L6',30,21]]};
 const RQS={};function rqSpots(){if(!RQS[F.cur])RQS[F.cur]=curPicks().map(p=>spotNear(p.x,p.y));return RQS[F.cur]}
 const QGIV={sch:['stu','stuG','jao','ice','ing','kaimuk','captain','yum','che','mateo','waen','foo'],vil:['kidG','farmer','kid','dancer','luwa']};
 function newRQ(){const sp=rqSpots(),r=Math.random,i=Math.floor(r()*sp.length),pool=QGIV[F.cur];const g={k:pool[Math.floor(r()*pool.length)],x:sp[i].x,y:sp[i].y};
@@ -329,11 +329,21 @@ async function wkCeremony(){const w=F.ev.wk;if(F.day<w.day){await say(null,'พ�
 async function spCheer(){await talk([[null,'อัฒจันทร์ · กองเชียร์ทุกสีมาซ้อมพร้อมกัน แต่นกหวีดของพี่สตาฟตัวหนึ่งเป่าเพี้ยนไม่หยุด'],['whistle','ปรี๊ด! ข้ากลับมาแล้ว! ลูกล้อลูกขัดแบบเดิม รับให้ทันนะ!']]);
   const r=await fight('frSp1',Object.assign({},ENEMY.whistle,{n:'นกหวีดเพี้ยน (ซ้อมเชียร์)',hp:90,call:1,bg:'court'}));if(r==='win'){F.ev.sp.cheer=1;fsave();await talk([[null,'กองเชียร์ทุกสีร้องตามจังหวะฉิ่งของวงได้พร้อมกันเป็นครั้งแรก!']]);banner('ซ้อมเชียร์สำเร็จ'+(F.ev.sp.sign?' · กลับไปหาครูตังค์':''),2600)}}
 async function spSign(){await talk([[null,'อาคารอุตสาหกรรม · ครูช่างให้ยืมไม้อัดกับสี'],['?foo','ผมปีนขึ้นไปทาสีตัวอักษรบนสุดเองครับ!'],['?waen','ผมคำนวณระยะตัวอักษรแล้ว เส้นตรงทุกตัว'],[null,'ป้ายนำขบวน “ชมรมดนตรีไทยสรรพวาทิต · ม่วง–เหลืองหนึ่งเดียว” เสร็จเรียบร้อย']]);F.ev.sp.sign=1;fsave();banner('ทำป้ายเสร็จ'+(F.ev.sp.cheer?' · กลับไปหาครูตังค์':''),2600)}
+/* วงกลองปู่เจ่นำขบวน (เสียงอัดจริงจากวงของชมรม) — ใช้ตอนเดินขบวน */
+let PROC=null;
+function procStart(bpm){if(!AC||PROC)return;const sd=60/(bpm||104)/2;PROC={sd,next:AC.currentTime+.15,k:0,t:setInterval(procTick,80)}}
+function procTick(){if(!PROC||!AC)return;const {sd}=PROC;
+  while(PROC.next<AC.currentTime+.3){const k=PROC.k%8,t=PROC.next;
+    if(window.TS4){if(k===0||k===3||k===6)TS4.pujae(0,t,.95,SFX);else if(k===2||k===5)TS4.pujae(1,t,.7,SFX);else if(k===7)TS4.pujae(2,t,.6,SFX);
+      if(k%2===0)TS4.chab(k%4===0?0:1,t,.5,SFX);if(k===0)TS4.khongrao(0,t,.6,SFX)}
+    else{TS.drum(k%4,t,.6,SFX);if(k%2===0)TS.ching(k%4===0,t,.4,SFX)}
+    PROC.next+=sd;PROC.k++}}
+function procStop(){if(!PROC)return;clearInterval(PROC.t);PROC=null}
 /* ขบวนพาเหรด: เดินผ่านธงรอบสนามให้ครบภายในเวลา */
 let PAR=null;
 const PFLAGS=()=>[[26,11],[34,11],[34,25],[26,25],[30,18]].map(([x,y],i)=>spot('pf'+i,x,y));
-async function spParade(){await talk([['tang','ขบวนพาเหรดเริ่ม! เดินนำขบวนผ่านธงทั้งห้าจุดรอบสนามให้ทันเพลง (90 วินาที)'],['pob','ทุกสีเดินตามเรา! ผู้จัดการนำขบวนเอง!']]);PAR={i:0,t0:performance.now(),lim:90000};banner('ขบวนพาเหรดเริ่ม! เดินไปที่ธงสีทอง',2400)}
-async function parFinish(ok){const p=PAR;PAR=null;if(!ok){await say(null,'เพลงจบก่อนขบวนเดินครบ… ไม่เป็นไร ลองเดินใหม่ได้ที่สนามฟุตบอล');return}
+async function spParade(){await talk([['tang','ขบวนพาเหรดเริ่ม! เดินนำขบวนผ่านธงทั้งห้าจุดรอบสนามให้ทันเพลง (90 วินาที)'],['pob','ทุกสีเดินตามเรา! ผู้จัดการนำขบวนเอง!']]);PAR={i:0,t0:performance.now(),lim:90000};stopMusic();procStart(108);banner('ขบวนพาเหรดเริ่ม! วงกลองปู่เจ่นำขบวน เดินไปที่ธงสีทอง',2600)}
+async function parFinish(ok){const p=PAR;PAR=null;procStop();startMusic();if(!ok){await say(null,'เพลงจบก่อนขบวนเดินครบ… ไม่เป็นไร ลองเดินใหม่ได้ที่สนามฟุตบอล');return}
   await talk([[null,'ขบวนวงดนตรีไทยนำทุกสีเดินครบรอบสนาม เสียงกลองหลวงกับฉิ่งดังก้อง ทุกสีปรบมือพร้อมกัน'],['whistle','ปรี๊ด! ข้า… ข้าจะเป่าให้ขบวนสะดุด!'],['maha','อีกแล้ว! ทุกคน ตั้งวง!']]);
   const r=await fight('frSp2',Object.assign({},ENEMY.whistle,{n:'นกหวีดกรรมการเพี้ยน (ป่วนกีฬาสี)',hp:120,call:1,ghost:1,atk:10,bg:'court'}));if(r!=='win'){F.ev.sp.st=3;fsave();await say(null,'นกหวีดยังป่วนอยู่ ลองเริ่มขบวนใหม่');return}
   F.ev.sp.st=9;fsave();await talk([[null,'นกหวีดเพี้ยนสงบลง กลายเป็นนกหวีดกรรมการธรรมดา เป่าเสียงเดียวตรงจังหวะพอดี'],[null,'ประธานกีฬาสีประกาศรางวัลพิเศษ “ขวัญใจทุกสี” ให้วงดนตรีไทยสรรพวาทิต'],['tang','จะสีไหนก็คนสรรพวิทยาคมเหมือนกัน วันนี้พวกเธอทำให้ทุกสีเดินไปด้วยกันได้'],['pob','ผู้จัดการขอประกาศ… ม่วง–เหลืองหนึ่งเดียว!']]);
@@ -412,5 +422,5 @@ function titleCard(){const chs=document.querySelector('#title .chs');if(!chs||do
   const d=document.createElement('div');d.className='chc box';d.innerHTML='<div class="cht">โหมดเดินเล่นอิสระ'+(ok?'':' 🔒')+'</div><div class="chd">'+(ok?'ชีวิตโรงเรียนครบหนึ่งปี เข้าได้ทุกอาคาร หัวใจความสนิท ผอ. ครูอินโฟ งานประจำปี เควสสุ่ม ตำนานผีโรงเรียน และความลับอีกมาก':'ปลดล็อกเมื่อเล่นบทที่ 3 จบ')+'</div><div class="chb"><button class="btn g" id="cFree"'+(ok?'':' disabled')+'>▶ เดินเล่นอิสระ</button>'+(ok&&fload()?'<button class="btn" id="cFreeN">✦ เริ่มใหม่</button>':'')+'</div>';
   chs.appendChild(d);$('#cFree').onclick=startFree;const n=$('#cFreeN');if(n)n.onclick=()=>{if(!confirm('เริ่มโหมดอิสระใหม่? ความคืบหน้าในโหมดอิสระจะหายไป (บทที่ 1–3 ไม่เปลี่ยน)'))return;try{localStorage.removeItem(FK)}catch(e){}startFree()}}
 buildExtraSprites();titleCard();
-window.FREE={api:{fsave,coins,choose,openOv,snap:c=>snap(c),lore,album,walkFlash,TRIVIA,spotNear},get F(){return F},get on(){return ON},startFree,PH,skipTo,newRQ,ghostMeet,finale,GH,spot,BUS_SCH,TANG,BED,FIELDC,DOME,STANDS,INDUS,PFLAGS,WKI,EL4,TREE,kruoPos,miniPos,CHEDI,applyOutfit,evNotice};
+window.FREE={api:{fsave,coins,choose,openOv,snap:c=>snap(c),lore,album,walkFlash,TRIVIA,spotNear,procStart,procStop},get F(){return F},get on(){return ON},startFree,PH,skipTo,newRQ,ghostMeet,finale,GH,spot,BUS_SCH,TANG,BED,FIELDC,DOME,STANDS,INDUS,PFLAGS,WKI,EL4,TREE,kruoPos,miniPos,CHEDI,applyOutfit,evNotice};
 })();

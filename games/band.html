@@ -102,6 +102,7 @@ select option{color:#222;background:#fff}
 <script src="natab.js"></script>
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
+<script src="thaisound4.js"></script>
 <script src="thaiinst.js"></script>
 <script>
 "use strict";
@@ -121,9 +122,12 @@ const PART=[
   {id:'thon',n:'โทน–รำมะนา',d:'ตามหน้าทับ เสียงจริง'},
   {id:'drum',n:'กลองแขก',d:'ตามหน้าทับ'},
   {id:'ching',n:'ฉิ่ง',d:'ตามอัตราจังหวะ เสียงจริง'},
-  {id:'chab',n:'ฉาบเล็ก',d:'ตีคู่ฉิ่ง เสียงจริง'}
+  {id:'chab',n:'ฉาบเล็ก',d:'ตีคู่ฉิ่ง เสียงจริง'},
+  {id:'pujae',n:'กลองปู่เจ่',d:'ตามหน้าทับ · เสียงจริงจากวงของชมรม'},
+  {id:'pjchab',n:'ฉาบวงปู่เจ่',d:'ตีคู่ฉิ่ง เสียงจริง'},
+  {id:'khongrao',n:'ฆ้องราว',d:'ลงที่จังหวะฉับ เสียงจริง'}
 ];
-const DEF={on:{khong:true,ranad:true,thum:false,khlui:true,sor:true,thon:true,drum:false,ching:true,chab:false},vol:{khong:80,ranad:70,thum:60,khlui:70,sor:60,thon:75,drum:70,ching:75,chab:55},mine:'',guide:false,cnt:true,loop:false,bpm:{}};
+const DEF={on:{khong:true,ranad:true,thum:false,khlui:true,sor:true,thon:true,drum:false,ching:true,chab:false,pujae:false,pjchab:false,khongrao:false},vol:{khong:80,ranad:70,thum:60,khlui:70,sor:60,thon:75,drum:70,ching:75,chab:55,pujae:80,pjchab:55,khongrao:65},mine:'',guide:false,cnt:true,loop:false,bpm:{}};
 let ST;try{ST=Object.assign({},DEF,JSON.parse(localStorage.getItem('sapphawathit_band')||'{}'));ST.on=Object.assign({},DEF.on,ST.on);ST.vol=Object.assign({},DEF.vol,ST.vol);ST.bpm=ST.bpm||{}}catch(e){ST=JSON.parse(JSON.stringify(DEF))}
 const save=()=>{try{localStorage.setItem('sapphawathit_band',JSON.stringify(ST))}catch(e){}};
 
@@ -185,7 +189,10 @@ function slot(g,t,u,B,skip){
   }else if(on('ranad')&&s.R!==null&&g>0){/* ลากเสียง: ระนาดกรอเบา ๆ ด้วยเสียงก่อนหน้า */let k=g-1;while(k>=0&&TL.slots[k].mel==null)k--;const pm=k>=0?TL.slots[k].mel:null;if(pm!=null&&g-k<=3){TI.note('ranad',pm,t,.45,0,B.ranad);TI.note('ranad',pm+7<=13?pm+7:pm-7,t+u/2,.35,0,B.ranad)}}
   if(on('thon'))s.dl.forEach(l=>TI.perc('thon',l,t,.9,B.thon));
   if(on('drum'))s.dl.forEach(l=>TI.perc('drum',l,t,.85,B.drum));
-  if(s.ch){if(on('ching'))TI.perc('ching',s.ch,t,1,B.ching);if(on('chab'))TI.perc('chab',s.ch===1?1:0,t,.9,B.chab)}
+  if(on('pujae'))s.dl.forEach(l=>TI.perc('pujae',l>=2?0:l===1?1:2,t,.9,B.pujae));
+  if(s.ch){if(on('ching'))TI.perc('ching',s.ch,t,1,B.ching);if(on('chab'))TI.perc('chab',s.ch===1?1:0,t,.9,B.chab);
+    if(on('pjchab'))TI.perc('pjchab',s.ch===1?0:1,t,.85,B.pjchab);
+    if(s.ch===2&&on('khongrao'))TI.perc('khongrao',0,t,.9,B.khongrao)}
 }
 function countIn(t0,u,B){const n=4;for(let k=-n;k<0;k++){const c=NATAB.countInCh(k,TL.rate)||(k===-n?1:0);if(c)TI.perc('ching',c,t0+(k+n)*u,1,B.ching)}return n}
 

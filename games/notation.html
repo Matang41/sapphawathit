@@ -132,7 +132,7 @@ body.selmode .sl{cursor:copy}
     <button class="btn play" id="bPlay">▶ เล่นตั้งแต่ต้น</button>
     <button class="btn" id="bPlayHere">▶ เล่นจากห้องนี้</button>
     <button class="btn" id="bLoop">🔁 วน</button>
-    <label class="voice">เสียงทำนอง <select id="voice" aria-label="เครื่องดนตรีที่เล่นทำนอง"></select></label><span class="seg mix"><button data-m="khong">ทำนอง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button></span>
+    <label class="voice">เสียงทำนอง <select id="voice" aria-label="เครื่องดนตรีที่เล่นทำนอง"></select></label><span class="seg mix"><button data-m="khong">ทำนอง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button><button data-m="pujae" title="วงกลองปู่เจ่ของชมรม: กลองตามหน้าทับ ฉาบตามฉิ่ง ฆ้องราวลงที่ฉับ">วงปู่เจ่</button></span>
     <span class="west">🎼 โน้ตสากล: ด =<select id="wKey" aria-label="คีย์สากล"></select><button class="btn" id="wChord">🎸 คอร์ด</button></span>
   </div>
   <div class="bar-set tech">
@@ -172,6 +172,7 @@ body.selmode .sl{cursor:copy}
 <script src="natab.js"></script>
 <script src="thaisound.js"></script>
 <script src="thaisound2.js"></script>
+<script src="thaisound4.js"></script>
 <script src="thaiinst.js"></script>
 <script>
 (function(){
@@ -211,7 +212,7 @@ function decBars(str){
 const blankBars=n=>Array.from({length:n},()=>[[],[],[],[]]);
 /* แต่ละท่อนมีสองแถว: h.L = มือซ้าย (แถวบน) · h.R = มือขวา (แถวล่าง) จำนวนห้องเท่ากันเสมอ */
 const blankLine=(label,n)=>({label,h:{L:blankBars(n),R:blankBars(n)}});
-function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",voice:"khong",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
+function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",voice:"khong",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true,pujae:false},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
 function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{},l.rep===2?{rep:2}:{})),at:Date.now()}}
 /* เพลงรุ่นเก่า (แถวเดียว): ตีคู่แยกเป็นเสียงต่ำ→มือซ้าย เสียงสูง→มือขวา · โน้ตเดี่ยวอยู่มือขวา */
 function splitOld(bars){
@@ -491,7 +492,9 @@ function sched(){
       if(song.mix.khong){if(TI.INST[VOICE()].hold){const h=TL[g].R&&(isGrp(TL[g].R)||TL[g].R.length)?"R":"L",sl=TL[g][h];if(sl!==null){if(isGrp(sl))playEntry(sl,nextT,u);else if(sl.length)vN(Math.max(...sl),nextT,.9,holdSlots(g,h)*u*.96)}}
         else["L","R"].forEach(h=>{const sl=TL[g][h];if(sl===null)return;if(isGrp(sl))playEntry(sl,nextT,u);else sl.forEach(i=>vN(i,nextT,.85))})}
       const m=TL[g].m,ev=NT.RATE[m.r].ev,c=(m.k%ev)===ev-1?(Math.floor(m.k/ev)%2===0?1:2):0;if(c&&song.mix.ching)TS.ching(c===1,nextT);
+      if(song.mix.pujae){if(c)TI.perc('pjchab',c===1?0:1,nextT,.8);if(c===2)TI.perc('khongrao',0,nextT,.85)}
       const dt=m.p&&DT[m.p];if(dt&&song.mix.drum)dt[m.dk%dt.length].l.forEach(l=>TS.drum(l,nextT,.8));
+      if(dt&&song.mix.pujae)dt[m.dk%dt.length].l.forEach(l=>TI.perc('pujae',l>=2?0:l===1?1:2,nextT,.9));
       vq.push({t:nextT,g:TL[g].o});
     }
     nextT+=u;g++;

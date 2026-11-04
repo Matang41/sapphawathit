@@ -22,7 +22,11 @@ const INST={
   chab:{n:'ฉาบ',k:'cym',pads:['ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>TS2.klchab(i,t,v)},
   harp:{n:'เตหน่ากู',k:'string',pads:['1','2','3','4','5','6'],play:(i,t,v)=>TS2.harp(i,t,v)},
   pinae:{n:'ปี่แน',k:'hole',pads:['ด','ร','ม','ซ','ล','ดํ'],play:(i,t,v)=>TS2.pinae(TS2.PINAEF[[1,2,3,5,6,8][i]],t,.32,v)},
-  pat:{n:'ปัตวาย่ง',k:'gong',pads:['1','2','3','4','5','6'],play:(i,t,v)=>patwaing(i,t,(v||1)*1.4,SFX)}};
+  pat:{n:'ปัตวาย่ง',k:'gong',pads:['1','2','3','4','5','6'],play:(i,t,v)=>patwaing(i,t,(v||1)*1.4,SFX)},
+  /* วงกลองปู่เจ่และกลองสะบัดชัยของชมรม (เสียงอัดจริง thaisound4.js) */
+  pujae:{n:'กลองปู่เจ่',k:'face',pads:['ตุ้ม','ป๊ะ','แต๊ะ'],play:(i,t,v)=>TS4.pujae(i,t,v)},
+  khongrao:{n:'ฆ้องราว',k:'gong',pads:['ลูก 1','ลูก 2','ลูก 3','ลูก 4'],play:(i,t,v)=>TS4.khongrao(i,t,v)},
+  sabat:{n:'กลองสะบัดชัย',k:'face',pads:['หน้ากลอง','ขอบกลอง','ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>i<2?TS4.sabat(i,t,v):TS4.chab(i-2,t,v)}};
 const inTeam=id=>TEAM.includes(id);
 let BT=null;
 function bEl(){let d=$('#battle');if(!d){d=document.createElement('div');d.id='battle';d.innerHTML='<div class="btop"><div class="bnm"></div><div class="bbar"><i></i></div><div class="bme"><span class="bmeh">♥</span><b></b></div></div><div class="bmsg"></div><div class="bside"><button id="bRep" class="bsm">🔁 ฟังอีกครั้ง</button><button id="bLv" class="bsm">ยอมแพ้</button></div><div class="bpads"></div><div class="blose"><div class="card"><h2>ยังไม่ไหว…</h2><p class="muted">เงาเพี้ยนยังไม่ยอม ลองใหม่ได้ทันที</p><div class="row" style="justify-content:center"><button class="btn" data-r="1">ลองใหม่</button><button class="btn ghost" data-r="2">ลองใหม่แบบง่าย</button></div></div></div>';document.body.appendChild(d)}return d}
