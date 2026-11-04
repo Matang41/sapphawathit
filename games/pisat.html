@@ -485,13 +485,13 @@ const BLD=[
  {n:22,nm:'อาคารรวมใจ (ศาลาพักคอย)',x:35,y:12,w:1,h:2,c:'#8a4a1f',door:[36,13],act:'rest',lb:'นั่งพัก + บันทึก'},
  {n:0,nm:'7-Eleven',x:47,y:10,w:4,h:2,c:'#1f8a3a',door:[48,12],act:'seven',lb:'เข้าเซเว่น'}
 ];
-const DECO=[[31,4,1,1],[31,6,1,1],[25,6,1,1],[36,5,2,1],[38,2,1,2],[40,2,1,2],[40,5,1,2],[38,5,1,1],[52,10,1,1],[52,12,1,1],[49,14,1,1],[51,14,1,1],[44,11,1,1]];
+const DECO=[[31,4,1,1],[31,6,1,1],[25,6,1,1],[36,5,2,1],[38,2,1,2],[40,2,1,2],[40,5,1,2],[38,5,1,1],[52,10,1,1],[52,12,1,1],[51,14,1,1],[44,11,1,1]];
 const SHED=[[20,34,2,1],[24,34,2,1],[27,34,2,1],[38,34,2,1],[20,10,2,1]];
-const ROADS=[[0,8,56,2],[20,0,2,8],[45,0,2,8],[45,10,2,7],[10,11,13,1],[10,11,1,9],[10,19,7,1],[23,10,1,25],[23,26,21,1],[24,30,13,1],[36,10,2,24],[12,18,11,1],[47,8,9,2]];
+const ROADS=[[0,8,56,2],[20,0,2,8],[45,0,2,8],[45,10,2,7],[10,11,13,1],[10,11,1,9],[10,19,7,1],[23,10,1,25],[36,26,8,1],[24,30,13,1],[36,10,2,24],[12,18,11,1],[47,8,9,2]];
 const PINES=[[24,10],[24,12],[24,14],[35,16],[35,19],[35,22],[26,7],[27,7],[28,7],[31,7],[32,7],[33,7]];
-const TREES=[[42,10],[47,12],[49,17],[54,19],[47,22],[55,25],[49,31],[54,30],[46,16],[51,34],[47,33],[2,2],[8,2],[18,3],[23,3],[15,36],[21,35],[27,36],[41,36],[52,36],[5,34],[14,35],[35,35],[44,35],[55,13],[55,31],[3,20],[9,13],[33,30],[37,33],[12,29],[1,26],[4,28],[8,30],[12,27],[15,30],[2,3],[6,4],[10,2],[14,5],[50,20],[52,24],[48,28],[53,30],[46,33],[1,33],[16,33],[43,22],[49,4],[53,6],[11,24],[6,25]];
+const TREES=[[42,10],[47,12],[49,17],[54,19],[47,22],[55,25],[49,31],[54,30],[51,34],[47,33],[2,2],[8,2],[18,3],[23,3],[15,36],[21,35],[27,36],[41,36],[52,36],[5,34],[14,35],[35,35],[44,35],[55,13],[55,31],[3,20],[9,13],[12,29],[1,26],[8,30],[12,27],[15,30],[2,3],[6,4],[10,2],[14,5],[50,20],[52,24],[48,28],[53,30],[46,33],[1,33],[16,33],[43,22],[49,4],[53,6],[11,24],[6,25]];
 const LAMPS=[[24,27],[35,27],[37,27],[19,22],[17,18]];
-const FIELD={x:25,y:10,w:10,h:16},COURT={x:39,y:28,w:4,h:5};
+const FIELD={x:25,y:11,w:9,h:15},COURT={x:39,y:28,w:4,h:5};
 /* ===== รุ่น 3.15: เติมรายละเอียดให้แผนที่โรงเรียนใกล้ของจริงและไม่โล่ง =====
    ZONE = พื้นที่ใช้สอย (เดินผ่านได้ทุกชนิด ยกเว้น water) · PROP = ของประกอบฉาก (solid ตามชนิด)
    XBLD = อาคาร/สิ่งปลูกสร้างเพิ่ม · FENCE = รั้วโรงเรียน (เว้นช่องประตู) */
@@ -522,7 +522,7 @@ const ZONE=[
   /* ---- นอกรั้ว ทิศใต้ ---- */
   ['dirt',0,35,56,1],['crop',0,36,18,1],['crop',33,36,13,1],['crop',19,36,13,1],
   /* เติมเพิ่ม: ทางเดินในโรงเรียน ซอยและไร่นารอบนอก */
-  ['paved',26,30,10,1],['paved',24,19,1,7],['paved',36,26,6,2],['paved',9,20,2,6],
+  ['paved',26,30,10,1],['paved',24,21,1,5],['paved',36,26,6,2],['paved',9,20,2,6],
   ['dirt',50,12,1,23],['dirt',46,24,10,1],['dirt',46,18,10,1],
   ['crop',47,25,9,5],['crop',51,13,5,4],['crop',47,13,3,4],
   ['dirt',0,3,12,1],['paved',0,4,20,1],['crop',11,0,8,2],['dirt',22,0,2,5],
@@ -531,13 +531,13 @@ const ZONE=[
 const XBLD=[
   /* ---- ในรั้ว ---- */
   {nm:'ศาลาพระพุทธสรรพวิทย์',x:13,y:24,w:3,h:2,kind:'sala',act:'budd',lb:'กราบพระพุทธรูปประจำโรงเรียน'},
-  {nm:'ศาลพระภูมิ',x:33,y:11,w:1,h:1,kind:'shrine',act:'spirit',lb:'ไหว้ศาลพระภูมิ'},
+  {nm:'ศาลพระภูมิ',x:35,y:11,w:1,h:1,kind:'shrine',act:'spirit',lb:'ไหว้ศาลพระภูมิ'},
   {nm:'โรงจอดรถจักรยานยนต์นักเรียน',x:2,y:28,w:6,h:1,kind:'carport',act:'bikepark',lb:'โรงจอดรถจักรยานยนต์'},
   {nm:'เรือนเพาะชำ',x:12,y:34,w:3,h:1,kind:'green',act:'nursery',lb:'เรือนเพาะชำ'},
   {nm:'ซุ้มขายของหน้าโรงอาหาร',x:17,y:26,w:2,h:1,kind:'stall',act:'stall',lb:'ซุ้มขายของ'},
   {nm:'ศาลานั่งเล่น',x:8,y:24,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
-  {nm:'ศาลานั่งเล่น',x:27,y:23,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
-  {nm:'ศาลานั่งเล่น',x:42,y:26,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
+  {nm:'ศาลานั่งเล่น',x:15,y:27,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
+  {nm:'ศาลานั่งเล่น',x:42,y:25,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
   {nm:'โรงเก็บพัสดุ',x:1,y:24,w:1,h:1,kind:'shed2'},
   {nm:'บ้านพักนักการภารโรง',x:7,y:32,w:2,h:1,kind:'house2'},
   {nm:'ถังเก็บน้ำประปาโรงเรียน',x:44,y:18,w:1,h:2,kind:'tank'},
@@ -564,8 +564,8 @@ const XBLD=[
   {nm:'บ้านชาวบ้าน',x:12,y:36,w:2,h:1,kind:'home'},
   {nm:'บ้านชาวบ้าน',x:36,y:36,w:2,h:1,kind:'home'},
   {nm:'บ้านชาวบ้าน',x:6,y:1,w:2,h:1,kind:'home'},
-  {nm:'ร้านค้าชุมชน',x:52,y:9,w:3,h:1,kind:'shop'},
-  {nm:'ศาลานั่งเล่น',x:20,y:24,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
+  {nm:'ร้านค้าชุมชน',x:53,y:10,w:3,h:1,kind:'shop'},
+  {nm:'ศาลานั่งเล่น',x:19,y:24,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'},
   {nm:'ศาลานั่งเล่น',x:38,y:16,w:1,h:1,kind:'gaz',act:'gaz',lb:'ศาลานั่งเล่น'}
 ];
 /* รั้วโรงเรียน: หน้าโรงเรียน y=10 (เว้นประตูใหญ่ 34–37 ประตูข้าง 10 และทางรถ 23) · หลังโรงเรียน y=34 · ข้าง x=0,x=45 */
@@ -579,36 +579,32 @@ const FENCE=fenceTiles();
 const FLAG={x:31,y:26};            // เสาธงกลางลานหน้าเสาธง
 const GATE={x:34,y:10,w:4};        // ซุ้มประตูโรงเรียน
 const PROP=[
-  /* ป้ายชื่อโรงเรียนและประตู */
+  /* ป้ายชื่อโรงเรียนสองข้างประตู */
   ['sign',32,10],['sign',38,10],
-  /* รถจักรยานยนต์ใต้โรงจอด */
+  /* รถจักรยานยนต์ใต้โรงจอดนักเรียน */
   ...[2,3,4,5,6,7].map(x=>['bike',x,29]),
   /* รถครูในลานจอด */
   ['car',41,12],['car',43,12],['car',41,14],['car',43,14],['car',41,16],['car',43,16],
-  /* ม้านั่ง ถังขยะ กระถาง เสาไฟ ตามลาน */
-  ['bench',12,23],['bench',16,23],['bench',7,25],['bench',26,27],['bench',35,27],['bench',28,23],
-  ['bench',41,27],['bench',10,20],['bench',19,26],['bench',44,21],
-  ['bin',13,23],['bin',25,27],['bin',36,27],['bin',18,26],['bin',6,28],['bin',42,11],['bin',24,13],['bin',33,19],
-  ['pot',10,24],['pot',10,25],['pot',17,24],['pot',17,25],['pot',30,26],['pot',32,26],['pot',27,26],['pot',35,26],
-  ['pot',1,11],['pot',1,14],['pot',1,19],['pot',1,22],['pot',45,13],
-  ['lamp',8,27],['lamp',14,26],['lamp',29,27],['lamp',40,19],['lamp',43,25],['lamp',12,32],['lamp',47,16],['lamp',47,24],
-  /* กีฬา */
-  ['hoop',39,29],['hoop',42,31],['vnet',44,29],['vnet',46,29],['goal',29,10],['goal',29,25],
-  /* เกษตร */
-  ...[1,3,5,7,9].map(x=>['scare',x,33]),
-  ['tank2',10,31],['tank2',10,33],
-  /* ซุ้มและร่มในชุมชน */
-  ['stall2',4,6],['stall2',8,6],['stall2',17,6],['stall2',50,6],['stall2',51,3],
-  ['car',46,3],['car',46,5],['bike',44,7],['bike',43,7],['bike',19,7],['bike',18,7],
-  ['bench',9,22],['bench',24,24],['bench',37,27],['bench',13,19],['bench',31,19],
-  ['bin',9,25],['bin',21,25],['bin',39,27],['bin',16,19],['bin',44,27],
-  ['pot',25,26],['pot',34,26],['pot',25,30],['pot',36,30],['pot',12,22],['pot',18,23],
-  ['lamp',25,22],['lamp',36,22],['lamp',10,16],['lamp',31,33],['lamp',19,33],['lamp',42,33],['lamp',51,20],['lamp',51,29],
-  ['scare',48,21],['scare',52,21],['scare',48,27],['scare',53,27],['scare',53,15],['scare',12,1],['scare',16,1],
-  ['stall2',12,6],['stall2',23,6],['stall2',47,6],['stall2',6,3],
-  ['car',47,10],['car',53,11],['bike',49,8],['bike',50,8],['bike',12,8],['bike',13,8],['bike',33,8],['bike',34,8],
-  ['tank2',46,36],['tank2',29,35]
+  /* ม้านั่ง: ลานพระ · ริมสนามฝั่งอัฒจันทร์ · ลานเสาธง · หลังโดม · สวนหย่อม */
+  ['bench',12,23],['bench',16,23],['bench',24,23],['bench',35,27],['bench',19,26],['bench',7,25],
+  /* ถังขยะหน้าอาคารสำคัญ */
+  ['bin',24,31],['bin',18,26],['bin',6,28],['bin',39,27],['bin',44,27],
+  /* กระถางต้นไม้: ลานพระพุทธรูป และริมลานหน้าเสาธง */
+  ['pot',10,24],['pot',10,25],['pot',17,24],['pot',17,25],['pot',25,26],['pot',27,26],['pot',33,26],
+  /* เสาไฟริมถนนและลาน */
+  ['lamp',8,27],['lamp',14,26],['lamp',29,26],['lamp',43,25],['lamp',12,32],['lamp',11,16],
+  ['lamp',47,16],['lamp',47,24],['lamp',31,33],['lamp',42,33],
+  /* กีฬา: ประตูฟุตบอล แป้นบาส เน็ตวอลเลย์ */
+  ['goal',29,11],['goal',29,25],['hoop',39,29],['hoop',42,31],['vnet',44,29],['vnet',46,29],
+  /* งานเกษตร */
+  ['scare',3,32],['scare',7,32],['scare',48,21],['scare',52,27],['scare',53,15],
+  ['tank2',10,31],['tank2',10,33],['tank2',46,36],
+  /* ชุมชนหน้าโรงเรียน: ซุ้มขายของ จักรยาน รถ */
+  ['stall2',4,6],['stall2',8,6],['stall2',12,6],['stall2',17,6],['stall2',23,6],['stall2',50,6],
+  ['bike',44,7],['bike',43,7],['bike',19,7],['bike',18,7],['bike',12,7],['bike',13,7],
+  ['car',47,3],['car',47,5],['car',53,11],['car',49,13]
 ];
+
 
 let SOLID=null;
 const SOLIDPROP={bin:1,pot:1,lamp:1,car:1,hoop:1,vnet:1,scare:1,tank2:1,sign:1,stall2:1,bench:1};
@@ -915,11 +911,37 @@ function solidAt(px,py){
   const x=Math.floor(px/T),y=Math.floor(py/T);if(x<0||y<0||x>=MW||y>=MH)return true;return SOLID[y*MW+x];
 }
 function blocked(x,y){return solidAt(x-5,y-4)||solidAt(x+5,y-4)||solidAt(x-5,y)||solidAt(x+5,y)}
+/* ===== ระบบกันตัวละครค้าง =====
+   freeSpotNear: ไล่หาช่องว่างที่ใกล้ที่สุดแบบวงกลมรอบตัว เลือกช่องที่มีทางออกอย่างน้อยสองด้าน
+   placeSafe: ใช้ตอนวางตัวละครลงแผนที่ (ลงรถ เข้าออกห้อง เปลี่ยนบท) ถ้าจุดนั้นตัน ย้ายให้เอง
+   unstick: ถ้าผู้เล่นกดเดินแล้วไม่ขยับ ระบบจะวาบไปช่องว่างใกล้ ๆ ให้เอง */
+function freeSpotNear(px,py,maxR){
+  const tx=Math.floor(px/T),ty=Math.floor(py/T),R=maxR||14;
+  const ok=(x,y)=>!blocked(x*T+8,y*T+12);
+  const open=(x,y)=>{let n=0;if(ok(x+1,y))n++;if(ok(x-1,y))n++;if(ok(x,y+1))n++;if(ok(x,y-1))n++;return n};
+  let best=null,bd=1e9,loose=null,ld=1e9;
+  for(let r=0;r<=R;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+    const x=tx+dx,y=ty+dy;if(!ok(x,y))continue;
+    const d=Math.hypot(dx,dy);const o=open(x,y);
+    if(o>=2&&d<bd){bd=d;best={x:x*T+8,y:y*T+12}}
+    if(d<ld){ld=d;loose={x:x*T+8,y:y*T+12}}
+    if(best&&r>bd+1)return best}
+  return best||loose}
+function placeSafe(){if(!S)return;if(!blocked(S.x,S.y))return;const p=freeSpotNear(S.x,S.y);if(p){S.x=p.x;S.y=p.y;S.safeX=p.x;S.safeY=p.y}}
+let stuckT=0,stuckN=0,stuckDir='',unstickCool=0;
+function unstick(){
+  unstickCool=performance.now()+2200;stuckT=0;stuckN=0;
+  const p=freeSpotNear(S.x,S.y);if(!p)return;
+  if(Math.hypot(p.x-S.x,p.y-S.y)<3)return;
+  S.x=p.x;S.y=p.y;follow=[];keys.up=keys.down=keys.left=keys.right=0;
+  flash('#c69bff',170);try{sfx.blip()}catch(e){}
+  banner('ติดอยู่หรือเปล่า? ขยับให้อัตโนมัติแล้ว',2200);save()}
 let walkF=0,walkT=0,lastNear=null,idleT=0,bubT=0;
 function updateWorld(dt){
   if(busy||paused||!$('#dlg').classList.contains('hide'))return;
   let dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0);
-  const sp=78*dt;
+  const sp=78*dt,px0=S.x,py0=S.y;
   if(dx||dy){
     if(dx&&dy){dx*=.707;dy*=.707}
     S.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u');
@@ -927,7 +949,11 @@ function updateWorld(dt){
     if(!blocked(nx,S.y)){S.x=nx;mv=true}if(!blocked(S.x,ny)){S.y=ny;mv=true}
     if(mv){walkT+=dt;if(walkT>.14){walkT=0;walkF=walkF===1?2:1}follow.push({x:S.x,y:S.y,dir:S.dir});if(follow.length>60)follow.shift()}
     idleT=0;
-  }else{walkF=0;idleT+=dt}
+    /* กันค้าง: กดเดินแล้วไม่ขยับ หรือสลับทิศหลายครั้งแล้วยังอยู่ที่เดิม */
+    if(Math.hypot(S.x-px0,S.y-py0)<sp*.3){stuckT+=dt;if(S.dir!==stuckDir){stuckDir=S.dir;stuckN++}}
+    else{stuckT=0;stuckN=0;stuckDir=S.dir}
+    if((stuckT>1.5||stuckN>=4)&&performance.now()>unstickCool)unstick();
+  }else{walkF=0;idleT+=dt;stuckT=Math.max(0,stuckT-dt*2);if(stuckT===0)stuckN=0}
   // ออกจากห้อง
   if(S.map==='room'&&S.y>(RH-1)*T+4){if(S.ch===3){goVillage();return}goWorld(15*T+8,19*T+12,'d');return}
   if(S.map==='attic'&&S.y>(RH-1)*T+4){goWorld(17*T+8,11*T+10,'u');return}
@@ -1007,8 +1033,8 @@ async function runAct(a){
   if(a==='canteen'||a==='library'||a==='dome'){if(S.beat[a]){await say(null,{canteen:'โรงอาหารเงียบแล้ว เหลือแต่กลิ่นข้าวมันไก่',library:'ห้องสมุดกลับมาเงียบสงบ หนังสือเรียงเป็นระเบียบ',dome:'โดมกิจกรรมเงียบสนิท ไม่มีเสียงก้องหลอนอีกแล้ว'}[a]);return}await monEncounter(a);return}
   }finally{busy=false}
 }
-function goRoom(){S.map='room';prerenderRoom(TM()?false:S.intro>0);S.x=7*T+8;S.y=8*T+12;S.dir='u';follow=[];setTimeout(()=>{busy=false},0);save();banner('ห้อง 512 · อาคาร5 อัญมณี')}
-function goWorld(x,y,dir){S.map='world';S.x=x;S.y=y;S.dir=dir||'d';follow=[];save();if(S.intro===1&&!S.beat.planSaid){S.beat.planSaid=1;setTimeout(planTalk,300)}}
+function goRoom(){S.map='room';S.rm=null;prerenderRoom(TM()?false:S.intro>0);S.x=7*T+8;S.y=8*T+12;S.dir='u';follow=[];placeSafe();setTimeout(()=>{busy=false},0);save();banner('ห้อง 512 · อาคาร5 อัญมณี')}
+function goWorld(x,y,dir){S.map='world';S.rm=null;S.x=x;S.y=y;S.dir=dir||'d';follow=[];placeSafe();save();if(S.intro===1&&!S.beat.planSaid){S.beat.planSaid=1;setTimeout(planTalk,300)}}
 async function planTalk(){busy=true;await talk([['pob','โอเค! แผนบริหารวิกฤตฉบับพบธรรม'],['pob','ข้อหนึ่ง โรงอาหาร (อาคาร10) ข้อสอง ห้องสมุด (อาคาร12) ข้อสาม โดมกิจกรรม (13)'],['pob','เอาเครื่องคืนครบ แล้วบุกกลางสนามฟุตบอลไปช่วยครู! กด 🗺 ดูแผนที่ได้นะ'],['maha','ทำไมพูดเหมือนนายไม่ใช่คนปล่อยปีศาจ']]);busy=false;hud()}
 
 /* ===================== วาดโลก ===================== */
@@ -1586,7 +1612,7 @@ function playInst(inst,i,t,v){
   if(inst==='khlui'){khlui(i,t,v);return}if(inst==='voice'){voice(i,t,v);return}
   /* วงกลองปู่เจ่และกลองสะบัดชัยของชมรม (thaisound4.js) */
   if(inst==='pujae'){if(window.TS4&&TS4.pujae(clamp(Math.round(i)%3,0,2),t,v,SFX))return;TS.drum(i%4,t,v);return}
-  if(inst==='khongrao'){if(window.TS4&&TS4.khongrao(clamp(Math.round(i)%4,0,3),t,v,SFX))return;TS.khong(clamp(i,0,15),t,v);return}
+  if(inst==='khongrao'){if(window.TS4&&TS4.khongrao(t,v,SFX))return;TS.khong(3,t,v);return}
   if(inst==='sabat'){if(window.TS4&&TS4.sabat(Math.round(i)%2,t,v,SFX))return;TS.drum(2,t,v);return}
   if(inst==='gong')TS.khong(i,t,v);else if(inst==='gongS')TS.khong(Math.min(15,i+4),t,(v||1)*.85);else if(inst==='ranad')ranad(i,t,v);
   else if(inst==='thum')thum(i,t,v);else if(inst==='pinae')pinae(i,t,v);else if(inst==='sor')sor(i,t,v);else TS.khong(i,t,v)}
@@ -1616,7 +1642,7 @@ function prerenderAttic(empty){
   [[1,2],[2,2],[1,3],[11,2],[12,2],[12,3],[1,7],[2,8],[12,7],[11,8]].forEach(([x,y])=>set(x,y,1,1));set(4,2,1,2);set(6,3,3,1);
 }
 function prerenderInterior(){if(!S)return;if(S.map==='attic')prerenderAttic(S.intro>0);else if(S.map==='village')prerenderVillage();else prerenderRoom(TM()?false:S.intro>0)}
-function goAttic(){S.map='attic';prerenderAttic(true);S.x=7*T+8;S.y=8*T+12;S.dir='u';follow=[];save();banner('ห้องเก็บของชั้นบน · อาคาร6 พระวอมิ่งขวัญ')}
+function goAttic(){S.map='attic';S.rm=null;prerenderAttic(true);S.x=7*T+8;S.y=8*T+12;S.dir='u';follow=[];placeSafe();save();banner('ห้องเก็บของชั้นบน · อาคาร6 พระวอมิ่งขวัญ')}
 
 /* ---- ด่านในบทที่ 2 ---- */
 const MON2=[
@@ -2139,7 +2165,7 @@ const NPC3=[
   {k:'kidG',nm:'น้องนักเรียน',x:33*T+8,y:28*T+12,lines:'kid'},
   {k:'drummer',nm:'พ่อครูกลองหลวง',x:29*T+8,y:17*T+10,lines:'drummer'}
 ];
-function goVillage(x,y,dir){S.map='village';S.x=x||21*T+8;S.y=y||35*T+12;S.dir=dir||'u';follow=[];prerenderVillage();save();banner('ชุมชนแม่โกนเกน · ริมแม่น้ำเมย')}
+function goVillage(x,y,dir){S.map='village';S.rm=null;S.x=x||21*T+8;S.y=y||35*T+12;S.dir=dir||'u';follow=[];prerenderVillage();placeSafe();save();banner('ชุมชนแม่โกนเกน · ริมแม่น้ำเมย')}
 
 /* ---------- วาดสิ่งต่าง ๆ บนแผนที่ชุมชน ---------- */
 function drawVillageEnts(list,P,cX,cY,t){
@@ -2472,11 +2498,100 @@ function drawIntro3Fx(t){
 }
 function seg0col(k){return k<.36?'#8a8a80':k<.84?'#7a6a4a':'#8a7a5a'}
 
+/* ---------- คัตซีน: นั่งรถสองแถวกลับโรงเรียน (ฉากใหม่ คนละฉากกับขาไป) ----------
+   ขาไปเป็นภาพข้างรถตอนกลางวัน · ขากลับเป็น “มองออกไปนอกหน้าต่างจากในรถ” ตอนเย็น
+   หมอกควันจางลงเรื่อย ๆ ฟ้าเปลี่ยนจากน้ำตาลขุ่น → ส้มเย็น → คราม มีดาวและไฟในเมืองตอนท้าย
+   เสียง: เครื่องยนต์เบา ๆ กับขลุ่ยเป่าคลอ ไม่มีกลอง (ขากลับทุกคนเหนื่อยแล้ว) */
+let busBack=0,busBackSkip=false;const BACK_DUR=17;
+const BACK_CAP=[[0,'ขากลับ · ออกจากชุมชนแม่โกนเกน'],[.17,'ควันจากไร่เริ่มจางลงข้างหลัง'],[.36,'ทางหลวง 1090 · แดดเย็นส่องเข้าหน้าต่าง'],[.55,'ลู่วาหลับคาฉาบ พบธรรมยังพูดไม่หยุด'],[.74,'ไฟในตัวเมืองแม่สอดเริ่มติด'],[.88,'ถึงป้ายหน้าโรงเรียนสรรพวิทยาคม']];
+let bkEng=null;
+function bkSound(on){
+  if(!AC)return;
+  if(on){if(bkEng)return;const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
+    o.type='sawtooth';o.frequency.value=52;f.type='lowpass';f.frequency.value=170;g.gain.value=0;
+    o.connect(f);f.connect(g);g.connect(MUS);o.start();g.gain.setTargetAtTime(.1,AC.currentTime,.6);bkEng={o,g}}
+  else if(bkEng){const {o,g}=bkEng;bkEng=null;g.gain.setTargetAtTime(0,AC.currentTime,.25);try{o.stop(AC.currentTime+1.2)}catch(e){}}}
+function busBackRun(){return new Promise(res=>{
+  busBack=performance.now();busBackSkip=false;setPad(false);bkSound(true);
+  const skip=()=>{if(performance.now()-busBack>800)busBackSkip=true};
+  window.addEventListener('pointerdown',skip);window.addEventListener('keydown',skip);
+  /* ขลุ่ยเป่าคลอช้า ๆ เป็นวรรค ๆ กับระนาดรับเบา ๆ */
+  const MEL=[7,8,10,8,7,5,4,5,7,8,7,5,4,3,4,5];
+  let nx=AC?AC.currentTime+.6:0,mi=0;
+  const iv=setInterval(()=>{const el=(performance.now()-busBack)/1000;
+    if(AC){const fade=el>BACK_DUR-2?Math.max(0,(BACK_DUR-el)/2):Math.min(1,el/2);
+      while(nx<AC.currentTime+.4){const n=MEL[mi%MEL.length];
+        playInst('khlui',n,nx,.5*fade);
+        if(mi%4===0)playInst('ranad',n-7,nx,.22*fade);
+        nx+=mi%4===3?.95:.62;mi++}}
+    if(el>BACK_DUR||busBackSkip){clearInterval(iv);window.removeEventListener('pointerdown',skip);window.removeEventListener('keydown',skip);
+      busBack=0;bkSound(false);setPad(true);res()}},50)})}
+function drawBusBack(){
+  if(!busBack)return;
+  const el=(performance.now()-busBack)/1000,k=Math.min(1,el/BACK_DUR);
+  const hz=Math.max(0,.5-k*.62);                      /* หมอกควันจางลงเรื่อย ๆ */
+  const dusk=Math.min(1,Math.max(0,(k-.55)/.42));      /* เย็น → ค่ำ */
+  const wy0=16,wy1=Math.round(H*.56),gy=wy1-14;        /* กรอบหน้าต่างและเส้นขอบฟ้า */
+  cx.fillStyle='#0d0f1a';cx.fillRect(0,0,W,H);
+  /* ---- วิวนอกหน้าต่าง ---- */
+  cx.save();cx.beginPath();cx.rect(0,wy0,W,wy1-wy0);cx.clip();
+  const g=cx.createLinearGradient(0,wy0,0,gy);
+  g.addColorStop(0,mixc('#c08a5a','#2a2a5a',dusk));
+  g.addColorStop(1,mixc('#ffd9a0','#6a4a7a',dusk));
+  cx.fillStyle=g;cx.fillRect(0,wy0,W,gy-wy0);
+  if(dusk<.85){const sy=wy0+14+dusk*16;cx.globalAlpha=.35;disc(cx,mixc('#ffd98a','#ff7a3a',dusk),W*.17,sy,16+dusk*6);cx.globalAlpha=1;disc(cx,mixc('#fff3c8','#ff8a4a',dusk),W*.17,sy,8+dusk*3)}
+  if(dusk>.35)for(let i=0;i<22;i++){const r=hsh(i*3.7);cx.globalAlpha=(dusk-.35)*1.5*(.4+r*.6);cx.fillStyle='#fff';cx.fillRect(Math.round(r*W),Math.round(wy0+2+hsh(i*9.1)*(gy-wy0-18)),1,1);cx.globalAlpha=1}
+  /* ดอยไกล (เลื่อนกลับทางตรงข้ามกับขาไป) */
+  for(let L=0;L<2;L++){const off=-el*(5+L*7);cx.fillStyle=mixc(L?'#7a6a80':'#8a7a90','#2a2440',dusk*.9);
+    cx.beginPath();cx.moveTo(0,gy);for(let x=0;x<=W+8;x+=8){const wx=x+off;cx.lineTo(x,gy-18-L*6-(Math.sin(wx*.015+L)*12+Math.sin(wx*.037)*7+14)*(L?.75:1.1))}cx.lineTo(W,gy);cx.fill()}
+  /* ไร่นาและเสาไฟริมทาง เลื่อนเร็ว */
+  cx.fillStyle=mixc('#6a7a3a','#1b2220',dusk);cx.fillRect(0,gy,W,wy1-gy);
+  const sp=38,base=-el*96;
+  for(let j=Math.floor(-base/sp)-2;j<Math.floor((-base+W)/sp)+2;j++){
+    const x=Math.round(j*sp+base),r=hsh(j);
+    if(k>.72&&j%2===0){                                 /* เข้าเมือง: ตึกแถวและไฟ */
+      const hgt=16+Math.round(r*16);cx.fillStyle=mixc('#b0a898','#2a2630',dusk);cx.fillRect(x,gy-hgt,sp-4,hgt);
+      cx.fillStyle='#ffd98a';for(let i=0;i<2;i++)if(hsh(j*3+i)<.7)cx.fillRect(x+5+i*13,gy-hgt+5,5,4)}
+    else{for(let i=0;i<4;i++){cx.fillStyle=mixc(i%2?'#8aa83a':'#6a8a2a','#2b3326',dusk);cx.fillRect(x+i*9,gy-8-Math.round(r*4),3,9+Math.round(r*4))}}
+    if(j%4===1){cx.fillStyle=mixc('#4a443c','#15131c',dusk);cx.fillRect(x+16,gy-34,2,34);cx.fillRect(x+10,gy-33,14,2);
+      if(dusk>.25){const a=(dusk-.25)*1.33;cx.globalAlpha=a*.3;disc(cx,'#ffd98a',x+12,gy-30,9);cx.globalAlpha=a;disc(cx,'#fff3c8',x+12,gy-30,3);cx.globalAlpha=1}}}
+  cx.fillStyle='rgba(176,146,112,'+Math.max(0,hz)+')';cx.fillRect(0,wy0,W,wy1-wy0);   /* หมอกควันที่ยังเหลือ */
+  cx.restore();
+  /* ---- กรอบหน้าต่างและโครงรถ ---- */
+  cx.fillStyle='#1b3f78';cx.fillRect(0,0,W,wy0);cx.fillStyle='#2a5aa0';cx.fillRect(0,wy0-4,W,4);
+  cx.fillStyle='#8a8a90';cx.fillRect(10,6,W-20,2);                                    /* ราวจับเพดาน */
+  for(let x=24;x<W-20;x+=52){cx.fillStyle='#9a9aa0';cx.fillRect(x,8,2,7);cx.fillStyle='#d8d0b0';cx.fillRect(x-3,14,8,3)}
+  [6,W-14].forEach(px=>{cx.fillStyle='#1b3f78';cx.fillRect(px,wy0,8,wy1-wy0);cx.fillStyle='#143059';cx.fillRect(px+6,wy0,2,wy1-wy0)});
+  cx.fillStyle='#1b3f78';cx.fillRect(0,wy1,W,H-wy1);
+  cx.fillStyle='#8a5a2a';cx.fillRect(0,wy1,W,6);                                       /* ขอบไม้ใต้หน้าต่าง */
+  for(let x=0;x<W;x+=14){cx.fillStyle='#6a421e';cx.fillRect(x,wy1+1,1,5)}
+  /* ---- เบาะและเพื่อนร่วมทาง ---- */
+  const bob=Math.sin(el*13)>.55?1:0;
+  const party=(S&&S.party?S.party.slice():['pob','luwa','maha']).slice(0,5);
+  const seatY=wy1+16;
+  cx.fillStyle='#3a6a2a';cx.fillRect(0,seatY+18,W,8);                                  /* เบาะยาว */
+  cx.fillStyle='#2e5622';cx.fillRect(0,seatY+18,W,2);
+  party.forEach((pn,i)=>{
+    const n=party.length,gap=Math.min(34,W*.62/Math.max(1,n-1||1)),x0=W/2-gap*(n-1)/2;
+    const px=Math.round(x0+i*gap)-8,py=seatY+bob+(i%2);
+    if(SPR[pn]&&SPR[pn].d)cx.drawImage(SPR[pn].d[0],0,0,16,16,px,py,16,16);
+    if(pn==='luwa'&&k>.5){cx.fillStyle='#ffe9a8';cx.font='9px Mitr';cx.fillText('z',px+14,py-2);if(k>.62)cx.fillText('z',px+17,py-7)}});
+  cx.fillStyle='#14305c';cx.fillRect(0,H-14,W,14);cx.fillStyle='#0f2547';cx.fillRect(0,H-14,W,2);
+  /* ---- คำบรรยาย ---- */
+  let ci=0;BACK_CAP.forEach((c,i)=>{if(k>=c[0])ci=i});
+  const c0=BACK_CAP[ci][0],c1=(BACK_CAP[ci+1]||[1.06])[0],lk=(k-c0)/(c1-c0),al=Math.min(1,lk*5,(1-lk)*5);
+  cx.globalAlpha=Math.max(0,al);cx.fillStyle='rgba(20,12,30,.72)';cx.fillRect(0,H-40,W,22);
+  cx.fillStyle='#ffe9a8';cx.font='bold 11px Mitr';cx.textAlign='center';cx.fillText(BACK_CAP[ci][1],W/2,H-25);cx.textAlign='left';cx.globalAlpha=1;
+  cx.fillStyle='rgba(255,255,255,.75)';cx.font='8px Mitr';cx.textAlign='right';cx.fillText('🎍 ขลุ่ยคลอขากลับ · แตะเพื่อข้าม',W-6,H-4);cx.textAlign='left';
+  if(el<.5){cx.fillStyle='rgba(0,0,0,'+(1-el*2)+')';cx.fillRect(0,0,W,H)}
+  if(el>BACK_DUR-.6){cx.fillStyle='rgba(0,0,0,'+Math.min(1,(el-BACK_DUR+.6)/.6)+')';cx.fillRect(0,0,W,H)}
+}
+
 /* ===================== ลูปหลัก ===================== */
 let lastT=performance.now();
 function frame(now){
   const dt=Math.min(.05,(now-lastT)/1000);lastT=now;const t=now/1000;
-  if(mode==='world'){updateWorld(dt);drawWorld(t);drawIntroFx(t);drawIntro2Fx(t);drawIntro3Fx(t)}
+  if(mode==='world'){updateWorld(dt);drawWorld(t);drawIntroFx(t);drawIntro2Fx(t);drawIntro3Fx(t);drawBusBack()}
   else if(mode==='battle'&&BT)drawBattle(t);
   else if(mode==='title')drawTitleBg(t);
   requestAnimationFrame(frame);
@@ -2505,7 +2620,7 @@ buildSprites();buildSolid();prerenderWorld();prerenderRoom(false);prerenderVilla
 $('#c1C').classList.toggle('hide',!load(1));$('#c2C').classList.toggle('hide',!load(2));$('#c3C').classList.toggle('hide',!load(3));
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{prerenderWorld();prerenderVillage();if(S)prerenderInterior()});
 requestAnimationFrame(frame);
-window.__PS={MON2,STAGE2,MON3,STAGE3,stage3,hazeFinal,intro3,goVillage,get VROAM(){return VROAM},finalShow,SPR,drawChar,teamSelect,stageEncounter,intro2,get S(){return S},set S(v){S=v},battle,ENEMY,get BT(){return BT},runAct,startGame,tapLane,dlgNext,openMap,goWorld};
+window.__PS={freeSpotNear,placeSafe,unstick,MON2,STAGE2,MON3,STAGE3,stage3,hazeFinal,intro3,goVillage,get VROAM(){return VROAM},finalShow,SPR,drawChar,teamSelect,stageEncounter,intro2,get S(){return S},set S(v){S=v},battle,ENEMY,get BT(){return BT},runAct,startGame,tapLane,dlgNext,openMap,goWorld};
 </script>
 <script src="khaotaen.js"></script>
 <script src="songbook.js"></script>

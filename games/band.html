@@ -231,9 +231,12 @@ $('#exp').onclick=async()=>{
   try{
     const u=60/bpm,sr=44100,cnt=ST.cnt?4:0,len=(TL.slots.length+cnt)*u+2.5;
     if(len>900)throw new Error('เพลงยาวเกิน 15 นาที ลองลดจำนวนท่อนหรือเร่งความเร็ว');
-    H.textContent='กำลังเรียงเสียงทั้งวง…';await new Promise(r=>setTimeout(r,30));
+    H.textContent='กำลังเตรียมเสียงเครื่องดนตรีจริง…';await new Promise(r=>setTimeout(r,30));
     const off=new OfflineAudioContext(1,Math.ceil(sr*len),sr),m=off.createGain();m.gain.value=.85;const cp=off.createDynamicsCompressor();m.connect(cp);cp.connect(off.destination);
-    TI.init(off,m);const B=mkBuses(off,m);let t=.3;if(cnt){countIn(t,u,B);t+=cnt*u}
+    /* ต้องรอถอดรหัสเสียงจริงให้ครบก่อนเรียงเสียง ไม่งั้นบางเครื่อง (เช่น ฆ้องราว) จะได้เสียงสำรองแทน */
+    await TI.init(off,m);if(TI.whenReady)await TI.whenReady();
+    H.textContent='กำลังเรียงเสียงทั้งวง…';
+    const B=mkBuses(off,m);let t=.3;if(cnt){countIn(t,u,B);t+=cnt*u}
     for(let k=0;k<TL.slots.length;k++)slot(k,t+k*u,u,B,true);
     const buf=await off.startRendering();TI.init(AC,MASTER);
     let blob,ext='mp3';

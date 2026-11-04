@@ -468,10 +468,10 @@ function buildLifeSprites(){
 /* ---------------- ห้องปัจจุบัน / ทางเข้าออก ---------------- */
 const inRm=()=>!!(S&&S.map==='room'&&S.rm&&ROOMS[S.rm]);
 const openNow=D=>{const h=hourF();return h>=D.open[0]&&h<D.open[1]};
-function enterRoom(id){const D=ROOMS[id];if(!D)return;const b=built(id);ROOM=b.c;RSOLID=b.sol;S.map='room';S.rm=id;S.x=7*T+8;S.y=8*T+6;S.dir='u';follow=[];save();banner(D.nm,2400);try{sfx.blip()}catch(e){}LIFE._ents=null}
+function enterRoom(id){const D=ROOMS[id];if(!D)return;const b=built(id);ROOM=b.c;RSOLID=b.sol;S.map='room';S.rm=id;S.x=7*T+8;S.y=8*T+6;S.dir='u';follow=[];try{__PS.placeSafe()}catch(e){}save();banner(D.nm,2400);try{sfx.blip()}catch(e){}LIFE._ents=null}
 function exitRoom(){const D=ROOMS[S.rm];const id=S.rm;S.rm=null;S.beat=S.beat||{};S.beat.planSaid=1;if(!D){goWorld(15*T+8,19*T+12,'d');return}
   const key=D.map==='vil'?'village':'world';const p=reachNear(key,D.out[0],D.out[1])||{x:D.out[0]*T+8,y:D.out[1]*T+12};
-  if(D.map==='vil')goVillage(p.x,p.y,D.dir||'d');else goWorld(p.x,p.y,D.dir||'d');banner(F_().cur==='vil'?'ชุมชนแม่โกนเกน':'โรงเรียนสรรพวิทยาคม',1400);LIFE._ents=null}
+  if(D.map==='vil')goVillage(p.x,p.y,D.dir||'d');else goWorld(p.x,p.y,D.dir||'d');try{__PS.placeSafe()}catch(e){}banner(F_().cur==='vil'?'ชุมชนแม่โกนเกน':'โรงเรียนสรรพวิทยาคม',1400);LIFE._ents=null}
 async function doorTo(act){
   const map=F_().cur==='vil'?DOORS_V:DOORS_S;let id=map[act];if(!id)return false;
   if(id==='?b1'){const v=await choose('อาคาร1 ศรีเมืองฉอด',[{t:'🏛️ ห้องผู้อำนวยการ'},{t:'📣 ห้องประชาสัมพันธ์ (ครูอินโฟ)'},{t:'ยกเลิก'}]);if(v===0)id='b1dir';else if(v===1)id='b1pr';else return true}
@@ -575,7 +575,7 @@ async function runFest(f){const L=LF(),c=cal(),F=F_();const mark=()=>{L.fest[f.i
   if(f.id==='open'){const d=LF().gen>=2?'dir2':'dir';await talk([[null,'เปิดภาคเรียนที่ 1 · หน้าเสาธงตอนเช้า นักเรียนเข้าแถวเต็มสนาม'],[d,d==='dir'?'(ถือโทรโข่ง) ยินดีต้อนรับเปิดเทอม! ปีนี้ ผอ.ขอสามข้อ ข้อหนึ่ง ตั้งใจเรียน ข้อสอง… เอ่อ ข้อสองคืออะไรนะ… ข้อสาม กินข้าวให้หมดจาน!':'ยินดีต้อนรับเปิดเทอม ปีนี้ ผอ.ตั้งเป้าให้ทุกชมรมได้แสดงผลงาน วงดนตรีไทยเปิดงานเลยนะ'],['maha','(กระซิบ) ข้อสองคือมาเรียนให้ตรงเวลาครับ ผอ.'],[null,'ทั้งสนามหัวเราะพร้อมกัน']]);
     mark();aff(d,6);coins(10);return}
   if(f.id==='candle'){await talk([[null,'วันเข้าพรรษา · ชาวแม่โกนเกนแห่ต้นเทียนพรรษาไปวัดห้วยมหาวงก์'],['drummer','วงกลองปู่เจ่กับกลองหลวงตีนำขบวนนะลูก ตามจังหวะพ่อครู']]);
-    api().procStart(100);await sleep(2600);api().procStop();
+    api().procStart();await sleep(3800);api().procStop();
     const a=await bandSong('แห่เทียนพรรษา · '+song('talebaa').title,song('talebaa'),0,8);
     if(a<0){await say(null,'ขบวนยังรอที่ลานวัด ลองตีนำอีกครั้ง');return}mark();aff('drummer',10);aff('elder',6);aff('luwa',6);coins(25,'แห่เทียนพรรษา');snap('แห่เทียนพรรษาแม่โกนเกน');return}
   if(f.id==='sci'){await talk([[null,'สัปดาห์วิทยาศาสตร์ · ห้องวิทย์ตั้งส้อมเสียง ขวดน้ำ และลูกระนาดไว้ให้ทดลอง'],['tchM','วันนี้เราจะทดลองว่า “เสียงสูงต่ำเกิดจากอะไร” ตอบคำถามสามข้อนะ']]);const ok=await quiz(SCIQ.slice().sort(()=>Math.random()-.5).slice(0,3),'ทดลองเรื่องเสียง');

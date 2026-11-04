@@ -16,9 +16,23 @@
   /* โทน–รำมะนา เรียงตามแถวหน้าทับกลองแขก: 0 ติง · 1 จ๊ง (แทนโจ๊ะ) · 2 ทั่ม · 3 จ๊ะ · ไฟล์อัด t_a ทั่ม t_b จ๊ง t_c ติง t_d จ๊ะ */
   const THON=['t_c','t_b','t_a','t_d'],THON_NAMES=['ติง','จ๊ง','ทั่ม','จ๊ะ'],CHAB=['c_1','c_2','c_3'];
   let AC=null,OUT=null;const B={};
-  function init(ac,out){if(AC===ac)return;AC=ac;OUT=out||ac.destination;
-    Object.keys(SRC).forEach(k=>{fetch(SRC[k]).then(r=>r.arrayBuffer()).then(ab=>new Promise((res,rej)=>AC.decodeAudioData(ab,res,rej))).then(b=>{
-      const d=b.getChannelData(0);let m=0;for(let i=0;i<d.length;i++)m=Math.max(m,Math.abs(d[i]));let s=0;while(s<d.length&&Math.abs(d[s])<m*.04)s++;B[k]={b,off:Math.max(0,s/b.sampleRate-.002)}}).catch(()=>{})})}
+  let RAW=null,RDY=null;
+  /* โหลดไฟล์เสียงครั้งเดียว แล้วถอดรหัสใหม่ทุกครั้งที่เปลี่ยน AudioContext
+     (ตอนบันทึกเป็นไฟล์ต้องใช้ OfflineAudioContext คนละตัว ถ้าไม่ถอดใหม่จะได้เสียงสำรองแทนเสียงจริง) */
+  function fetchAll(){if(RAW)return RAW;const KS=Object.keys(SRC);
+    RAW=Promise.all(KS.map(k=>fetch(SRC[k]).then(r=>r.arrayBuffer()).then(ab=>[k,ab]))).then(a=>{const o={};a.forEach(x=>o[x[0]]=x[1]);return o});
+    return RAW}
+  function init(ac,out){
+    if(AC===ac){if(out)OUT=out;return RDY||Promise.resolve()}
+    AC=ac;OUT=out||ac.destination;const my=ac,KS=Object.keys(SRC);
+    RDY=fetchAll().then(raw=>Promise.all(KS.map(k=>new Promise(res=>{
+        try{my.decodeAudioData(raw[k].slice(0),b=>res([k,b]),()=>res(null))}catch(e){res(null)}}))))
+      .then(list=>{if(AC!==my)return;Object.keys(B).forEach(k=>delete B[k]);
+        list.forEach(x=>{if(!x)return;const k=x[0],b=x[1],d=b.getChannelData(0);
+          let m=0;for(let i=0;i<d.length;i++){const v=d[i]<0?-d[i]:d[i];if(v>m)m=v}
+          let s=0;while(s<d.length&&Math.abs(d[s])<m*.04)s++;B[k]={b:b,off:Math.max(0,s/b.sampleRate-.002)}})}).catch(()=>{});
+    return RDY}
+  const whenReady=()=>RDY||Promise.resolve();
   const ready=k=>!!(k?B[k]:Object.keys(SRC).every(x=>B[x]));
   function near(list,f){let best=list[0];list.forEach(x=>{if(Math.abs(Math.log(x[1]/f))<Math.abs(Math.log(best[1]/f)))best=x});return best}
   function play(key,t,v,rate,dur,out,lp){const s=B[key];if(!AC||!s)return false;t=Math.max(t||0,AC.currentTime);
@@ -39,7 +53,7 @@
       n=AC.createBufferSource();n.buffer=sm.b;n.playbackRate.value=f/f0;n.loop=true;n.loopStart=Math.min(sm.b.duration-.4,sm.off+.35);n.loopEnd=sm.b.duration-.2;g.gain.setValueAtTime(v,t);n.connect(g);n.start(t,sm.off)}
     return{stop(){const e=AC.currentTime;try{g.gain.cancelScheduledValues(e);g.gain.setValueAtTime(g.gain.value,e);g.gain.linearRampToValueAtTime(0,e+.08);n.stop(e+.12)}catch(x){}}}}
   const RANADF=PITCH.ranad.reduce((o,[k,f])=>{o[+k.slice(1)]=f;return o},{});
-  window.TS2={init,ready,ranadKey,sustain,RANADF,THON_NAMES,
+  window.TS2={whenReady,init,ready,ranadKey,sustain,RANADF,THON_NAMES,
     ranad:(f,t,v,out)=>{const [k]=near(PITCH.ranad,f);return ranadKey(+k.slice(1),t,v,out)},
     thum:(k,t,v,out)=>{k=Math.round(k);while(k<0)k+=7;while(k>21)k-=7;const e=RK[k];return e?play(e[0],t,(v==null?1:v)*1.1,.5,0,out,1400):false},
     khlui:(f,t,dur,v,out)=>pitched('khlui',f,t,v,dur||.6,out),

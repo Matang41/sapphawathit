@@ -25,7 +25,7 @@ const INST={
   pat:{n:'ปัตวาย่ง',k:'gong',pads:['1','2','3','4','5','6'],play:(i,t,v)=>patwaing(i,t,(v||1)*1.4,SFX)},
   /* วงกลองปู่เจ่และกลองสะบัดชัยของชมรม (เสียงอัดจริง thaisound4.js) */
   pujae:{n:'กลองปู่เจ่',k:'face',pads:['ตุ้ม','ป๊ะ','แต๊ะ'],play:(i,t,v)=>TS4.pujae(i,t,v)},
-  khongrao:{n:'ฆ้องราว',k:'gong',pads:['ลูก 1','ลูก 2','ลูก 3','ลูก 4'],play:(i,t,v)=>TS4.khongrao(i,t,v)},
+  khongrao:{n:'ฆ้องราว–ฉาบ',k:'gong',pads:['ฆ้องราว','ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>i===0?TS4.khongrao(t,v):TS4.chab(i-1,t,v)},
   sabat:{n:'กลองสะบัดชัย',k:'face',pads:['หน้ากลอง','ขอบกลอง','ฉาบเปิด','ฉาบปิด'],play:(i,t,v)=>i<2?TS4.sabat(i,t,v):TS4.chab(i-2,t,v)}};
 const inTeam=id=>TEAM.includes(id);
 let BT=null;

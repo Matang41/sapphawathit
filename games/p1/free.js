@@ -211,9 +211,9 @@ async function busTrip(to){
   const v=await choose('ป้ายรถสองแถว',[{t:to==='vil'?'🚐 นั่งรถไปชุมชนแม่โกนเกน':'🚐 นั่งรถกลับโรงเรียนสรรพวิทยาคม',s:'ใช้เวลาราว 40 นาทีในเกม'},{t:'🌙 นั่งรอรถจนถึงช่วงถัดไป',s:'ข้ามเวลาไปตอนเย็นหรือกลางคืน'},{t:'ยกเลิก'}]);
   if(v===1){skipTo(PH()===0?16*60+10:PH()===1?19*60+10:7*60);return}if(v!==0)return;
   busy=true;stopMusic();const sh={lv:S.lv,xp:S.xp,bag:clone(S.bag),easy:S.easy};F[F.cur]=S;
-  await busRideRun();F.clock+=40;if(F.clock>=1440){F.clock-=1440;F.day++}
+  await (to==='vil'?busRideRun():busBackRun());F.clock+=40;if(F.clock>=1440){F.clock-=1440;F.day++}
   F.cur=to;Object.assign(F[to],sh);bindS();S.hp=S.hpMax;
-  if(to==='vil')goVillage(22*T+8,38*T+4,'u');else{goWorld(BUS_SCH().x,BUS_SCH().y+16,'d')}
+  if(to==='vil')goVillage(22*T+8,38*T+4,'u');else{const b=BUS_SCH();goWorld(b.x,b.y,'d')}
   prerenderInterior();hud();startMusic();busy=false;banner(placeName()+' · '+hhmm()+' '+PHN[PH()]);fsave()}
 function skipTo(min){if(F.clock%1440>=min){F.day++}F.clock=min;F.lastPh=-1;if(S&&S.ch===2)S.phase=PH();fsave();flash('#000',400);try{sfx.heal()}catch(e){}S.hp=S.hpMax;hud();banner(dayLbl()+' · '+hhmm()+' '+PHN[PH()],2600)}
 async function bed(){const v=await choose('นอนพักที่มุมห้อง 512',[{t:'☀️ ตื่นตอนเช้า (07:00)'},{t:'🌇 ตื่นตอนเย็น (16:30)'},{t:'🌙 ตื่นตอนค่ำ (19:30)'},{t:'ยกเลิก'}],'ฟื้นพลังเต็มและข้ามเวลา · เหตุการณ์บางอย่างเกิดแค่บางช่วงเวลา');if(v===0)skipTo(7*60);if(v===1)skipTo(16*60+30);if(v===2)skipTo(19*60+30)}
@@ -330,19 +330,37 @@ async function spCheer(){await talk([[null,'อัฒจันทร์ · ก�
   const r=await fight('frSp1',Object.assign({},ENEMY.whistle,{n:'นกหวีดเพี้ยน (ซ้อมเชียร์)',hp:90,call:1,bg:'court'}));if(r==='win'){F.ev.sp.cheer=1;fsave();await talk([[null,'กองเชียร์ทุกสีร้องตามจังหวะฉิ่งของวงได้พร้อมกันเป็นครั้งแรก!']]);banner('ซ้อมเชียร์สำเร็จ'+(F.ev.sp.sign?' · กลับไปหาครูตังค์':''),2600)}}
 async function spSign(){await talk([[null,'อาคารอุตสาหกรรม · ครูช่างให้ยืมไม้อัดกับสี'],['?foo','ผมปีนขึ้นไปทาสีตัวอักษรบนสุดเองครับ!'],['?waen','ผมคำนวณระยะตัวอักษรแล้ว เส้นตรงทุกตัว'],[null,'ป้ายนำขบวน “ชมรมดนตรีไทยสรรพวาทิต · ม่วง–เหลืองหนึ่งเดียว” เสร็จเรียบร้อย']]);F.ev.sp.sign=1;fsave();banner('ทำป้ายเสร็จ'+(F.ev.sp.cheer?' · กลับไปหาครูตังค์':''),2600)}
 /* วงกลองปู่เจ่นำขบวน (เสียงอัดจริงจากวงของชมรม) — ใช้ตอนเดินขบวน */
+/* ====== เสียงแห่ขบวนกลองปู่เจ่ ======
+   ถอดจังหวะจากคลิป “รวมวง” ที่ครูอัดไว้ (วัดจริง): หนึ่งรอบ ≈ 1.22 วินาที (ประมาณ 98 ครั้ง/นาที)
+   แบ่งเป็น 4 ช่วงย่อย ช่วงละ ≈ 0.306 วินาที
+     ฉาบ   : ลงช่วง 0 (เปิด) และช่วง 1 (ปิด) แล้วเว้นสองช่วง  ← “ฉับ–ฉับ–เงียบ–เงียบ” ตรงกับที่วัดได้
+     กลอง  : ลงหนักช่วง 0 (ใบใหญ่) · ลงกลางช่วง 2 (ครึ่งรอบ) · บางรอบมีลูกขัดช่วง 1/3
+     ฆ้องราว: ลงต้นรอบ รอบเว้นรอบ (ของจริงฆ้องตีห่างกว่ากลอง)
+   ทุกสี่รอบจะมีลูกรัวสั้น ๆ ให้เหมือนคนตีจริง ไม่ใช่จังหวะเครื่องจักร */
+const PJ_BAR=1.22;                       /* หนึ่งรอบขบวน (วินาที) */
 let PROC=null;
-function procStart(bpm){if(!AC||PROC)return;const sd=60/(bpm||104)/2;PROC={sd,next:AC.currentTime+.15,k:0,t:setInterval(procTick,80)}}
-function procTick(){if(!PROC||!AC)return;const {sd}=PROC;
-  while(PROC.next<AC.currentTime+.3){const k=PROC.k%8,t=PROC.next;
-    if(window.TS4){if(k===0||k===3||k===6)TS4.pujae(0,t,.95,SFX);else if(k===2||k===5)TS4.pujae(1,t,.7,SFX);else if(k===7)TS4.pujae(2,t,.6,SFX);
-      if(k%2===0)TS4.chab(k%4===0?0:1,t,.5,SFX);if(k===0)TS4.khongrao(0,t,.6,SFX)}
-    else{TS.drum(k%4,t,.6,SFX);if(k%2===0)TS.ching(k%4===0,t,.4,SFX)}
+function procStart(bpm){if(!AC||PROC)return;
+  const bar=bpm?120/bpm:PJ_BAR,sd=bar/4;
+  PROC={sd,bar,next:AC.currentTime+.15,k:0,t:setInterval(procTick,80)}}
+function procTick(){if(!PROC||!AC)return;const sd=PROC.sd;
+  while(PROC.next<AC.currentTime+.4){
+    const n=PROC.k,k=n%4,cyc=(n/4)|0,t=PROC.next,sw=(Math.random()-.5)*.012;  /* ขยับเวลานิดหน่อยให้เป็นคนตี */
+    if(window.TS4&&TS4.ready()){
+      if(k===0){TS4.pujae(0,t+sw,.95,SFX);TS4.chab(0,t+sw,.6,SFX);if(cyc%2===0)TS4.khongrao(t+sw,.55,SFX)}
+      else if(k===1){TS4.chab(1,t+sw,.5,SFX);if(cyc%2===1)TS4.pujae(1,t+sw,.45,SFX)}
+      else if(k===2){TS4.pujae(0,t+sw,.72,SFX)}
+      else{if(cyc%4===3){TS4.pujae(1,t+sw,.5,SFX);TS4.pujae(2,t+sd*.5+sw,.42,SFX)}   /* ลูกขัดท้ายรอบ */
+           else if(cyc%2===0)TS4.pujae(2,t+sw,.4,SFX)}
+    }else{  /* ยังโหลดเสียงจริงไม่เสร็จ ใช้เสียงสำรองไปก่อน จังหวะเดียวกัน */
+      if(k===0){TS.drum(0,t,.8,SFX);TS.ching(false,t,.4,SFX)}
+      else if(k===1)TS.ching(true,t,.35,SFX);
+      else if(k===2)TS.drum(1,t,.6,SFX)}
     PROC.next+=sd;PROC.k++}}
 function procStop(){if(!PROC)return;clearInterval(PROC.t);PROC=null}
 /* ขบวนพาเหรด: เดินผ่านธงรอบสนามให้ครบภายในเวลา */
 let PAR=null;
 const PFLAGS=()=>[[26,11],[34,11],[34,25],[26,25],[30,18]].map(([x,y],i)=>spot('pf'+i,x,y));
-async function spParade(){await talk([['tang','ขบวนพาเหรดเริ่ม! เดินนำขบวนผ่านธงทั้งห้าจุดรอบสนามให้ทันเพลง (90 วินาที)'],['pob','ทุกสีเดินตามเรา! ผู้จัดการนำขบวนเอง!']]);PAR={i:0,t0:performance.now(),lim:90000};stopMusic();procStart(108);banner('ขบวนพาเหรดเริ่ม! วงกลองปู่เจ่นำขบวน เดินไปที่ธงสีทอง',2600)}
+async function spParade(){await talk([['tang','ขบวนพาเหรดเริ่ม! เดินนำขบวนผ่านธงทั้งห้าจุดรอบสนามให้ทันเพลง (90 วินาที)'],['pob','ทุกสีเดินตามเรา! ผู้จัดการนำขบวนเอง!']]);PAR={i:0,t0:performance.now(),lim:90000};stopMusic();procStart();banner('ขบวนพาเหรดเริ่ม! วงกลองปู่เจ่นำขบวน เดินไปที่ธงสีทอง',2600)}
 async function parFinish(ok){const p=PAR;PAR=null;procStop();startMusic();if(!ok){await say(null,'เพลงจบก่อนขบวนเดินครบ… ไม่เป็นไร ลองเดินใหม่ได้ที่สนามฟุตบอล');return}
   await talk([[null,'ขบวนวงดนตรีไทยนำทุกสีเดินครบรอบสนาม เสียงกลองหลวงกับฉิ่งดังก้อง ทุกสีปรบมือพร้อมกัน'],['whistle','ปรี๊ด! ข้า… ข้าจะเป่าให้ขบวนสะดุด!'],['maha','อีกแล้ว! ทุกคน ตั้งวง!']]);
   const r=await fight('frSp2',Object.assign({},ENEMY.whistle,{n:'นกหวีดกรรมการเพี้ยน (ป่วนกีฬาสี)',hp:120,call:1,ghost:1,atk:10,bg:'court'}));if(r!=='win'){F.ev.sp.st=3;fsave();await say(null,'นกหวีดยังป่วนอยู่ ลองเริ่มขบวนใหม่');return}

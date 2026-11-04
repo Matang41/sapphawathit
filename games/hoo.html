@@ -138,7 +138,7 @@ function playInst(id,ph,t){const u=.36;
   if(id==='ching'){[2,1,2,1].forEach((c,k)=>TI.perc('ching',c,t+k*u*1.2,1));return t+4*u*1.2}
   if(id==='chab'){[1,0,1,2].forEach((c,k)=>TI.perc('chab',c,t+k*u*1.2,1));return t+4*u*1.2}
   if(id==='pujae'){[0,2,1,0,2,2,1].forEach((l,k)=>TI.perc('pujae',l,t+k*u*.7,.95));return t+7*u*.7}
-  if(id==='khongrao'){[0,1,2,1].forEach((l,k)=>TI.perc('khongrao',l,t+k*u*1.4,1));return t+4*u*1.4}
+  if(id==='khongrao'){[0,0,0].forEach((l,k)=>TI.perc('khongrao',0,t+k*u*1.6,1));return t+3*u*1.6}
   if(id==='sabat'){[0,1,1,0,1,0].forEach((l,k)=>TI.perc('sabat',l,t+k*u*.8,1));return t+6*u*.8}
   if(id==='klong'){[0,1,2,0].forEach((l,k)=>TI.perc('klong',l,t+k*u*1.1,1));return t+4*u*1.1}}
 
