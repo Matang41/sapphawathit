@@ -12,7 +12,7 @@
   const cats = () => { const l = A.cfg().libCats; return Array.isArray(l) && l.length ? l : (C.libCats || ['อื่น ๆ']); };
   const items = () => Object.keys(A.D.library || {}).map(id => Object.assign({ id }, A.D.library[id])).filter(x => x.title).sort((a, b) => b.at - a.at);
   const allCats = () => cats().concat(items().map(x => x.cat).filter(c => c && !cats().includes(c))).filter((c, i, a) => a.indexOf(c) === i);
-  const kindLabel = x => x.kind === 'song' ? 'โน้ตเพลง' : x.kind === 'link' ? 'ลิงก์' : /pdf/.test(x.mime || '') ? 'PDF' : /^image\//.test(x.mime || '') ? 'ภาพ' : /^audio\//.test(x.mime || '') ? 'เสียง' : /^video\//.test(x.mime || '') ? 'วิดีโอ' : 'ไฟล์';
+  const kindLabel = x => x.kind === 'song' ? 'โน้ตเพลง' : x.kind === 'chart' ? 'โน้ตเกมกลอง' : x.kind === 'link' ? 'ลิงก์' : /pdf/.test(x.mime || '') ? 'PDF' : /^image\//.test(x.mime || '') ? 'ภาพ' : /^audio\//.test(x.mime || '') ? 'เสียง' : /^video\//.test(x.mime || '') ? 'วิดีโอ' : 'ไฟล์';
   const size = n => n ? (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB') : '';
 
   /* โน้ตเพลงที่บันทึกจากเกม “บันทึกโน้ตเพลงไทย” (kind: 'song') เปิดในตัวบันทึกโน้ตเพื่อเล่น/แก้/ส่งออก */
@@ -22,17 +22,22 @@
     const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(x.title) + '</h3><button class="btn ghost sm" data-close>ปิด</button></div><div class="gm-host"><iframe class="gm-f" src="games/notation.html?' + (sub ? 'sub=' : 'song=') + encodeURIComponent(id) + '&name=' + encodeURIComponent(nm) + '" title="' + esc(x.title) + '" allow="autoplay; fullscreen"></iframe></div>', { full: true, sticky: true });
     return w;
   }
+  /* โน้ตเกมกลองปู่เจ่ที่มือกลองบันทึกจากคลิปวง (kind: 'chart') เปิดเป็นด่านในเกมแห่กลองปู่เจ่ */
+  function openChart(id, sub) {
+    const x = sub ? (A.D.libsub || {})[id] : (A.D.library || {})[id]; if (!x) return;
+    return modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(x.title) + '</h3><button class="btn ghost sm" data-close>ปิด</button></div><div class="gm-host"><iframe class="gm-f" src="games/pujae.html?' + (sub ? 'sub=' : 'chart=') + encodeURIComponent(id) + '" title="' + esc(x.title) + '" allow="autoplay; fullscreen"></iframe></div>', { full: true, sticky: true });
+  }
   A.SUBS.push({ key: 'library', path: () => 'library' });
-  /* ผลงานที่สมาชิกส่งมาให้ครูตรวจ: libsub/{id} = { kind: 'song' | 'tap', title, sid, by, at, … } */
+  /* ผลงานที่สมาชิกส่งมาให้ครูตรวจ: libsub/{id} = { kind: 'song' | 'tap' | 'chart', title, sid, by, at, … } */
   A.SUBS.push({ key: 'libsub', path: () => 'libsub' });
   const subs = () => Object.keys(A.D.libsub || {}).map(id => Object.assign({ id }, A.D.libsub[id])).filter(x => x && x.title).sort((a, b) => a.at - b.at);
-  const subKind = x => x.kind === 'tap' ? 'หน้าทับ/จังหวะ' : 'โน้ตเพลง';
+  const subKind = x => x.kind === 'tap' ? 'หน้าทับ/จังหวะ' : x.kind === 'chart' ? 'โน้ตเกมกลองปู่เจ่' : 'โน้ตเพลง';
   function reviewHTML() {
     const l = subs(); if (T()) {
       if (!l.length) return '';
       return '<section class="card" style="border:2px solid var(--gold)"><div class="lb">ผลงานที่สมาชิกส่งมา รอครูตรวจ (' + l.length + ')</div>' + l.map(x =>
         '<div class="lib"><div class="row"><span class="lib-k">' + subKind(x) + '</span><div class="grow"><b>' + esc(x.title) + '</b><div class="muted">ส่งโดย ' + esc(x.by || x.sid) + ' · ' + M.thDate(x.at) + (x.target ? ' · ขอแก้เพลงเดิม' : '') + '</div>' + (x.desc ? '<div class="lib-d">' + esc(x.desc) + '</div>' : '') +
-        '<div class="row wrap" style="margin-top:8px">' + (x.kind === 'song' ? '<button class="btn ghost sm" data-act="subView" data-id="' + esc(x.id) + '">ดู / ฟัง</button>' : '') + '<button class="btn sm" data-act="subOk" data-id="' + esc(x.id) + '">ยอมรับ</button><button class="btn ghost sm danger" data-act="subNo" data-id="' + esc(x.id) + '">ไม่รับ</button></div></div></div></div>').join('') + '</section>';
+        '<div class="row wrap" style="margin-top:8px">' + (x.kind === 'song' || x.kind === 'chart' ? '<button class="btn ghost sm" data-act="subView" data-id="' + esc(x.id) + '">' + (x.kind === 'chart' ? 'ลองเล่น' : 'ดู / ฟัง') + '</button>' : '') + '<button class="btn sm" data-act="subOk" data-id="' + esc(x.id) + '">ยอมรับ</button><button class="btn ghost sm danger" data-act="subNo" data-id="' + esc(x.id) + '">ไม่รับ</button></div></div></div></div>').join('') + '</section>';
     }
     const mine = l.filter(x => x.sid === A.sid());
     return mine.length ? '<section class="card"><div class="lb">ผลงานของฉันที่รอครูตรวจ</div>' + mine.map(x => '<div class="muted">• ' + esc(x.title) + ' (' + subKind(x) + ') · ส่งเมื่อ ' + M.thDate(x.at) + '</div>').join('') + '</section>' : '';
@@ -94,13 +99,13 @@
 
   Object.assign(A.ACT, {
     libCat: d => { LB.cat = d.c || ''; A.rerender(); },
-    libNew: () => { if (T()) form(null); }, libEdit: d => { if (!T()) return; const x = (A.D.library || {})[d.id]; if (x && x.kind === 'song') return openSong(d.id); form(d.id); },
+    libNew: () => { if (T()) form(null); }, libEdit: d => { if (!T()) return; const x = (A.D.library || {})[d.id]; if (x && x.kind === 'song') return openSong(d.id); if (x && x.kind === 'chart') return openChart(d.id); form(d.id); },
     libDel: async d => { if (!T()) return; const x = A.D.library[d.id]; if (!x || !(await M.confirmBox('ลบรายการ', esc(x.title) + ' จะหายไปจากคลังความรู้', 'ลบ', true))) return; A.W(B.update('', { ['library/' + d.id]: null, ['libfiles/' + d.id]: null })); A.log('library.del', '', x.title); },
     libCats: () => {
       if (!T()) return; const w = modal('<h3>หมวดหมู่คลังความรู้</h3><form class="form"><div class="muted" style="margin-bottom:8px">หนึ่งหมวดต่อหนึ่งบรรทัด</div><textarea class="in" id="lc" rows="8" aria-label="หมวดหมู่">' + esc(cats().join('\n')) + '</textarea><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const l = Array.from(new Set($('#lc', w).value.split(/\r?\n/).map(s => s.trim()).filter(Boolean))); if (!l.length) return toast('ต้องมีอย่างน้อยหนึ่งหมวด'); A.W(B.set('config/libCats', l)); w.remove(); toast('บันทึกหมวดหมู่แล้ว'); });
     },
-    subView: d => { if (T()) openSong(d.id, true); },
+    subView: d => { if (!T()) return; const x = (A.D.libsub || {})[d.id]; if (x && x.kind === 'chart') openChart(d.id, true); else openSong(d.id, true); },
     subOk: async d => {
       if (!T()) return; const x = (A.D.libsub || {})[d.id]; if (!x) return;
       if (!(await M.confirmBox('ยอมรับผลงาน', 'เผยแพร่ “' + esc(x.title) + '” ของ ' + esc(x.by || '') + ' เป็นสื่อของชมรม', 'ยอมรับ'))) return;
@@ -109,6 +114,9 @@
         if (p.pid) rec.pid = p.pid; else rec.str = p.str || '';
         try { await B.direct('set', '/tapPresets/' + d.id, rec); } catch (e) { return toast('บันทึกไม่สำเร็จ: ' + A.errTH(e)); }
         A.W(B.remove('libsub/' + d.id));
+      } else if (x.kind === 'chart') {
+        const cs = cats(), cat = cs.includes('โน้ตและเพลง') ? 'โน้ตและเพลง' : (cs[0] || 'อื่น ๆ');
+        A.W(B.update('', { ['library/chart_' + d.id.replace(/^sub_/, '')]: { title: x.title, cat, desc: x.desc || '', kind: 'chart', chart: x.chart || {}, at: Date.now(), by: x.by || '', bySid: x.sid || '', approvedBy: A.myName() }, ['libsub/' + d.id]: null }));
       } else {
         const lid = x.target && (A.D.library || {})[x.target] ? x.target : 'song_' + d.id.replace(/^sub_/, ''); const old = (A.D.library || {})[lid];
         const song = Object.assign({}, x.song, { libId: lid }); const cs = cats(), cat = cs.includes('โน้ตและเพลง') ? 'โน้ตและเพลง' : (cs[0] || 'อื่น ๆ');
@@ -123,7 +131,7 @@
       A.W(B.remove('libsub/' + d.id)); A.log('library.reject', x.sid || '', x.title); toast('นำออกแล้ว');
     },
     libOpen: async d => {
-      const x = (A.D.library || {})[d.id]; if (!x) return; if (x.kind === 'song') return openSong(d.id); if (x.kind === 'link') { window.open(x.url, '_blank', 'noopener'); return; }
+      const x = (A.D.library || {})[d.id]; if (!x) return; if (x.kind === 'song') return openSong(d.id); if (x.kind === 'chart') return openChart(d.id); if (x.kind === 'link') { window.open(x.url, '_blank', 'noopener'); return; }
       let url = ''; const w = modal('<h3>' + esc(x.title) + '</h3><div id="lv" class="muted">กำลังโหลดไฟล์ …</div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true, wide: true, onClose: () => { if (url) URL.revokeObjectURL(url); } });
       try {
         const data = await B.get('libfiles/' + d.id); if (!data) throw new Error('ไม่พบไฟล์'); const blob = toBlob(data); url = URL.createObjectURL(blob); const mime = blob.type;

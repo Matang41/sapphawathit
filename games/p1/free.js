@@ -329,32 +329,21 @@ async function spCheer(){await talk([[null,'อัฒจันทร์ · ก�
 async function spSign(){await talk([[null,'อาคารอุตสาหกรรม · ครูช่างให้ยืมไม้อัดกับสี'],['?foo','ผมปีนขึ้นไปทาสีตัวอักษรบนสุดเองครับ!'],['?waen','ผมคำนวณระยะตัวอักษรแล้ว เส้นตรงทุกตัว'],[null,'ป้ายนำขบวน “ชมรมดนตรีไทยสรรพวาทิต · ม่วง–เหลืองหนึ่งเดียว” เสร็จเรียบร้อย']]);F.ev.sp.sign=1;fsave();banner('ทำป้ายเสร็จ'+(F.ev.sp.cheer?' · กลับไปหาครูตังค์':''),2600)}
 /* วงกลองปู่เจ่นำขบวน (เสียงอัดจริงจากวงของชมรม) — ใช้ตอนเดินขบวน */
 /* ====== เสียงแห่ขบวนกลองปู่เจ่ ======
-   ถอดจังหวะจากคลิป “รวมวง” ที่ครูอัดไว้ (วัดจริง): หนึ่งรอบ ≈ 1.22 วินาที (ประมาณ 98 ครั้ง/นาที)
-   แบ่งเป็น 4 ช่วงย่อย ช่วงละ ≈ 0.306 วินาที
-     ฉาบ   : ลงช่วง 0 (เปิด) และช่วง 1 (ปิด) แล้วเว้นสองช่วง  ← “ฉับ–ฉับ–เงียบ–เงียบ” ตรงกับที่วัดได้
-     กลอง  : กลองปู่เจ่ใบเดียว · เสียงตึ้ง (สันกำปั้นที่ขอบ) ลงช่วง 0 และ 2 · ลูกขัดเป้ง (ฝ่ามือ) / ปิ๊ก (ปลายนิ้ว) ช่วง 1/3
-     ฆ้องราว: ยืนจังหวะ ตีย้ำต้นรอบทุกรอบ (ตามเอกสาร: ฆ้องตียืน/ย้ำจังหวะให้ขบวนพร้อมเพรียง)
-   ทุกสี่รอบจะมีลูกรัวสั้น ๆ ให้เหมือนคนตีจริง ไม่ใช่จังหวะเครื่องจักร */
-const PJ_BAR=1.22;                       /* หนึ่งรอบขบวน (วินาที) */
-let PROC=null;
-function procStart(bpm){if(!AC||PROC)return;
-  const bar=bpm?120/bpm:PJ_BAR,sd=bar/4;
-  PROC={sd,bar,next:AC.currentTime+.15,k:0,t:setInterval(procTick,80)}}
-function procTick(){if(!PROC||!AC)return;const sd=PROC.sd;
-  while(PROC.next<AC.currentTime+.4){
-    const n=PROC.k,k=n%4,cyc=(n/4)|0,t=PROC.next,sw=(Math.random()-.5)*.012;  /* ขยับเวลานิดหน่อยให้เป็นคนตี */
-    if(window.TS4&&TS4.ready()){
-      if(k===0){TS4.pujae(0,t+sw,.95,SFX);TS4.chab(0,t+sw,.6,SFX);TS4.khongrao(t+sw,cyc%2?.45:.55,SFX)}
-      else if(k===1){TS4.chab(1,t+sw,.5,SFX);if(cyc%2===1)TS4.pujae(1,t+sw,.45,SFX)}
-      else if(k===2){TS4.pujae(0,t+sw,.72,SFX)}
-      else{if(cyc%4===3){TS4.pujae(1,t+sw,.5,SFX);TS4.pujae(2,t+sd*.5+sw,.42,SFX)}   /* ลูกขัดท้ายรอบ */
-           else if(cyc%2===0)TS4.pujae(2,t+sw,.4,SFX)}
-    }else{  /* ยังโหลดเสียงจริงไม่เสร็จ ใช้เสียงสำรองไปก่อน จังหวะเดียวกัน */
-      if(k===0){TS.drum(0,t,.8,SFX);TS.ching(false,t,.4,SFX)}
-      else if(k===1)TS.ching(true,t,.35,SFX);
-      else if(k===2)TS.drum(1,t,.6,SFX)}
-    PROC.next+=sd;PROC.k++}}
-function procStop(){if(!PROC)return;clearInterval(PROC.t);PROC=null}
+   ใช้คลิป “รวมวง” ของชมรมจริง (audio/pujae_ruam.mp3) วนซ้ำ ไม่ได้สังเคราะห์จังหวะขึ้นเอง
+   วนจากฆ้องลูกแรกถึงฆ้องลูกที่ 59 (58 จังหวะฆ้อง เป็นเลขคู่ ฉาบคู่จึงต่อกันพอดีตอนวนกลับ)
+   ระหว่างโหลดคลิป: ฆ้องราวยืนจังหวะทุก 0.616 วินาที + ฉาบคู่ (ลูกแรกกลางระหว่างฆ้อง ลูกสองพร้อมฆ้อง เว้นหนึ่งจังหวะ) ตามที่ถอดจากคลิป */
+const PJ_BEAT=.616,PJ_CLIP='audio/pujae_ruam.mp3';
+let PROC=null,PJBUF=null,PJLOAD=null;
+function pjLoad(){if(PJBUF||PJLOAD||!AC)return PJLOAD;PJLOAD=fetch(PJ_CLIP).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(ab=>new Promise((res,rej)=>{const q=AC.decodeAudioData(ab,res,rej);if(q&&q.then)q.then(res,rej)})).then(b=>{PJBUF=b;return b}).catch(()=>{PJLOAD=null});return PJLOAD}
+function procClip(){if(!PROC||PROC.src||!PJBUF)return;clearInterval(PROC.t);
+  const s=AC.createBufferSource(),g=AC.createGain();s.buffer=PJBUF;s.loop=true;s.loopStart=.23;s.loopEnd=35.34;g.gain.value=0;g.gain.linearRampToValueAtTime(.9,AC.currentTime+.4);s.connect(g);g.connect(SFX);s.start(AC.currentTime+.05,.23);PROC.src=s;PROC.g=g}
+function procStart(){if(!AC||PROC)return;
+  PROC={next:AC.currentTime+.15,k:0,t:setInterval(procTick,80)};const P=pjLoad();if(PJBUF)procClip();else if(P)P.then(procClip)}
+function procTick(){if(!PROC||!AC||PROC.src)return;
+  while(PROC.next<AC.currentTime+.4){const t=PROC.next,k=PROC.k;
+    if(window.TS4&&TS4.ready()){TS4.khongrao(t,.55,SFX);if(k%2===0)TS4.chab(0,t+PJ_BEAT*.47,.5,SFX);else TS4.chab(0,t,.55,SFX)}
+    PROC.next+=PJ_BEAT;PROC.k++}}
+function procStop(){if(!PROC)return;clearInterval(PROC.t);if(PROC.src){const s=PROC.src,g=PROC.g;try{g.gain.setValueAtTime(g.gain.value,AC.currentTime);g.gain.linearRampToValueAtTime(0,AC.currentTime+.3);s.stop(AC.currentTime+.35)}catch(e){}}PROC=null}
 /* ขบวนพาเหรด: เดินผ่านธงรอบสนามให้ครบภายในเวลา */
 let PAR=null;
 const PFLAGS=()=>[[26,11],[34,11],[34,25],[26,25],[30,18]].map(([x,y],i)=>spot('pf'+i,x,y));

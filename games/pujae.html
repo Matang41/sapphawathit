@@ -13,6 +13,7 @@
 html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
 body{font-family:"Sarabun",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 80% at 50% 0%,var(--bg1),var(--bg2) 75%) fixed;background-color:var(--bg2)}
 button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:var(--cream);-webkit-user-select:text;user-select:text}
 .scr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:max(14px,env(safe-area-inset-top)) 14px 24px}
 .hide{display:none!important}
 h1{font-family:Mitr;font-weight:600;font-size:34px;color:var(--gold);margin:6px 0 0;text-shadow:0 3px 0 #6a1a1a}
@@ -54,23 +55,22 @@ h1{font-family:Mitr;font-weight:600;font-size:34px;color:var(--gold);margin:6px 
 <body>
 <div class="scr" id="title">
   <h1>🥁 แห่กลองปู่เจ่</h1>
-  <div class="sub">ตีเข้ากับวงกลองปู่เจ่ของชมรม ด้วยเสียงอัดจริงและจังหวะที่ถอดจากคลิปวงจริง</div>
+  <div class="sub">ตีเข้ากับคลิปวงกลองปู่เจ่ของชมรมจริง ๆ โน้ตทุกลูกถอดจากคลิปนั้น</div>
   <div class="vg"><img id="tImg" alt=""><div><b>เวกัส · ม.2 ชมรมพื้นเมือง</b><p id="tSay">พี่ ๆ! ขบวนแห่ขาดคนตี มาช่วยผมหน่อยได้ไหมครับ ผมจะสอนทีละเครื่องเลย</p></div></div>
   <div class="box"><div class="lb">เลือกด่าน</div><div class="lv" id="lv"></div>
-    <div class="row"><button class="btn" id="demo">🔊 ฟังวงตีให้ฟังก่อน</button><button class="btn" id="calib" style="font-size:13px">ปรับเสียงช้า/เร็ว</button></div></div>
+    <div class="row"><button class="btn" id="demo">🔊 ฟังคลิปวงจริง</button><button class="btn" id="recBtn">✍️ บันทึกโน้ตกลอง</button><button class="btn" id="calib" style="font-size:13px">ปรับเสียงช้า/เร็ว</button></div></div>
   <div class="box"><div class="lb">รู้จักวงกลองปู่เจ่</div>
     <div class="fact"><b>กลองปู่เจ่</b><span>กลองหน้าเดียวรูปร่างคล้ายกลองยาว วงหนึ่งใช้<b>กลองใบเดียว</b> ผู้ตีสะพายกลอง ตีด้วยมือ · ไทใหญ่เรียก “กลองก้นยาว” ไทลื้อเรียก “กลองตีนช้าง” ถิ่นอื่นเรียก อุเจ่ อู่เจ่ ปุ๊ดเจ่ ปั๊ดเจ่</span>
       <b>ขี้จ่า</b><span>ข้าวเหนียวนึ่งบดผสมขี้เถ้า ติดกลางหน้ากลองเพื่อปรับเสียงให้ทุ้มนุ่ม</span>
       <b>เสียงตึ้ง</b><span>สันกำปั้นมือขวาตีที่ขอบแล้วยกมือทันที เสียงทุ้มครางใหญ่ (บางถิ่นเรียก “ปุ่ม”) · เสียงต่ำสุดในเกม</span>
       <b>เสียงเป้ง</b><span>ฝ่ามือขวากระทบใต้ขอบแล้วยกมือทันที มือซ้ายไม่แตะหน้ากลอง (ตีเบาเรียก “เปง”)</span>
       <b>เสียงปิ๊ก</b><span>ปลายนิ้วมือขวาตีที่ขอบ มือซ้ายกดหน้ากลองไว้ เสียงสั้นแหลม (บางถิ่นเรียก “ตุ๊บ”)</span>
-      <b>ลีลาหน้ากลอง</b><span>มือกลองด้นลูกเล่นเองได้ ทั้งตีเต็มเสียง ครึ่งเสียง ลักจังหวะ และมือซ้ายกดหน้ากลอง (“กะ/ดึก”) · ในเกมใช้กระสวนพื้นฐานให้ฝึกก่อน</span>
-      <b>ฆ้องราว</b><span>ฆ้องหลายลูกแขวนบนราวเดียว ใช้กลไกโยกไม้ตีให้ลงพร้อมกัน (ไทใหญ่เรียก “มอง”) · หน้าที่ <b>ยืนจังหวะ</b> ตีย้ำต้นรอบให้ทั้งขบวนพร้อมกัน</span>
-      <b>ฉาบ</b><span>ฉาบขนาดกลาง 1 คู่ (ไทใหญ่เรียก “แส่ง”) ตีขัดและหยอกล้อกับกลอง บางคนตีข้างหน้า ข้างหลัง ลอดใต้ขา · ในคลิปวงชมรมลง “ฉับ–ฉับ–เงียบ–เงียบ”</span>
-      <b>หนึ่งรอบ</b><span>วัดจากคลิปวงชมรม ≈ 1.22 วินาที (ราว 98 ครั้ง/นาที) แบ่งเป็น 4 ช่วงย่อย · ขบวนจริงค่อนข้างเร็วและเร่งขึ้นเรื่อย ๆ</span>
-      <b>กลองสะบัดชัย</b><span>คนละวงกับปู่เจ่ ใช้ฉาบกับฆ้องราวร่วมกันเท่านั้น</span></div>
+      <b>ลีลาหน้ากลอง</b><span>มือกลองด้นลูกเล่นเองตลอด ไม่ซ้ำกันสักรอบ ทั้งตีเต็มเสียง ครึ่งเสียง ลักจังหวะ และมือซ้ายกดหน้ากลอง · ในเกมใช้<b>ลูกหนักที่ได้ยินชัดในคลิปวงชมรม</b> ส่วนชื่อเสียงแต่ละลูกให้มือกลองของวงเป็นคนบันทึก</span>
+      <b>ฆ้องราว</b><span>ฆ้องหลายลูกแขวนบนราวเดียว ใช้กลไกโยกไม้ตีให้ลงพร้อมกัน (ไทใหญ่เรียก “มอง”) · หน้าที่ <b>ยืนจังหวะ</b> · ในคลิปวงชมรมฆ้องลง 59 ครั้งใน 36 วินาที ห่างกันราว 0.62 วินาที (≈ 97 ครั้ง/นาที)</span>
+      <b>ฉาบ</b><span>ฉาบขนาดกลาง 1 คู่ (ไทใหญ่เรียก “แส่ง”) ตีขัดและหยอกล้อกับกลอง · ในคลิปวงชมรมตีเป็นคู่ “ฉับ–ฉับ” <b>ลูกแรกตกกลางระหว่างฆ้องสองลูก ลูกที่สองลงพร้อมฆ้อง</b> ส่วนมากเว้นไปหนึ่งจังหวะฆ้องแล้วตีคู่ใหม่</span>
+      <b>เสียงในเกม</b><span>เล่นทับ<b>คลิปวงจริงของชมรม</b> (อัด 3 พ.ย. 2569) โน้ตทุกลูกวางตรงเวลาที่เครื่องนั้นดังในคลิป ถอดด้วยการหาจุดเริ่มเสียงแยกย่านความถี่ของแต่ละเครื่อง</span></div>
     <div class="note" style="margin-top:8px;font-size:12px">ที่มา: สนั่น ธรรมธิ (2550) นาฏดุริยการล้านนา, มช. · ศูนย์ข้อมูลดนตรีภาคเหนือ ม.พายัพ · บทความ “การสืบทอดอัตลักษณ์การตีกลองก้นยาวของแรงงานชาวไทใหญ่ในจังหวัดระยอง” (วารสารวิชาการในฐาน ThaiJO) · ข้อมูลวัฒนธรรมลำปาง (วงกลองปู่เจ่บ้านแม่เมาะหลวง)</div></div>
-  <div class="box note"><b style="color:var(--gold)">วิธีเล่น</b> โน้ตวิ่งจากขวามาซ้าย แตะปุ่มเมื่อโน้ตถึงวงกลมทอง (คีย์บอร์ด 1 2 3 หรือ D F J) · โน้ตยาว = รัว แตะเร็ว ๆ หลายครั้ง · เครื่องที่ไม่ได้เล่น เพื่อนในวงตีให้ · ความแม่นตั้งแต่ 60% ผ่านด่านและเปิดด่านถัดไป</div>
+  <div class="box note"><b style="color:var(--gold)">วิธีเล่น</b> คลิปวงจริงเล่นอยู่ข้างหลัง โน้ตวิ่งจากขวามาซ้าย แตะปุ่มเมื่อโน้ตถึงวงกลมทอง ให้พร้อมกับเสียงเครื่องนั้นในคลิป (คีย์บอร์ด 1 2 3 4 หรือ D F J K) · ความแม่นตั้งแต่ 60% ผ่านด่านและเปิดด่านถัดไป<br><b style="color:var(--gold)">บันทึกโน้ตกลอง</b> มือกลองของวงฟังคลิปแล้วแตะตามทีละลูก ตั้งชื่อเสียงเองได้ ส่งให้ครูตรวจ ครูยอมรับแล้วโน้ตชุดนั้นจะกลายเป็นด่านใหม่ให้ทุกคนเล่น</div>
   <div class="foot">ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div>
 
@@ -94,6 +94,24 @@ h1{font-family:Mitr;font-weight:600;font-size:34px;color:var(--gold);margin:6px 
 <div id="say" class="hide"><div style="width:100%;max-width:640px"><div class="vg"><img id="sImg" alt=""><div><b>เวกัส</b><p id="sTxt"></p></div></div>
   <div class="row"><button class="btn g" id="sGo">เริ่มเลย!</button><button class="btn" id="sBack">ยังก่อน</button></div></div></div>
 
+<div class="scr hide" id="rec">
+  <h1 style="font-size:26px">✍️ บันทึกโน้ตกลองจากคลิปวง</h1>
+  <div class="sub">ฟังคลิปวงจริงแล้วแตะปุ่มตามเสียงกลองทุกลูก เลือกปุ่มตามวิธีตี · บันทึกหลายรอบได้ (เช่น รอบแรกเฉพาะเสียงหนึ่ง รอบสองเสียงอื่น)</div>
+  <div class="box"><div class="lb">ชื่อเสียงกลอง (ตั้งตามที่วงเรียก)</div><div id="rNames" class="lv"></div>
+    <div class="note" style="margin-top:6px">ปุ่ม 🔊 คือเสียงจากคลิปที่เวกัสตีสาธิตทีละแบบ (แบบละ 3 ครั้ง)</div></div>
+  <div class="box"><div class="row" style="justify-content:flex-start;margin-top:0"><span>ความเร็วคลิป</span><button class="btn" data-rate="1">ปกติ</button><button class="btn" data-rate="0.75">ช้า 75%</button><button class="btn" data-rate="0.6">ช้า 60%</button></div>
+    <div class="note" id="rInfo" style="margin-top:6px"></div>
+    <div class="row"><button class="btn g" id="rGo">● เริ่มบันทึก</button><button class="btn" id="rPlay">▶ ฟังทวน</button><button class="btn" id="rUndo">ลบรอบล่าสุด</button><button class="btn" id="rClear">ล้างทั้งหมด</button></div></div>
+  <div class="box"><div class="lb">ส่งโน้ต</div><input id="rTitle" class="btn" style="width:100%;border-radius:10px;text-align:left;background:rgba(0,0,0,.3)" maxlength="80" placeholder="ชื่อโน้ตชุดนี้ เช่น กลองปู่เจ่ รวมวง (เวกัสถอด)">
+    <div class="row"><button class="btn g" id="rTry">🎮 ลองเล่นเป็นด่าน</button><button class="btn" id="rSend">📤 ส่งให้ครูตรวจ</button><button class="btn" id="rBack">กลับ</button></div><div class="note" id="rMsg" style="text-align:center"></div></div>
+</div>
+<div id="recPlay" class="hide" style="position:absolute;inset:0;display:flex;flex-direction:column;background:rgba(20,8,16,.96);z-index:6">
+  <div style="padding:max(10px,env(safe-area-inset-top)) 14px 6px;display:flex;align-items:center;gap:10px"><b id="rpT" style="font-family:Mitr;color:var(--gold);font-size:18px;flex:1">กำลังบันทึก…</b><span id="rpN" class="note"></span><button class="btn" id="rpStop">หยุด</button></div>
+  <div style="height:10px;margin:0 14px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden"><div id="rpBar" style="height:100%;width:0;background:var(--gold)"></div></div>
+  <div style="text-align:center;margin:8px 0;font-family:Mitr;font-size:15px"><span id="rpGong" style="display:inline-block;padding:4px 14px;border-radius:99px;background:rgba(154,216,255,.15)">ฆ้อง</span></div>
+  <div class="pads" id="rpPads" style="flex:1;align-content:end"></div>
+</div>
+
 <div class="scr hide" id="cal">
   <h1 style="font-size:26px">ปรับเสียงช้า/เร็ว</h1>
   <div class="box note">แตะปุ่มให้ตรงกับเสียงกลองที่ได้ยิน 8 ครั้ง ระบบจะคำนวณว่าเสียงในเครื่องนี้ช้ากว่าภาพเท่าไร (หูฟังบลูทูธมักช้ากว่าลำโพงในเครื่อง) · ค่าเดียวกับเกมแห่กลองหลวง</div>
@@ -105,22 +123,23 @@ h1{font-family:Mitr;font-weight:600;font-size:34px;color:var(--gold);margin:6px 
 <script src="thaisound.js"></script>
 <script src="p1/ports2.js"></script>
 <script src="thaisound4.js"></script>
+<script src="pujae_chart.js"></script>
 <script src="khaotaen.js"></script>
 <script src="skill.js"></script>
 <script>
 /* ============================================================
-   แห่กลองปู่เจ่ — เกมจังหวะวงกลองปู่เจ่ของชมรมสรรพวาทิต
-   จังหวะ: ถอดจากคลิป “รวมวง” ที่ครูอัดไว้ (วิเคราะห์ด้วยการหาจุดเริ่มเสียงแยกย่านความถี่)
-     หนึ่งรอบ ≈ 1.22 วินาที · 4 ช่วงย่อย · ฉาบลงช่วง 0 (เปิด) และ 1 (ปิด) · เสียงตึ้งลงช่วง 0 และ 2
-     ฆ้องราวยืนจังหวะ ลงต้นรอบทุกรอบ · ลูกขัดเป้ง/ปิ๊กสลับกันทุก 2 และ 4 รอบ
-   ชื่อเสียงกลอง (กลองใบเดียว ตีต่างวิธี) ตามเอกสาร: ตึ้ง = สันกำปั้นที่ขอบ · เป้ง = ฝ่ามือใต้ขอบ ยกมือ · ปิ๊ก = ปลายนิ้วที่ขอบ มือซ้ายกด
-   การจับคู่ชื่อกับเสียงที่อัดมา อาศัยลักษณะเสียง (ต่ำ–ก้องยาว / กลาง–เปิด / สูง–สั้น) ควรให้ครูกับมือกลองฟังยืนยัน
-   เสียง: thaisound4.js (อัดจริงจากวงของชมรม 3 พ.ย. 2569)
+   แห่กลองปู่เจ่ — เกมจังหวะวงกลองปู่เจ่ของชมรมสรรพวาทิต (รุ่น 3.18: เล่นทับคลิปวงจริง)
+   เสียงประกอบ = คลิป “รวมวง” ที่ครูอัด (audio/pujae_ruam.mp3) ไม่ได้สังเคราะห์จังหวะขึ้นเอง
+   โน้ต = เวลาที่เครื่องนั้นดังจริงในคลิป (pujae_chart.js)
+     ฆ้องราว 59 ลูก ยืนจังหวะ ห่าง ≈ 0.616 วินาที
+     ฉาบตีเป็นคู่: ลูกแรกตกกลางระหว่างฆ้อง ลูกสองลงพร้อมฆ้อง
+     กลอง: มือกลองด้นอิสระ เกมใช้เฉพาะลูกหนักที่ถอดได้ชัด
+   โน้ตกลองแยกวิธีตี: มือกลองของวงบันทึกเองในหน้า “บันทึกโน้ตกลอง” → ส่งครู (libsub kind:'chart') → ครูยอมรับ → library kind:'chart' → เป็นด่านใหม่
    พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026
    ============================================================ */
 'use strict';
 const $=s=>document.querySelector(s);
-const KEY='sapphawathit_pujae',LATK='sapphawathit_audio_lat';
+const KEY='sapphawathit_pujae',LATK='sapphawathit_audio_lat',DRK='sapphawathit_pujae_draft';
 const ld=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return{}}};
 const sv=o=>{try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
 const userLat=()=>{try{return +(localStorage.getItem(LATK)||0)}catch(e){return 0}};
@@ -129,92 +148,104 @@ const lat=()=>Math.max(0,(AC&&AC.outputLatency||0)+(AC&&AC.baseLatency||0)+userL
 function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C();OUT=AC.createGain();OUT.gain.value=.9;const cp=AC.createDynamicsCompressor();OUT.connect(cp);cp.connect(AC.destination);TS4.init(AC,OUT);try{TS.init(AC,OUT)}catch(e){}}
   if(AC.state==='suspended')AC.resume();return AC}
 
-/* ---------- เครื่องดนตรีและปุ่ม ---------- */
+/* ---------- คลิปเสียงจริง ---------- */
+const CH=window.PJCHART.ruam,DEMO=window.PJCHART.demo,BUF={};
+function loadBuf(src){audio();if(BUF[src])return BUF[src];
+  BUF[src]=fetch(src).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()}).then(ab=>new Promise((res,rej)=>{const p=AC.decodeAudioData(ab,res,rej);if(p&&p.then)p.then(res,rej)}));
+  BUF[src].catch(()=>{delete BUF[src]});return BUF[src]}
+let demoBuf=null;loadDemo();
+function loadDemo(){if(!AC)return;loadBuf(DEMO.src).then(b=>demoBuf=b).catch(()=>{})}
+function playClip(t,rate,vol,off){const b=BUF.__ruam;if(!b)return null;const s=AC.createBufferSource(),g=AC.createGain();s.buffer=b;s.playbackRate.value=rate||1;g.gain.value=vol==null?1:vol;s.connect(g);g.connect(OUT);s.start(t,off||0);return s}
+async function ruam(){const b=await loadBuf(CH.src);BUF.__ruam=b;return b}
+/* เสียงกลองแต่ละวิธีตี: ตัดจากคลิปสาธิตของเวกัส (ลูกแรกของแต่ละแบบ) */
+function strokeHit(i,t,v){if(!demoBuf){TS4.pujae(Math.min(2,i),t,v,OUT);return}
+  const g=DEMO.groups[i]||DEMO.groups[0],s=AC.createBufferSource(),gn=AC.createGain();s.buffer=demoBuf;gn.gain.value=v*1.3;s.connect(gn);gn.connect(OUT);s.start(t,Math.max(0,g[0]-.03),.6);return s}
+
+/* ---------- ปุ่ม ---------- */
 const PAD={
-  lo:{sn:'ตึ้ง',n:'ตึ้ง',s:'สันกำปั้นที่ขอบ',c:'#ff8a5c',snd:(t,v)=>TS4.pujae(0,t,v,OUT)},
-  mid:{sn:'เป้ง',n:'เป้ง',s:'ฝ่ามือใต้ขอบ',c:'#ffb35c',snd:(t,v)=>TS4.pujae(1,t,v,OUT)},
-  hi:{sn:'ปิ๊ก',n:'ปิ๊ก',s:'ปลายนิ้วที่ขอบ',c:'#ffd86a',snd:(t,v)=>TS4.pujae(2,t,v,OUT)},
-  co:{sn:'เปิด',n:'ฉาบเปิด',s:'ฉาบ',c:'#ffe27a',snd:(t,v)=>TS4.chab(0,t,v,OUT)},
-  cs:{sn:'ปิด',n:'ฉาบปิด',s:'ฉาบ',c:'#e8c86a',snd:(t,v)=>TS4.chab(1,t,v,OUT)},
-  kr:{sn:'ฆ้อง',n:'ฆ้องราว',s:'ตีพร้อมกันทั้งราว',c:'#9ad8ff',snd:(t,v)=>TS4.khongrao(t,v,OUT)},
-  sh:{sn:'หน้า',n:'หน้ากลอง',s:'สะบัดชัย',c:'#ff7a7a',snd:(t,v)=>TS4.sabat(0,t,v,OUT)},
-  sr:{sn:'ขอบ',n:'ขอบกลอง',s:'สะบัดชัย',c:'#d8a878',snd:(t,v)=>TS4.sabat(1,t,v,OUT)}};
-/* แพตเทิร์นต่อรอบ (ตำแหน่งเป็นช่วงย่อย 0–4) */
-function partEv(part,c){const o=[];
-  if(part==='gong'){o.push({p:0,pad:'kr',v:c%2?.5:.62})}   /* ฆ้องราวยืนจังหวะ ตีย้ำต้นรอบทุกรอบ */
-  else if(part==='chab'){o.push({p:0,pad:'co',v:.6});o.push({p:1,pad:'cs',v:.5})}
-  else if(part==='drum'){o.push({p:0,pad:'lo',v:.95});o.push({p:2,pad:'lo',v:.74});
-    if(c%2===1)o.push({p:1,pad:'mid',v:.5});
-    if(c%4===3){o.push({p:3,pad:'mid',v:.55});o.push({p:3.5,pad:'hi',v:.46})}else if(c%2===0)o.push({p:3,pad:'hi',v:.44})}
-  else if(part==='sabat'){o.push({p:0,pad:'sh',v:.95});o.push({p:.67,pad:'sh',v:.62,roll:1.9});o.push({p:3,pad:'sr',v:.72})}
-  return o}
+  kr:{sn:'ฆ้อง',n:'ฆ้องราว',s:'ยืนจังหวะ',c:'#9ad8ff',snd:(t,v)=>TS4.khongrao(t,v,OUT)},
+  ch:{sn:'ฉับ',n:'ฉาบ',s:'ตีเป็นคู่',c:'#ffe27a',snd:(t,v)=>TS4.chab(0,t,v,OUT)},
+  dr:{sn:'ตึ้ง',n:'กลองลูกหนัก',s:'กลองปู่เจ่',c:'#ff8a5c',snd:(t,v)=>TS4.pujae(0,t,v,OUT)}};
+const SC=['#ff8a5c','#ffb35c','#ffd86a','#d8a0ff'];
+function strokeNames(){const d=ld();return [0,1,2,3].map(i=>(d.names&&d.names[i])||DEMO.names[i]||('เสียงแบบ '+(i+1)))}
+function strokePads(names){names.forEach((nm,i)=>{PAD['d'+i]={sn:nm.slice(0,5),n:nm,s:'วิธีตีแบบ '+(i+1),c:SC[i],snd:(t,v)=>strokeHit(i,t,v)}})}
+strokePads(strokeNames());
+const thin=(a,g)=>{const o=[];a.forEach(t=>{if(!o.length||t-o[o.length-1]>=g)o.push(t)});return o};
+const PART={gong:{pad:'kr',t:CH.gong},chab:{pad:'ch',t:CH.chabLead.concat(CH.chabOn).sort((a,b)=>a-b)},drum:{pad:'dr',t:thin(CH.drumH,.16)}};
 const LV=[
-  {n:'ฆ้องราวยืนจังหวะ',d:'ตีย้ำต้นรอบทุกรอบ ให้ทั้งขบวนเดินพร้อมกัน · ฟังกลองกับฉาบให้ขึ้นใจ',parts:['gong','chab','drum'],me:'gong',pads:['kr'],bpm:98,cyc:14},
-  {n:'ฉาบ ฉับ–ฉับ',d:'ฉาบเปิดลงต้นรอบ ฉาบปิดตามทันที แล้วเว้นสองช่วง',parts:['gong','chab','drum'],me:'chab',pads:['co','cs'],bpm:98,cyc:16},
-  {n:'เสียงตึ้ง',d:'ตึ้งลงต้นรอบกับครึ่งรอบ ลูกขัดเป้ง–ปิ๊กเวกัสตีให้',parts:['gong','chab','drum'],me:'drum',only:['lo'],pads:['lo'],bpm:98,cyc:16},
-  {n:'ครบสามเสียง ตึ้ง เป้ง ปิ๊ก',d:'ตึ้งคุมจังหวะ เป้งกับปิ๊กเป็นลูกขัด · กลองใบเดียว ตีสามวิธี',parts:['gong','chab','drum'],me:'drum',pads:['lo','mid','hi'],bpm:98,cyc:20},
-  {n:'ขบวนเร่งจังหวะ',d:'ยิ่งเดินยิ่งเร็ว 92 → 114 ครั้งต่อนาที เหมือนแห่จริง',parts:['gong','chab','drum'],me:'drum',pads:['lo','mid','hi'],bpm:92,bpm2:114,cyc:28},
-  {n:'สะบัดชัยรับขบวน',d:'คนละวงกับปู่เจ่ · ลงหน้ากลองหนัก รัวต่อ แล้วตีขอบ',parts:['gong','chab','sabat'],me:'sabat',pads:['sh','sr'],bpm:96,cyc:16}];
-const PRE=2;   /* รอบนำก่อนเริ่มตี */
-/* ---------- เวกัส (ตัวเอก) ---------- */
+  {n:'ฆ้องราวยืนจังหวะ',d:'ตีพร้อมฆ้องในคลิปวงจริง 59 ลูก ห่างกันราว 0.6 วินาที',me:['gong'],pads:['kr']},
+  {n:'ฉาบคู่ ฉับ–ฉับ',d:'ลูกแรกกลางระหว่างฆ้อง ลูกสองพร้อมฆ้อง แล้วเว้นหนึ่งจังหวะ',me:['chab'],pads:['ch']},
+  {n:'ฆ้องกับฉาบ',d:'สองเครื่องยืนจังหวะของขบวน สองนิ้วสองปุ่ม',me:['gong','chab'],pads:['kr','ch']},
+  {n:'กลองลูกหนัก',d:'มือกลองด้นไม่ซ้ำสักรอบ ตีตามลูกหนักที่ได้ยินชัดในคลิป',me:['drum'],pads:['dr']},
+  {n:'ครบวง',d:'ฆ้อง ฉาบ กลอง พร้อมกันทั้งเพลง',me:['gong','chab','drum'],pads:['kr','ch','dr']}];
+/* โน้ตกลองที่มือกลองบันทึก: ที่ครูยอมรับแล้ว (คลังความรู้) + ร่างของฉันเอง */
+const P=(()=>{try{return window.parent!==window&&window.parent.APP?window.parent:null}catch(e){return null}})();
+const parseN=s=>String(s||'').split(',').map(x=>{const [t,p]=x.split(':');return {t:+t/1000,p:+p|0}}).filter(x=>isFinite(x.t)&&x.p>=0&&x.p<4);
+function chartLevel(c,tag){const ns=parseN(c.notes),used=[0,1,2,3].filter(i=>ns.some(n=>n.p===i)),names=(c.names||[]).slice(0,4);
+  return {n:(tag||'')+c.title,d:(c.by?'บันทึกโดย '+c.by+' · ':'')+ns.length+' ลูก · '+used.map(i=>names[i]||('แบบ '+(i+1))).join(' ')+' ',chart:{ns,used,names},pads:used.map(i=>'d'+i),free:1,by:c.by||''}}
+function libCharts(){try{const L=P&&P.APP.D.library||{};return Object.keys(L).map(id=>Object.assign({id},L[id])).filter(x=>x.kind==='chart'&&x.chart&&x.chart.game==='pujae').sort((a,b)=>a.at-b.at)}catch(e){return []}}
+function draft(){try{return JSON.parse(localStorage.getItem(DRK)||'null')}catch(e){return null}}
+function allLevels(){const l=LV.slice();
+  libCharts().forEach(x=>l.push(Object.assign(chartLevel(Object.assign({title:x.title,by:x.by},x.chart),'🎼 '),{lid:x.id})));
+  const d=draft();if(d&&parseN(d.notes).length)l.push(chartLevel(Object.assign({title:d.title||'โน้ตที่ฉันบันทึก',by:''},d),'📝 ร่าง: '));
+  return l}
+
+/* ---------- เวกัส ---------- */
 const PI=k=>(window.PORT2||{})[k]||(window.PORT2||{}).vegas||'';
 const INTRO=[
-  ['vegas','พี่ ๆ! ช่วยผมหน่อย ขบวนแห่ขาดคนตีฆ้องราว… ฆ้องหลายลูกบนราวเดียว โยกกลไกทีเดียวลงพร้อมกันหมด หน้าที่คือยืนจังหวะ ตีย้ำต้นรอบทุกรอบครับ!'],
-  ['vegas','ลู่วาไปช่วยแม่อุ๊ย ฉาบเลยว่าง… ฉาบเปิดลงต้นรอบ แล้วปิดตามทันที ฉับ–ฉับ–เงียบ–เงียบ ลองฟังกลองผมเป็นหลักนะครับ'],
-  ['vegasH','คราวนี้ลองกลองของผม! เสียง “ตึ้ง” ใช้สันกำปั้นตีที่ขอบแล้วยกมือ ลงต้นรอบกับครึ่งรอบ… ตึ้ง… ตึ้ง… ลูกขัดผมตีให้เอง'],
-  ['vegas','กลองปู่เจ่มีใบเดียว แต่ตีได้หลายเสียงนะพี่ ตึ้งคุมจังหวะ “เป้ง” ฝ่ามือตีใต้ขอบ “ปิ๊ก” ปลายนิ้วตีขอบแล้วมือซ้ายกดไว้… พี่กัปตันยังทำไม่ได้เลย (ผมแอบบอก)'],
-  ['vegasH','ขบวนจริงยิ่งเดินยิ่งเร็ว เพราะคนฟ้อนสนุกจนลืมตัว! ตามให้ทันนะพี่ ผมเชื่อมือพี่'],
-  ['vegasS','อันนี้ไม่ใช่ปู่เจ่นะพี่ กลองสะบัดชัยเป็นอีกวงเลย ใช้ฉาบกับฆ้องราวร่วมกันแค่นั้น ลงหน้ากลองหนัก ๆ แล้วรัวให้สุดแรง!']];
-const OUTRO={S:['vegasH','พี่ตีเข้าวงเหมือนคนเดียวกับผมเลย! ผมจะไปเล่าให้พี่กัปตันฟังเดี๋ยวนี้'],A:['vegasH','เยี่ยมมากครับ! ขบวนเดินสวยจนคนข้างทางเต้นตามเลย'],B:['vegas','ดีมากครับพี่ อีกนิดเดียวก็พร้อมกันทุกลูกแล้ว'],C:['vegas','ผ่านแล้ว! ลองฟังเสียงตึ้งกับฆ้องราวเป็นหลัก แล้วจะง่ายขึ้นนะครับ'],D:['vegasS','ไม่เป็นไรครับพี่… ผมตอนแรกก็ตีหลุดตลอด ลองฟังวงตีให้ฟังก่อนแล้วมาใหม่นะ']};
-function intro(i){return new Promise(res=>{const [k,t]=INTRO[i]||INTRO[0];$('#sImg').src=PI(k);$('#sTxt').textContent=t;$('#say').classList.remove('hide');
+  ['vegas','พี่ ๆ! นี่คือเสียงวงของเราที่ครูอัดไว้จริง ๆ เลยนะ ฆ้องราวโยกทีเดียวลงพร้อมกันทั้งราว หน้าที่คือยืนจังหวะ ตีให้พร้อมเสียงฆ้องในคลิปครับ'],
+  ['vegas','ฉาบวงเราตีเป็นคู่ ฉับ–ฉับ ลูกแรกตกกลางระหว่างฆ้อง ลูกสองลงพร้อมฆ้อง แล้วเว้นไปหนึ่งจังหวะ… บางทีพี่เขาก็เติมลูก ฟังดี ๆ นะ'],
+  ['vegasH','สองเครื่องนี้คือหัวใจของขบวน ถ้าฆ้องกับฉาบแน่น คนฟ้อนก็เดินพร้อมกันทั้งแถว!'],
+  ['vegasH','กลองผมตีด้นนะพี่ ไม่ซ้ำสักรอบ! ด่านนี้ตีเฉพาะลูกหนักที่ได้ยินชัด ๆ ในคลิป ลูกเบา ๆ ผมเก็บเอง'],
+  ['vegas','ครบวงแล้ว! ฆ้อง ฉาบ กลอง ตามคลิปทั้งเพลง… ผ่านด่านนี้ได้ ผมยกให้เป็นมือกลองสำรองเลย']];
+const OUTRO={S:['vegasH','พี่ตีเข้าวงเหมือนคนเดียวกับผมเลย! ผมจะไปเล่าให้พี่กัปตันฟังเดี๋ยวนี้'],A:['vegasH','เยี่ยมมากครับ! พร้อมกับวงจริงเกือบทุกลูก'],B:['vegas','ดีมากครับพี่ อีกนิดเดียวก็พร้อมกันทุกลูกแล้ว'],C:['vegas','ผ่านแล้ว! ลองฟังฆ้องเป็นหลัก แล้วจะง่ายขึ้นนะครับ'],D:['vegasS','ไม่เป็นไรครับพี่… ผมตอนแรกก็ตีหลุดตลอด ลองกด “ฟังคลิปวงจริง” ก่อนแล้วมาใหม่นะ']};
+function intro(L,i){return new Promise(res=>{const [k,t]=L.chart?['vegasH','โน้ตชุดนี้'+(L.by?' '+L.by:'')+'บันทึกจากคลิปวงจริงทีละลูก แยกวิธีตีด้วย ลองตีตามดูนะพี่ ปุ่มแต่ละปุ่มคือเสียงกลองจริงของวงเรา']:(INTRO[i]||INTRO[0]);
+  $('#sImg').src=PI(k);$('#sTxt').textContent=t;$('#say').classList.remove('hide');
   $('#sGo').onclick=()=>{$('#say').classList.add('hide');res(true)};$('#sBack').onclick=()=>{$('#say').classList.add('hide');res(false)}})}
 
-/* ---------- สร้างเพลงทั้งด่าน ---------- */
-function build(L){
-  const cs=[];let t=0;const total=L.cyc+PRE;
-  for(let c=0;c<total;c++){const k=Math.max(0,c-PRE)/Math.max(1,L.cyc-1),bpm=L.bpm2?L.bpm+(L.bpm2-L.bpm)*k:L.bpm,d=120/bpm;cs.push({t,d});t+=d}
-  const band=[],notes=[];
-  cs.forEach((C,ci)=>{const c=ci-PRE,sd=C.d/4;
-    L.parts.forEach(part=>{
-      if(ci<PRE&&part!=='gong'&&part!=='chab')return;            /* รอบนำ: ฆ้องกับฉาบนำวงก่อน */
-      partEv(part,Math.max(0,c)).forEach(e=>{const at=C.t+e.p*sd;
-        const mine=ci>=PRE&&part===L.me&&(!L.only||L.only.includes(e.pad));
-        if(mine){notes.push(e.roll?{t:at,t2:C.t+e.roll*sd,pad:e.pad,roll:1,st:0,taps:0}:{t:at,pad:e.pad,st:0})}
-        else if(e.roll){for(let r=0;r<5;r++)band.push({t:at+r*sd/3,pad:e.pad,v:e.v*(1-r*.1)})}
-        else band.push({t:at,pad:e.pad,v:e.v})})})});
+/* ---------- สร้างโน้ตของด่าน ---------- */
+function build(L){const notes=[],band=[];
+  if(L.chart)L.chart.ns.forEach(n=>notes.push({t:n.t,pad:'d'+n.p,st:0}));
+  else L.me.forEach(k=>PART[k].t.forEach(t=>notes.push({t,pad:PART[k].pad,st:0})));
+  /* ภาพขบวนขยับตามเสียงที่ดังจริงในคลิป */
+  PART.gong.t.forEach(t=>band.push({t,pad:'kr'}));PART.chab.t.forEach(t=>band.push({t,pad:'ch'}));CH.drumH.concat(CH.drumL).forEach(t=>band.push({t,pad:'dr'}));
   band.sort((a,b)=>a.t-b.t);notes.sort((a,b)=>a.t-b.t);
-  const end=Math.max(t,...notes.map(n=>(n.t2||n.t)))+.8;
-  return {cs,band,notes,end}}
+  return {notes,band,beats:CH.gong,end:CH.dur+.4}}
 
 /* ---------- หน้าเลือกด่าน ---------- */
 const GR=a=>a>=95?'S':a>=85?'A':a>=70?'B':a>=60?'C':'D';
-function title(){const o=ld(),P=o.pass||{},B=o.best||{};
-  $('#lv').innerHTML=LV.map((L,i)=>{const lock=i>0&&!P[i-1],b=B[i];
-    return '<button data-i="'+i+'" class="'+(lock?'lock':'')+'"><span class="no">'+(i+1)+'</span><span><b>'+L.n+'</b><span>'+L.d+'</span></span><span class="best">'+(lock?'🔒':b?'<b style="font-size:18px;color:var(--gold)">'+b.g+'</b><br>'+b.a+'%':'ใหม่')+'</span></button>'}).join('');
-  document.querySelectorAll('#lv button').forEach(b=>b.onclick=async()=>{const i=+b.dataset.i;if(b.classList.contains('lock')){b.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:220});$('#tSay').textContent='ด่านนี้ยังล็อกอยู่ครับพี่ ผ่านด่านก่อนหน้าให้ได้ 60% ก่อนนะ';return}audio();if(await intro(i))start(i)});
+let LVS=LV;
+function title(){const o=ld(),Pp=o.pass||{},B=o.best||{};LVS=allLevels();
+  $('#lv').innerHTML=LVS.map((L,i)=>{const lock=!L.free&&i>0&&!Pp[i-1],b=L.free?null:B[i];
+    return '<button data-i="'+i+'" class="'+(lock?'lock':'')+'"><span class="no">'+(L.free?'🎼':i+1)+'</span><span><b>'+esc(L.n)+'</b><span>'+esc(L.d)+'</span></span><span class="best">'+(lock?'🔒':b?'<b style="font-size:18px;color:var(--gold)">'+b.g+'</b><br>'+b.a+'%':L.free?'':'ใหม่')+'</span></button>'}).join('');
+  document.querySelectorAll('#lv button').forEach(b=>b.onclick=async()=>{const i=+b.dataset.i;if(b.classList.contains('lock')){b.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:220});$('#tSay').textContent='ด่านนี้ยังล็อกอยู่ครับพี่ ผ่านด่านก่อนหน้าให้ได้ 60% ก่อนนะ';return}audio();loadDemo();ruam().catch(()=>{});if(await intro(LVS[i],i))start(i)});
   $('#tImg').src=PI('vegas');
   show('title')}
-function show(id){['title','game','end','cal'].forEach(x=>$('#'+x).classList.toggle('hide',x!==id))}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function show(id){['title','game','end','cal','rec'].forEach(x=>$('#'+x).classList.toggle('hide',x!==id))}
 
 /* ---------- เล่น ---------- */
 let G=null,lastLv=0;
 const cv=$('#cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
 function fit(){DPR=Math.min(2,window.devicePixelRatio||1);const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);cx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener('resize',()=>{if(G)fit()});
-async function start(i){
-  audio();lastLv=i;const L=LV[i];
-  show('game');$('#lvn').textContent='ด่าน '+(i+1)+' · '+L.n;$('#sc').textContent='0';$('#cb').textContent='เตรียมเสียง…';
+const KEYS=['1 / D','2 / F','3 / J','4 / K'];
+async function start(i,Lx){
+  audio();lastLv=i;const L=Lx||LVS[i];
+  show('game');$('#lvn').textContent=(L.free?'':'ด่าน '+(i+1)+' · ')+L.n;$('#sc').textContent='0';$('#cb').textContent='กำลังโหลดเสียงวง…';
   const pads=$('#pads');pads.style.gridTemplateColumns='repeat('+L.pads.length+',1fr)';
-  pads.innerHTML=L.pads.map((p,k)=>'<button data-k="'+k+'" style="background:'+PAD[p].c+'">'+PAD[p].n+'<small>'+PAD[p].s+' · '+(['1 / D','2 / F','3 / J'][k]||'')+'</small></button>').join('');
+  pads.innerHTML=L.pads.map((p,k)=>'<button data-k="'+k+'" style="background:'+PAD[p].c+'">'+esc(PAD[p].n)+'<small>'+esc(PAD[p].s)+' · '+(KEYS[k]||'')+'</small></button>').join('');
   pads.querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();press(+b.dataset.k)}));
   fit();
-  await Promise.race([TS4.whenReady(),new Promise(r=>setTimeout(r,6000))]);
-  const S=build(L);
-  G={i,L,S,t0:AC.currentTime+.5,bi:0,score:0,combo:0,maxc:0,perf:0,good:0,miss:0,run:true,pops:[],last:{},tap:{}};
+  try{await ruam()}catch(e){$('#cb').textContent='โหลดคลิปเสียงวงไม่สำเร็จ ลองต่ออินเทอร์เน็ตแล้วเข้าใหม่';return}
+  await Promise.race([TS4.whenReady(),new Promise(r=>setTimeout(r,4000))]);
+  const S=build(L),t0=AC.currentTime+2.6;
+  G={i,L,S,t0,bi:0,score:0,combo:0,maxc:0,perf:0,good:0,miss:0,run:true,pops:[],last:{},tap:{},src:playClip(t0,1,1)};
   $('#cb').textContent='คอมโบ 0';
   requestAnimationFrame(frame)}
-function sched(){const S=G.S,ah=AC.currentTime+.2;
-  while(G.bi<S.band.length&&G.t0+S.band[G.bi].t<ah){const e=S.band[G.bi++];PAD[e.pad].snd(G.t0+e.t,e.v);G.last[e.pad]=e.t}}
+function stopGame(){if(!G)return;G.run=false;try{G.src&&G.src.stop()}catch(e){}}
+function sched(){const S=G.S,tn=now();
+  while(G.bi<S.band.length&&S.band[G.bi].t<=tn){const e=S.band[G.bi++];G.last[e.pad]=e.t}}
 const WIN={p:.075,g:.15};
 function judge(n,kind){n.st=kind==='p'?2:kind==='g'?1:-1;
   if(kind==='m'){G.miss++;G.combo=0;G.pops.push({t:now(),txt:'พลาด',c:'#ff8a8a',pad:n.pad});}
@@ -225,68 +256,49 @@ const now=()=>AC.currentTime-G.t0-lat();
 function press(k){if(!G||!G.run)return;audio();const pad=G.L.pads[k];if(!pad)return;
   const b=$('#pads').children[k];if(b){b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),90)}
   const tn=now();G.tap[pad]=tn;
-  /* รัว: นับทุกครั้งที่แตะในช่วงรัว */
-  const r=G.S.notes.find(n=>n.roll&&n.pad===pad&&!n.st&&tn>=n.t-WIN.g&&tn<=n.t2+.12);
-  if(r){r.taps++;PAD[pad].snd(AC.currentTime,.55);return}
-  PAD[pad].snd(AC.currentTime,.9);
-  let best=null,bd=1;G.S.notes.forEach(n=>{if(n.st||n.roll||n.pad!==pad)return;const d=Math.abs(n.t-tn);if(d<bd){bd=d;best=n}});
+  PAD[pad].snd(AC.currentTime,pad[0]==='d'?.8:.5);   /* คลิปมีเสียงเครื่องนั้นอยู่แล้ว เสียงจากปุ่มจึงเบาลง */
+  let best=null,bd=1;G.S.notes.forEach(n=>{if(n.st||n.pad!==pad)return;const d=Math.abs(n.t-tn);if(d<bd){bd=d;best=n}});
   if(best&&bd<=WIN.g)judge(best,bd<=WIN.p?'p':'g')}
-addEventListener('keydown',e=>{if(!G||!G.run||e.repeat)return;const m={'1':0,'2':1,'3':2,d:0,f:1,j:2}[e.key.toLowerCase()];if(m!=null&&m<G.L.pads.length){e.preventDefault();press(m)}});
-$('#quit').onclick=()=>{if(G)G.run=false;title()};
+addEventListener('keydown',e=>{const m={'1':0,'2':1,'3':2,'4':3,d:0,f:1,j:2,k:3}[e.key.toLowerCase()];if(m==null||e.repeat)return;
+  if(REC.on){e.preventDefault();recTap(m);return}
+  if(!G||!G.run)return;if(m<G.L.pads.length){e.preventDefault();press(m)}});
+$('#quit').onclick=()=>{stopGame();title()};
 
 /* ---------- วาด ---------- */
 function frame(){if(!G||!G.run)return;sched();const tn=now(),S=G.S;
-  S.notes.forEach(n=>{if(n.st)return;
-    if(n.roll){if(tn>n.t2+.15)judge(n,n.taps>=3?'p':n.taps>=1?'g':'m')}
-    else if(tn>n.t+WIN.g)judge(n,'m')});
+  S.notes.forEach(n=>{if(!n.st&&tn>n.t+WIN.g)judge(n,'m')});
   draw(tn);
   if(tn>S.end){finish();return}
   requestAnimationFrame(frame)}
-function cycleAt(tn){const cs=G.S.cs;let c=0;for(let i=0;i<cs.length;i++)if(cs[i].t<=tn)c=i;return c}
 function draw(tn){
   const S=G.S,L=G.L,np=L.pads.length,gy=Math.round(H*.46),hitX=Math.max(58,W*.14),LOOK=2.3,spd=(W-hitX)/LOOK;
-  /* ฟ้ายามเย็น */
   const g=cx.createLinearGradient(0,0,0,gy);g.addColorStop(0,'#3a1a4a');g.addColorStop(.6,'#c2554a');g.addColorStop(1,'#ffb36a');cx.fillStyle=g;cx.fillRect(0,0,W,gy);
-  /* หลังคาวัดไกล ๆ */
-  cx.fillStyle='rgba(60,20,40,.55)';const off=(tn*14)%320;
+  cx.fillStyle='rgba(60,20,40,.55)';const off=(Math.max(0,tn)*14)%320;
   for(let x=-off;x<W+320;x+=320){cx.beginPath();cx.moveTo(x+40,gy);cx.lineTo(x+90,gy-46);cx.lineTo(x+140,gy);cx.fill();cx.beginPath();cx.moveTo(x+70,gy-46);cx.lineTo(x+90,gy-72);cx.lineTo(x+110,gy-46);cx.fill();cx.fillRect(x+88,gy-86,4,16);
     cx.fillRect(x+180,gy-30,90,30);cx.beginPath();cx.moveTo(x+170,gy-30);cx.lineTo(x+225,gy-58);cx.lineTo(x+280,gy-30);cx.fill()}
-  /* ธงราว */
-  for(let r=0;r<2;r++){const y0=12+r*22,ph=(tn*30+r*40)%40;cx.strokeStyle='rgba(255,240,220,.6)';cx.beginPath();cx.moveTo(0,y0);cx.lineTo(W,y0+6);cx.stroke();
+  for(let r=0;r<2;r++){const y0=12+r*22,ph=(Math.max(0,tn)*30+r*40)%40;cx.strokeStyle='rgba(255,240,220,.6)';cx.beginPath();cx.moveTo(0,y0);cx.lineTo(W,y0+6);cx.stroke();
     for(let x=-ph,k=0;x<W;x+=20,k++){const c=['#ff5a5a','#ffd84a','#5ad06a','#5aa8ff','#ff8ad0'][(k+r*2)%5];cx.fillStyle=c;const yy=y0+x/W*6;cx.beginPath();cx.moveTo(x,yy);cx.lineTo(x+14,yy);cx.lineTo(x+7,yy+12);cx.fill()}}
-  /* โคมไฟ */
-  for(let x=60-(tn*20%140);x<W;x+=140){cx.fillStyle='rgba(255,200,90,.25)';cx.beginPath();cx.arc(x,52,14,0,7);cx.fill();cx.fillStyle='#ff7a3a';cx.fillRect(x-6,44,12,16);cx.fillStyle='#ffd27a';cx.fillRect(x-6,50,12,3)}
-  /* ถนน */
+  for(let x=60-(Math.max(0,tn)*20%140);x<W;x+=140){cx.fillStyle='rgba(255,200,90,.25)';cx.beginPath();cx.arc(x,52,14,0,7);cx.fill();cx.fillStyle='#ff7a3a';cx.fillRect(x-6,44,12,16);cx.fillStyle='#ffd27a';cx.fillRect(x-6,50,12,3)}
   cx.fillStyle='#5a3a3a';cx.fillRect(0,gy,W,H-gy);cx.fillStyle='#6a4646';cx.fillRect(0,gy,W,6);
-  /* ขบวนแห่ (เดินอยู่กับที่ ขยับตามเสียงจริงของแต่ละเครื่อง) */
   procession(tn,gy);
-  /* เลน */
   const y0=gy+10,y1=H-6,lh=(y1-y0)/np,r=Math.min(lh*.36,24);
   L.pads.forEach((p,k)=>{const yc=y0+lh*(k+.5);cx.fillStyle=k%2?'rgba(0,0,0,.28)':'rgba(0,0,0,.18)';cx.fillRect(0,y0+lh*k,W,lh);
     cx.fillStyle='rgba(255,255,255,.55)';cx.font='600 12px Mitr';cx.textAlign='left';cx.fillText(PAD[p].n,6,yc+4)});
-  /* เส้นรอบ (บาร์) */
-  S.cs.forEach((C,ci)=>{const x=hitX+(C.t-tn)*spd;if(x<hitX-30||x>W+10)return;cx.strokeStyle=ci<PRE?'rgba(255,255,255,.12)':'rgba(255,220,140,.28)';cx.lineWidth=ci%2===PRE%2?2:1;cx.beginPath();cx.moveTo(x,y0);cx.lineTo(x,y1);cx.stroke();
-    if(ci>=PRE){cx.fillStyle='rgba(255,230,180,.55)';cx.font='10px Sarabun';cx.textAlign='center';cx.fillText('รอบ '+(ci-PRE+1),x,y0+10)}});
+  /* เส้นจังหวะ = ฆ้องราวในคลิป */
+  S.beats.forEach((t,bi)=>{const x=hitX+(t-tn)*spd;if(x<hitX-30||x>W+10)return;cx.strokeStyle=bi%2?'rgba(255,220,140,.16)':'rgba(255,220,140,.32)';cx.lineWidth=bi%2?1:2;cx.beginPath();cx.moveTo(x,y0);cx.lineTo(x,y1);cx.stroke()});
   cx.lineWidth=1;
-  /* วงกลมจุดตี */
-  L.pads.forEach((p,k)=>{const yc=y0+lh*(k+.5),hot=G.tap[p]!=null&&tn-G.tap[p]<.12;cx.strokeStyle=hot?'#fff':'#ffc94a';cx.lineWidth=hot?4:3;cx.beginPath();cx.arc(hitX,yc,r+4,0,7);cx.stroke()});
+  L.pads.forEach((p,k)=>{const yc=y0+lh*(k+.5),hot=G.tap[p]!=null&&tn-G.tap[p]<.12&&tn>=G.tap[p];cx.strokeStyle=hot?'#fff':'#ffc94a';cx.lineWidth=hot?4:3;cx.beginPath();cx.arc(hitX,yc,r+4,0,7);cx.stroke()});
   cx.lineWidth=1;
-  /* โน้ต */
   S.notes.forEach(n=>{const k=L.pads.indexOf(n.pad);if(k<0)return;const yc=y0+lh*(k+.5),x=hitX+(n.t-tn)*spd;
-    if(n.roll){const x2=hitX+(n.t2-tn)*spd;if(x2<-r||x>W+r)return;if(n.st>0)return;
-      cx.fillStyle=PAD[n.pad].c;cx.globalAlpha=n.st<0?.25:.85;cx.beginPath();cx.moveTo(x,yc-r);cx.lineTo(x2,yc-r);cx.arc(x2,yc,r,-Math.PI/2,Math.PI/2);cx.lineTo(x,yc+r);cx.arc(x,yc,r,Math.PI/2,-Math.PI/2);cx.fill();cx.globalAlpha=1;
-      cx.fillStyle='#2a120c';cx.font='600 '+Math.round(r*.72)+'px Mitr';cx.textAlign='center';cx.fillText('รัว! '+(n.taps||''),Math.max(x,hitX)+r*1.6,yc+r*.26);return}
     if(n.st>0||x<-r||x>W+r)return;
     cx.globalAlpha=n.st<0?.25:1;cx.fillStyle='rgba(0,0,0,.35)';cx.beginPath();cx.arc(x,yc+3,r,0,7);cx.fill();
     cx.fillStyle=PAD[n.pad].c;cx.beginPath();cx.arc(x,yc,r,0,7);cx.fill();cx.strokeStyle='#2a120c';cx.lineWidth=2;cx.stroke();cx.lineWidth=1;
-    cx.fillStyle='#2a120c';cx.font='600 '+Math.round(r*.7)+'px Mitr';cx.textAlign='center';cx.fillText(PAD[n.pad].sn,x,yc+r*.24);cx.globalAlpha=1});
-  /* คำบอกผล */
-  G.pops=G.pops.filter(p=>tn-p.t<.7);G.pops.forEach(p=>{const k=L.pads.indexOf(p.pad),yc=y0+lh*(Math.max(0,k)+.5),a=1-(tn-p.t)/.7;cx.globalAlpha=a;cx.fillStyle=p.c;cx.font='600 18px Mitr';cx.textAlign='left';cx.fillText(p.txt,hitX+r+12,yc-r*.4-(1-a)*14);cx.globalAlpha=1});
-  /* นับเข้า */
-  const ci=cycleAt(tn);if(tn<S.cs[PRE].t){const left=PRE-ci;cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(W/2-120,gy*.42-26,240,44);cx.fillStyle='#ffe27a';cx.font='600 22px Mitr';cx.textAlign='center';cx.fillText(tn<0?'เตรียมตัว…':'ฟังวงนำ… อีก '+left+' รอบ',W/2,gy*.42+4)}
-  else if(G.L.bpm2){const C=S.cs[ci];cx.fillStyle='rgba(255,240,200,.85)';cx.font='12px Sarabun';cx.textAlign='right';cx.fillText('ความเร็ว '+Math.round(120/C.d)+' ครั้ง/นาที',W-10,gy-8)}
+    cx.fillStyle='#2a120c';cx.font='600 '+Math.round(r*.62)+'px Mitr';cx.textAlign='center';cx.fillText(PAD[n.pad].sn,x,yc+r*.22);cx.globalAlpha=1});
+  G.pops=G.pops.filter(p=>tn-p.t<.7&&tn>=p.t);G.pops.forEach(p=>{const k=L.pads.indexOf(p.pad),yc=y0+lh*(Math.max(0,k)+.5),a=1-(tn-p.t)/.7;cx.globalAlpha=a;cx.fillStyle=p.c;cx.font='600 18px Mitr';cx.textAlign='left';cx.fillText(p.txt,hitX+r+12,yc-r*.4-(1-a)*14);cx.globalAlpha=1});
+  const first=S.notes.length?S.notes[0].t:0;
+  if(tn<first-.4){cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(W/2-130,gy*.42-26,260,44);cx.fillStyle='#ffe27a';cx.font='600 22px Mitr';cx.textAlign='center';cx.fillText(tn<0?'เตรียมตัว… '+Math.ceil(-tn):'ฟังวงก่อน…',W/2,gy*.42+4)}
+  {const k=Math.max(0,Math.min(1,tn/CH.dur));cx.fillStyle='rgba(255,255,255,.18)';cx.fillRect(10,gy-5,W-20,3);cx.fillStyle='#ffe27a';cx.fillRect(10,gy-5,(W-20)*k,3)}
   cx.textAlign='left'}
-/* คนในขบวน: กลองปู่เจ่บนรถเข็น · ฉาบ · ฆ้องราวหามสองคน · คนฟ้อน */
 function person(x,y,s,shirt,ph,arm){const b=Math.sin(ph)*1.5*s;
   cx.fillStyle='#2a1a1a';cx.fillRect(x-3*s,y-9*s,2.5*s,9*s+Math.sin(ph)*2*s);cx.fillRect(x+.5*s,y-9*s,2.5*s,9*s-Math.sin(ph)*2*s);
   cx.fillStyle=shirt;cx.fillRect(x-4.5*s,y-21*s+b,9*s,12*s);
@@ -299,7 +311,7 @@ function procession(tn,gy){const s=Math.max(1.6,Math.min(3.2,H/165)),L=G.last,pu
   const gx=base,kr=act('kr');person(gx,gy,s,'#7a2a8a',ph,0);person(gx+44*s,gy,s,'#7a2a8a',ph+1,0);
   cx.fillStyle='#8a5a2a';cx.fillRect(gx,gy-27*s,44*s,2*s);[10,22,34].forEach((d,i)=>{cx.fillStyle=kr?'#fff2b0':'#d8a83a';cx.beginPath();cx.arc(gx+d*s,gy-19*s+(kr?Math.sin(tn*40+i)*1.5*s:0),4.5*s,0,7);cx.fill();cx.fillStyle='#8a6a1a';cx.beginPath();cx.arc(gx+d*s,gy-19*s,1.5*s,0,7);cx.fill()});
   /* เวกัส: สะพายกลองปู่เจ่ยาวสีดำ ร้อยเชือกลายข้าวหลามตัด หัวกลองหนัง ท้ายกลองแถบแดง · คาดผ้าโพกหัวขาว เสื้อแดงเลือดหมู ผ้าคาดเอวทอง */
-  const dx=gx+92*s,dr=Math.max(act('lo'),act('mid')*.75,act('hi')*.55,act('sh'),act('sr')*.6),bb=Math.sin(ph)*1.5*s;
+  const dx=gx+92*s,dr=Math.max(act('dr'),act('d0'),act('d1'),act('d2')*.75,act('d3')*.6),bb=Math.sin(ph)*1.5*s;
   cx.fillStyle='#2a1a1a';cx.fillRect(dx-3*s,gy-9*s,2.5*s,9*s+Math.sin(ph)*2*s);cx.fillRect(dx+.5*s,gy-9*s,2.5*s,9*s-Math.sin(ph)*2*s);
   cx.fillStyle='#8a1f3a';cx.fillRect(dx-5*s,gy-22*s+bb,10*s,13*s);cx.fillStyle='#d8b24a';cx.fillRect(dx-5*s,gy-12*s+bb,10*s,2*s);
   cx.fillStyle='#e8b088';cx.beginPath();cx.arc(dx,gy-26*s+bb,4.2*s,0,7);cx.fill();cx.fillStyle='#14100e';cx.fillRect(dx-4.2*s,gy-30.5*s+bb,8.4*s,2.5*s);
@@ -312,46 +324,108 @@ function procession(tn,gy){const s=Math.max(1.6,Math.min(3.2,H/165)),L=G.last,pu
   if(dr>.4){cx.strokeStyle='rgba(255,230,160,'+dr+')';cx.beginPath();cx.arc(dx+4*s,ty,8*s*(1.6-dr),0,7);cx.stroke()}
   person(dx+44*s,gy,s,'#2a5aa8',ph+2,0);
   /* ฉาบ */
-  const cxp=dx+76*s,ch=Math.max(act('co'),act('cs'));person(cxp,gy,s,'#c03a3a',ph+1.4,0);
+  const cxp=dx+76*s,ch=act('ch');person(cxp,gy,s,'#c03a3a',ph+1.4,0);
   cx.fillStyle='#ffd84a';const sp=ch?(1-ch)*3*s:4*s;cx.beginPath();cx.ellipse(cxp+6*s,gy-28*s-sp,6*s,2*s,0,0,7);cx.fill();cx.beginPath();cx.ellipse(cxp+6*s,gy-28*s+sp,6*s,2*s,0,0,7);cx.fill();
   if(ch>.5){cx.strokeStyle='rgba(255,240,150,'+ch+')';cx.beginPath();cx.arc(cxp+6*s,gy-28*s,10*s*(1.6-ch),0,7);cx.stroke()}
   /* คนฟ้อน */
   for(let i=0;i<2;i++){const fx=cxp+34*s+i*24*s;person(fx,gy,s,i?'#2a8a5a':'#d0507a',ph+i*2.2,.5+Math.sin(ph+i)*.5);cx.fillStyle='#ffd84a';cx.beginPath();cx.arc(fx+8*s,gy-(26+Math.sin(ph+i)*4)*s,4*s,Math.PI,0);cx.fill()}}
 
+
 /* ---------- จบด่าน ---------- */
-function finish(){G.run=false;const L=G.L,tot=G.S.notes.length,acc=tot?Math.round((G.perf+G.good*.6)/tot*100):0,gr=GR(acc),i=G.i;
-  const o=ld();o.pass=o.pass||{};o.best=o.best||{};if(acc>=60)o.pass[i]=1;const b=o.best[i];if(!b||acc>b.a)o.best[i]={a:acc,g:gr,s:G.score};sv(o);
+function finish(){stopGame();const L=G.L,tot=G.S.notes.length,acc=tot?Math.round((G.perf+G.good*.6)/tot*100):0,gr=GR(acc),i=G.i;
+  if(!L.free){const o=ld();o.pass=o.pass||{};o.best=o.best||{};if(acc>=60)o.pass[i]=1;const b=o.best[i];if(!b||acc>b.a)o.best[i]={a:acc,g:gr,s:G.score};sv(o)}
   try{if(window.SKILL)SKILL('rhythm',acc/100,{game:'pujae'})}catch(e){}
   try{if(window.KT)KT.roll('pujae',acc>=85)}catch(e){}
-  $('#eLv').textContent='ด่าน '+(i+1)+' · '+L.n;$('#eG').textContent=gr;
+  $('#eLv').textContent=(L.free?'':'ด่าน '+(i+1)+' · ')+L.n;$('#eG').textContent=gr;
   $('#eT').textContent=acc>=95?'ตีเข้าวงเหมือนคนเดียวกัน!':acc>=85?'ขบวนเดินสวยมาก':acc>=70?'เข้าวงได้ดี':acc>=60?'ผ่านแล้ว ฝึกอีกนิด':'ฟังวงให้มากขึ้นแล้วลองใหม่';
   {const o=OUTRO[gr]||OUTRO.B;$('#eImg').src=PI(o[0]);$('#eSay').textContent=o[1]}
   $('#eS').textContent=G.score.toLocaleString()+' คะแนน';$('#eP').textContent=G.perf;$('#eGd').textContent=G.good;$('#eM').textContent=G.miss;$('#eA').textContent=acc+'%';
-  $('#eMsg').textContent=acc>=60?(i<LV.length-1?'เปิดด่าน '+(i+2)+' “'+LV[i+1].n+'” แล้ว':'ผ่านครบทุกด่าน! วงกลองปู่เจ่ยินดีต้อนรับเข้าขบวน'):'ต้องแม่นอย่างน้อย 60% จึงจะเปิดด่านถัดไป · ลองกด “ฟังวงตีให้ฟังก่อน” ที่หน้าแรก';
-  $('#next').classList.toggle('hide',!(acc>=60&&i<LV.length-1));
-  show('end');if(acc>=60){PAD.kr.snd(AC.currentTime+.05,.7);PAD.co.snd(AC.currentTime+.3,.6)}
+  const nx=!L.free&&acc>=60&&i<LV.length-1;
+  $('#eMsg').textContent=L.free?'โน้ตชุดนี้ไม่นับด่าน เล่นซ้ำได้ตามใจ':acc>=60?(i<LV.length-1?'เปิดด่าน '+(i+2)+' “'+LV[i+1].n+'” แล้ว':'ผ่านครบทุกด่าน! วงกลองปู่เจ่ยินดีต้อนรับเข้าขบวน'):'ต้องแม่นอย่างน้อย 60% จึงจะเปิดด่านถัดไป · ลองกด “ฟังคลิปวงจริง” ที่หน้าแรก';
+  $('#next').classList.toggle('hide',!nx);
+  show('end');if(acc>=60){PAD.kr.snd(AC.currentTime+.05,.7);PAD.ch.snd(AC.currentTime+.3,.6)}
   try{parent.postMessage({type:'spw-game',game:'pujae',level:i+1,score:G.score,acc},location.origin)}catch(e){}}
-$('#again').onclick=()=>start(lastLv);$('#home').onclick=title;$('#next').onclick=async()=>{if(await intro(lastLv+1))start(lastLv+1)};
+$('#again').onclick=()=>start(lastLv,G&&G.L);$('#home').onclick=title;$('#next').onclick=async()=>{if(await intro(LVS[lastLv+1],lastLv+1))start(lastLv+1)};
 
-/* ---------- ฟังวงตีให้ฟัง ---------- */
-let demoOn=0;
-$('#demo').onclick=async()=>{audio();const b=$('#demo');if(demoOn){demoOn=0;b.textContent='🔊 ฟังวงตีให้ฟังก่อน';return}
-  demoOn=1;b.textContent='■ หยุดฟัง';await Promise.race([TS4.whenReady(),new Promise(r=>setTimeout(r,6000))]);
-  const t0=AC.currentTime+.2,d=1.22;for(let c=0;c<8&&demoOn;c++)['gong','chab','drum'].forEach(p=>partEv(p,c).forEach(e=>PAD[e.pad].snd(t0+c*d+e.p*d/4,e.v)));
-  setTimeout(()=>{demoOn=0;b.textContent='🔊 ฟังวงตีให้ฟังก่อน'},8*1220+400)};
+/* ---------- ฟังคลิปวงจริง ---------- */
+let demoSrc=null;
+$('#demo').onclick=async()=>{audio();const b=$('#demo');if(demoSrc){try{demoSrc.stop()}catch(e){}demoSrc=null;b.textContent='🔊 ฟังคลิปวงจริง';return}
+  b.textContent='กำลังโหลด…';try{await ruam()}catch(e){b.textContent='🔊 ฟังคลิปวงจริง';$('#tSay').textContent='โหลดคลิปไม่สำเร็จครับพี่ ลองต่ออินเทอร์เน็ตก่อนนะ';return}
+  demoSrc=playClip(AC.currentTime+.05,1,1);b.textContent='■ หยุดฟัง';const me=demoSrc;demoSrc.onended=()=>{if(demoSrc===me){demoSrc=null;b.textContent='🔊 ฟังคลิปวงจริง'}}};
+
+/* ---------- บันทึกโน้ตกลอง (มือกลองแตะตามคลิป) ---------- */
+const REC={on:false,rate:.75,layers:[],cur:null,t0:0,src:null,raf:0};
+function recLoad(){const d=draft();REC.layers=d&&d.notes?[parseN(d.notes)]:[];REC.rate=(d&&d.rate)||.75;$('#rTitle').value=(d&&d.title)||''}
+function recAll(){return REC.layers.flat().sort((a,b)=>a.t-b.t)}
+function recSave(){const ns=recAll(),d={game:'pujae',clip:'ruam',names:strokeNames(),rate:REC.rate,title:$('#rTitle').value.trim().slice(0,80),notes:ns.map(n=>Math.round(n.t*1000)+':'+n.p).join(',')};try{localStorage.setItem(DRK,JSON.stringify(d))}catch(e){}return d}
+function recUI(){const ns=recAll(),c=[0,1,2,3].map(i=>ns.filter(n=>n.p===i).length);
+  $('#rInfo').textContent=ns.length?'บันทึกแล้ว '+ns.length+' ลูก ('+strokeNames().map((n,i)=>n+' '+c[i]).join(' · ')+') จาก '+REC.layers.length+' รอบ':'ยังไม่มีโน้ต · แนะนำให้เริ่มที่ความเร็ว 75% แล้วแตะเฉพาะเสียงเดียวก่อน รอบต่อไปค่อยเพิ่มเสียงอื่น';
+  document.querySelectorAll('[data-rate]').forEach(b=>b.classList.toggle('g',+b.dataset.rate===REC.rate))}
+function recNames(){const nm=strokeNames();
+  $('#rNames').innerHTML=nm.map((n,i)=>'<div class="row" style="margin-top:0;justify-content:flex-start;flex-wrap:nowrap"><span class="no" style="font-family:Mitr;width:30px;height:30px;border-radius:50%;background:'+SC[i]+';color:#2a120c;display:flex;align-items:center;justify-content:center;flex:none">'+(i+1)+'</span><input data-nm="'+i+'" class="btn" style="flex:1;min-width:0;border-radius:10px;text-align:left;background:rgba(0,0,0,.3)" maxlength="16" value="'+esc(n)+'"><button class="btn" data-hear="'+i+'">🔊</button></div>').join('');
+  document.querySelectorAll('[data-nm]').forEach(e=>e.onchange=()=>{const o=ld();o.names=strokeNames();o.names[+e.dataset.nm]=e.value.trim().slice(0,16)||('เสียงแบบ '+(+e.dataset.nm+1));sv(o);strokePads(strokeNames());recUI()});
+  document.querySelectorAll('[data-hear]').forEach(b=>b.onclick=()=>{audio();loadDemo();const i=+b.dataset.hear,gr=DEMO.groups[i];
+    loadBuf(DEMO.src).then(buf=>{demoBuf=buf;const s=AC.createBufferSource();s.buffer=buf;s.connect(OUT);s.start(AC.currentTime+.05,Math.max(0,gr[0]-.15),gr[2]-gr[0]+.9)}).catch(()=>strokeHit(i,AC.currentTime,.9))})}
+$('#recBtn').onclick=()=>{audio();loadDemo();ruam().catch(()=>{});recLoad();recNames();recUI();$('#rMsg').textContent='';show('rec')};
+document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{REC.rate=+b.dataset.rate;recUI()});
+$('#rBack').onclick=()=>{recSave();title()};
+$('#rClear').onclick=()=>{if(!REC.layers.length)return;if(!confirmTwice($('#rClear')))return;REC.layers=[];recSave();recUI()};
+$('#rUndo').onclick=()=>{REC.layers.pop();recSave();recUI()};
+function confirmTwice(b){if(b.dataset.c){delete b.dataset.c;b.textContent='ล้างทั้งหมด';return true}b.dataset.c=1;b.textContent='แตะอีกครั้งเพื่อยืนยัน';setTimeout(()=>{delete b.dataset.c;b.textContent='ล้างทั้งหมด'},2500);return false}
+const clipPos=()=>(AC.currentTime-lat()-REC.t0)*REC.rate;
+async function recRun(play){audio();try{await ruam()}catch(e){$('#rMsg').textContent='โหลดคลิปเสียงวงไม่สำเร็จ ลองต่ออินเทอร์เน็ต';return}
+  const nm=strokeNames();strokePads(nm);
+  $('#rpPads').style.gridTemplateColumns='repeat(4,1fr)';
+  $('#rpPads').innerHTML=nm.map((n,i)=>'<button data-rk="'+i+'" style="background:'+SC[i]+';height:min(34vh,190px)">'+esc(n)+'<small>'+KEYS[i]+'</small></button>').join('');
+  $('#rpPads').querySelectorAll('button').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();recTap(+b.dataset.rk)}));
+  $('#rpPads').style.visibility=play?'hidden':'visible';
+  $('#rpT').textContent=play?'ฟังทวน: คลิปวง + โน้ตที่บันทึก':'กำลังบันทึก… แตะตามเสียงกลอง';
+  $('#recPlay').classList.remove('hide');
+  REC.t0=AC.currentTime+1.2;REC.src=playClip(REC.t0,REC.rate,play?.7:1);REC.cur=play?null:[];REC.on=!play;
+  REC.sch=play?recAll().map(n=>strokeHit(n.p,REC.t0+n.t/REC.rate,.9)).filter(Boolean):[];
+  let gi=0;const tick=()=>{const p=clipPos();$('#rpBar').style.width=Math.max(0,Math.min(100,p/CH.dur*100))+'%';
+    while(gi<CH.gong.length&&CH.gong[gi]<=p){gi++;const e=$('#rpGong');e.style.background='rgba(154,216,255,.7)';setTimeout(()=>e.style.background='rgba(154,216,255,.15)',90)}
+    $('#rpN').textContent=p<0?'เริ่มใน '+Math.ceil(-p/REC.rate):(REC.cur?REC.cur.length+' ลูก':'');
+    if(p>CH.dur+.3){recEnd();return}REC.raf=requestAnimationFrame(tick)};tick()}
+function recTap(i){if(!REC.on||!REC.cur)return;const p=clipPos();strokeHit(i,AC.currentTime,.9);
+  const b=$('#rpPads').children[i];if(b){b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),90)}
+  if(p<0||p>CH.dur)return;REC.cur.push({t:Math.round(p*1000)/1000,p:i});$('#rpN').textContent=REC.cur.length+' ลูก'}
+function recEnd(){cancelAnimationFrame(REC.raf);try{REC.src&&REC.src.stop()}catch(e){}REC.src=null;
+  if(REC.cur&&REC.cur.length)REC.layers.push(REC.cur);REC.cur=null;REC.on=false;$('#recPlay').classList.add('hide');recSave();recUI();
+  (REC.sch||[]).forEach(s=>{try{s.stop()}catch(e){}});REC.sch=[]}
+$('#rGo').onclick=()=>recRun(false);
+$('#rPlay').onclick=()=>{if(!recAll().length){$('#rMsg').textContent='ยังไม่มีโน้ตให้ฟังทวน';return}recRun(true)};
+$('#rpStop').onclick=()=>recEnd();
+$('#rTry').onclick=async()=>{const d=recSave();if(!parseN(d.notes).length){$('#rMsg').textContent='บันทึกโน้ตก่อนนะ';return}
+  const L=chartLevel(Object.assign({title:d.title||'โน้ตที่ฉันบันทึก',by:''},d),'📝 ร่าง: ');LVS=allLevels();start(LVS.length-1,L)};
+$('#rSend').onclick=async()=>{const d=recSave(),ns=parseN(d.notes);
+  if(ns.length<8){$('#rMsg').textContent='ต้องมีอย่างน้อย 8 ลูกก่อนส่ง';return}
+  if(!d.title){$('#rMsg').textContent='ตั้งชื่อโน้ตชุดนี้ก่อนส่งนะ';$('#rTitle').focus();return}
+  if(!P||!P.B||!P.APP){$('#rMsg').textContent='ส่งได้เมื่อเปิดเกมจากในแอปชมรม (เข้าสู่ระบบแล้ว) · ตอนนี้เก็บเป็นร่างในเครื่องไว้ให้แล้ว';return}
+  const A=P.APP,by=(()=>{try{return A.myName()||''}catch(e){return ''}})(),id='sub_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const chart={game:'pujae',clip:'ruam',names:d.names,rate:d.rate,notes:d.notes};
+  const desc='โน้ตกลองปู่เจ่ถอดจากคลิปรวมวง '+ns.length+' ลูก · '+d.names.map((n,i)=>n+' '+ns.filter(x=>x.p===i).length).join(' · ');
+  try{
+    if(A.teacher&&A.teacher()){await A.W(P.B.set('library/chart_'+id.slice(4),{title:d.title,cat:'โน้ตและเพลง',desc,kind:'chart',chart,at:Date.now(),by:by||'คุณครู',bySid:'',approvedBy:by}));$('#rMsg').textContent='ครูบันทึกลงคลังความรู้แล้ว ทุกคนเล่นเป็นด่านได้ทันที'}
+    else{await A.W(P.B.set('libsub/'+id,{kind:'chart',title:d.title,desc,chart,sid:A.sid()||'',by,at:Date.now()}));$('#rMsg').textContent='ส่งให้ครูตรวจแล้ว ครูยอมรับเมื่อไรจะเป็นด่านใหม่ให้ทุกคนเล่น พร้อมชื่อผู้บันทึก'}
+  }catch(e){$('#rMsg').textContent='ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'}};
 
 /* ---------- ปรับเสียงช้า/เร็ว ---------- */
 const CAL={taps:[],t0:0,iv:0};
 $('#calib').onclick=()=>{audio();show('cal');CAL.taps=[];$('#calOut').textContent='ฟังเสียงกลองแล้วแตะตาม';clearInterval(CAL.iv);CAL.t0=AC.currentTime+.6;let k=0;
-  CAL.iv=setInterval(()=>{while(k<12&&CAL.t0+k*.75<AC.currentTime+.2){PAD.lo.snd(CAL.t0+k*.75,.9);k++}if(k>=12)clearInterval(CAL.iv)},40)};
+  CAL.iv=setInterval(()=>{while(k<12&&CAL.t0+k*.75<AC.currentTime+.2){PAD.dr.snd(CAL.t0+k*.75,.9);k++}if(k>=12)clearInterval(CAL.iv)},40)};
 $('#calTap').addEventListener('pointerdown',e=>{e.preventDefault();if(!AC)return;const t=AC.currentTime-(AC.outputLatency||0)-(AC.baseLatency||0),k=Math.round((t-CAL.t0)/.75);if(k<0||k>=12)return;CAL.taps.push(t-(CAL.t0+k*.75));
   if(CAL.taps.length>=8){const a=CAL.taps.slice().sort((x,y)=>x-y),m=a[a.length>>1];const ms=Math.round(Math.max(0,Math.min(400,m*1000)));try{localStorage.setItem(LATK,String(ms))}catch(e){}$('#calOut').textContent='ตั้งค่าแล้ว: '+ms+' มิลลิวินาที'}
   else $('#calOut').textContent='แตะแล้ว '+CAL.taps.length+'/8'});
 $('#calReset').onclick=()=>{try{localStorage.setItem(LATK,'0')}catch(e){}$('#calOut').textContent='ตั้งเป็น 0 แล้ว'};
 $('#calBack').onclick=()=>{clearInterval(CAL.iv);title()};
 
+/* ---------- เปิดจากคลังความรู้: ?chart=<id> (ยอมรับแล้ว) · ?sub=<id> (ครูตรวจผลงานที่ส่งมา) ---------- */
 title();
-window.__PJ={get G(){return G},start,press,LV,build,partEv,get AC(){return AC}};
+(async()=>{const q=new URLSearchParams(location.search),cid=q.get('chart'),sid=q.get('sub');if(!cid&&!sid)return;
+  try{const x=cid?(P.APP.D.library||{})[cid]:(P.APP.D.libsub||{})[sid];if(!x||!x.chart)return;
+    const L=chartLevel(Object.assign({title:x.title,by:x.by},x.chart),sid?'ตรวจ: ':'🎼 ');if(await intro(L,0)){audio();loadDemo();start(0,L)}}catch(e){}})();
+window.__PJ={get G(){return G},start,press,LV,build,PART,REC,recTap,recEnd,get AC(){return AC},allLevels};
 </script>
 </body>
 </html>
