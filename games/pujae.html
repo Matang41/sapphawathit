@@ -97,7 +97,8 @@ h1{font-family:Mitr;font-weight:600;font-size:34px;color:var(--gold);margin:6px 
 <div class="scr hide" id="rec">
   <h1 style="font-size:26px">✍️ บันทึกโน้ตกลองจากคลิปวง</h1>
   <div class="sub">ฟังคลิปวงจริงแล้วแตะปุ่มตามเสียงกลองทุกลูก เลือกปุ่มตามวิธีตี · บันทึกหลายรอบได้ (เช่น รอบแรกเฉพาะเสียงหนึ่ง รอบสองเสียงอื่น)</div>
-  <div class="box"><div class="lb">ชื่อเสียงกลอง (ตั้งตามที่วงเรียก)</div><div id="rNames" class="lv"></div>
+  <div class="box"><div class="lb">✏️ ชื่อเสียงกลอง <span style="font-family:Sarabun;font-size:13px;color:var(--muted)">แตะช่องแล้วพิมพ์ชื่อที่วงเรียกได้เลย</span></div><div id="rNames" class="lv"></div>
+    <div class="note" id="rNmMsg" style="margin-top:6px"></div>
     <div class="note" style="margin-top:6px">ปุ่ม 🔊 คือเสียงจากคลิปที่เวกัสตีสาธิตทีละแบบ (แบบละ 3 ครั้ง)</div></div>
   <div class="box"><div class="row" style="justify-content:flex-start;margin-top:0"><span>ความเร็วคลิป</span><button class="btn" data-rate="1">ปกติ</button><button class="btn" data-rate="0.75">ช้า 75%</button><button class="btn" data-rate="0.6">ช้า 60%</button></div>
     <div class="note" id="rInfo" style="margin-top:6px"></div>
@@ -167,7 +168,11 @@ const PAD={
   ch:{sn:'ฉับ',n:'ฉาบ',s:'ตีเป็นคู่',c:'#ffe27a',snd:(t,v)=>TS4.chab(0,t,v,OUT)},
   dr:{sn:'ตึ้ง',n:'กลองลูกหนัก',s:'กลองปู่เจ่',c:'#ff8a5c',snd:(t,v)=>TS4.pujae(0,t,v,OUT)}};
 const SC=['#ff8a5c','#ffb35c','#ffd86a','#d8a0ff'];
-function strokeNames(){const d=ld();return [0,1,2,3].map(i=>(d.names&&d.names[i])||DEMO.names[i]||('เสียงแบบ '+(i+1)))}
+/* ชื่อเสียงกลอง: ชื่อที่พิมพ์เองในเครื่อง > ชื่อกลางของวงที่ครูตั้ง (config/pujaeNames) > เสียงแบบ 1–4 */
+const DEFN=i=>DEMO.names[i]||('เสียงแบบ '+(i+1));
+function clubNames(){try{const n=window.parent!==window&&window.parent.APP&&window.parent.APP.cfg().pujaeNames;return Array.isArray(n)?n:[]}catch(e){return []}}
+function isTeacher(){try{return !!(window.parent!==window&&window.parent.APP&&window.parent.APP.teacher())}catch(e){return false}}
+function strokeNames(){const d=ld(),c=clubNames();return [0,1,2,3].map(i=>(d.names&&d.names[i])||c[i]||DEFN(i))}
 function strokePads(names){names.forEach((nm,i)=>{PAD['d'+i]={sn:nm.slice(0,5),n:nm,s:'วิธีตีแบบ '+(i+1),c:SC[i],snd:(t,v)=>strokeHit(i,t,v)}})}
 strokePads(strokeNames());
 const thin=(a,g)=>{const o=[];a.forEach(t=>{if(!o.length||t-o[o.length-1]>=g)o.push(t)});return o};
@@ -362,8 +367,15 @@ function recUI(){const ns=recAll(),c=[0,1,2,3].map(i=>ns.filter(n=>n.p===i).leng
   $('#rInfo').textContent=ns.length?'บันทึกแล้ว '+ns.length+' ลูก ('+strokeNames().map((n,i)=>n+' '+c[i]).join(' · ')+') จาก '+REC.layers.length+' รอบ':'ยังไม่มีโน้ต · แนะนำให้เริ่มที่ความเร็ว 75% แล้วแตะเฉพาะเสียงเดียวก่อน รอบต่อไปค่อยเพิ่มเสียงอื่น';
   document.querySelectorAll('[data-rate]').forEach(b=>b.classList.toggle('g',+b.dataset.rate===REC.rate))}
 function recNames(){const nm=strokeNames();
-  $('#rNames').innerHTML=nm.map((n,i)=>'<div class="row" style="margin-top:0;justify-content:flex-start;flex-wrap:nowrap"><span class="no" style="font-family:Mitr;width:30px;height:30px;border-radius:50%;background:'+SC[i]+';color:#2a120c;display:flex;align-items:center;justify-content:center;flex:none">'+(i+1)+'</span><input data-nm="'+i+'" class="btn" style="flex:1;min-width:0;border-radius:10px;text-align:left;background:rgba(0,0,0,.3)" maxlength="16" value="'+esc(n)+'"><button class="btn" data-hear="'+i+'">🔊</button></div>').join('');
-  document.querySelectorAll('[data-nm]').forEach(e=>e.onchange=()=>{const o=ld();o.names=strokeNames();o.names[+e.dataset.nm]=e.value.trim().slice(0,16)||('เสียงแบบ '+(+e.dataset.nm+1));sv(o);strokePads(strokeNames());recUI()});
+  $('#rNames').innerHTML=nm.map((n,i)=>'<div class="row" style="margin-top:0;justify-content:flex-start;flex-wrap:nowrap"><span class="no" style="font-family:Mitr;width:30px;height:30px;border-radius:50%;background:'+SC[i]+';color:#2a120c;display:flex;align-items:center;justify-content:center;flex:none">'+(i+1)+'</span><input data-nm="'+i+'" class="btn" style="flex:1;min-width:0;border-radius:10px;text-align:left;background:rgba(0,0,0,.3)" maxlength="16" value="'+esc(n)+'" placeholder="'+esc(DEFN(i))+'" enterkeyhint="done"><button class="btn" data-hear="'+i+'">🔊</button></div>').join('');
+  let nt=0;const T=isTeacher();
+  $('#rNmMsg').innerHTML=T?'ครูพิมพ์แล้วจะเป็น<b>ชื่อกลางของทั้งวง</b> สมาชิกทุกคนเห็นชื่อนี้':'ชื่อที่พิมพ์ใช้ในเครื่องนี้ · ถ้าครูตั้งชื่อกลางไว้ จะใช้ชื่อของครูเป็นค่าเริ่มต้น'+(ld().names?' · <button class="btn" id="rNmReset" style="padding:3px 10px;font-size:12px">ใช้ชื่อกลางของวง</button>':'');
+  const rb=$('#rNmReset');if(rb)rb.onclick=()=>{const o=ld();delete o.names;sv(o);strokePads(strokeNames());recNames();recUI()};
+  const save=()=>{const v=[...document.querySelectorAll('[data-nm]')].map((e,i)=>e.value.trim().slice(0,16)||DEFN(i));
+    if(T){try{const A=window.parent.APP,B=window.parent.B;A.W(B.set('config/pujaeNames',v));const o=ld();delete o.names;sv(o)}catch(e){}}
+    else{const o=ld();o.names=v;sv(o)}
+    strokePads(v);recUI();$('#rNmMsg').textContent='✓ บันทึกชื่อแล้ว: '+v.join(' · ')};
+  document.querySelectorAll('[data-nm]').forEach(e=>{e.oninput=()=>{clearTimeout(nt);nt=setTimeout(save,600)};e.onchange=save;e.onkeydown=k=>{if(k.key==='Enter')e.blur()}});
   document.querySelectorAll('[data-hear]').forEach(b=>b.onclick=()=>{audio();loadDemo();const i=+b.dataset.hear,gr=DEMO.groups[i];
     loadBuf(DEMO.src).then(buf=>{demoBuf=buf;const s=AC.createBufferSource();s.buffer=buf;s.connect(OUT);s.start(AC.currentTime+.05,Math.max(0,gr[0]-.15),gr[2]-gr[0]+.9)}).catch(()=>strokeHit(i,AC.currentTime,.9))})}
 $('#recBtn').onclick=()=>{audio();loadDemo();ruam().catch(()=>{});recLoad();recNames();recUI();$('#rMsg').textContent='';show('rec')};
