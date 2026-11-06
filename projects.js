@@ -22,8 +22,10 @@
   const KIND = { teacher: 'ครู / บุคลากร', alumni: 'ศิษย์เก่า', guest: 'บุคคลทั่วไป' };
   const T = () => A.teacher(), me = () => A.sid();
   const cid = () => M.C.club.id;
+  /* proj* ไม่อยู่ใน CLUB_ROOTS ของ backend จึงต้องใช้เส้นทางเต็มของชมรม (ขึ้นต้นด้วย /) */
+  const CP = () => '/c/' + cid() + '/';
 
-  A.SUBS.push({ key: 'proj', path: () => 'proj' });
+  A.SUBS.push({ key: 'proj', path: () => CP() + 'proj' });
   const projs = () => Object.keys(A.D.proj || {}).map(id => Object.assign({ id }, A.D.proj[id])).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const pj = id => { const p = (A.D.proj || {})[id]; return p ? Object.assign({ id }, p) : null; };
   const arr = v => Array.isArray(v) ? v.filter(Boolean) : Object.keys(v || {}).map(k => v[k]).filter(Boolean);
@@ -41,7 +43,7 @@
       s = S[p.id] = { key, pp: {}, pay: {}, ok: { pp: 0, pay: 0 }, offs: [] };
       const sub = (k, path) => s.offs.push(B.on(path, v => { s[k] = full ? (v || {}) : (v ? { [me()]: v } : {}); s.ok[k] = 1; A.rerender(); }, e => { s.ok[k] = 1; console.warn('read ' + path, e && e.code); }));
       const tail = full ? '' : '/' + me();
-      if (full || me()) { sub('pp', 'projp/' + p.id + tail); sub('pay', 'projpay/' + p.id + tail); }
+      if (full || me()) { sub('pp', CP() + 'projp/' + p.id + tail); sub('pay', CP() + 'projpay/' + p.id + tail); }
     }
     return s;
   }
@@ -225,7 +227,7 @@
     const fv = n => f.elements[n].value.trim();
     const ch = { name: fv('name'), desc: fv('desc'), deadline: fv('deadline'), unit: fv('unit'), ease: num(fv('ease')), selfMeasure: f.elements.selfMeasure.checked, status: fv('status'), items: it, sizes: sz, fields: fd, staff: staffM };
     if (!ch.name) return err('ใส่ชื่อโครงการ');
-    A.W(B.update('proj/' + p.id, ch)); A.log('proj.set', '', ch.name); toast('บันทึกการตั้งค่าแล้ว');
+    A.W(B.update(CP() + 'proj/' + p.id, ch)); A.log('proj.set', '', ch.name); toast('บันทึกการตั้งค่าแล้ว');
   });
   document.addEventListener('input', e => { if (e.target.id === 'pjq') { P.q = e.target.value; const pos = e.target.selectionStart; A.rerender(); const q = $('#pjq'); if (q) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (er) { /* ignore */ } } } });
   document.addEventListener('change', e => { if (e.target.matches && e.target.matches('[data-pjf]')) { P.f = e.target.value; A.rerender(); } });
@@ -246,22 +248,22 @@
         '<div class="muted">สร้างแล้วไปที่แท็บ “ตั้งค่า” เพื่อใส่ราคา แก้ตารางไซซ์ตามร้าน และมอบหมายผู้ช่วย</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">สร้าง</button></div></form>', { sticky: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const id = 'p' + B.uid().slice(-8), t = $('#pn-t', w).value;
         const rec = t === 'shirt' ? TEMPLATE() : { status: 'open', unit: 'นิ้ว', ease: 2, items: { a: { name: 'ค่าใช้จ่าย', price: 0, req: true, o: 0 } }, sizes: [], fields: [] };
-        Object.assign(rec, { name: $('#pn-n', w).value.trim() || rec.name, createdAt: Date.now(), by: A.myName() }); A.W(B.set('proj/' + id, rec)); A.log('proj.new', '', rec.name); w.remove(); P.tab = 'set'; location.hash = '#/pj/' + id; });
+        Object.assign(rec, { name: $('#pn-n', w).value.trim() || rec.name, createdAt: Date.now(), by: A.myName() }); A.W(B.set(CP() + 'proj/' + id, rec)); A.log('proj.new', '', rec.name); w.remove(); P.tab = 'set'; location.hash = '#/pj/' + id; });
     },
     pjDel: async d => { const p = pj(d.p); if (!p || !T()) return; const s = data(p); if (Object.keys(s.pay || {}).length) return toast('มีการรับเงินแล้ว ลบไม่ได้ ใช้ “ปิดโครงการ” แทน', 4000);
-      if (!await M.confirmBox('ลบโครงการ', 'ลบ “' + esc(p.name) + '” และข้อมูลรายคนทั้งหมด?', 'ลบ', true)) return; A.W(B.remove('projp/' + p.id)); A.W(B.remove('proj/' + p.id)); location.hash = '#/proj'; },
+      if (!await M.confirmBox('ลบโครงการ', 'ลบ “' + esc(p.name) + '” และข้อมูลรายคนทั้งหมด?', 'ลบ', true)) return; A.W(B.remove(CP() + 'projp/' + p.id)); A.W(B.remove(CP() + 'proj/' + p.id)); location.hash = '#/proj'; },
     pjPerson: d => personModal(d.p, d.k),
     pjAddX: d => {
       const p = pj(d.p); if (!p) return; const w = modal('<h3>เพิ่มบุคคลภายนอก</h3><form class="form">' + fld('ชื่อ-สกุล', '<input class="in" id="x-n" required>') + fld('ประเภท', '<select class="in" id="x-k">' + opt(Object.keys(KIND).map(k => [k, KIND[k]])) + '</select>') +
         '<div class="muted">ใช้สำหรับครู ศิษย์เก่า หรือผู้ที่สั่งเพิ่มตามความสมัครใจ</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">เพิ่ม</button></div></form>', { sticky: true });
-      $('form', w).addEventListener('submit', e => { e.preventDefault(); const n = $('#x-n', w).value.trim(); if (!n) return; const pk = 'x' + B.uid().slice(-9); A.W(B.set('projp/' + p.id + '/' + pk + '/info', { name: n, kind: $('#x-k', w).value, at: Date.now(), by: A.myName() })); w.remove(); setTimeout(() => personModal(p.id, pk), 300); });
+      $('form', w).addEventListener('submit', e => { e.preventDefault(); const n = $('#x-n', w).value.trim(); if (!n) return; const pk = 'x' + B.uid().slice(-9); A.W(B.set(CP() + 'projp/' + p.id + '/' + pk + '/info', { name: n, kind: $('#x-k', w).value, at: Date.now(), by: A.myName() })); w.remove(); setTimeout(() => personModal(p.id, pk), 300); });
     },
     pjSelf: d => selfModal(d.p, d.k),
     pjForm: d => formModal(d.p, d.k),
     pjPay: d => payModal(d.p, d.k),
     pjSlip: async (d, el) => {
       const r = A.route(), pid = el.dataset.p || r.arg, pk = el.dataset.k || me(), w = modal('<h3>หลักฐานการชำระ</h3><div id="sl" class="muted">กำลังโหลด…</div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
-      try { const v = await B.get('projslip/' + pid + '/' + pk + '/' + d.t); $('#sl', w).innerHTML = v ? '<img class="pj-slip" src="' + esc(v) + '" alt="สลิป">' : 'ไม่พบภาพ'; } catch (er) { $('#sl', w).textContent = 'เปิดไม่ได้: ' + A.errTH(er); }
+      try { const v = await B.get(CP() + 'projslip/' + pid + '/' + pk + '/' + d.t); $('#sl', w).innerHTML = v ? '<img class="pj-slip" src="' + esc(v) + '" alt="สลิป">' : 'ไม่พบภาพ'; } catch (er) { $('#sl', w).textContent = 'เปิดไม่ได้: ' + A.errTH(er); }
     },
     pjRemind: async d => {
       const p = pj(d.p); if (!p || !T() || !window.PUSH) return; const s = data(p);
@@ -284,7 +286,7 @@
           const rec = { kind: 'in', no: 'ร.' + String(no).padStart(3, '0') + '/' + A.year(), date: A.todayISO(), amount: tot, party: 'สมาชิกและผู้ร่วมโครงการ ' + n + ' คน', title: 'เงินโครงการ ' + p.name, cat: 'กิจกรรม / โครงการ', at: Date.now(), by: A.by(), status: 'approved', approvedBy: A.myName(), approvedAt: Date.now(), note: 'สรุปจากระบบโครงการ ' + p.id };
           await B.direct('set', y + '/ledger/' + id, rec); if (A.finPublish) A.finPublish(Object.assign({ id }, rec)); Object.assign(ch, { ledgerId: id, ledgerNo: rec.no, ledgerYear: A.year() });
         }
-        await B.direct('update', 'proj/' + p.id, ch); A.log('proj.close', '', p.name + ' ' + money(tot)); toast(ch.ledgerNo ? 'ปิดโครงการแล้ว · ออกใบรับเงิน ' + ch.ledgerNo : 'ปิดโครงการแล้ว', 5000);
+        await B.direct('update', CP() + 'proj/' + p.id, ch); A.log('proj.close', '', p.name + ' ' + money(tot)); toast(ch.ledgerNo ? 'ปิดโครงการแล้ว · ออกใบรับเงิน ' + ch.ledgerNo : 'ปิดโครงการแล้ว', 5000);
       } catch (er) { toast('ปิดไม่สำเร็จ: ' + A.errTH(er), 5000); }
     }
   });
@@ -308,11 +310,11 @@
     const w = modal(h, { wide: true });
     w.addEventListener('click', async e => {
       const ok = e.target.closest('[data-ok]'), vd = e.target.closest('[data-void]');
-      if (ok) { try { await B.direct('update', 'projpay/' + pid + '/' + pk + '/' + ok.dataset.ok, { st: 'ok', vby: A.myName(), vat: Date.now() }); A.log('proj.verify', pk, p.name); w.remove(); toast('ยืนยันรับเงินแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } }
+      if (ok) { try { await B.direct('update', CP() + 'projpay/' + pid + '/' + pk + '/' + ok.dataset.ok, { st: 'ok', vby: A.myName(), vat: Date.now() }); A.log('proj.verify', pk, p.name); w.remove(); toast('ยืนยันรับเงินแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } }
       if (vd) { const m = modal('<h3>ยกเลิกรายการรับเงิน</h3><form class="form">' + fld('เหตุผล (จำเป็น)', '<input class="in" id="v-r" required>') + '<div class="muted">รายการยังอยู่พร้อมสถานะ “ยกเลิก”</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ไม่ยกเลิก</button><button class="btn danger grow">ยกเลิกรายการ</button></div></form>', { center: true, sticky: true });
-        $('form', m).addEventListener('submit', async ev => { ev.preventDefault(); const r = $('#v-r', m).value.trim(); if (!r) return; try { await B.direct('update', 'projpay/' + pid + '/' + pk + '/' + vd.dataset.void, { st: 'void', voidWhy: r, vby: A.myName(), vat: Date.now() }); A.log('proj.void', pk, p.name + ' ' + r); m.remove(); w.remove(); toast('ยกเลิกแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } }); }
+        $('form', m).addEventListener('submit', async ev => { ev.preventDefault(); const r = $('#v-r', m).value.trim(); if (!r) return; try { await B.direct('update', CP() + 'projpay/' + pid + '/' + pk + '/' + vd.dataset.void, { st: 'void', voidWhy: r, vby: A.myName(), vat: Date.now() }); A.log('proj.void', pk, p.name + ' ' + r); m.remove(); w.remove(); toast('ยกเลิกแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } }); }
     });
-    const tf = $('#pj-t', w); if (tf) tf.addEventListener('submit', e => { e.preventDefault(); const ex = $('#t-ex', w).value, pl = $('#t-pl', w).value, no = $('#t-no', w).value.trim(), base = 'projp/' + pid + '/' + pk;
+    const tf = $('#pj-t', w); if (tf) tf.addEventListener('submit', e => { e.preventDefault(); const ex = $('#t-ex', w).value, pl = $('#t-pl', w).value, no = $('#t-no', w).value.trim(), base = CP() + 'projp/' + pid + '/' + pk;
       A.W(ex ? B.set(base + '/ex', { why: ex, note: no, by: A.myName(), at: Date.now() }) : B.remove(base + '/ex')); A.W(pl ? B.set(base + '/plan', { kind: pl, note: no, at: Date.now() }) : B.remove(base + '/plan'));
       A.log('proj.ex', pk, p.name + ' ' + (ex || '-') + '/' + (pl || '-')); w.remove(); toast('บันทึกแล้ว'); });
   }
@@ -330,7 +332,7 @@
     w.addEventListener('input', upd); upd();
     $('form', w).addEventListener('submit', async e => { e.preventDefault(); const v = read(); v.at = Date.now(); v.by = A.myName();
       if (mine && !await M.confirmBox('ยืนยันตัวเลือก', 'ยืนยันแล้วจะแก้ไขเองไม่ได้ ต้องให้ครูแก้ให้', 'ยืนยัน')) return;
-      try { await B.direct('set', 'projp/' + pid + '/' + pk + '/self', v); A.log('proj.self', pk, p.name); w.remove(); toast('บันทึกแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } });
+      try { await B.direct('set', CP() + 'projp/' + pid + '/' + pk + '/self', v); A.log('proj.self', pk, p.name); w.remove(); toast('บันทึกแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } });
   }
 
   /* ---------- บันทึกขนาดตัว ---------- */
@@ -343,7 +345,7 @@
     const keyOf = re => (mf.find(f => re.test(f.label)) || {}).id;
     const upd = () => { const m = read(), sg = suggest(p, { chest: m[keyOf(/อก/)], len: m[keyOf(/ยาว/)] }), el = $('#m-sg', w); if (el) el.innerHTML = sg ? 'แนะนำ: <b>' + esc(sg) + '</b> <button type="button" class="btn ghost sm" id="m-use">ใช้ไซซ์นี้</button>' : ''; const u = $('#m-use', w); if (u) u.onclick = () => { $('#m-s', w).value = sg; }; };
     w.addEventListener('input', upd); upd();
-    $('form', w).addEventListener('submit', async e => { e.preventDefault(); const m = read(), z = $('#m-s', w) ? $('#m-s', w).value : '', base = 'projp/' + pid + '/' + pk;
+    $('form', w).addEventListener('submit', async e => { e.preventDefault(); const m = read(), z = $('#m-s', w) ? $('#m-s', w).value : '', base = CP() + 'projp/' + pid + '/' + pk;
       try { await B.direct('set', base + '/m', Object.keys(m).length ? m : null); await B.direct('set', base + '/size', z || null); A.log('proj.form', pk, p.name); w.remove(); toast('บันทึกแล้ว'); } catch (er) { toast('ไม่สำเร็จ: ' + A.errTH(er), 4000); } });
   }
 
@@ -363,8 +365,8 @@
       const btn = $('button.gold', w); btn.disabled = true;
       try {
         const tid = B.uid(), rec = { amt: a, at: Date.now(), by: A.by(), st: stf ? 'ok' : 'pending', method: stf ? $('#py-m', w).value : 'โอนเงิน' }, n = $('#py-n', w).value.trim(); if (n) rec.note = n; if (stf) { rec.vby = A.myName(); rec.vat = Date.now(); }
-        if (f) { const img = await M.fileToImage(f, 1000, 0.6); await B.direct('set', 'projslip/' + pid + '/' + pk + '/' + tid, img); rec.slip = true; }
-        await B.direct('set', 'projpay/' + pid + '/' + pk + '/' + tid, rec); A.log('proj.pay', pk, p.name + ' ' + money(a));
+        if (f) { const img = await M.fileToImage(f, 1000, 0.6); await B.direct('set', CP() + 'projslip/' + pid + '/' + pk + '/' + tid, img); rec.slip = true; }
+        await B.direct('set', CP() + 'projpay/' + pid + '/' + pk + '/' + tid, rec); A.log('proj.pay', pk, p.name + ' ' + money(a));
         if (!stf && window.PUSH) PUSH.notify('tx', { ref: p.name + ' ' + money(a) });
         w.remove(); toast(stf ? 'บันทึกการรับเงินแล้ว' : 'ส่งสลิปแล้ว รอตรวจ');
       } catch (x) { btn.disabled = false; er('บันทึกไม่สำเร็จ: ' + A.errTH(x)); }
