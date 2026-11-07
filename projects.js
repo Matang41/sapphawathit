@@ -365,9 +365,9 @@
       const btn = $('button.gold', w); btn.disabled = true;
       try {
         const tid = B.uid(), rec = { amt: a, at: Date.now(), by: A.by(), st: stf ? 'ok' : 'pending', method: stf ? $('#py-m', w).value : 'โอนเงิน' }, n = $('#py-n', w).value.trim(); if (n) rec.note = n; if (stf) { rec.vby = A.myName(); rec.vat = Date.now(); }
-        if (f) { const img = await M.fileToImage(f, 1000, 0.6); await B.direct('set', CP() + 'projslip/' + pid + '/' + pk + '/' + tid, img); rec.slip = true; }
+        if (f) { const img = await M.fileToImage(f, 900, 0.55); await B.direct('set', CP() + 'projslip/' + pid + '/' + pk + '/' + tid, img); rec.slip = true; }
         await B.direct('set', CP() + 'projpay/' + pid + '/' + pk + '/' + tid, rec); A.log('proj.pay', pk, p.name + ' ' + money(a));
-        if (!stf && window.PUSH) PUSH.notify('tx', { ref: p.name + ' ' + money(a) });
+        if (!stf && window.PUSH) PUSH.notify('tx', { ref: 'สลิป ' + money(a) + ' บ. · ' + p.name });
         w.remove(); toast(stf ? 'บันทึกการรับเงินแล้ว' : 'ส่งสลิปแล้ว รอตรวจ');
       } catch (x) { btn.disabled = false; er('บันทึกไม่สำเร็จ: ' + A.errTH(x)); }
     });
