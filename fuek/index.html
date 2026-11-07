@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ฝึกเครื่องจังหวะตามเพลง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500&family=Sarabun:wght@400;600&display=swap">
+<style>
+/* ============================================================
+   ฝึกเครื่องจังหวะตามเพลง (ต้นแบบ) — ป้อนโน้ตเพลงไทย แล้วฝึกตีเครื่องจังหวะให้เข้ากับทำนองของเพลงนั้น
+   แยกจากแอปชมรม: เปิดได้โดยไม่ต้องล็อกอิน ไม่เขียนข้อมูลลงฐานข้อมูลของชมรม ผลฝึกเก็บในเครื่อง
+   ใช้ชุดเสียงและข้อมูลกลางของชมรม: games/thaiinst.js (TI.timeline วางฉิ่ง–ฉับและหน้าทับตามห้องของเพลง)
+     · natab.js หน้าทับกลองแขก (ที่มา: เอกสารหน้าทับดนตรีไทย อ.สุธินันท์ โสภาภาค ม.ราชภัฏนครปฐม)
+     · songbook.js เพลงไทยเดิมติดตัว 4 เพลง · เพลงที่บันทึกใน “บันทึกโน้ตเพลงไทย” บนเครื่องเดียวกันขึ้นให้เลือกอัตโนมัติ
+   สถานะ: ต้นแบบ — รูปแบบเครื่องจังหวะทุกแบบ ชื่อโครงการ และผู้ออกแบบการเรียนรู้ รอข้อมูลจากผู้รับผิดชอบโครงการ (แก้ที่ PROJECT)
+   พัฒนาระบบโดย นายนนทพัทธ์ วงค์มูล 2026
+   ============================================================ */
+:root{
+  /* แผ่นโน้ตไทยบนโต๊ะไม้: ห้องเพลงเป็นช่องตาราง สีครามของหมึก กับสีทองเหลืองของฉิ่ง */
+  --bg:#f6f3ec;--card:#fffdf8;--ink:#2a2420;--mute:#776d63;--line:#e3dccf;
+  --acc:#1f4e79;--brass:#b8862b;--ok:#2f8a4e;--warn:#c08a12;--bad:#c0392b;--now:#ffe7a8;
+  --fd:'Mitr',system-ui,sans-serif;--fb:'Sarabun',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#181512;--card:#221e1a;--ink:#efe8dc;--mute:#a59a8c;--line:#3a332c;--acc:#8fb8e0;--brass:#e0b45a;--ok:#5cc07c;--warn:#e5b84a;--bad:#ef6f61;--now:#4a3d1c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#181512;--card:#221e1a;--ink:#efe8dc;--mute:#a59a8c;--line:#3a332c;--acc:#8fb8e0;--brass:#e0b45a;--ok:#5cc07c;--warn:#e5b84a;--bad:#ef6f61;--now:#4a3d1c;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--fb);padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+h1,h2,h3{font-family:var(--fd);font-weight:500;margin:0;text-wrap:balance}
+button,select,input{font:inherit;color:inherit}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+header h1{font-size:22px;flex:1;min-width:220px}
+header h1 small{display:block;font:13px var(--fb);color:var(--mute)}
+nav{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px}
+nav button{border:0;background:none;padding:6px 12px;border-radius:8px;cursor:pointer}
+nav button[aria-current="true"]{background:var(--acc);color:var(--card)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 16px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--mute);min-width:0}
+label.f>span{letter-spacing:.02em}
+select,input[type=text],input[type=number]{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:var(--ink);min-width:0;width:100%}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--card)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+.btn{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 14px;cursor:pointer}
+.btn.p{background:var(--brass);border-color:var(--brass);color:#1d1408;font-family:var(--fd)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.note{font-size:13px;color:var(--mute)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--warn);color:var(--warn)}
+.tag.ok{border-color:var(--ok);color:var(--ok)}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+/* ---------- แผ่นโน้ต: 1 บรรทัด = 8 ห้อง (วรรคหน้า 4 · วรรคหลัง 4) ห้องละ 4 ตัว ---------- */
+.sheet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bar{border:1px solid var(--line);border-radius:6px;display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden;background:var(--card)}
+.bar .s{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-right:1px dashed var(--line);min-width:0;transition:background .08s}
+.bar .s:last-child{border-right:0}
+.s .m{font-family:var(--fd);font-size:17px;line-height:1.2;min-height:22px}
+.s .p{font-size:11.5px;line-height:1.2;min-height:28px;color:var(--acc);text-align:center;font-weight:600;white-space:pre-line}
+.s.now{background:var(--now)}
+.s.hit2 .p{color:var(--ok)}.s.hit1 .p{color:var(--warn)}.s.miss .p{color:var(--bad);text-decoration:line-through}
+.half{grid-column:1/-1;font-size:12px;color:var(--mute);margin-top:2px}
+#play{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;gap:10px;z-index:5;overflow:auto;
+  padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+#play .top{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+#play .top h2{font-size:18px;flex:1;min-width:180px}
+.stat{display:flex;gap:14px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.stat b{font-family:var(--fd);font-size:20px;font-weight:500}
+.stat div{display:flex;flex-direction:column;font-size:12px;color:var(--mute)}
+.stat div b{color:var(--ink)}
+#cnt{font-family:var(--fd);font-size:15px;color:var(--brass);min-height:22px}
+.pads{display:grid;gap:8px;margin-top:auto}
+.pads button{border:0;border-radius:14px;min-height:min(26vh,150px);font-family:var(--fd);font-size:20px;color:#1d1408;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.pads button small{display:block;font:12px var(--fb);opacity:.7}
+.pads button.dn{filter:brightness(1.25);transform:scale(.98)}
+.meter{height:8px;border-radius:9px;background:var(--line);overflow:hidden;flex:1;min-width:120px}
+.meter i{display:block;height:100%;width:0;background:var(--ok)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap}
+.tw{overflow-x:auto}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0}
+dt{color:var(--mute)}dd{margin:0;min-width:0}
+@media (max-width:560px){.sheet{grid-template-columns:repeat(2,minmax(0,1fr))}.s .m{font-size:15px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="appName">ฝึกเครื่องจังหวะตามเพลง<small id="appSub">ต้นแบบ · ฝึกตีฉิ่งและกลองแขกให้เข้ากับทำนองเพลงที่บันทึกไว้</small></h1>
+    <nav aria-label="หน้า"><button data-v="fuek" aria-current="true">ฝึก</button><button data-v="phon">ผลการฝึก</button><button data-v="about">เกี่ยวกับ</button></nav>
+  </header>
+
+  <!-- ===== ฝึก ===== -->
+  <section id="v-fuek" class="wrap" style="gap:12px">
+    <div class="card grid">
+      <label class="f"><span>เพลง</span><select id="song"></select></label>
+      <label class="f"><span>ชื่อผู้ฝึก</span><input id="who" type="text" maxlength="40" placeholder="เช่น ด.ญ.ใจดี ม.2/1"></label>
+      <div class="f"><span class="note">เครื่องที่ฝึก</span><div class="seg" id="inst">
+        <button data-k="ching" aria-pressed="true">ฉิ่ง</button><button data-k="drum">กลองแขก</button><button data-k="chab" disabled title="รอรูปแบบการตีจากผู้รับผิดชอบโครงการ">ฉาบ (รอข้อมูล)</button></div></div>
+      <label class="f" id="natabF"><span>หน้าทับกลองแขก</span><select id="natab"></select></label>
+      <div class="f"><span class="note">ขั้นการฝึก</span><div class="seg" id="mode">
+        <button data-k="listen">1 ฟัง</button><button data-k="practice" aria-pressed="true">2 ฝึก</button><button data-k="test">3 ทดสอบ</button></div></div>
+      <label class="f"><span>ความเร็ว <b id="spV">70%</b> ของเพลง</span><input id="sp" type="range" min="40" max="120" step="5" value="70"></label>
+      <label class="f"><span>ช่วงที่ฝึก</span><select id="range"></select></label>
+      <div class="f"><span class="note">วิธีรับการตี</span><div class="seg" id="inp">
+        <button data-k="tap" aria-pressed="true">แตะจอ / แป้นพิมพ์</button><button data-k="mic">ตีเครื่องจริง (ไมโครโฟน)</button></div></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row" style="justify-content:space-between"><h3 id="sTitle" style="font-size:17px"></h3><span id="sInfo" class="note"></span></div>
+      <div id="preview"></div>
+      <div class="row"><button class="btn p" id="go">เริ่ม</button><label class="row note"><input type="checkbox" id="loop"> วนซ้ำช่วงที่เลือก</label><label class="row note"><input type="checkbox" id="guide" checked> เสียงนำของเครื่องที่ฝึก (ขั้นฝึก)</label>
+        <button class="btn" id="cal" style="margin-left:auto">ปรับเวลาตอบสนอง</button></div>
+      <div class="note" id="warn"></div>
+    </div>
+  </section>
+
+  <!-- ===== ผลการฝึก ===== -->
+  <section id="v-phon" hidden class="card" style="display:flex;flex-direction:column;gap:10px">
+    <div class="row" style="justify-content:space-between"><h2 style="font-size:18px">ผลการฝึกในเครื่องนี้</h2><div class="row"><button class="btn" id="csv">คัดลอกเป็นตาราง (CSV)</button><button class="btn" id="clr">ล้างผล</button></div></div>
+    <div class="note">ความแม่น = ตีตรงช่องที่ต้องตี (ดีมาก ±50 มิลลิวินาที เต็ม · ดี ±100 ได้ 70% · พอใช้ ±160 ได้ 40%) · ค่าคลาดเคลื่อนติดลบ = ตีก่อนจังหวะ บวก = ตีหลังจังหวะ</div>
+    <div class="tw"><table><thead><tr><th>วันเวลา</th><th>ผู้ฝึก</th><th>เพลง</th><th>เครื่อง</th><th>ขั้น</th><th>ความเร็ว</th><th>รับการตี</th><th>ความแม่น</th><th>คลาดเคลื่อนเฉลี่ย</th><th>ตีพลาด</th></tr></thead><tbody id="hist"></tbody></table></div>
+    <textarea id="csvOut" hidden readonly style="width:100%;min-height:120px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px"></textarea>
+  </section>
+
+  <!-- ===== เกี่ยวกับ ===== -->
+  <section id="v-about" hidden class="card" style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="font-size:18px">เกี่ยวกับโครงการ</h2>
+    <dl id="proj"></dl>
+    <h3 style="font-size:16px">ที่มาของข้อมูล</h3>
+    <ul style="margin:0;padding-left:20px" class="note" id="srcs"></ul>
+    <h3 style="font-size:16px">สิ่งที่รอข้อมูลก่อนใช้จริง</h3>
+    <ul style="margin:0;padding-left:20px" id="todo"></ul>
+  </section>
+</div>
+
+<!-- ===== หน้าฝึก ===== -->
+<div id="play" hidden>
+  <div class="top"><h2 id="pT"></h2><span id="cnt"></span><button class="btn" id="stop">หยุด</button></div>
+  <div class="stat"><div>ความแม่น<b id="acc">–</b></div><div>คลาดเคลื่อนเฉลี่ย<b id="err">–</b></div><div>ดีมาก / ดี / พอใช้ / พลาด<b id="cnts">0 / 0 / 0 / 0</b></div><div id="micBox" hidden style="flex-direction:row;align-items:center;gap:8px;min-width:200px">ไมค์<span class="meter"><i id="lvl"></i></span></div></div>
+  <div id="sheetP"></div>
+  <div class="pads" id="pads"></div>
+</div>
+
+<script src="../games/thaisound.js"></script>
+<script src="../games/thaisound2.js"></script>
+<script src="../games/thaisound4.js"></script>
+<script src="../games/natab.js"></script>
+<script src="../games/songbook.js"></script>
+<script src="../games/thaiinst.js"></script>
+<script>
+'use strict';
+/* ---------- ข้อมูลโครงการ: แก้ตรงนี้เมื่อได้ข้อมูลจากผู้รับผิดชอบโครงการ ---------- */
+const PROJECT={
+  name:'ฝึกเครื่องจังหวะตามเพลง',
+  sub:'ต้นแบบ · ฝึกตีฉิ่งและกลองแขกให้เข้ากับทำนองเพลงที่บันทึกไว้',
+  owner:'(รอระบุ) ครูผู้ออกแบบการจัดการเรียนรู้และผู้รับผิดชอบโครงการ',
+  dev:'นายนนทพัทธ์ วงค์มูล (พัฒนาระบบ)',
+  target:'(รอระบุ) ระดับชั้นและกลุ่มนักเรียนที่ใช้',
+  status:'ต้นแบบ — ยังไม่ผ่านการตรวจรูปแบบเครื่องจังหวะโดยผู้เชี่ยวชาญ',
+  reviewer:'(รอระบุ) ผู้ตรวจความถูกต้องของรูปแบบฉิ่ง ฉาบ และหน้าทับ'
+};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const ST=Object.assign({song:'',inst:'ching',natab:'',mode:'practice',sp:70,range:'all',inp:'tap',loop:false,guide:true,who:'',lat:{tap:0,mic:0},sens:5},LS.get('jw_state',{}));
+const save=()=>LS.set('jw_state',ST);
+
+/* ---------- เครื่องที่ฝึก: ช่องที่ต้องตีมาจาก TI.timeline ----------
+   ฉิ่ง: s.ch 1 = ฉิ่ง 2 = ฉับ (ตกตัวท้ายตามอัตราจังหวะ ตามหลักใน natab.js)
+   กลองแขก: s.dl = รายการเสียง 0 ติง 1 โจ๊ะ 2 ทั่ม 3 จ๊ะ ตามหน้าทับที่เลือก */
+const INST={
+  ching:{n:'ฉิ่ง',lanes:['ฉิ่ง','ฉับ'],col:['#e0b45a','#c9a27a'],keys:['f','j'],ev:s=>s.ch?[s.ch-1]:[],snd:(l,t,v)=>TI.perc('ching',l+1,t,v)},
+  drum:{n:'กลองแขก',lanes:['ติง','โจ๊ะ','ทั่ม','จ๊ะ'],col:['#e8a26a','#e8c06a','#9cc2e6','#b7d98a'],keys:['d','f','j','k'],ev:s=>s.dl||[],snd:(l,t,v)=>TI.perc('drum',l,t,v)}
+};
+
+/* ---------- เพลง ---------- */
+let SONGS=[];
+function loadSongs(){SONGS=[];
+  try{TI.songs().forEach(x=>SONGS.push({key:x.key,title:x.title,src:x.src,song:x.song}))}catch(e){}
+  (window.SB&&SB.builtin||[]).forEach(s=>SONGS.push({key:s.id,title:s.title,src:'เพลงติดตัว (ร่าง รอตรวจ)',song:SB.toLibSong(s)}));
+  $('#song').innerHTML=SONGS.map(s=>'<option value="'+esc(s.key)+'">'+esc(s.title)+' · '+esc(s.src)+'</option>').join('');
+  if(!SONGS.some(s=>s.key===ST.song))ST.song=SONGS[0]?SONGS[0].key:'';$('#song').value=ST.song}
+function natabList(){const L=(window.NATAB&&NATAB.LIST)||[];return L.filter(p=>p.sec&&p.sec.length===1)}
+function curSong(){return SONGS.find(s=>s.key===ST.song)}
+let TL=null;
+function build(){const S=curSong();if(!S){TL=null;return}
+  const song=Object.assign({},S.song);if(ST.inst==='drum'&&ST.natab)song.natab=ST.natab;
+  TL=TI.timeline(song);
+  /* บรรทัดละ 8 ห้อง = 32 ช่อง */
+  TL.lines=[];for(let i=0;i<TL.slots.length;i+=32)TL.lines.push([i,Math.min(TL.slots.length,i+32)]);
+  const r=$('#range'),cur=ST.range;r.innerHTML='<option value="all">ทั้งเพลง ('+TL.lines.length+' บรรทัด)</option>'+TL.lines.map((l,i)=>'<option value="'+i+'">บรรทัดที่ '+(i+1)+(TL.slots[l[0]].line?' · '+esc(TL.slots[l[0]].line):'')+'</option>').join('');
+  r.value=[...r.options].some(o=>o.value===cur)?cur:'all';ST.range=r.value;
+  const nt=song.natab&&NATAB.get(song.natab);
+  $('#sTitle').textContent=TL.title;
+  $('#sInfo').innerHTML=TL.slots.length/4+' ห้อง · อัตรา'+NATAB.RATE[TL.rate].n+' · '+TL.bpm+' ครั้ง/นาที'+(nt?' · หน้าทับ'+esc(nt.name.replace(/^หน้าทับ/,'')):'')+' <span class="tag">รูปแบบรอตรวจ</span>';
+  renderSheet($('#preview'),rangeOf()[0],true)}
+function rangeOf(){if(!TL)return[0,0];if(ST.range==='all')return[0,TL.slots.length];return TL.lines[+ST.range]||[0,TL.slots.length]}
+/* แผ่นโน้ตหนึ่งบรรทัดเริ่มที่ช่อง from */
+function renderSheet(el,from,preview){if(!TL){el.innerHTML='<p class="note">ยังไม่มีเพลง เพิ่มเพลงได้ใน “บันทึกโน้ตเพลงไทย” ของชมรมบนเครื่องนี้</p>';return}
+  const I=INST[ST.inst],L=Math.floor(from/32)*32;let h='<div class="sheet">';
+  for(let b=0;b<8;b++){if(b===0||b===4)h+='<div class="half">'+(b===0?'วรรคหน้า':'วรรคหลัง')+(b===0&&!preview?' · บรรทัดที่ '+(L/32+1)+' / '+TL.lines.length:'')+'</div>';
+    h+='<div class="bar">';for(let s=0;s<4;s++){const i=L+b*4+s,x=TL.slots[i];
+      if(!x){h+='<div class="s"><span class="m"></span><span class="p"></span></div>';continue}
+      const m=x.mel!=null?TI.noteName(x.mel):'-',ev=I.ev(x).map(l=>I.lanes[l]).join('\n');
+      h+='<div class="s" data-i="'+i+'"><span class="m">'+esc(m)+'</span><span class="p">'+esc(ev)+'</span></div>'}
+    h+='</div>'}
+  el.innerHTML=h+'</div>'}
+
+/* ---------- เสียง ---------- */
+let AC=null,OUT=null;
+function audio(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C({latencyHint:'interactive'});OUT=AC.createGain();OUT.gain.value=.9;OUT.connect(AC.destination);TI.init(AC,OUT)}
+  if(AC.state==='suspended')AC.resume();return AC}
+const outLat=()=>(AC.outputLatency||0)+(AC.baseLatency||0);
+
+/* ---------- ไมโครโฟน: จับจุดเริ่มเสียงตีด้วย AudioWorklet (ละเอียดระดับตัวอย่างเสียง) ---------- */
+const MIC={on:false,node:null,stream:null,lvl:0};
+const WK=`class O extends AudioWorkletProcessor{constructor(){super();this.f=1e-4;this.last=-1;this.k=5;this.port.onmessage=e=>{this.k=e.data.k}}
+process(i){const x=i[0]&&i[0][0];if(!x)return true;let e=0;for(let n=0;n<x.length;n++)e+=x[n]*x[n];e/=x.length;
+const t=currentTime;if(e>this.f*(2+this.k*1.2)&&e>2e-5&&t-this.last>.09){this.last=t;this.port.postMessage({t,e})}
+this.f=this.f*.995+e*.005;if(Math.random()<.05)this.port.postMessage({lvl:Math.sqrt(e)});return true}}registerProcessor('onset',O)`;
+async function micStart(){if(MIC.on)return true;audio();
+  try{MIC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}
+  catch(e){$('#warn').textContent='เปิดไมโครโฟนไม่ได้ ตรวจว่าอนุญาตไมโครโฟนให้เว็บนี้แล้ว (ต้องเปิดผ่าน https)';return false}
+  if(!AC.audioWorklet){$('#warn').textContent='เบราว์เซอร์นี้ยังไม่รองรับการฟังเสียงตี ลองใช้ Chrome หรือ Safari รุ่นใหม่';return false}
+  await AC.audioWorklet.addModule(URL.createObjectURL(new Blob([WK],{type:'text/javascript'})));
+  const src=AC.createMediaStreamSource(MIC.stream),hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=1800;
+  MIC.node=new AudioWorkletNode(AC,'onset');src.connect(hp);hp.connect(MIC.node);
+  MIC.node.port.postMessage({k:ST.sens});
+  MIC.node.port.onmessage=e=>{const d=e.data;if(d.lvl!=null){MIC.lvl=d.lvl;return}onHit(-1,d.t)};
+  MIC.on=true;return true}
+function micStop(){if(!MIC.on)return;try{MIC.stream.getTracks().forEach(t=>t.stop());MIC.node.disconnect()}catch(e){}MIC.on=false}
+
+/* ---------- เล่น ---------- */
+let P=null;
+const WIN=[.05,.10,.16];
+async function start(){if(!TL)return;audio();ST.who=$('#who').value.trim();save();
+  if(ST.inp==='mic'&&ST.mode!=='listen'&&!(await micStart()))return;
+  await Promise.race([TI.whenReady(),new Promise(r=>setTimeout(r,5000))]);
+  const [a,b]=rangeOf(),dt=60/(TL.bpm*ST.sp/100),I=INST[ST.inst];
+  const t0=AC.currentTime+dt*4+.4;   /* นับเข้า 1 ห้อง */
+  const exp=[];for(let i=a;i<b;i++)I.ev(TL.slots[i]).forEach(l=>exp.push({i,l,j:0,d:null}));
+  P={a,b,dt,t0,I,exp,next:a,pass:0,run:true,hits:[0,0,0],miss:0,errs:[],mode:ST.mode,inp:ST.inp,timer:0};
+  $('#pT').textContent=TL.title+' · '+I.n+' · '+{listen:'ขั้นฟัง',practice:'ขั้นฝึก',test:'ขั้นทดสอบ'}[ST.mode]+' · '+ST.sp+'%';
+  $('#micBox').hidden=!(P.inp==='mic'&&P.mode!=='listen');
+  const pads=$('#pads');pads.innerHTML='';pads.style.gridTemplateColumns='repeat('+I.lanes.length+',1fr)';
+  if(P.mode!=='listen'&&P.inp==='tap')I.lanes.forEach((n,l)=>{const b=document.createElement('button');b.style.background=I.col[l];b.innerHTML=esc(n)+'<small>แป้น '+I.keys[l].toUpperCase()+'</small>';
+    b.addEventListener('pointerdown',e=>{e.preventDefault();tap(l)});pads.appendChild(b)});
+  if(P.inp==='mic'&&P.mode!=='listen')pads.innerHTML='<p class="note" style="text-align:center;grid-column:1/-1">ตี'+esc(I.n)+'จริงตามแผ่นโน้ต · ใส่หูฟังจะแม่นที่สุด (เสียงจากลำโพงไม่ไปรบกวนไมค์)</p>';
+  for(let k=0;k<4;k++)TI.perc('ching',k===3?2:1,AC.currentTime+.4+k*dt,.5);
+  $('#play').hidden=false;renderSheet($('#sheetP'),a);stats();
+  P.timer=setInterval(sched,25);requestAnimationFrame(frame)}
+const slotT=(i,pass)=>P.t0+((i-P.a)+pass*(P.b-P.a))*P.dt;
+function sched(){if(!P||!P.run)return;const ah=AC.currentTime+.15;
+  while(true){const pass=P.pass,i=P.next,t=slotT(i,pass);if(t>ah)break;const s=TL.slots[i];
+    if(s.mel!=null)TI.note('khong',s.mel,t,.8);
+    /* เครื่องอื่นในวงเล่นให้: ฉิ่งคุมจังหวะเสมอเมื่อฝึกกลองแขก */
+    if(ST.inst!=='ching'&&s.ch)TI.perc('ching',s.ch,t,.45);
+    const guide=P.mode==='listen'||(P.mode==='practice'&&ST.guide&&P.inp!=='mic');
+    if(guide)P.I.ev(s).forEach(l=>P.I.snd(l,t,P.mode==='listen'?.9:.4));
+    P.next++;if(P.next>=P.b){if(ST.loop&&P.mode!=='test'){P.next=P.a;P.pass++;P.exp.forEach(e=>{e.j=0;e.d=null})}else{P.next=1e9;break}}}}
+function now(){return AC.currentTime-outLat()-(ST.lat[P.inp]||0)/1000}
+function cur(){const t=now(),pass=Math.max(0,Math.floor((t-P.t0)/((P.b-P.a)*P.dt)));return {t,pass:ST.loop&&P.mode!=='test'?pass:0}}
+function tap(l){if(!P||!P.run)return;const b=$('#pads').children[l];if(b){b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),90)}
+  P.I.snd(l,AC.currentTime,.8);onHit(l,null)}
+function onHit(l,tAbs){if(!P||!P.run||P.mode==='listen')return;
+  const t=tAbs!=null?tAbs-(ST.lat.mic||0)/1000:now(),pass=cur().pass;
+  let best=null,bd=1;P.exp.forEach(e=>{if(e.j||(l>=0&&e.l!==l))return;const d=t-slotT(e.i,pass);if(Math.abs(d)<Math.abs(bd)){bd=d;best=e}});
+  if(!best||Math.abs(bd)>WIN[2])return;
+  const g=Math.abs(bd)<=WIN[0]?0:Math.abs(bd)<=WIN[1]?1:2;best.j=g+1;best.d=bd;P.hits[g]++;P.errs.push(bd*1000);mark(best);stats()}
+function mark(e){const el=$('#sheetP [data-i="'+e.i+'"]');if(!el)return;el.classList.remove('hit2','hit1','miss');
+  el.classList.add(e.j===-1?'miss':e.j===1?'hit2':'hit1')}
+function stats(){const tot=P.hits[0]+P.hits[1]+P.hits[2]+P.miss,acc=tot?(P.hits[0]+P.hits[1]*.7+P.hits[2]*.4)/tot:0,
+  me=P.errs.length?P.errs.reduce((a,b)=>a+b,0)/P.errs.length:null;
+  $('#acc').textContent=tot?Math.round(acc*100)+'%':'–';
+  $('#err').textContent=me==null?'–':(me>0?'+':'')+Math.round(me)+' ms '+(Math.abs(me)<15?'(ตรง)':me<0?'(ตีเร็วไป)':'(ตีช้าไป)');
+  $('#cnts').textContent=P.hits.join(' / ')+' / '+P.miss;return {acc,me,tot}}
+let lastLine=-1;
+function frame(){if(!P||!P.run)return;const {t,pass}=cur(),k=Math.floor((t-P.t0)/P.dt),i=P.a+((k%(P.b-P.a))+(P.b-P.a))%(P.b-P.a);
+  $('#cnt').textContent=t<P.t0?'นับเข้า… '+Math.ceil((P.t0-t)/P.dt):'';
+  /* ช่องที่เลยหน้าต่างไปแล้ว = พลาด */
+  if(P.mode!=='listen')P.exp.forEach(e=>{if(!e.j&&t-slotT(e.i,pass)>WIN[2]&&slotT(e.i,pass)>=P.t0){e.j=-1;P.miss++;mark(e);stats()}});
+  if(t>=P.t0){const line=Math.floor(i/32);if(line!==lastLine){lastLine=line;renderSheet($('#sheetP'),i);P.exp.forEach(e=>{if(e.j)mark(e)})}
+    $$('#sheetP .s.now').forEach(x=>x.classList.remove('now'));const el=$('#sheetP [data-i="'+i+'"]');if(el)el.classList.add('now')}
+  if(MIC.on)$('#lvl').style.width=Math.min(100,MIC.lvl*400)+'%';
+  if(!ST.loop||P.mode==='test'){if(t>slotT(P.b-1,0)+P.dt*2){finish();return}}
+  requestAnimationFrame(frame)}
+function finish(){if(!P)return;P.run=false;clearInterval(P.timer);const r=stats();lastLine=-1;
+  if(P.mode!=='listen'&&r.tot){const h=LS.get('jw_hist',[]);h.unshift({at:Date.now(),who:ST.who||'(ไม่ระบุ)',song:TL.title,inst:P.I.n,mode:{practice:'ฝึก',test:'ทดสอบ'}[P.mode],sp:ST.sp,inp:P.inp==='mic'?'ไมค์':'แตะจอ',acc:Math.round(r.acc*100),me:r.me==null?null:Math.round(r.me),miss:P.miss,range:ST.range==='all'?'ทั้งเพลง':'บรรทัด '+(+ST.range+1)});LS.set('jw_hist',h.slice(0,500))}
+  $('#cnt').textContent=P.mode==='listen'?'จบตัวอย่าง':'จบแล้ว · ความแม่น '+Math.round(r.acc*100)+'% บันทึกในผลการฝึกแล้ว';$('#stop').textContent='กลับ';renderHist()}
+$('#stop').onclick=()=>{if(P&&P.run){finish();return}P=null;$('#play').hidden=true;$('#stop').textContent='หยุด';micStop()};
+addEventListener('keydown',e=>{if(!P||!P.run||P.inp!=='tap'||e.repeat||e.target.tagName==='INPUT')return;const l=P.I.keys.indexOf(e.key.toLowerCase());if(l>=0){e.preventDefault();tap(l)}});
+
+/* ---------- ปรับเวลาตอบสนอง: ฟังเสียงฉิ่ง 12 ครั้งแล้วตีตาม ---------- */
+$('#cal').onclick=async()=>{audio();const mode=ST.inp;if(mode==='mic'&&!(await micStart()))return;
+  const dt=.75,t0=AC.currentTime+.8,errs=[];$('#warn').textContent=(mode==='mic'?'ตีฉิ่งจริง':'แตะปุ่มเริ่มหรือกดแป้น F')+'ให้พร้อมเสียงฉิ่ง 12 ครั้ง…';
+  for(let k=0;k<12;k++)TI.perc('ching',1,t0+k*dt,.8);
+  const take=t=>{const k=Math.round((t-t0)/dt);if(k>=2&&k<12)errs.push(t-(t0+k*dt))};
+  const kh=e=>{if(e.key.toLowerCase()==='f')take(AC.currentTime-outLat())},ph=()=>take(AC.currentTime-outLat());
+  let old=null;if(mode==='mic'){old=MIC.node.port.onmessage;MIC.node.port.onmessage=e=>{if(e.data.t!=null)take(e.data.t)}}else{addEventListener('keydown',kh);$('#go').addEventListener('pointerdown',ph)}
+  setTimeout(()=>{if(mode==='mic')MIC.node.port.onmessage=old;else{removeEventListener('keydown',kh);$('#go').removeEventListener('pointerdown',ph)}
+    if(errs.length<5){$('#warn').textContent='จับการตีได้น้อยไป ('+errs.length+' ครั้ง) ลองใหม่อีกครั้ง';return}
+    errs.sort((a,b)=>a-b);const ms=Math.round(Math.max(-50,Math.min(400,errs[errs.length>>1]*1000)));ST.lat[mode]=ms;save();
+    $('#warn').textContent='ตั้งเวลาตอบสนอง'+(mode==='mic'?'ของไมโครโฟน':'ของการแตะจอ')+'เป็น '+ms+' มิลลิวินาทีแล้ว'},dt*12*1000+1200)};
+
+/* ---------- ผลการฝึก ---------- */
+function renderHist(){const h=LS.get('jw_hist',[]),d=x=>new Date(x).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'});
+  $('#hist').innerHTML=h.length?h.map(r=>'<tr><td>'+d(r.at)+'</td><td>'+esc(r.who)+'</td><td>'+esc(r.song)+' <span class="note">'+esc(r.range)+'</span></td><td>'+esc(r.inst)+'</td><td>'+esc(r.mode)+'</td><td>'+r.sp+'%</td><td>'+esc(r.inp)+'</td><td><b>'+r.acc+'%</b></td><td>'+(r.me==null?'–':(r.me>0?'+':'')+r.me+' ms')+'</td><td>'+r.miss+'</td></tr>').join(''):'<tr><td colspan="10" class="note">ยังไม่มีผล เริ่มฝึกที่หน้า “ฝึก” แล้วผลจะขึ้นที่นี่</td></tr>'}
+$('#csv').onclick=()=>{const h=LS.get('jw_hist',[]),q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const t=['วันเวลา,ผู้ฝึก,เพลง,ช่วง,เครื่อง,ขั้น,ความเร็ว%,รับการตี,ความแม่น%,คลาดเคลื่อนเฉลี่ยms,ตีพลาด'].concat(h.map(r=>[new Date(r.at).toISOString(),r.who,r.song,r.range,r.inst,r.mode,r.sp,r.inp,r.acc,r.me,r.miss].map(q).join(','))).join('\n');
+  const o=$('#csvOut');o.hidden=false;o.value=t;o.select();try{navigator.clipboard.writeText(t).then(()=>$('#csv').textContent='คัดลอกแล้ว',()=>{})}catch(e){}};
+$('#clr').onclick=e=>{const b=e.target;if(!b.dataset.c){b.dataset.c=1;b.textContent='แตะอีกครั้งเพื่อยืนยัน';setTimeout(()=>{delete b.dataset.c;b.textContent='ล้างผล'},2500);return}LS.set('jw_hist',[]);delete b.dataset.c;b.textContent='ล้างผล';renderHist()};
+
+/* ---------- เกี่ยวกับ ---------- */
+function renderAbout(){$('#appName').firstChild.textContent=PROJECT.name;$('#appSub').textContent=PROJECT.sub;document.title=PROJECT.name;
+  $('#proj').innerHTML=[['โครงการ',PROJECT.name],['ผู้รับผิดชอบโครงการ',PROJECT.owner],['กลุ่มเป้าหมาย',PROJECT.target],['พัฒนาระบบ',PROJECT.dev],['ผู้ตรวจรูปแบบ',PROJECT.reviewer],['สถานะ',PROJECT.status]].map(([a,b])=>'<dt>'+esc(a)+'</dt><dd>'+esc(b)+'</dd>').join('');
+  $('#srcs').innerHTML=['หน้าทับกลองแขกและตำแหน่งฉิ่ง–ฉับตามอัตราจังหวะ: เอกสารประกอบรายวิชาหน้าทับดนตรีไทย อ.สุธินันท์ โสภาภาค มหาวิทยาลัยราชภัฏนครปฐม (ผ่านคลัง natab.js ของชมรม)',
+    'หลักการแบ่งห้องและบรรทัด: 1 ห้อง = 4 ตัว · 1 บรรทัด = 8 ห้อง (วรรคหน้า 4 · วรรคหลัง 4)',
+    'เพลงติดตัว 4 เพลง: ทำนองเพลงไทยเดิมถอดจากโน้ตที่เผยแพร่ (ลาวดำเนินทราย ลาวจ้อย ทะเลบ้า แขกมอญบางขุนพรหม) เป็นฉบับร่าง',
+    'เสียงฉิ่ง–ฉับ อัดจริงในห้องดนตรีไทยของชมรมสรรพวาทิต · เสียงกลองแขกเป็นเสียงสังเคราะห์'].map(s=>'<li>'+esc(s)+'</li>').join('');
+  $('#todo').innerHTML=['ชื่อโครงการ ผู้รับผิดชอบ และกลุ่มเป้าหมาย','รายชื่อเพลงที่ใช้สอนจริง พร้อมอัตราจังหวะและหน้าทับประจำเพลง','รูปแบบฉิ่งแต่ละอัตราจังหวะที่ใช้สอน (ยืนยันกับที่ระบบวางให้)','รูปแบบการตีฉาบ (ยังไม่มีในระบบ)','เกณฑ์ให้คะแนนและเกณฑ์ผ่านของแต่ละขั้น','ผู้เชี่ยวชาญที่ตรวจความถูกต้อง'].map(s=>'<li>'+esc(s)+'</li>').join('')}
+
+/* ---------- ตั้งค่าหน้าฝึก ---------- */
+function segs(id,key,after){$$('#'+id+' button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.k===ST[key]));b.onclick=()=>{ST[key]=b.dataset.k;save();segs(id,key,after);after&&after()}})}
+function syncUI(){$('#natabF').hidden=ST.inst!=='drum';$('#spV').textContent=ST.sp+'%';
+  $('#warn').textContent=ST.inp==='mic'?'โหมดไมโครโฟน: ตอนนี้ระบบจับ “เวลา” ของการตีได้ แต่ยังไม่แยกว่าเป็นเสียงฉิ่งหรือฉับ / ติงหรือทั่ม (ขั้นต่อไป) · กด “ปรับเวลาตอบสนอง” ก่อนใช้ครั้งแรก':''}
+function init(){loadSongs();
+  const nl=natabList();$('#natab').innerHTML='<option value="">ตามที่บันทึกไว้กับเพลง</option>'+nl.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join('');$('#natab').value=ST.natab;
+  segs('inst','inst',()=>{build();syncUI()});segs('mode','mode');segs('inp','inp',syncUI);
+  $('#song').onchange=e=>{ST.song=e.target.value;ST.range='all';save();build()};
+  $('#natab').onchange=e=>{ST.natab=e.target.value;save();build()};
+  $('#range').onchange=e=>{ST.range=e.target.value;save();renderSheet($('#preview'),rangeOf()[0],true)};
+  $('#sp').value=ST.sp;$('#sp').oninput=e=>{ST.sp=+e.target.value;save();syncUI()};
+  $('#loop').checked=ST.loop;$('#loop').onchange=e=>{ST.loop=e.target.checked;save()};
+  $('#guide').checked=ST.guide;$('#guide').onchange=e=>{ST.guide=e.target.checked;save()};
+  $('#who').value=ST.who||'';$('#go').onclick=start;
+  $$('nav button').forEach(b=>b.onclick=()=>{$$('nav button').forEach(x=>x.setAttribute('aria-current',String(x===b)));['fuek','phon','about'].forEach(v=>$('#v-'+v).hidden=v!==b.dataset.v)});
+  build();syncUI();renderHist();renderAbout()}
+init();
+window.__JW={get P(){return P},get TL(){return TL},onHit,tap,ST,get AC(){return AC},finish};
+</script>
+</body>
+</html>
