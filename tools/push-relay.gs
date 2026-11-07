@@ -102,6 +102,7 @@ function handle_(cx, id, it) {
     let title, body, url;
     if (k === 'leave') { title = 'ใบลาใหม่'; body = who + ' ส่งใบลา รอครูรับทราบ'; url = '#/practice'; }
     else if (k === 'griev') { title = 'ข้อความร้องทุกข์ใหม่'; body = 'มีข้อความใหม่ถึงครูที่ปรึกษา'; url = '#/griev'; }
+    else if (k === 'tx' && /^สลิป/.test(String(it.ref || ''))) { title = 'สลิปรอตรวจ'; body = who + ' ส่ง' + String(it.ref || '').slice(0, 60); url = '#/proj'; }
     else if (k === 'tx') { title = 'รายการเงินรออนุมัติ'; body = who + ' ส่งรายการ ' + String(it.ref || '').slice(0, 30); url = '#/finance'; }
     else if (k === 'att') { title = 'เช็กชื่อการซ้อมแล้ว'; body = who + ' บันทึกการเช็กชื่อ ' + String(it.ref || '').slice(0, 40); url = '#/practice'; }
     else if (k === 'join') { const a = db_('get', 'c/' + cid + '/applications/' + encodeURIComponent(it.ref)) || {}; if (!a.first) return 0; title = 'ใบสมัครสมาชิกใหม่'; body = (a.prefix || '') + a.first + ' ' + (a.last || '') + ' ม.' + a.grade + '/' + a.room; url = '#/join'; }
