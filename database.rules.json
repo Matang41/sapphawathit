@@ -150,6 +150,15 @@
          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 3"
         }
        }
+      },
+      "attday": {
+       ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')",
+       "$date": {
+        ".validate": "$date.matches(/^20[0-9]{2}-[0-9]{2}-[0-9]{2}$/)",
+        "$ses": {
+         ".validate": "($ses == 'am' || $ses == 'pm') && newData.hasChildren(['k']) && (newData.child('k').val() == 'work' || newData.child('k').val() == 'hol' || newData.child('k').val() == 'off')"
+        }
+       }
       }
      }
     },
@@ -411,7 +420,7 @@
    }
   },
   "rulesProbe": {
-   "v13": {
+   "v14": {
     ".read": true
    }
   },

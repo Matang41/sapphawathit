@@ -151,7 +151,7 @@
   /* เอกสาร DOCX ทั่วไป: body = สตริง WordprocessingML (ใช้ wPara/wRun/wTable ประกอบ) */
   function docxDoc(body, o) {
     o = o || {}; const NS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'; const mar = o.margin || 1134;
-    const sect = '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="' + mar + '" w:right="' + mar + '" w:bottom="' + mar + '" w:left="' + mar + '" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
+    const sect = '<w:sectPr>' + (o.land ? '<w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>' : '<w:pgSz w:w="11906" w:h="16838"/>') + '<w:pgMar w:top="' + mar + '" w:right="' + mar + '" w:bottom="' + mar + '" w:left="' + mar + '" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr>';
     const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + NS + '><w:body>' + body + sect + '</w:body></w:document>';
     const styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ' + NS + '><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="' + DFONT + '" w:hAnsi="' + DFONT + '" w:cs="' + DFONT + '" w:eastAsia="' + DFONT + '"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:val="en-US" w:bidi="th-TH"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>';
     return zip([

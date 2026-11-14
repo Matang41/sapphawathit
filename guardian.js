@@ -22,7 +22,7 @@
   /* ---------- สำเนาข้อมูลสำหรับผู้ปกครอง (สร้างฝั่งครู) ---------- */
   function snap(sid) {
     const m = A.members()[sid], S = A.assess, att = (A.D.att || {})[sid] || {}, c = { p: 0, l: 0, v: 0, a: 0 }, recent = [];
-    Object.keys(att).forEach(k => { const v = att[k]; if (c[v] !== undefined) c[v]++; recent.push({ d: k.slice(0, 10), s: k.slice(11), v }); });
+    Object.keys(att).forEach(k => { const v = att[k]; if (A.attHeld && !A.attHeld(k.slice(0, 10), k.slice(11))) return; if (c[v] !== undefined) c[v]++; recent.push({ d: k.slice(0, 10), s: k.slice(11), v }); });
     recent.sort((a, b) => (b.d + b.s).localeCompare(a.d + a.s)); const n = c.p + c.l + c.v + c.a;
     const bs = S.behaveScore(sid), bh = (A.D.behave || {})[sid] || {}, weeks = Object.keys(bh).filter(k => bh[k] && bh[k].s).sort().reverse().slice(0, 8).map(k => ({ w: k, s: bh[k].s }));
     const aw = Object.keys(A.D.awards || {}).map(k => A.D.awards[k]).filter(a => a.title && (a.rcp || {})[sid]).sort((a, b) => b.at - a.at).slice(0, 20).map(a => ({ t: a.title, d: a.at }));

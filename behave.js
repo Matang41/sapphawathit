@@ -49,7 +49,7 @@
   /* ---------- ค่าแนะนำจากระบบที่มีอยู่ ---------- */
   function basis(sid) {
     const att = (A.D.att || {})[sid] || {}; let p = 0, l = 0, v = 0, a = 0;
-    Object.keys(att).forEach(k => { const x = att[k]; if (x === 'p') p++; else if (x === 'l') l++; else if (x === 'v') v++; else if (x === 'a') a++; });
+    Object.keys(att).forEach(k => { const x = att[k]; if (A.attHeld && !A.attHeld(k.slice(0, 10), k.slice(11))) return; if (x === 'p') p++; else if (x === 'l') l++; else if (x === 'v') v++; else if (x === 'a') a++; });
     const n = p + l + v + a, evs = Object.keys(A.D.events || {}).filter(e => { const x = A.D.events[e]; return x && x.status !== 'cancelled' && (x.people || {})[sid] && (x.dateEnd || x.date) <= A.todayISO(); }).length;
     return { pct: n ? Math.round((p + l) / n * 100) : null, n, bs: behaveScore(sid), fa: focusAvg(sid), top: A.topLv(sid), N: Math.max(1, A.levels().length), evs, role: A.roleOf(sid) };
   }
