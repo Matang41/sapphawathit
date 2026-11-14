@@ -92,6 +92,7 @@ body.selmode .sl{cursor:copy}
 /* keypad */
 .pad{position:fixed;left:0;right:0;bottom:0;z-index:10;background:linear-gradient(180deg,rgba(43,22,40,.92),#1d0e1b);border-top:1px solid var(--line);padding:8px 10px max(8px,env(safe-area-inset-bottom));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .pad-in{max-width:1100px;margin:0 auto}
+.o2{position:relative;display:inline-block}.o2.up::before,.o2.dn::after{content:"••";position:absolute;left:50%;transform:translateX(-50%);font-size:.42em;letter-spacing:.12em;line-height:1}.o2.up::before{top:-.5em}.o2.dn::after{bottom:-.55em}.oor{border-bottom:2px solid #ff9d3a}
 .keys{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
 .key{border:none;border-radius:50%;aspect-ratio:1;max-height:58px;justify-self:center;width:100%;max-width:58px;cursor:pointer;font-family:Mitr;font-size:18px;color:#3b2205;
   background:radial-gradient(circle at 35% 30%,#fff1c2,#d9a640 55%,#8a5d1a);box-shadow:0 3px 6px rgba(0,0,0,.45);transition:transform .06s;touch-action:manipulation}
@@ -144,7 +145,7 @@ body.selmode .sl{cursor:copy}
     <button class="btn" id="tUn">แยกกลุ่ม</button>
     <span id="tSelN" class="seln"></span>
   </div>
-  <div class="hint">แตะช่องในห้องเพื่อเลือก แล้วกดลูกฆ้องด้านล่างเพื่อใส่โน้ต · <b>–</b> = เว้น/ลากเสียง · <b>คู่</b> = ตีสองเสียงพร้อมกัน · คีย์บอร์ด: <b>1–7</b> ด–ท กลาง · <b>Shift+1–6</b> ดํ–ลํ สูง · <b>Alt+5–7</b> ซฺ ลฺ ทฺ ต่ำ · <b>เว้นวรรค</b> = – · <b>←→</b> เลื่อน · <b>↑↓</b> สลับแถวมือซ้าย/ขวา</div>
+  <div class="hint">แตะช่องในห้องเพื่อเลือก แล้วกดลูกฆ้องด้านล่างเพื่อใส่โน้ต · <b>–</b> = เว้น/ลากเสียง · <b>คู่</b> = ตีสองเสียงพร้อมกัน · <span class="kbh">คีย์บอร์ด / นัมแพด: <b>1–7</b> = ด ร ม ฟ ซ ล ท · <b>+</b> (หรือ <b>=</b>) หลังตัวโน้ต = เติมจุดบน (เสียงสูง) กดซ้ำ = สองจุด · <b>−</b> = จุดล่าง (เสียงต่ำ) · <b>เว้นวรรค</b> หรือ <b>0</b> = – · <b>Enter</b> = ไปห้องถัดไป · <b>.</b> หรือ <b>Backspace</b> = ลบ · <b>*</b> = คู่ · <b>/</b> = สลับมือ · <b>←→</b> เลื่อน · <b>↑↓</b> สลับแถว · ตัวอย่าง: <b>5 6 1+ 2+</b> = ซ ล ดํ รํ</span></div>
   <div class="sheet" id="sheet"></div>
   <div class="credit">บันทึกโน้ตเพลงไทย · ชมรมดนตรีไทยสรรพวาทิต<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div>
@@ -196,11 +197,19 @@ const mySid=()=>{try{return P?(P.APP.sid()||""):""}catch(e){return ""}};
      {g:[เสียง,...], span, t} = กลุ่มเทคนิค: t "tri" สามพยางค์ (3 เสียงในเวลา 2 ช่อง) · t "kyi" ขยี้ (หลายเสียงใน 1 ช่อง)
      null = ช่องที่ถูกกลุ่มก่อนหน้าครอบอยู่
    เก็บเป็นข้อความสั้น: ลูกฆ้อง a–p · เว้น - · ตีคู่ (ab) · กลุ่ม [ช่อง,ชนิด:เสียง…] · ช่องที่ถูกครอบ ~ */
-const tok=sl=>!sl.length?"-":sl.length===1?String.fromCharCode(97+sl[0]):"("+sl.map(i=>String.fromCharCode(97+i)).join("")+")";
+/* ช่วงเสียงขยาย (รุ่น 3.23): ลูก -11…23 = ดฺฺ … ทํํ (ต่ำ/สูงได้ 2 ช่วงเสียง) · 0–15 = ลูกฆ้องวงใหญ่เดิม
+   เก็บเป็นอักษร a–x (0…23) และ A–K (-11…-1) */
+const NMIN=-11,NMAX=23,DEG=["ด","ร","ม","ฟ","ซ","ล","ท"];
+const nOct=i=>Math.floor((i-3)/7),nDeg=i=>(((i-3)%7)+7)%7;
+const nm=i=>{const o=nOct(i);return DEG[nDeg(i)]+(o>0?"ํ".repeat(o):o<0?"ฺ".repeat(-o):"")};
+const nmH=i=>{const o=nOct(i),x=Math.abs(o)===2?'<span class="o2 '+(o>0?"up":"dn")+'">'+DEG[nDeg(i)]+'</span>':nm(i);return i<0||i>15?'<span class="oor" title="เกินช่วงเสียงฆ้องวงใหญ่ (เสียงที่เล่นจะทบช่วงให้)">'+x+'</span>':x};
+const chOf=i=>String.fromCharCode(i>=0?97+i:76+i);
+const chI=c=>{const v=c.charCodeAt(0);return v>=97&&v<=120?v-97:v>=65&&v<=75?v-76:null};
+const tok=sl=>!sl.length?"-":sl.length===1?chOf(sl[0]):"("+sl.map(chOf).join("")+")";
 const isGrp=e=>e&&!Array.isArray(e);
 const enc=e=>e===null?"~":isGrp(e)?"["+e.span+","+e.t+":"+e.g.map(tok).join("")+"]":tok(e);
 function encBars(bars){return bars.map(b=>b.map(enc).join("")).join(" ")}
-function readToks(str){const out=[];let i=0;while(i<str.length){const c=str[i];if(c==="-"){out.push([]);i++}else if(c==="("){const j=str.indexOf(")",i);out.push(str.slice(i+1,j).split("").map(x=>x.charCodeAt(0)-97).filter(x=>x>=0&&x<16));i=j+1}else{const v=c.charCodeAt(0)-97;out.push(v>=0&&v<16?[v]:[]);i++}}return out}
+function readToks(str){const out=[];let i=0;while(i<str.length){const c=str[i];if(c==="-"){out.push([]);i++}else if(c==="("){const j=str.indexOf(")",i);out.push(str.slice(i+1,j).split("").map(chI).filter(x=>x!==null));i=j+1}else{const v=chI(c);out.push(v!==null?[v]:[]);i++}}return out}
 function decBars(str){
   return String(str||"").trim().split(/\s+/).filter(Boolean).map(b=>{const out=[];let i=0;
     while(i<b.length&&out.length<4){const c=b[i];
@@ -287,10 +296,10 @@ function natabFor(r){if(!song.natab)return null;if(r===song.rate)return NT.get(s
 const entryAt=c=>rowOf(c.l,c.h)[c.b][c.s];
 const setEntry=(c,v)=>{rowOf(c.l,c.h)[c.b][c.s]=v};
 const ck=c=>c.l+","+c.b+","+c.s+","+c.h;
-const noteTxt=sl=>!sl.length?"–":sl.map(i=>KN[i]).join("");
+const noteTxt=sl=>!sl.length?"–":sl.map(nmH).join("");
 function cellHTML(e){
   if(isGrp(e))return '<div class="grp '+e.t+'"><span class="gl">'+(e.t==="tri"?"สามพยางค์":"ขยี้ ×"+e.g.length)+'</span><div class="gn">'+e.g.map(x=>'<i>'+noteTxt(x)+'</i>').join("")+'</div></div>';
-  return !e.length?'<div class="n rest">–</div>':'<div class="n'+(e.length>1?" pair":"")+'">'+e.map(i=>KN[i]).join(e.length>1?"<br>":"")+'</div>';
+  return !e.length?'<div class="n rest">–</div>':'<div class="n'+(e.length>1?" pair":"")+'">'+e.map(nmH).join(e.length>1?"<br>":"")+'</div>';
 }
 let G2EL={};
 function render(){
@@ -338,8 +347,21 @@ function putNote(i){
     ["L","R"].forEach(h=>{const cc={l:c.l,b:c.b,s:c.s,h};const st=startOf(cc);if(st.s!==c.s)return;clearGroupAt(cc);setEntry(cc,[h==="L"?a:b])});
     touch();refresh();setCur(c);move(1);return;
   }
-  const wasG=clearGroupAt(cur);setEntry(cur,[i]);touch();if(wasG)refresh();else refreshSlot(cur);move(1);
+  const c0=Object.assign({},cur);const wasG=clearGroupAt(cur);setEntry(cur,[i]);touch();if(wasG)refresh();else refreshSlot(cur);move(1);lastPut={c:c0,i,after:ck(cur)};
 }
+/* + / − : เลื่อนโน้ตที่เพิ่งใส่ (หรือโน้ตที่เคอร์เซอร์อยู่) ขึ้น/ลงหนึ่งช่วงเสียง = เติมจุดบน/จุดล่าง */
+let lastPut=null;
+function octShift(d){
+  if(selMode)return;let c=null;
+  if(lastPut&&lastPut.after===ck(cur)){const e=entryAt(lastPut.c);if(Array.isArray(e)&&e.length===1&&e[0]===lastPut.i)c=lastPut.c}
+  if(!c){const e=entryAt(cur);if(Array.isArray(e)&&e.length===1)c=Object.assign({},cur)}
+  if(!c)return toast("กดตัวโน้ต 1–7 ก่อน แล้วค่อยกด + หรือ − เพื่อเปลี่ยนช่วงเสียง");
+  const i=entryAt(c)[0],ni=i+7*d;
+  if(ni<NMIN||ni>NMAX)return toast(d>0?"สูงสุดได้สองจุดบน":"ต่ำสุดได้สองจุดล่าง");
+  setEntry(c,[ni]);if(lastPut&&lastPut.c===c)lastPut.i=ni;if(pend&&ck(pend.c)===ck(c))pend.i=ni;
+  touch();refreshSlot(c);audio();vN(ni);
+}
+function nextBar(){pend=null;const just=lastPut&&lastPut.after===ck(cur)&&cur.s===0;lastPut=null;if(just)return;/* เพิ่งพิมพ์ครบห้อง เคอร์เซอร์อยู่ต้นห้องใหม่แล้ว */if(cur.b+1<nBars(cur.l))return setCur({l:cur.l,b:cur.b+1,s:0,h:cur.h},true);if(cur.l+1<song.lines.length)return setCur({l:cur.l+1,b:0,s:0,h:cur.h},true);addBar()}
 function rest(){pend=null;const g=clearGroupAt(cur);setEntry(cur,[]);touch();g?refresh():refreshSlot(cur);move(1)}
 function back(){pend=null;const e=entryAt(cur);if(isGrp(e)||e.length){const g=clearGroupAt(cur);setEntry(cur,[]);g?refresh():refreshSlot(cur)}else{move(-1);const g=clearGroupAt(cur);setEntry(cur,[]);g?refresh():refreshSlot(cur)}touch()}
 function addBar(){["L","R"].forEach(h=>rowOf(cur.l,h).splice(cur.b+1,0,[[],[],[],[]]));touch();render();setCur({l:cur.l,b:cur.b+1,s:0,h:cur.h},true)}
@@ -434,9 +456,18 @@ $$(".ctl [data-k]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset
 document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z"||e.key==="y")){if(e.target.matches("input,textarea"))return;e.preventDefault();(e.key==="y"||e.shiftKey)?redo():undo();return}
   if(e.target.matches("input,textarea,select"))return;
-  const d=e.code&&/^Digit[1-7]$/.test(e.code)?+e.code.slice(5):null;
-  if(d){e.preventDefault();let i;if(e.altKey){if(d<5)return;i=d-5}else if(e.shiftKey){i=9+d;if(i>15)return}else i=2+d;putNote(i);return}
-  if(e.key===" "||e.key==="-"){e.preventDefault();rest()}else if(e.key==="Backspace"){e.preventDefault();back()}
+  if(e.ctrlKey||e.metaKey||!$("#ov").classList.contains("hidden"))return;
+  /* ใช้รหัสปุ่มจริง (e.code) — ใช้ได้ทั้งแป้นไทย/อังกฤษ และนัมแพดแม้ปิด NumLock */
+  const c=e.code||"",np=/^Numpad[0-9]$/.test(c)?+c.slice(6):null;
+  const d=/^Digit[1-7]$/.test(c)?+c.slice(5):(np>=1&&np<=7?np:null);
+  if(d){e.preventDefault();let i;if(np===null&&e.altKey){if(d<5)return;i=d-5}else if(np===null&&e.shiftKey){i=9+d;if(i>15)return}else i=2+d;putNote(i);return}
+  if(np===8||np===9){e.preventDefault();return}
+  if(c==="NumpadAdd"||c==="Equal"){e.preventDefault();octShift(1);return}
+  if(c==="NumpadSubtract"||c==="Minus"){e.preventDefault();octShift(-1);return}
+  if(c==="NumpadEnter"||c==="Enter"){e.preventDefault();nextBar();return}
+  if(c==="NumpadMultiply"){e.preventDefault();$("#kPair").click();return}
+  if(c==="NumpadDivide"){e.preventDefault();lastPut=null;setHand(cur.h==="L"?"R":"L");return}
+  if(e.key===" "||c==="Space"||np===0||c==="Digit0"){e.preventDefault();lastPut=null;rest()}else if(e.key==="Backspace"||c==="NumpadDecimal"){e.preventDefault();lastPut=null;back()}
   else if(e.key==="ArrowUp"){e.preventDefault();setHand("L")}else if(e.key==="ArrowDown"){e.preventDefault();setHand("R")}
   else if(e.key==="ArrowRight"){e.preventDefault();move(1)}else if(e.key==="ArrowLeft"){e.preventDefault();move(-1)}
 });
@@ -569,7 +600,7 @@ async function publish(){
 
 /* ---------- ส่งออก ---------- */
 $("#bExport").addEventListener("click",()=>dlg('<h3>ส่งออกแผ่นโน้ต</h3><button class="xb" data-e="pdf"><b>PDF</b><span>กระดาษ A4 พร้อมพิมพ์ หรือส่งในกลุ่มแชต</span></button><button class="xb" data-e="docx"><b>Word (.docx)</b><span>แก้ไขต่อในโปรแกรม Word ได้ · ฟอนต์ TH SarabunPSK</span></button><div class="lbl">🎼 โน้ตสากล (ด = '+esc(KEYS.find(k=>k[1]===((+song.west.tr%12)+12)%12)[0])+' · เปลี่ยนคีย์ได้ที่แถบด้านบน)</div><button class="xb" data-e="west"><b>ดูโน้ตสากล + PDF</b><span>บรรทัดห้าเส้น มือขวา/มือซ้าย พร้อมคอร์ด</span></button><button class="xb" data-e="xml"><b>MusicXML</b><span>เปิดแก้/พิมพ์ต่อใน MuseScore (ฟรี) Sibelius Finale Dorico</span></button><button class="xb" data-e="abc"><b>ABC</b><span>ไฟล์ข้อความโน้ตสากล ใช้กับเว็บ/แอปที่รองรับ ABC</span></button>'));
-const cellText=b=>b.filter(e=>e!==null).map(e=>isGrp(e)?e.g.map(x=>x.length?x.map(i=>KN[i]).join(""):"-").join("")+(e.t==="tri"?"³":""):(!e.length?"-":e.map(i=>KN[i]).join(""))).join(" ");
+const cellText=b=>b.filter(e=>e!==null).map(e=>isGrp(e)?e.g.map(x=>x.length?x.map(nm).join(""):"-").join("")+(e.t==="tri"?"³":""):(!e.length?"-":e.map(nm).join(""))).join(" ");
 
 /* ================= โน้ตสากล: แปลงคีย์ · MusicXML · ABC · คอร์ด =================
    ลูกฆ้อง 16 ลูก (ซฺ … ลํ) เทียบโน้ตสากลแบบ “ด = C” แล้วเลื่อนคีย์ได้ทีละครึ่งเสียง
@@ -582,7 +613,7 @@ const FLAT=["C","D","D","E","E","F","G","G","A","A","B","B"],FALT=[0,-1,0,-1,0,0
 const flatKey=()=>[1,3,5,8,10].includes(((song.west.tr%12)+12)%12);
 const CN_S=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"],CN_F=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const cname=pc=>(flatKey()?CN_F:CN_S)[(pc%12+12)%12];
-const midiOf=i=>BASE[i]+(+song.west.tr||0);
+const midiOf=i=>60+12*nOct(i)+[0,2,4,5,7,9,11][nDeg(i)]+(+song.west.tr||0);
 /* ป้ายอัตราจังหวะที่ห้องแรกของท่อน (เฉพาะเพลงเถา) · คืน {ลำดับห้อง: ข้อความ} */
 function rateMarks(){const out={};if(mixedRates().length<2&&!mixedNatab())return out;let b=0,prev=null;song.lines.forEach((l,li)=>{const r=lineRate(li);const lab=NT.RATE[r].n+(mixedNatab()?" · หน้าทับ"+natabName(lineNatab(li)):"");if(lab!==prev){out[b]=lab;prev=lab}b+=l.h.R.length});return out}
 const FIFTHS={0:0,1:-5,2:2,3:-3,4:4,5:-1,6:6,7:1,8:-4,9:3,10:-2,11:5};
