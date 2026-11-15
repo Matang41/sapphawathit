@@ -128,7 +128,7 @@
       return { title: 'ภารกิจของฉัน', body: b };
     }
     const p = P(), rd = ready();
-    let b = '<div class="row wrap" style="margin-bottom:14px;gap:8px"><button class="btn gold" data-act="misNew">' + ic('plus', 18) + 'มอบภารกิจ</button><button class="btn" data-act="misCrown">🎖️ สถาปนายศ</button><button class="btn ghost" data-act="misCfg">ตั้งค่าหลอดแต้ม</button><button class="btn ghost" data-act="mainBulk">🎵 เครื่องหลักของสมาชิก</button><button class="btn ghost" data-act="misDown" style="color:#c0392b">⚖️ ลงโทษ / ทัณฑ์บน</button></div>';
+    let b = '<div class="row wrap" style="margin-bottom:14px;gap:8px"><button class="btn gold" data-act="misNew">' + ic('plus', 18) + 'มอบภารกิจ</button><button class="btn" data-act="misCrown">🎖️ สถาปนายศ</button><button class="btn ghost" data-act="misCfg">ตั้งค่าหลอดแต้ม</button><button class="btn ghost" data-act="mainBulk">🎵 เครื่องหลักของสมาชิก</button><button class="btn ghost" data-act="misDown" style="color:#c0392b">⚖️ ลงโทษ / ทัณฑ์บน</button><button class="btn ghost" data-act="misReport">📄 รายงานรายบุคคล</button><a class="btn ghost" href="#/rep">🎵 สมุดต่อเพลง</a></div>';
     if (rd.length) b += '<section class="card alert"><div class="lb">🔥 หลอดเต็ม รอประเมินเลื่อนยศ (' + rd.length + ')</div>' + rd.map(x => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><span class="grow"><b>' + esc(nm(x.sid)) + '</b><div class="muted" style="font-size:.82rem">' + esc(x.inst) + ' · ' + esc(A.lvName(A.lvOf(x.sid, x.inst))) + ' · ' + xpOf(x.sid, x.inst) + '/' + XPMAX() + ' แต้ม</div></span><button class="btn sm" data-act="misPromote" data-sid="' + esc(x.sid) + '" data-inst="' + esc(x.inst) + '">ประเมิน / เลื่อนยศ</button></div>').join('') + '</section>';
     { const lg = allLog(), pb = A.activeSids().map(s => [s, probOf(s)]).filter(x => x[1]);
       if (pb.length) b += '<section class="card" style="border-left:4px solid #e0a800"><div class="lb">⚠️ อยู่ระหว่างทัณฑ์บน (' + pb.length + ')</div>' + pb.map(x => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><span class="grow"><b>' + esc(nm(x[0])) + '</b><div class="ms-sv">ถึง ' + esc(A.dTH(x[1].until, 'short')) + (x[1].cond ? ' · ' + esc(x[1].cond) : '') + ' · มลทิน: ' + esc(tagTxt(x[1].tags)) + '</div></span><button class="btn sm ghost" data-act="probEnd" data-sid="' + esc(x[0]) + '" data-id="' + esc(x[1].id) + '">ยุติทัณฑ์บน</button></div>').join('') + '</section>';
@@ -146,6 +146,7 @@
     if (P() === null) return { title: m.t, body: '<div class="empty">กำลังโหลด…</div>', back: '#/mis' };
     let b = '<section class="card"><div class="row" style="gap:8px;flex-wrap:wrap">' + stars(m.star) + chip(CAT[m.cat] || '', 'line') + '<span class="grow"></span>' + (m.st === 'closed' ? chip('ปิดแล้ว', 'line') : dl(m)) + '</div>' +
       '<div class="muted" style="margin-top:6px;font-size:.85rem">ช่วงเวลา ' + esc(period(m)) + ' · สำเร็จได้ +' + (m.xp || 0) + ' แต้ม · ' + (m.inst && m.inst !== 'main' ? 'เข้าหลอดเครื่อง' + esc(m.inst) : 'เข้าหลอดเครื่องหลักของแต่ละคน') + '</div>' +
+      (m.auto ? '<div class="note" style="margin-top:8px">🎮 ตรวจอัตโนมัติ: เล่นเกมฝึกทักษะด้าน' + (SKN[m.auto.k] || '') + ' ให้ได้ ' + m.auto.min + '% ขึ้นไป (เปิดเกมจากในแอป) ระบบจะส่งผลให้ครูตรวจเอง</div>' : '') +
       (m.d ? '<div style="margin-top:8px;white-space:pre-wrap">' + esc(m.d) + '</div>' : '') + '</section>';
     return { title: m.t, body: b + (T() ? tView(m) : sView(m)), back: '#/mis' };
   };
@@ -173,6 +174,7 @@
         (r.st ? '' : '<div class="ms-pgb">' + [0, 25, 50, 75, 100].map(v => '<button data-act="misPg" ' + D + ' data-v="' + v + '" class="' + ((r.pg || 0) === v ? 'on' : '') + '">' + v + '%</button>').join('') + '</div>') +
         (S.length ? '<div class="ms-sv">เป้าหมายย่อย: ' + S.map((t, i) => (ck[i] ? '✅ ' : '⬜ ') + esc(t)).join('  ·  ') + '</div>' : '') +
         (s.note ? '<div class="ms-sv">📝 ' + esc(s.note) + '</div>' : '') + (s.link ? '<div class="ms-sv">🔗 <a href="' + esc(/^https?:\/\//.test(s.link) ? s.link : '#') + '" target="_blank" rel="noopener">' + esc(s.link) + '</a></div>' : '') +
+        (s.auto ? '<div class="ms-sv">🎮 ผ่านเกณฑ์จากเกม ' + esc(String(s.auto.v)) + '%' + (s.auto.g ? ' (' + esc(s.auto.g) + ')' : '') + '</div>' : '') +
         (s.sent ? '<div class="ms-sv">📨 ส่งตรวจ ' + esc(M.thDate(s.sent)) + '</div>' : '') + (r.tn ? '<div class="ms-sv">💬 ความเห็นครู: ' + esc(r.tn) + '</div>' : '') +
         (r.st === 'done' ? '<div class="ms-sv">🎉 ได้ +' + (r.xp || 0) + ' แต้ม · เครื่อง' + esc(r.inst || '') + '</div>' + xpBar(sid, r.inst) : '') +
         '<div class="ms-act">' + (r.st ? '<button class="btn sm ghost" data-act="misUndo" ' + D + '>↺ ยกเลิกผลประเมิน</button>' : '<button class="btn sm ghost" data-act="misNote" ' + D + '>💬 ความเห็น</button><button class="btn sm ghost danger" data-act="misFail" ' + D + '>ไม่สำเร็จ</button><button class="btn sm gold" data-act="misDone" ' + D + '>✓ สำเร็จ</button>') + '</div></div>';
@@ -191,6 +193,7 @@
       fld('รายละเอียด', '<textarea class="in" id="mf-d" rows="3" maxlength="1500">' + esc(e.d || '') + '</textarea>') +
       '<div class="row" style="gap:8px">' + fld('หมวด', '<select class="in" id="mf-c">' + opt(Object.keys(CAT).map(k => [k, CAT[k]]), e.cat) + '</select>') + fld('ความยาก', '<select class="in" id="mf-s">' + opt([[1, '★ ง่าย'], [2, '★★ กลาง'], [3, '★★★ ยาก']], e.star) + '</select>') + fld('แต้มเมื่อสำเร็จ', '<input class="in" id="mf-x" type="number" min="0" max="1000" value="' + (e.xp || 0) + '">') + '</div>' +
       fld('แต้มเข้าหลอดของเครื่อง', '<select class="in" id="mf-i">' + opt([['main', 'เครื่องหลักของแต่ละคน']].concat(ins.map(i => [i, i])), e.inst || 'main') + '</select>') +
+      '<div class="row" style="gap:8px">' + fld('ตรวจอัตโนมัติจากเกม (ไม่บังคับ)', '<select class="in" id="mf-ak">' + opt([['', 'ไม่ใช้ — ครูตรวจเอง'], ['rhythm', 'เกมด้านจังหวะ (กลองแขกคู่ขวัญ แห่กลอง ฯลฯ)'], ['melody', 'เกมด้านทำนอง (ฆ้องวงใหญ่แสนกล ฯลฯ)'], ['ear', 'เกมด้านการฟัง (หูทอง)'], ['inst', 'เกมทายเครื่องดนตรี (หูทอง)']], (e.auto || {}).k || '') + '</select>') + fld('เกณฑ์ผ่าน (%)', '<input class="in" id="mf-am" type="number" min="1" max="100" value="' + ((e.auto || {}).min || 80) + '">') + '</div>' +
       '<div class="row" style="gap:8px">' + fld('วันเริ่ม', '<input class="in" id="mf-f" type="date" value="' + esc(e.from || '') + '" required>') + fld('วันสิ้นสุด', '<input class="in" id="mf-e" type="date" value="' + esc(e.to || '') + '" required>') + '</div>' +
       fld('เป้าหมายย่อย (บรรทัดละ 1 ข้อ · ไม่ใส่ก็ได้)', '<textarea class="in" id="mf-p" rows="3" maxlength="1200" placeholder="ตีท่อน ๑ ได้\nตีทั้งเพลงตามจังหวะ\nตีร่วมวงได้">' + esc(steps(e).join('\n')) + '</textarea>') +
       '<div class="fld"><span>ผู้รับภารกิจ <b id="mf-n"></b></span><input class="in" id="mf-q" placeholder="ค้นหาชื่อ / เครื่อง"><div class="ms-qb"><button type="button" data-q="all">เลือกทุกคน</button><button type="button" data-q="none">ล้าง</button>' + grades.map(g => '<button type="button" data-q="g' + g + '">ม.' + g + '</button>').join('') + ins.map(i => '<button type="button" data-q="i' + esc(i) + '">' + esc(i) + '</button>').join('') + '</div><div class="ms-pick" id="mf-w">' + pick + '</div></div>' +
@@ -208,6 +211,7 @@
       if (!t) return bad('ใส่ชื่อภารกิจ'); if (!from || !to) return bad('ใส่วันเริ่มและวันสิ้นสุด'); if (to < from) return bad('วันสิ้นสุดต้องไม่ก่อนวันเริ่ม'); if (!sel.length) return bad('เลือกผู้รับภารกิจอย่างน้อย 1 คน');
       const whoO = {}; sel.forEach(s => { whoO[s] = true; });
       const v = { t, d: $('#mf-d', w).value.trim() || null, cat: $('#mf-c', w).value, star: +$('#mf-s', w).value || 1, xp: Math.max(0, Math.min(1000, Math.round(+$('#mf-x', w).value || 0))), inst: $('#mf-i', w).value || 'main', from, to,
+        auto: $('#mf-ak', w).value ? { k: $('#mf-ak', w).value, min: Math.max(1, Math.min(100, Math.round(+$('#mf-am', w).value || 80))) } : null,
         steps: $('#mf-p', w).value.split('\n').map(x => x.trim()).filter(Boolean).slice(0, 20), who: whoO, st: m ? (m.st || 'open') : 'open', at: m ? m.at : Date.now(), by: m ? m.by : A.myName(), y: m ? m.y : A.year(), ed: m ? Date.now() : null };
       if (!v.steps.length) v.steps = null;
       const mid = id || B.uid(); A.W(B.set(CP() + 'mis/' + mid, v)); A.log(m ? 'mis.edit' : 'mis.new', '', t + ' · ' + sel.length + ' คน');
@@ -419,6 +423,74 @@
   });
   /* ติ๊กเป้าหมายย่อย (นักเรียน) */
   document.addEventListener('change', e => { const c = e.target; if (!c || !c.dataset || !c.dataset.msck || T() || !me()) return; A.W(B.set(RP(c.dataset.m, me()) + '/s/ck/' + c.dataset.k, c.checked ? true : null)); });
+  /* ---------- รุ่น 3.37: สมุดต่อเพลง · วันนี้ของฉัน · ภารกิจตรวจอัตโนมัติจากเกม · รายงานรายบุคคล ----------
+     rep/{id} = เพลงที่ชมรมต่อ (ครูเขียน) · repp/{sid}/{id} = { st: 1 กำลังต่อ · 2 จำได้แล้ว · 3 ขึ้นวงได้ } (ครูเขียน เจ้าตัวอ่าน) */
+  A.SUBS.push({ key: 'rep', path: () => CP() + 'rep' });
+  const RST = [['·', 'ยังไม่เริ่ม', 'line'], ['◔', 'กำลังต่อ', 'gold'], ['◑', 'จำได้แล้ว', 'plum'], ['●', 'ขึ้นวงได้', 'ok']];
+  const SKN = { ear: 'การฟัง', rhythm: 'จังหวะ', melody: 'ทำนอง', inst: 'เครื่องดนตรี' };
+  const reps = () => Object.keys(A.D.rep || {}).map(id => Object.assign({ id }, A.D.rep[id])).sort((a, b) => (a.o || 0) - (b.o || 0));
+  let rkey = '', roff = null, RPD = null;
+  function REPP() {
+    const key = cid() + '|' + (T() ? 'T' : me()); if (!T() && !me()) return {};
+    if (key !== rkey) { if (roff) roff(); RPD = null; rkey = key; roff = B.on(CP() + 'repp' + (T() ? '' : '/' + me()), v => { RPD = T() ? (v || {}) : { [me()]: v || {} }; A.rerender(); }, () => { RPD = {}; }); }
+    return RPD || {};
+  }
+  const rst = (sid, id) => +(((REPP()[sid] || {})[id] || {}).st) || 0;
+  const st2 = document.createElement('style');
+  st2.textContent = '.rp-w{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}.rp-g{border-collapse:collapse;font-size:.85rem}.rp-g th,.rp-g td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:center;white-space:nowrap}.rp-g th:first-child,.rp-g td:first-child{position:sticky;left:0;background:#fff;text-align:left;z-index:1;max-width:150px;overflow:hidden;text-overflow:ellipsis}.rp-g thead th{position:sticky;top:0;background:#faf5f8;font-weight:600;max-width:110px;white-space:normal;vertical-align:bottom}.rp-c{border:0;background:none;font-size:1.25rem;line-height:1;cursor:pointer;padding:4px 8px;border-radius:8px}.rp-c.s1{color:#c9930a}.rp-c.s2{color:#7a3d73}.rp-c.s3{color:#2e9d57}.rp-c.s0{color:#bbb}';
+  document.head.appendChild(st2);
+  A.NAVS.push({ id: 'rep', label: 'สมุดต่อเพลง', icon: 'flag', order: 34, show: () => T() || reps().length > 0 });
+  const RUI = { inst: '' };
+  A.V.rep = function () {
+    const L = reps(), leg = '<div class="muted" style="font-size:.82rem;margin:8px 0">' + RST.map(x => x[0] + ' ' + x[1]).join(' &nbsp; ') + '</div>';
+    if (!T()) {
+      const b = L.map(r => { const s = RST[rst(me(), r.id)]; return '<div class="card rowcard"><div class="grow"><b>' + esc(r.t) + '</b></div>' + chip(s[0] + ' ' + s[1], s[2]) + '</div>'; }).join('') || '<div class="empty">ครูยังไม่ได้ลงรายการเพลง</div>';
+      return { title: 'สมุดต่อเพลงของฉัน', body: '<div class="note">ครูเป็นผู้บันทึกว่าแต่ละเพลงเราต่อถึงขั้นไหน — ต่อได้แล้วบอกครูให้ตรวจ</div>' + b };
+    }
+    const ins = A.instList(), act = A.activeSids().filter(s => !RUI.inst || A.insts(ms()[s]).includes(RUI.inst)).sort(A.byClass);
+    let b = '<div class="row wrap" style="gap:8px;margin-bottom:10px"><button class="btn gold" data-act="repNew">' + ic('plus', 18) + 'เพิ่มเพลง</button><select class="in" data-rpi style="max-width:170px">' + opt([['', 'ทุกเครื่องดนตรี']].concat(ins.map(i => [i, i])), RUI.inst) + '</select></div>';
+    if (!L.length) return { title: 'สมุดต่อเพลง', body: b + '<div class="empty">ยังไม่มีเพลง — กด “เพิ่มเพลง” เพื่อลงรายการเพลงที่ชมรมกำลังต่อ</div>' };
+    b += '<div class="muted" style="font-size:.82rem">แตะช่องเพื่อเปลี่ยนสถานะทีละขั้น</div>' + leg + '<div class="rp-w"><table class="rp-g"><thead><tr><th>สมาชิก (' + act.length + ')</th>' + L.map(r => '<th>' + esc(r.t) + '<br><button class="rp-c s0" style="font-size:.8rem" data-act="repDel" data-id="' + esc(r.id) + '" title="ลบเพลงนี้">✕</button></th>').join('') + '</tr></thead><tbody>' +
+      act.map(s => '<tr><td title="' + esc(nm(s)) + '">' + esc(ms()[s].first || nm(s)) + ' <small class="muted">' + esc(A.cls(ms()[s])) + '</small></td>' + L.map(r => { const v = rst(s, r.id); return '<td><button class="rp-c s' + v + '" data-act="repSet" data-sid="' + esc(s) + '" data-id="' + esc(r.id) + '" title="' + RST[v][1] + '">' + RST[v][0] + '</button></td>'; }).join('') + '</tr>').join('') +
+      '<tr><td><b>ขึ้นวงได้</b></td>' + L.map(r => '<td><b>' + act.filter(s => rst(s, r.id) === 3).length + '</b></td>').join('') + '</tr></tbody></table></div>';
+    return { title: 'สมุดต่อเพลง', body: b };
+  };
+  document.addEventListener('change', e => { if (e.target && e.target.dataset && 'rpi' in e.target.dataset) { RUI.inst = e.target.value; A.rerender(); } });
+  Object.assign(A.ACT, {
+    repSet: d => { if (!T()) return; const n = (rst(d.sid, d.id) + 1) % 4; A.W(B.set(CP() + 'repp/' + d.sid + '/' + d.id, n ? { st: n, at: Date.now(), by: A.myName() } : null)); },
+    repNew: () => { if (!T()) return; const lib = Object.keys(A.D.library || {}).map(k => A.D.library[k]).filter(x => x && x.kind === 'song').map(x => (x.song && x.song.title) || x.title).filter(Boolean), have = new Set(reps().map(r => r.t));
+      const w = modal('<h3>เพิ่มเพลงในสมุดต่อเพลง</h3><form class="form">' + fld('ชื่อเพลง', '<input class="in" id="rn-t" maxlength="80" list="rn-l" required placeholder="เช่น ลาวดวงเดือน สองชั้น"><datalist id="rn-l">' + [...new Set(lib)].filter(t => !have.has(t)).map(t => '<option value="' + esc(t) + '">').join('') + '</datalist>', 'พิมพ์เอง หรือเลือกจากเพลงในสื่อของชมรม') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">เพิ่ม</button></div></form>', { center: true });
+      $('form', w).addEventListener('submit', ev => { ev.preventDefault(); const t = $('#rn-t', w).value.trim(); if (!t) return; A.W(B.set(CP() + 'rep/' + B.uid(), { t, o: Date.now(), at: Date.now(), by: A.myName() })); A.log('rep.new', '', t); w.remove(); toast('เพิ่มเพลงแล้ว'); }); },
+    repDel: async d => { const r = (A.D.rep || {})[d.id]; if (!T() || !r) return; if (!(await M.confirmBox('ลบเพลงออกจากสมุด', '“' + esc(r.t) + '” และสถานะของทุกคนในเพลงนี้จะไม่แสดงอีก', 'ลบ', true))) return; A.W(B.remove(CP() + 'rep/' + d.id)); A.log('rep.del', '', r.t); },
+    misReport: () => { if (T()) report(); }
+  });
+  /* การ์ด “วันนี้ของฉัน” บนสุดของหน้าหลักนักเรียน */
+  A.HOME.push({ order: 4, html: () => {
+    if (T() || !me() || !ms()[me()]) return ''; const i0 = mainInst(me()), op = myOpen(), near = op.slice().sort((a, b) => String(a.to || '').localeCompare(String(b.to || '')))[0], L = reps(), lrn = L.filter(r => rst(me(), r.id) === 1), got = L.filter(r => rst(me(), r.id) >= 2).length;
+    const row = (href, a, b2) => '<a href="' + href + '" class="row" style="padding:7px 0;border-top:1px dashed var(--line);gap:8px;color:inherit;text-decoration:none"><span class="grow">' + a + '</span>' + b2 + '</a>';
+    return '<section class="card" style="border:2px solid var(--plum)"><div class="lb">☀️ วันนี้ของฉัน</div>' + (i0 ? xpBar(me(), i0) : '') +
+      row('#/mis', '📜 ภารกิจที่ต้องทำ' + (near ? '<div class="muted" style="font-size:.8rem">ใกล้กำหนด: ' + esc(near.t) + '</div>' : ''), '<b>' + op.length + '</b>' + (near ? dl(near) : '')) +
+      (L.length ? row('#/rep', '🎵 เพลงที่กำลังต่อ' + (lrn.length ? '<div class="muted" style="font-size:.8rem">' + esc(lrn.slice(0, 3).map(r => r.t).join(' · ')) + '</div>' : ''), '<b>' + lrn.length + '</b><small class="muted">ได้แล้ว ' + got + '/' + L.length + '</small>') : '') + '</section>';
+  } });
+  /* ภารกิจตรวจอัตโนมัติ: ผลจากเกม (skill.js) ถึงเกณฑ์ → บันทึกผลและส่งให้ครูตรวจเอง */
+  window.addEventListener('message', e => {
+    const d = e.data; if (!d || d.type !== 'spw-skill' || e.origin !== location.origin || T() || !me()) return;
+    myOpen().forEach(m => { if (!m.auto || m.auto.k !== d.k || +d.v < +m.auto.min) return; const r = recOf(m.id, me()); if (r.s && r.s.auto && +r.s.auto.v >= +d.v) return;
+      A.W(B.update(RP(m.id, me()) + '/s', { auto: { v: Math.round(+d.v), g: String(d.g || '').slice(0, 24), at: Date.now() }, sent: Date.now() })); toast('🎯 ผ่านเกณฑ์ภารกิจ “' + m.t + '” (' + Math.round(+d.v) + '%) — ส่งให้ครูตรวจแล้ว', 5000); });
+  });
+  /* รายงานรายบุคคล: ยศ แต้ม ภารกิจ เพลง */
+  function report() {
+    const p = P() || {}, L = reps(), act = A.activeSids().sort(A.byClass), M0 = all();
+    const head = ['ที่', 'ชื่อ-สกุล', 'ชั้น', 'เครื่องหลัก', 'ยศ', 'แต้ม', 'ภารกิจสำเร็จ', 'เพลงที่ได้', 'หมายเหตุ'];
+    const rows = act.map((s, i) => { const i0 = mainInst(s), mine2 = M0.filter(m => (m.who || {})[s]), done = mine2.filter(m => (((p[m.id] || {})[s]) || {}).st === 'done').length, pb = probOf(s);
+      return [String(i + 1), nm(s), A.cls(ms()[s]), i0 || '-', i0 ? A.lvName(A.lvOf(s, i0)) : '-', i0 ? xpOf(s, i0) + '/' + XPMAX() : '-', done + '/' + mine2.length, L.length ? L.filter(r => rst(s, r.id) >= 2).length + '/' + L.length : '-', pb ? 'ทัณฑ์บนถึง ' + A.dTH(pb.until, 'short') : '']; });
+    const widths = [5, 22, 8, 12, 16, 9, 10, 9, 9], al = ['c', '', 'c', '', '', 'c', 'c', 'c', ''], title = 'รายงานยศ ภารกิจ และการต่อเพลงรายบุคคล', sub = M.C.club.full + ' · ข้อมูล ณ ' + M.thDate(Date.now()), name = M.safeName(title);
+    const w = modal('<h3>ส่งออกรายงาน</h3><div class="muted" style="margin-bottom:8px">สมาชิก ' + act.length + ' คน · ยศและแต้มของเครื่องหลัก · ภารกิจสำเร็จ · เพลงที่จำได้แล้วขึ้นไป</div><div class="xlist"><button class="xbtn" data-x="pdf"><b>PDF</b><span>พิมพ์ / ส่งในแชท</span></button><button class="xbtn" data-x="docx"><b>DOCX</b><span>เปิดแก้ต่อใน Word</span></button></div><div class="muted" id="x-msg" style="margin-top:10px"></div><button class="btn ghost block" data-close style="margin-top:12px">ปิด</button>', { center: true });
+    w.addEventListener('click', async ev => { const b = ev.target.closest('[data-x]'); if (!b) return; const msg = $('#x-msg', w); msg.textContent = 'กำลังสร้างไฟล์ …';
+      try { if (b.dataset.x === 'docx') await M.saveBlob(M.docxTable({ title, lines: [sub], head, rows, widths, align: al.map(a => a === 'c' ? 'center' : 'left'), footer: ['', 'พัฒนาโดย นายนนทพัทธ์ วงค์มูล © 2026'] }), name + '.docx');
+        else await M.exportPDF(A.tablePages(title, sub, head, rows, { widths, align: al, foot: 'ข้อมูล ณ ' + M.thDate(Date.now()) + ' ·' }), name + '.pdf'); msg.textContent = 'เสร็จแล้ว'; }
+      catch (er) { msg.textContent = 'ส่งออกไม่สำเร็จ: ' + (er.message || er); } });
+  }
   function saveMine(mid, send) {
     const m = one(mid); if (!m || !me()) return; const note = ($('#ms-note') || {}).value || '', link = (($('#ms-link') || {}).value || '').trim();
     if (link && !/^https?:\/\//i.test(link)) return toast('ลิงก์ต้องขึ้นต้นด้วย https://');
