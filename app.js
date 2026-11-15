@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 14;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 15;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -443,7 +443,9 @@
       '<div class="row" style="margin-top:14px"><button class="btn ghost grow" data-close>ยกเลิก</button>' + (cur ? '<button class="btn ghost grow danger" data-lv="0">ล้างการประเมิน</button>' : '') + '</div>', { center: true });
     w.addEventListener('click', e => {
       const b = e.target.closest('[data-lv]'); if (!b) return; const lv = +b.dataset.lv;
-      W(lv ? B.set('skills/' + sid + '/' + inst, { lv, at: Date.now(), by: myName() }) : B.remove('skills/' + sid + '/' + inst));
+      const old = ((D.skills || {})[sid] || {})[inst] || {}, up = !!(lv && old.lv && lv > old.lv);
+      W(lv ? B.set('skills/' + sid + '/' + inst, Object.assign({ lv, at: Date.now(), by: myName() }, up ? { pAt: Date.now() } : (old.xp ? { xp: old.xp } : {}))) : B.remove('skills/' + sid + '/' + inst));
+      if (up && window.MIS) window.MIS.announce(sid, inst, lv, '');   /* เลื่อนยศ → ประกาศเกียรติคุณทั้งชมรม */
       log('skill.set', sid, inst + ' → ' + lvName(lv)); w.remove(); toast(lv ? 'ประเมินเป็น “' + lvName(lv) + '” แล้ว' : 'ล้างการประเมินแล้ว');
     });
   }

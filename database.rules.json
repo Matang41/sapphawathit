@@ -359,6 +359,36 @@
        }
       }
      }
+    },
+    "mis": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')"
+    },
+    "misp": {
+     "$mid": {
+      "$sid": {
+       ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+       "s": {
+        ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid) && root.child('c').child($cid).child('mis').child($mid).child('who').child($sid).val() == true && root.child('c').child($cid).child('mis').child($mid).child('st').val() != 'closed'",
+        "ck": {
+         "$k": {
+          ".validate": "newData.isBoolean()"
+         }
+        },
+        "note": {
+         ".validate": "newData.isString() && newData.val().length <= 800"
+        },
+        "link": {
+         ".validate": "newData.isString() && newData.val().length <= 300"
+        },
+        "sent": {
+         ".validate": "newData.isNumber() && newData.val() <= now + 120000"
+        },
+        "$other": {
+         ".validate": false
+        }
+       }
+      }
+     }
     }
    }
   },
@@ -420,7 +450,7 @@
    }
   },
   "rulesProbe": {
-   "v14": {
+   "v15": {
     ".read": true
    }
   },
