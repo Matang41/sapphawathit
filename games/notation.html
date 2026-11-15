@@ -159,6 +159,8 @@ body.selmode .sl{cursor:copy}
     <button class="btn play" id="bPlay">▶ เล่นตั้งแต่ต้น</button>
     <button class="btn" id="bPlayHere">▶ เล่นจากห้องนี้</button>
     <button class="btn" id="bLoop">🔁 วน</button>
+    <button class="btn on" id="bFollow" title="ขณะเล่น เลื่อนจอตามโน้ตที่กำลังเล่น · เลื่อนจอเองเมื่อไร ระบบจะหยุดตามให้ทันที">📍 ตามโน้ต</button>
+    <button class="btn" id="bFull" title="เปิด/ปิดโหมดเต็มจอ">⛶ เต็มจอ</button>
     <label class="voice">เสียงทำนอง <select id="voice" aria-label="เครื่องดนตรีที่เล่นทำนอง"></select></label><span class="seg mix"><button data-m="khong">ทำนอง</button><button data-m="drum">กลองแขก</button><button data-m="ching">ฉิ่ง</button><button data-m="pc" title="เล่นแถวเครื่องจังหวะที่บันทึกเอง (ตะโพน กลองทัด กลองแขก ฯลฯ) · ท่อนที่บันทึกเครื่องจังหวะเอง จะไม่เล่นหน้าทับอัตโนมัติซ้อน">เครื่องจังหวะ</button></span>
     <span class="west">🎼 โน้ตสากล: ด =<select id="wKey" aria-label="คีย์สากล"></select><button class="btn" id="wChord">🎸 คอร์ด</button></span>
   </div>
@@ -834,11 +836,23 @@ function sched(){
 let lastG=-1;
 function vis(){
   if(!run)return;const now=visNow();let c=null;while(vq.length&&vq[0].t<=now)c=vq.shift();
-  if(c&&c.g!==lastG){lastG=c.g;$$(".sl.play").forEach(e=>e.classList.remove("play"));const es=G2EL[c.g];if(es){es.forEach(x=>x.classList.add("play"));const e=es[es.length-1],r=e.getBoundingClientRect();if(r.top<60||r.bottom>window.innerHeight-200)e.scrollIntoView({block:"center",behavior:"smooth"})}}
+  if(c&&c.g!==lastG){lastG=c.g;$$(".sl.play").forEach(e=>e.classList.remove("play"));const es=G2EL[c.g];if(es){es.forEach(x=>x.classList.add("play"));const e=es[es.length-1],r=e.getBoundingClientRect();if(FOLLOW&&(r.top<60||r.bottom>window.innerHeight-200))e.scrollIntoView({block:"center",behavior:"smooth"})}}
   raf=requestAnimationFrame(vis);
 }
-$("#bPlay").addEventListener("click",()=>run?stop():play(0));
-$("#bPlayHere").addEventListener("click",()=>{if(run)stop();play(gIndex({l:cur.l,b:cur.b,s:0,h:cur.h}))});
+/* ตามโน้ตขณะเล่น: ผู้ใช้เลื่อนจอเอง (ล้อเมาส์ / ลากนิ้ว / ปุ่มเลื่อนหน้า) = หยุดตาม จนกว่าจะกด “ตามโน้ต” อีกครั้งหรือกดเล่นใหม่ */
+var FOLLOW=true;
+function followUI(){const b=$("#bFollow");if(b)b.classList.toggle("on",FOLLOW)}
+function userScroll(){if(run&&FOLLOW){FOLLOW=false;followUI();toast("หยุดเลื่อนตามโน้ตแล้ว — เลื่อนจอได้อิสระ · กด “📍 ตามโน้ต” เพื่อกลับไปตาม")}}
+window.addEventListener("wheel",userScroll,{passive:true});window.addEventListener("touchmove",userScroll,{passive:true});
+window.addEventListener("keydown",e=>{if(["PageUp","PageDown","Home","End"].includes(e.key))userScroll()});
+$("#bFollow").addEventListener("click",()=>{FOLLOW=!FOLLOW;followUI()});
+/* โหมดเต็มจอ */
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
+function fsUI(){const b=$("#bFull");if(b){b.classList.toggle("on",!!fsEl());b.textContent=fsEl()?"⛶ ออกจากเต็มจอ":"⛶ เต็มจอ"}}
+$("#bFull").addEventListener("click",()=>{try{const el=document.documentElement;if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const rq=el.requestFullscreen||el.webkitRequestFullscreen;if(!rq)return toast("อุปกรณ์นี้ไม่รองรับโหมดเต็มจอ (เช่น iPhone) — หมุนจอแนวนอนแทนได้");const p=rq.call(el);if(p&&p.catch)p.catch(()=>toast("เปิดเต็มจอไม่สำเร็จ"))}}catch(e){toast("เปิดเต็มจอไม่สำเร็จ")}});
+document.addEventListener("fullscreenchange",fsUI);document.addEventListener("webkitfullscreenchange",fsUI);
+$("#bPlay").addEventListener("click",()=>{if(run)stop();else{FOLLOW=true;followUI();play(0)}});
+$("#bPlayHere").addEventListener("click",()=>{if(run)stop();FOLLOW=true;followUI();play(gIndex({l:cur.l,b:cur.b,s:0,h:cur.h}))});
 
 /* ---------- กล่องโต้ตอบ ---------- */
 function dlg(html){$("#dlg").innerHTML=html+'<button class="btn" data-x="close" style="margin-top:14px;width:100%">ปิด</button>';$("#ov").classList.remove("hidden")}
