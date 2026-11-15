@@ -157,5 +157,6 @@ $('#chingT').onclick=()=>{audio();if(chT){clearInterval(chT);chT=null;$('#chingT
   $('#chingT').classList.add('on');chNext=AC.currentTime+.1;chN=0;chT=setInterval(()=>{while(chNext<AC.currentTime+.2){TI.perc('ching',chN%2?2:1,chNext,.7);chN++;chNext+=60/70*2}},50)};
 build();
 </script>
+<script src="help.js"></script>
 </body>
 </html>

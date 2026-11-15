@@ -101,12 +101,21 @@
     const lineNatab = (l, r) => { const v = l.natab; if (v === 'none') return null; if (v && NT.get(v)) return NT.get(v); return natabFor(r) };
     const slots = []; let k = 0, dk = 0, prev = null, pp = null;
     /* ท่อนที่ตั้ง rep: 2 เล่นวนสองเที่ยว */
-    const seq = []; lines.forEach(l => { seq.push(l); if (+l.rep === 2) seq.push(Object.assign({}, l, { label: (l.label || '') + ' (เที่ยวกลับ)' })) });
+    const seq = []; lines.forEach(l => { seq.push(l); if (+l.rep === 2) seq.push(Object.assign({}, l, { label: (l.label || '') + ' (เที่ยวกลับ)', _p2: true })) });
+    /* รุ่น 3.36: เที่ยวที่ ๒ (p2) · เงาเสียง (sh) · ✕ หยุดเสียง (mk มี z) · แถวเครื่องจังหวะ (pc) */
+    const mkd = s => s ? String(s).split(' ').map(b => b.split(',')) : [];
+    const pcd = s => String(s || '').split(' ').filter(Boolean).map(b => b.split(',').slice(0, 4).map(x => x === '-' || !x ? [] : x.split('+').map(Number)));
     seq.forEach(l => {
       const R = decBars(l.bars), L = l.barsL != null ? decBars(l.barsL) : R.map(() => [[], [], [], []]);
+      const mR = mkd(l.mkR), mL = mkd(l.mkL), SH = l.sh ? decBars(l.sh) : [];
+      if (l._p2 && l.p2 && String(l.p2.i || '').trim()) { const ix = String(l.p2.i).trim().split(/\s+/).map(Number), R2 = decBars(l.p2.R || ''), L2 = decBars(l.p2.L || ''), a2 = mkd(l.p2.mR), b2 = mkd(l.p2.mL);
+        ix.forEach((b, q) => { if (b < R.length) { if (R2[q]) R[b] = R2[q]; if (L2[q]) L[b] = L2[q]; mR[b] = a2[q] || []; mL[b] = b2[q] || [] } }) }
+      const PC = {}; Object.keys(l.pc || {}).forEach(q => { PC[q] = pcd(l.pc[q]) });
+      const pd = Object.keys(PC).some(q => q !== 'ching' && PC[q].some(b => b.some(e => e.length))), pch = !!PC.ching && PC.ching.some(b => b.some(e => e.length));
       const r = +l.rate || rate0, p = lineNatab(l, r), pid = p ? p.id : '';
       if (r !== prev) { k = 0; prev = r } if (pid !== pp || k === 0) { dk = 0; pp = pid }
-      R.forEach((bar, bi) => bar.forEach((e, si) => slots.push({ R: e, L: (L[bi] || [])[si] === undefined ? [] : L[bi][si], r, p: pid, k: k++, dk: dk++, line: l.label || '' })));
+      R.forEach((bar, bi) => bar.forEach((e, si) => { const P = {}; for (const q in PC) { const x = (PC[q][bi] || [])[si]; if (x && x.length) P[q] = x }
+        slots.push({ R: e, L: (L[bi] || [])[si] === undefined ? [] : L[bi][si], S: SH[bi] && SH[bi][si] !== undefined ? SH[bi][si] : [], xR: /z/.test((mR[bi] || [])[si] || ''), xL: /z/.test((mL[bi] || [])[si] || ''), P, pd, pch, r, p: pid, k: k++, dk: dk++, line: l.label || '' }) }));
     });
     const DT = {}; slots.forEach(s => { if (s.p && !DT[s.p]) DT[s.p] = NT.timeline(NT.get(s.p), { rate: s.r, end: false }) });
     slots.forEach(s => { const ev = NT.RATE[s.r].ev; s.ch = (s.k % ev) === ev - 1 ? (Math.floor(s.k / ev) % 2 === 0 ? 1 : 2) : 0; const dt = s.p && DT[s.p]; s.dl = dt ? dt[s.dk % dt.length].l : [];
