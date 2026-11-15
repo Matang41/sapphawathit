@@ -59,8 +59,10 @@ function build(raw){
   const bars=[],sec=[];
   (raw.lines||[]).forEach((l,li)=>{
     const R=String(l.bars||'').trim().split(/\s+/).filter(Boolean),L=String(l.barsL||'').trim().split(/\s+/).filter(Boolean);
-    for(let rep=0;rep<(+l.rep===2?2:1);rep++){const b0=bars.length;
-      R.forEach((b,i)=>bars.push({r:decBar(b),l:L[i]?decBar(L[i]):[]}));
+    for(let rep=0;rep<(+l.rep===2?2:1);rep++){const b0=bars.length;let R1=R,L1=L;
+      /* เที่ยวที่ ๒ ที่ครูแก้ไว้ในบันทึกโน้ต (p2): แทนเฉพาะห้องที่ต่างจากเที่ยวแรก */
+      if(rep&&l.p2&&String(l.p2.i||'').trim()){R1=R.slice();L1=L.slice();const ix=String(l.p2.i).trim().split(/\s+/).map(Number),r2=String(l.p2.R||'').trim().split(/\s+/),l2=String(l.p2.L||'').trim().split(/\s+/);ix.forEach((b,k)=>{if(b<R1.length){if(r2[k])R1[b]=r2[k];if(l2[k])L1[b]=l2[k]}})}
+      R1.forEach((b,i)=>bars.push({r:decBar(b),l:L1[i]?decBar(L1[i]):[]}));
       if(bars.length>b0)sec.push({b0,b1:bars.length-1,label:(l.label||('ท่อน '+(li+1)))+(rep?' (ซ้ำ)':'')})}
   });
   return {id:raw.id,title:raw.title||'เพลง',by:raw.by||'',bpm:+raw.bpm||160,bars,sec,src:raw.src||'lib'};
