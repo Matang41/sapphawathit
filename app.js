@@ -56,7 +56,8 @@
   const typeName = id => { const t = C.memberTypes.find(x => x.id === id); return t ? t.name : '-'; };
   const roleOf = sid => (D.roles || {})[sid] || null;
   const roleName = r => { if (!r) return ''; if (r.role === 'rep') return 'กรรมการ ม.' + r.grade; const x = C.roles.find(y => y.id === r.role); return x ? x.name : ''; };
-  const insts = m => Object.keys((m && m.inst) || {});
+  /* เครื่องดนตรีของสมาชิก — เครื่องหลัก (m.main) อยู่ลำดับแรกเสมอ */
+  const insts = m => { const l = Object.keys((m && m.inst) || {}), k = m && m.main; return k && l.includes(k) ? [k].concat(l.filter(x => x !== k)) : l; };
   const lvOf = (sid, i) => { const s = ((D.skills || {})[sid] || {})[i]; return s && s.lv ? s.lv : 0; };
   /* ระดับฝีมือของชมรม: ครูแก้ชื่อ/รายละเอียด/จำนวนขั้นได้ (config/levels) — แสดงเลขระดับนำหน้าเสมอ */
   const levels = () => { const l = Array.isArray(cfg().levels) && cfg().levels.length ? cfg().levels : C.club.levels; return l.map(x => typeof x === 'string' ? { name: x } : (x || { name: '' })); };
@@ -264,7 +265,7 @@
   }
   function skillLine(sid, inst, editable) {
     const n = lvOf(sid, inst);
-    return '<div class="skill"><div class="row"><span class="grow"><b>' + esc(inst) + '</b></span>' + chip(lvName(n), n ? 'gold' : 'line') +
+    return '<div class="skill"><div class="row"><span class="grow"><b>' + esc(inst) + '</b>' + ((members()[sid] || {}).main === inst ? ' ' + chip('★ เครื่องหลัก', 'plum') : '') + '</span>' + chip(lvName(n), n ? 'gold' : 'line') +
       (editable ? '<button class="btn sm ghost" data-act="skill" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ประเมิน</button>' : '') + '</div>' + lvBar(n) + '</div>';
   }
 
@@ -283,7 +284,7 @@
     const used = instList().filter(i => act.some(s => (ms[s].inst || {})[i]));
     b += '<section class="card"><div class="lb">สมาชิกตามเครื่องดนตรี</div>' + (used.length ? used.map(i => {
       const ps = act.filter(s => (ms[s].inst || {})[i]).sort((a, c) => lvOf(c, i) - lvOf(a, i) || byClass(a, c));
-      return '<div class="igroup"><div class="igroup-h"><b>' + esc(i) + '</b><span class="muted">' + ps.length + ' คน</span></div><div class="row wrap" style="gap:6px">' + ps.map(s => '<a class="pill" href="#/m/' + esc(s) + '">' + esc(ms[s].first) + '<i>' + esc(lvOf(s, i) ? lvName(lvOf(s, i)) : 'ยังไม่ประเมิน') + '</i></a>').join('') + '</div></div>';
+      return '<div class="igroup"><div class="igroup-h"><b>' + esc(i) + '</b><span class="muted">' + ps.length + ' คน</span></div><div class="row wrap" style="gap:6px">' + ps.map(s => '<a class="pill" href="#/m/' + esc(s) + '">' + (ms[s].main === i ? '★ ' : '') + esc(ms[s].first) + '<i>' + esc(lvOf(s, i) ? lvName(lvOf(s, i)) : 'ยังไม่ประเมิน') + '</i></a>').join('') + '</div></div>';
     }).join('') : '<div class="muted">ยังไม่มีข้อมูลเครื่องดนตรี</div>') + '</section>';
     b += '<section class="card"><div class="row"><div class="lb grow" style="margin:0 0 8px">ลำดับระดับฝีมือ ' + levels().length + ' ขั้น</div>' + (can.manage() ? '<button class="btn sm ghost" data-act="setLevels">แก้ไข</button>' : '') + '</div><div class="lvl">' + levels().map((l, i) => '<div class="lvl-i"><b>Lv.' + (i + 1) + '</b><span><b>' + esc(l.name) + '</b>' + (l.desc ? '<small>' + esc(l.desc) + '</small>' : '') + '</span></div>').join('') + '</div></section>';
     return { title: 'แผนผังชมรม', body: b };
@@ -374,7 +375,8 @@
       h += (isNew ? fld('เลขประจำตัวนักเรียน', '<input class="in" id="f-sid" inputmode="numeric" autocomplete="off" required>', 'ใช้ผูกกับอีเมล เลขประจำตัว@' + esc(C.auth.domain) + ' แก้ภายหลังไม่ได้') : '<div class="kv"><span>เลขประจำตัว</span><b>' + esc(sid) + '</b></div>') +
         '<div class="g3">' + fld('คำนำหน้า', '<select class="in" id="f-prefix">' + opt(C.prefixes.map(p => [p, p]), m.prefix) + '</select>') + fld('ชื่อ', '<input class="in" id="f-first" value="' + esc(m.first || '') + '" required>') + fld('นามสกุล', '<input class="in" id="f-last" value="' + esc(m.last || '') + '" required>') + '</div>' +
         '<div class="g3">' + fld('ระดับชั้น', '<select class="in" id="f-grade">' + opt([1, 2, 3, 4, 5, 6].map(g => [g, 'ม.' + g]), m.grade || 1) + '</select>') + fld('ห้อง', '<input class="in" id="f-room" inputmode="numeric" value="' + esc(m.room || '') + '" required>') + fld('ประเภทสมาชิก', '<select class="in" id="f-type">' + opt(C.memberTypes.map(t => [t.id, t.name]), m.type) + '</select>') + '</div>' +
-        '<div class="fld"><span>เครื่องดนตรีที่เล่นได้</span><div class="checks">' + instList().map(i => '<label class="ck"><input type="checkbox" name="inst" value="' + esc(i) + '"' + ((m.inst || {})[i] ? ' checked' : '') + '><span>' + esc(i) + '</span></label>').join('') + '</div></div>';
+        '<div class="fld"><span>เครื่องดนตรีที่เล่นได้</span><div class="checks">' + instList().map(i => '<label class="ck"><input type="checkbox" name="inst" value="' + esc(i) + '"' + ((m.inst || {})[i] ? ' checked' : '') + '><span>' + esc(i) + '</span></label>').join('') + '</div></div>' +
+        '<div class="fld"><span>เครื่องดนตรีหลัก</span><select class="in" id="f-main">' + (insts(m).length ? opt(insts(m).map(i => [i, i]), insts(m)[0]) : '<option value="">— ติ๊กเครื่องดนตรีก่อน —</option>') + '</select><small>เครื่องที่ถนัดที่สุด ใช้รับแต้มภารกิจ และแสดงเป็นเครื่องแรก</small></div>';
       if (teacher) h += '<div class="fld"><span>รอบซ้อมประจำ</span><div class="checks"><label class="ck"><input type="checkbox" id="f-am"' + (m.am ? ' checked' : '') + '><span>ซ้อมเช้า</span></label><label class="ck"><input type="checkbox" id="f-pm"' + (m.pm ? ' checked' : '') + '><span>ซ้อมเย็น</span></label></div></div>';
     }
     h += '<div class="lb" style="margin-top:14px">ข้อมูลติดต่อ (ไม่แสดงต่อสมาชิกทั่วไป)</div><div class="g3">' + fld('เบอร์โทรนักเรียน', '<input class="in" id="f-phone" inputmode="tel">') + (selfOnly ? '' : fld('ชื่อผู้ปกครอง', '<input class="in" id="f-pname">') + fld('เบอร์โทรผู้ปกครอง', '<input class="in" id="f-pphone" inputmode="tel">')) + '</div>';
@@ -404,6 +406,7 @@
       if (!/^[0-9]{1,2}$/.test(v('#f-room'))) return err('ห้องต้องเป็นตัวเลข');
       const inst = {}; $$('input[name=inst]:checked', w).forEach(c => inst[c.value] = true);
       const rec = { prefix: v('#f-prefix'), first: v('#f-first'), last: v('#f-last'), grade: +v('#f-grade'), room: +v('#f-room'), type: v('#f-type'), inst };
+      if ($('#f-main', w)) { const mv = $('#f-main', w).value, ks = Object.keys(inst); rec.main = ks.length > 1 && inst[mv] ? mv : null; }
       if (teacher) { rec.am = $('#f-am', w).checked; rec.pm = $('#f-pm', w).checked; }
       if (F.photo) rec.photo = F.photo;
       if (isNew) {
@@ -448,6 +451,15 @@
       if (up && window.MIS) window.MIS.announce(sid, inst, lv, '');   /* เลื่อนยศ → ประกาศเกียรติคุณทั้งชมรม */
       log('skill.set', sid, inst + ' → ' + lvName(lv)); w.remove(); toast(lv ? 'ประเมินเป็น “' + lvName(lv) + '” แล้ว' : 'ล้างการประเมินแล้ว');
     });
+  }
+  /* กำหนดเครื่องดนตรีหลักของสมาชิกหลายคนพร้อมกัน */
+  function mainBulkForm() {
+    const l = activeSids().filter(s => insts(members()[s]).length).sort(byClass);
+    const w = modal('<h3>เครื่องดนตรีหลักของสมาชิก</h3><div class="muted" style="margin-bottom:8px">เครื่องหลักใช้รับแต้มภารกิจ และแสดงเป็นเครื่องแรกของแต่ละคน · คนที่เล่นเครื่องเดียวใช้เครื่องนั้นอัตโนมัติ</div><form class="form"><div style="max-height:60vh;overflow:auto">' +
+      l.map(s => { const m = members()[s], L = insts(m); return '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line);gap:8px;align-items:center"><span class="grow"><b>' + esc(fullName(m)) + '</b> <small class="muted">' + esc(cls(m)) + '</small></span>' + (L.length > 1 ? '<select class="in" style="max-width:160px" data-main="' + esc(s) + '">' + opt(L.map(i => [i, i]), L[0]) + '</select>' : '<span class="muted">' + esc(L[0]) + '</span>') + '</div>'; }).join('') +
+      '</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">บันทึก</button></div></form>', { center: true, sticky: true });
+    $('form', w).addEventListener('submit', e => { e.preventDefault(); const upd = {}; $$('[data-main]', w).forEach(x => { const s = x.dataset.main; if (x.value !== insts(members()[s])[0]) upd['members/' + s + '/main'] = x.value; });
+      const n = Object.keys(upd).length; if (n) { W(B.update('', upd)); log('member.main', '', n + ' คน'); } w.remove(); toast(n ? 'บันทึกเครื่องหลัก ' + n + ' คนแล้ว' : 'ไม่มีการเปลี่ยนแปลง'); });
   }
   function removeForm(sid) {
     const m = members()[sid];
@@ -660,6 +672,7 @@
     removeMember: d => { if (can.manage()) removeForm(d.sid); },
     role: d => { if (can.manage()) roleForm(d.sid); },
     skill: d => { if (can.manage()) skillForm(d.sid, d.inst); },
+    mainBulk: () => { if (can.manage()) mainBulkForm(); },
     toggle: d => { if (!can.manage()) return; const m = members()[d.sid]; const u = {}; u[d.k] = !m[d.k]; W(B.update('members/' + d.sid, u)); },
     importMembers: () => { if (can.edit()) importForm(); },
     exportMenu: () => { if (can.exp()) exportMenu(); },
@@ -715,6 +728,9 @@
     const b = e.target.closest('[data-act]'); if (!b) return;
     const f = ACT[b.dataset.act]; if (f) { e.preventDefault(); f(b.dataset, b); }
   });
+  /* ฟอร์มสมาชิก: ตัวเลือกเครื่องหลักตามเครื่องที่ติ๊ก */
+  document.addEventListener('change', e => { if (e.target.name !== 'inst') return; const w = e.target.closest('.modal'), s = w && $('#f-main', w); if (!s) return; const cur = s.value, l = $$('input[name=inst]:checked', w).map(c => c.value);
+    s.innerHTML = l.length ? opt(l.map(i => [i, i]), l.includes(cur) ? cur : l[0]) : '<option value="">— ติ๊กเครื่องดนตรีก่อน —</option>'; });
   document.addEventListener('input', e => { if (e.target.id === 'q') { UI.q = e.target.value; const l = $('#mlist'); if (l) { l.innerHTML = listHTML(); lastHTML = ''; } } });
   document.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.filter; if (k) { UI[k] = e.target.value; const l = $('#mlist'); if (l) { l.innerHTML = listHTML(); lastHTML = ''; } } });
 

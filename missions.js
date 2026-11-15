@@ -126,7 +126,7 @@
       return { title: 'ภารกิจของฉัน', body: b };
     }
     const p = P(), rd = ready();
-    let b = '<div class="row wrap" style="margin-bottom:14px;gap:8px"><button class="btn gold" data-act="misNew">' + ic('plus', 18) + 'มอบภารกิจ</button><button class="btn" data-act="misCrown">🎖️ สถาปนายศ</button><button class="btn ghost" data-act="misCfg">ตั้งค่าหลอดแต้ม</button></div>';
+    let b = '<div class="row wrap" style="margin-bottom:14px;gap:8px"><button class="btn gold" data-act="misNew">' + ic('plus', 18) + 'มอบภารกิจ</button><button class="btn" data-act="misCrown">🎖️ สถาปนายศ</button><button class="btn ghost" data-act="misCfg">ตั้งค่าหลอดแต้ม</button><button class="btn ghost" data-act="mainBulk">🎵 เครื่องหลักของสมาชิก</button></div>';
     if (rd.length) b += '<section class="card alert"><div class="lb">🔥 หลอดเต็ม รอประเมินเลื่อนยศ (' + rd.length + ')</div>' + rd.map(x => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><span class="grow"><b>' + esc(nm(x.sid)) + '</b><div class="muted" style="font-size:.82rem">' + esc(x.inst) + ' · ' + esc(A.lvName(A.lvOf(x.sid, x.inst))) + ' · ' + xpOf(x.sid, x.inst) + '/' + XPMAX() + ' แต้ม</div></span><button class="btn sm" data-act="misPromote" data-sid="' + esc(x.sid) + '" data-inst="' + esc(x.inst) + '">ประเมิน / เลื่อนยศ</button></div>').join('') + '</section>';
     b += '<div class="row" style="gap:6px;margin-bottom:10px">' + [['open', 'กำลังดำเนินการ'], ['closed', 'ปิดแล้ว']].map(t => '<button class="btn sm' + (UI.tab === t[0] ? '' : ' ghost') + '" data-act="misTab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
     const l = all().filter(m => UI.tab === 'closed' ? m.st === 'closed' : m.st !== 'closed');
