@@ -142,3 +142,74 @@
     }
   });
 })();
+
+/* ============================================================
+   คลังหน้าทับของชมรม (รุ่น 3.39)
+   ข้อมูล: natab/{id} = { n ชื่อ, kit เครื่อง, r อัตรา 1–3, s โน้ต, tip, src, base, by, at }
+     s = ห้องคั่นด้วยเว้นวรรค · ช่องคั่นด้วย , · ค่า = ลำดับเสียงของเครื่อง (แบบเดียวกับแถวเครื่องจังหวะในบันทึกโน้ต) · - = เว้น · a+b = สองเสียงในช่องเดียว
+     base = รหัสหน้าทับตั้งต้นของระบบ (games/natab.js) ที่ครูแก้ทับ — เกมกลองแขกและเครื่องกำกับจังหวะจะใช้ฉบับที่ครูแก้
+   ครูแก้ได้คนเดียว (กฎฐานข้อมูล) สมาชิกอ่านได้ · เกมอ่านผ่าน APP.D.natab ตอนเปิดเกม
+   ============================================================ */
+(function () {
+  'use strict';
+  const M = window.MC, B = window.B, A = window.APP;
+  const { $, esc, toast, modal } = M; const { chip, fld, opt, ic } = A;
+  const T = () => A.teacher();
+  const KIT = { khaek: ['กลองแขก', ['ติง', 'โจ๊ะ', 'ทั่ม', 'จ๊ะ']], taphon: ['ตะโพน', ['ตุ๊บ', 'ติง', 'ตืด', 'เท่ง', 'เทิด', 'ถะ', 'ป๊ะ', 'พรึง', 'เพริ่ง', 'เพริด', 'พรืด']], that: ['กลองทัด', ['ตูม', 'ต้อม']], thon: ['โทน–รำมะนา', ['ติง', 'โจ๊ง', 'ทั่ม', 'จ๊ะ']],
+    ching: ['ฉิ่ง', ['ฉิ่ง', 'ฉับ']], luang: ['วงกลองหลวง', ['ตึ้ง', 'ตึง', 'ตุ๊บ', 'โหม่ง', 'ฉ่า', 'แฉ่']], pujae: ['วงกลองปู่เจ่', ['ตึ่ง', 'ตุ๊บ', 'แต๊ก', 'ฉ่า', 'แฉ่', 'โหม่ง']] };
+  const RATE = { 1: 'ชั้นเดียว', 2: 'สองชั้น', 3: 'สามชั้น' }, CH = { 'ต': 0, 'โ': 1, 'ท': 2, 'จ': 3 };
+  const UI = { kit: 'khaek' };
+  A.SUBS.push({ key: 'natab', path: () => 'natab' });
+  const D = () => A.D.natab || {};
+  let asked = false;
+  function builtin() { if (!window.NATAB) { if (!asked) { asked = true; const s = document.createElement('script'); s.src = 'games/natab.js'; s.onload = () => A.rerender(); document.head.appendChild(s); } return {}; } return window.NATAB.ORIG || {}; }
+  function toIdx(str) { const L = String(str).split('/').map(x => x.trim().split(/\s+/).filter(Boolean)); return (L[0] || []).map((b, bi) => Array.from(b).map((c, ci) => { const v = []; L.forEach(l => { const ch = Array.from(l[bi] || '')[ci]; if (ch in CH && !v.includes(CH[ch])) v.push(CH[ch]); }); return v.length ? v.slice(0, 2).join('+') : '-'; }).join(',')).join(' '); }
+  function toText(kit, s) { const N = (KIT[kit] || ['', []])[1]; return String(s || '').split(' ').filter(Boolean).map(b => b.split(',').map(e => e === '-' || !e ? '-' : e.split('+').map(i => N[+i] || '?').join('+')).join(' ')).join(' / '); }
+  function fromText(kit, txt) { const N = KIT[kit][1], bars = String(txt || '').split(/[\/|\n]+/).map(x => x.trim()).filter(Boolean), out = [];
+    if (!bars.length) return { err: 'ยังไม่ได้ใส่โน้ตหน้าทับ' }; if (bars.length > 64) return { err: 'ยาวเกิน 64 ห้อง' };
+    for (let i = 0; i < bars.length; i++) { const c = bars[i].split(/\s+/); if (c.length !== 4) return { err: 'ห้องที่ ' + (i + 1) + ' มี ' + c.length + ' ช่อง (ต้องมี 4 ช่อง ช่องว่างใส่ -)' };
+      const o = []; for (const e of c) { if (/^[-–—]$/.test(e)) { o.push('-'); continue; } const p = e.split('+'); if (p.length > 2) return { err: 'ห้องที่ ' + (i + 1) + ': ช่องหนึ่งซ้อนได้ไม่เกิน 2 เสียง' };
+        const ix = p.map(x => N.indexOf(x)); if (ix.some(n => n < 0)) return { err: 'ห้องที่ ' + (i + 1) + ': ไม่รู้จักคำ “' + p[ix.findIndex(n => n < 0)] + '” (ใช้ได้: ' + N.join(' ') + ')' }; o.push(ix.join('+')); }
+      out.push(o.join(',')); }
+    return { s: out.join(' ') }; }
+  function list(kit) { const d = D(), o = [], ov = {};
+    Object.keys(d).forEach(id => { const x = d[id]; if (!x || x.kit !== kit || !x.s) return; if (x.base) ov[x.base] = Object.assign({ id }, x); else o.push(Object.assign({ id }, x)); });
+    o.sort((a, b) => String(a.n).localeCompare(String(b.n), 'th'));
+    if (kit !== 'khaek') return o; const bi = builtin();
+    return Object.keys(bi).map(id => ov[id] ? Object.assign({ fixed: true }, ov[id]) : { base: id, n: bi[id].name, kit: 'khaek', r: bi[id].r, s: toIdx(bi[id].s), tip: bi[id].tip, src: bi[id].src }).concat(o); }
+  const row = x => '<section class="card"><div class="row" style="gap:6px;flex-wrap:wrap"><b class="grow">' + esc(x.n) + '</b>' + chip(RATE[x.r] || '', 'plum') + chip(x.s.split(' ').length + ' ห้อง', 'line') + (x.fixed ? chip('ครูแก้ไขแล้ว', 'gold') : '') + '</div>' +
+    '<div style="margin:8px 0;line-height:1.9;font-size:.95rem">' + x.s.split(' ').map(bar => '<span style="display:inline-block;border:1px solid rgba(128,128,128,.35);border-radius:6px;padding:0 7px;margin:2px 3px 2px 0;white-space:nowrap">' + esc(toText(x.kit, bar)) + '</span>').join('') + '</div>' +
+    (x.tip ? '<div class="muted" style="font-size:.85rem">' + esc(x.tip) + '</div>' : '') + (x.src || x.by ? '<div class="muted" style="font-size:.78rem">' + esc(x.src ? 'ที่มา: ' + x.src : 'บันทึกโดย ' + x.by) + '</div>' : '') +
+    (T() ? '<div class="row" style="gap:6px;margin-top:8px"><button class="btn sm ghost" data-act="ntEdit" data-id="' + esc(x.id || '') + '" data-base="' + esc(x.base || '') + '">แก้ไข</button>' + (x.id ? '<button class="btn sm ghost" data-act="ntDel" data-id="' + esc(x.id) + '">' + (x.base ? 'คืนค่าเดิม' : 'ลบ') + '</button>' : '') + '</div>' : '') + '</section>';
+  A.NAVS.push({ id: 'nt', label: 'คลังหน้าทับ', icon: 'lib', order: 35, show: () => true });
+  A.V.nt = function () {
+    const L = list(UI.kit);
+    const b = '<div class="row" style="gap:6px;margin-bottom:10px;flex-wrap:wrap">' + Object.keys(KIT).map(k => '<button class="btn sm ' + (UI.kit === k ? 'gold' : 'ghost') + '" data-act="ntKit" data-k="' + k + '">' + esc(KIT[k][0]) + '</button>').join('') + '</div>' +
+      (T() ? '<div class="row" style="margin-bottom:10px"><button class="btn gold" data-act="ntEdit" data-id="" data-base="">' + ic('plus', 18) + 'เพิ่มหน้าทับ</button></div><div class="note" style="margin-bottom:10px">ครูแก้หน้าทับได้คนเดียว · เมื่อบันทึก ทุกคนในชมรมจะได้ฉบับที่แก้แล้วในบันทึกโน้ต เครื่องกำกับจังหวะ และเกมกลองแขก เมื่อเปิดครั้งถัดไป · โน้ตเพลงที่เติมหน้าทับไปก่อนหน้านี้ไม่เปลี่ยนตาม ให้กดเติมซ้ำในเพลงนั้น</div>'
+        : '<div class="muted" style="margin-bottom:10px">หน้าทับกลางของชมรม ใช้ร่วมกันในบันทึกโน้ต เครื่องกำกับจังหวะ และเกม · พบจุดผิดแจ้งครูได้เลย</div>') +
+      (L.length ? L.map(row).join('') : '<div class="empty">ยังไม่มีหน้าทับของ' + esc(KIT[UI.kit][0]) + 'ในคลัง' + (T() ? ' — กด “เพิ่มหน้าทับ” หรือเก็บจากบรรทัดในบันทึกโน้ต (🥁 เครื่องจังหวะ › เก็บบรรทัดนี้เข้าคลัง)' : '') + '</div>');
+    return { title: 'คลังหน้าทับ', body: b };
+  };
+  function form(id, base) { if (!T()) return; const d = D(), bi = builtin();
+    const e = id ? d[id] : base && bi[base] ? { n: bi[base].name, kit: 'khaek', r: bi[base].r, s: toIdx(bi[base].s), tip: bi[base].tip, src: bi[base].src, base } : { kit: UI.kit, r: 2 };
+    if (!e) return; const fixKit = !!(id || base);
+    const w = modal('<h3>' + (fixKit ? 'แก้ไขหน้าทับ' : 'เพิ่มหน้าทับ') + '</h3><form class="form">' +
+      fld('ชื่อหน้าทับ', '<input class="in" id="nf-n" maxlength="60" required value="' + esc(e.n || '') + '">') +
+      '<div class="row" style="gap:8px">' + fld('เครื่อง', '<select class="in" id="nf-k"' + (fixKit ? ' disabled' : '') + '>' + opt(Object.keys(KIT).map(k => [k, KIT[k][0]]), e.kit) + '</select>') + fld('อัตราจังหวะ', '<select class="in" id="nf-r">' + opt([['3', 'สามชั้น'], ['2', 'สองชั้น'], ['1', 'ชั้นเดียว']], String(e.r || 2)) + '</select>') + '</div>' +
+      fld('โน้ตหน้าทับ', '<textarea class="in" id="nf-s" rows="6" style="font-size:1rem">' + esc(toText(e.kit, e.s || '').replace(/ \/ /g, ' /\n')) + '</textarea>', 'ห้องละ 4 ช่อง คั่นช่องด้วยเว้นวรรค · คั่นห้องด้วย / หรือขึ้นบรรทัดใหม่ · ช่องว่างใส่ - · สองเสียงในช่องเดียวใช้ + เช่น ติง+ทั่ม') +
+      '<div class="muted" id="nf-w" style="font-size:.85rem;margin:-4px 0 8px"></div>' +
+      fld('คำแนะนำ (ไม่บังคับ)', '<input class="in" id="nf-t" maxlength="140" value="' + esc(e.tip || '') + '">') + fld('ที่มา / เครดิต (ไม่บังคับ)', '<input class="in" id="nf-c" maxlength="100" value="' + esc(e.src || '') + '">') +
+      '<div class="note warn" id="nf-err" hidden></div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">บันทึก</button></div></form>');
+    const words = () => { $('#nf-w', w).textContent = 'คำที่ใช้ได้: ' + KIT[$('#nf-k', w).value][1].join(' · '); }; words(); $('#nf-k', w).addEventListener('change', words);
+    $('form', w).addEventListener('submit', ev => { ev.preventDefault(); const err = $('#nf-err', w), kit = $('#nf-k', w).value, n = $('#nf-n', w).value.trim(), r = fromText(kit, $('#nf-s', w).value);
+      if (!n) { err.textContent = 'ใส่ชื่อหน้าทับ'; err.hidden = false; return; } if (r.err) { err.textContent = r.err; err.hidden = false; return; }
+      const nid = id || B.uid(); A.W(B.set('natab/' + nid, { n, kit, r: +$('#nf-r', w).value || 2, s: r.s, tip: $('#nf-t', w).value.trim() || null, src: $('#nf-c', w).value.trim() || null, base: e.base || null, by: A.myName(), at: Date.now() }));
+      A.log(id ? 'natab.edit' : base ? 'natab.fix' : 'natab.new', '', n); UI.kit = kit; w.remove(); toast('บันทึกแล้ว — ทั้งชมรมจะใช้ฉบับนี้เมื่อเปิดเกมหรือบันทึกโน้ตครั้งถัดไป'); A.rerender(); }); }
+  Object.assign(A.ACT, {
+    ntKit: d => { UI.kit = d.k; A.rerender(); },
+    ntEdit: d => form(d.id || '', d.base || ''),
+    ntDel: async d => { if (!T()) return; const x = D()[d.id]; if (!x) return;
+      if (!(await M.confirmBox(x.base ? 'คืนค่าเดิม' : 'ลบหน้าทับ', esc(x.n) + (x.base ? ' — กลับไปใช้ฉบับตั้งต้นของระบบ' : ' — ลบออกจากคลังของชมรม (โน้ตเพลงที่เติมไปแล้วไม่เปลี่ยน)'), x.base ? 'คืนค่าเดิม' : 'ลบ', !x.base))) return;
+      A.W(B.remove('natab/' + d.id)); A.log('natab.del', '', x.n); toast('เรียบร้อย'); }
+  });
+})();
