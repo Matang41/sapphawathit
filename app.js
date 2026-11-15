@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 15;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 16;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -266,7 +266,7 @@
   function skillLine(sid, inst, editable) {
     const n = lvOf(sid, inst);
     return '<div class="skill"><div class="row"><span class="grow"><b>' + esc(inst) + '</b>' + ((members()[sid] || {}).main === inst ? ' ' + chip('★ เครื่องหลัก', 'plum') : '') + '</span>' + chip(lvName(n), n ? 'gold' : 'line') +
-      (editable ? '<button class="btn sm ghost" data-act="skill" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ประเมิน</button>' : '') + '</div>' + lvBar(n) + '</div>';
+      (editable ? '<button class="btn sm ghost" data-act="skill" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ประเมิน</button>' + (n && ME && ME.teacher && ACT.rankDown ? '<button class="btn sm ghost" style="color:#c0392b" data-act="rankDown" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ลด/ถอดยศ</button>' : '') : '') + '</div>' + lvBar(n) + '</div>';
   }
 
   /* ============ แผนผัง ============ */
