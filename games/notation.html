@@ -167,7 +167,7 @@ body.selmode .sl{cursor:copy}
     <span id="mkTools"></span>
     <span id="tSelN" class="seln"></span>
   </div>
-  <div class="hint">แตะช่องในห้องเพื่อเลือก แล้วกดลูกฆ้องด้านล่างเพื่อใส่โน้ต · <b>–</b> = เว้น/ลากเสียง · <b>คู่</b> = ตีสองเสียงพร้อมกัน · <span class="kbh">คีย์บอร์ด / นัมแพด: <b>1–7</b> = ด ร ม ฟ ซ ล ท · <b>+</b> (หรือ <b>=</b>) หลังตัวโน้ต = เติมจุดบน (เสียงสูง) กดซ้ำ = สองจุด · <b>−</b> = จุดล่าง (เสียงต่ำ) · <b>เว้นวรรค</b> หรือ <b>0</b> = – · <b>Enter</b> = ไปห้องถัดไป · <b>.</b> หรือ <b>Backspace</b> = ลบ · <b>*</b> = คู่ · <b>/</b> = สลับมือ · <b>←→</b> เลื่อน · <b>↑↓</b> สลับแถว · ตัวอย่าง: <b>5 6 1+ 2+</b> = ซ ล ดํ รํ · ทางจะเข้: <b>*</b> หลังตัวโน้ต = สายลวด (เส้นใต้คู่) กดซ้ำ = สายทุ้ม (เส้นใต้เดี่ยว) · ทางซอ: <b>*</b> = พรม · คันชักใช้ปุ่มเครื่องมือแล้วแตะ/ลากคร่อมโน้ต</span></div>
+  <div class="hint">แตะช่องในห้องเพื่อเลือก แล้วกดลูกฆ้องด้านล่างเพื่อใส่โน้ต · <b>–</b> = เว้น/ลากเสียง · <b>คู่</b> = ตีสองเสียงพร้อมกัน · <span class="kbh">คีย์บอร์ด / นัมแพด: <b>1–7</b> = ด ร ม ฟ ซ ล ท · <b>+</b> (หรือ <b>=</b>) หลังตัวโน้ต = เติมจุดบน (เสียงสูง) กดซ้ำ = สองจุด · <b>−</b> = จุดล่าง (เสียงต่ำ) · <b>เว้นวรรค</b> หรือ <b>0</b> = – · <b>Enter</b> = ไปห้องถัดไป · <b>.</b> หรือ <b>Backspace</b> = ลบ · <b>*</b> = คู่ · <b>/</b> = สลับมือ · <b>←→</b> เลื่อน · <b>↑↓</b> สลับแถว · <b>Ctrl/⌘+C</b> คัดลอก (ไม่เลือก = ทั้งห้อง · Shift+←→ เลือกช่วง) · <b>Ctrl/⌘+V</b> วาง · ตัวอย่าง: <b>5 6 1+ 2+</b> = ซ ล ดํ รํ · ทางจะเข้: <b>*</b> หลังตัวโน้ต = สายลวด (เส้นใต้คู่) กดซ้ำ = สายทุ้ม (เส้นใต้เดี่ยว) · ทางซอ: <b>*</b> = พรม · คันชักใช้ปุ่มเครื่องมือแล้วแตะ/ลากคร่อมโน้ต</span></div>
   <div class="sheet" id="sheet"></div>
   <div class="credit">บันทึกโน้ตเพลงไทย · ชมรมดนตรีไทยสรรพวาทิต<br>พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
 </div>
@@ -179,6 +179,8 @@ body.selmode .sl{cursor:copy}
       <button class="btn" data-k="undo" id="kUndo" title="ย้อนกลับ (Ctrl/⌘+Z)">↶ ย้อน</button>
       <button class="btn" data-k="redo" id="kRedo" title="ทำซ้ำ (Ctrl/⌘+Shift+Z)">↷ ทำซ้ำ</button>
       <button class="btn" data-k="rest">– เว้น</button>
+      <button class="btn" id="kCopy" title="คัดลอก (Ctrl/⌘+C) · เลือกช่วงด้วย Shift+←→ หรือ Shift+คลิก · ไม่เลือก = คัดลอกทั้งห้อง">📋 คัดลอก</button>
+      <button class="btn" id="kPaste" title="วางที่เคอร์เซอร์ (Ctrl/⌘+V)">📥 วาง</button>
       <button class="btn" data-k="back">⌫ ลบ</button>
       <button class="btn hand" data-k="hand" id="kHand">🤚 กำลังใส่: มือขวา (แถวล่าง)</button>
       <button class="btn" data-k="pair" id="kPair" title="กดสองลูก: เสียงต่ำลงมือซ้าย เสียงสูงลงมือขวา">คู่ (2 มือ)</button>
@@ -278,14 +280,14 @@ const blankBars=n=>Array.from({length:n},()=>[[],[],[],[]]);
 /* แต่ละท่อนมีสองแถว: h.L = มือซ้าย (แถวบน) · h.R = มือขวา (แถวล่าง) จำนวนห้องเท่ากันเสมอ */
 const blankLine=(label,n)=>({label,h:{L:blankBars(n),R:blankBars(n)}});
 function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",voice:"khong",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true,pujae:false},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
-function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,role:s.role||"",way:s.way||"",west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{},l.rep===2?{rep:2}:{},mkEnc(l,"R")?{mkR:mkEnc(l,"R")}:{},mkEnc(l,"L")?{mkL:mkEnc(l,"L")}:{},l.lk&&l.lk.some(Boolean)?{lk:Array.from({length:l.h.R.length},(_,i)=>l.lk[i]||"-").join(" ")}:{})),at:Date.now()}}
+function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,role:s.role||"",way:s.way||"",w0:s.w0!=null?s.w0:(s.way||""),west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{},l.rep===2?{rep:2}:{},mkEnc(l,"R")?{mkR:mkEnc(l,"R")}:{},mkEnc(l,"L")?{mkL:mkEnc(l,"L")}:{},l.lk&&l.lk.some(Boolean)?{lk:Array.from({length:l.h.R.length},(_,i)=>l.lk[i]||"-").join(" ")}:{})),at:Date.now()}}
 /* เพลงรุ่นเก่า (แถวเดียว): ตีคู่แยกเป็นเสียงต่ำ→มือซ้าย เสียงสูง→มือขวา · โน้ตเดี่ยวอยู่มือขวา */
 function splitOld(bars){
   const L=bars.map(b=>b.map(e=>Array.isArray(e)&&e.length>1?[Math.min(...e)]:[]));
   const R=bars.map(b=>b.map(e=>Array.isArray(e)&&e.length>1?[Math.max(...e)]:e));
   return {L,R};
 }
-function unpack(o){const s=Object.assign(newSong(),o||{});s.mix=Object.assign({khong:true,drum:true,ching:true},s.mix||{});s.west=Object.assign({tr:0,chords:true},s.west||{});s.hands=!(o&&o.hands===false);
+function unpack(o){const s=Object.assign(newSong(),o||{});s.mix=Object.assign({khong:true,drum:true,ching:true},s.mix||{});s.west=Object.assign({tr:0,chords:true},s.west||{});s.hands=!(o&&o.hands===false);s.w0=(o&&o.w0!=null)?o.w0:((o&&o.way)||"");
   const ls=Array.isArray(o&&o.lines)?o.lines:Object.values((o&&o.lines)||{});
   s.lines=ls.map(l=>{const R=decBars(l.bars);if(!R.length)return null;
     if(l.barsL==null){s.hands=false;return {label:l.label||"",rate:+l.rate||0,natab:l.natab||"",rep:+l.rep===2?2:0,lk:lkDec(l.lk),mk:{L:mkDec(l.mkL),R:mkDec(l.mkR)},h:{L:blankBars(R.length),R}}}   // เพลงรุ่นเก่า (แถวเดียว) เปิดแบบโน้ตกลาง
@@ -309,7 +311,7 @@ function snap(){const j=snapOf();if(j===H[HI])return;H=H.slice(0,HI+1);H.push(j)
 function resetHist(){H=[snapOf()];HI=0;histUI()}
 function touch(){snap();persist()}
 function histUI(){const u=$("#kUndo"),r=$("#kRedo");if(u)u.disabled=HI<=0;if(r)r.disabled=HI>=H.length-1}
-function restore(i){if(i<0||i>=H.length)return;HI=i;const keep={id:song.id,libId:song.libId};song=unpack(JSON.parse(H[HI]));Object.assign(song,keep);persist();
+function restore(i){if(i<0||i>=H.length)return;HI=i;const keep={id:song.id,libId:song.libId,w0:song.w0};song=unpack(JSON.parse(H[HI]));Object.assign(song,keep);persist();
   stop();uiSettings();render();const c=cur;if(!song.lines[c.l]||c.b>=song.lines[c.l].h.R.length)cur={l:0,b:0,s:0,h:c.h};setCur(cur);histUI()}
 function undo(){if(HI>0){restore(HI-1);toast("ย้อนกลับแล้ว")}else toast("ย้อนกลับไม่ได้อีกแล้ว")}
 function redo(){if(HI<H.length-1){restore(HI+1);toast("ทำซ้ำแล้ว")}}
@@ -417,6 +419,30 @@ function octShift(d){
   setEntry(c,[ni]);if(lastPut&&lastPut.c===c)lastPut.i=ni;if(pend&&ck(pend.c)===ck(c))pend.i=ni;
   touch();refreshSlot(c);audio();vN(ni);
 }
+/* ---------- คัดลอก / วางโน้ต (รุ่น 3.26) ----------
+   ช่วง = Shift+←→ หรือ Shift+คลิก · หรือโหมดติ๊กเลือก · ไม่เลือก = ทั้งห้องที่เคอร์เซอร์อยู่ · คัดลอกทั้งแถวมือซ้าย/ขวาพร้อมเครื่องหมาย
+   คลิปบอร์ดเก็บในเครื่อง จึงวางข้ามเพลงได้ (เช่น จากทางกลางไปทางซอ) */
+const KCLIP="sapphawathit_note_clip";let ANCH=null,RNG=null;
+function rngHL(){$$(".sl.rng").forEach(e=>e.classList.remove("rng"));if(!RNG)return;const r=clipSpan();if(!r)return;HANDS().forEach(h=>{for(let p=r.p0;p<=r.p1;p++){const e=$('.sl[data-c="'+ck({l:r.l,b:Math.floor(p/4),s:p%4,h})+'"]');if(e)e.classList.add("rng")}})}
+function clipSpan(){let l,p0,p1;
+  if(RNG&&RNG.a.l===RNG.z.l){l=RNG.a.l;p0=Math.min(lpos(RNG.a),lpos(RNG.z));p1=Math.max(lpos(RNG.a),lpos(RNG.z))}
+  else if(SEL.length){l=SEL[0].l;if(SEL.some(c=>c.l!==l))return null;p0=Math.min(...SEL.map(lpos));p1=Math.max(...SEL.map(lpos))}
+  else{l=cur.l;p0=cur.b*4;p1=p0+3}
+  HANDS().forEach(h=>{while(p0>0&&lget(l,h,p0)===null)p0--;while(lget(l,h,p1+1)===null)p1++});return {l,p0,p1}}
+function copyNotes(){const r=clipSpan();if(!r)return toast("เลือกโน้ตในท่อนเดียวกันก่อน");const L=song.lines[r.l],o={hands:!!song.hands,n:r.p1-r.p0+1,rows:{},mk:{}};
+  HANDS().forEach(h=>{o.rows[h]=[];o.mk[h]=[];for(let p=r.p0;p<=r.p1;p++){o.rows[h].push(JSON.parse(JSON.stringify(lget(r.l,h,p))));o.mk[h].push(mkAt(L,h,Math.floor(p/4),p%4))}});
+  try{localStorage.setItem(KCLIP,JSON.stringify(o))}catch(e){}window.__clip=o;
+  const nb=o.n%4===0?o.n/4+" ห้อง":o.n+" ช่อง";toast("คัดลอก "+nb+" แล้ว · ไปวางที่ต้องการแล้วกด Ctrl/⌘+V หรือปุ่ม “วาง”")}
+function pasteNotes(){let o=window.__clip;try{o=JSON.parse(localStorage.getItem(KCLIP))||o}catch(e){}if(!o||!o.n)return toast("ยังไม่ได้คัดลอกโน้ต");
+  if(selMode)return toast("ปิด “ติ๊กเลือก” ก่อน แล้วค่อยวาง");
+  const l=cur.l,p0=lpos(cur),src=Object.keys(o.rows),dst=HANDS();
+  const map=dst.length===1?{R:src.includes("R")?"R":src[0]}:src.length===1?{[cur.h]:src[0]}:{L:"L",R:"R"};
+  for(const h in map){const row=o.rows[map[h]];for(let k=0;k<row.length;k++){const e=row[k];if(isGrp(e)&&((p0+k)%4)+e.span>4)return toast("วางตรงนี้ไม่ได้: กลุ่มสามพยางค์/ขยี้จะข้ามห้อง — ให้วางที่ช่องเดียวกับต้นฉบับในห้อง")}}
+  const L=song.lines[l];while(nBars(l)*4<p0+o.n){L.h.L.push([[],[],[],[]]);L.h.R.push([[],[],[],[]])}
+  for(const h in map){for(let k=0;k<o.n;k++){const c={l,b:Math.floor((p0+k)/4),s:(p0+k)%4,h},st=startOf(c);if(isGrp(entryAt(st))){clearGroupAt(st);if(lpos(st)<p0)setEntry(st,[])}}}
+  for(const h in map){const row=o.rows[map[h]],mk=(o.mk||{})[map[h]]||[];for(let k=0;k<o.n;k++){const p=p0+k,b=Math.floor(p/4),s2=p%4;rowOf(l,h)[b][s2]=JSON.parse(JSON.stringify(row[k]));mkSet(L,h,b,s2,mk[k]||"")}bowFix(l,h)}
+  touch();RNG=null;ANCH=null;const end=p0+o.n,nb=nBars(l);render();setCur(end<nb*4?{l,b:Math.floor(end/4),s:end%4,h:cur.h}:{l,b:nb-1,s:3,h:cur.h},true);
+  toast("วางแล้ว "+(o.n%4===0?o.n/4+" ห้อง":o.n+" ช่อง"))}
 function nextBar(){pend=null;const just=lastPut&&lastPut.after===ck(cur)&&cur.s===0;lastPut=null;if(just)return;/* เพิ่งพิมพ์ครบห้อง เคอร์เซอร์อยู่ต้นห้องใหม่แล้ว */if(cur.b+1<nBars(cur.l))return setCur({l:cur.l,b:cur.b+1,s:0,h:cur.h},true);if(cur.l+1<song.lines.length)return setCur({l:cur.l+1,b:0,s:0,h:cur.h},true);addBar()}
 function rest(){pend=null;const g=clearGroupAt(cur);setEntry(cur,[]);touch();g?refresh():refreshSlot(cur);move(1)}
 function back(){pend=null;const e=entryAt(cur);if(isGrp(e)||e.length){const g=clearGroupAt(cur);setEntry(cur,[]);g?refresh():refreshSlot(cur)}else{move(-1);const g=clearGroupAt(cur);setEntry(cur,[]);g?refresh():refreshSlot(cur)}touch()}
@@ -462,6 +488,8 @@ function ungroup(){
 $("#sheet").addEventListener("click",e=>{
   const s2=e.target.closest(".sl");if(s2){const p=s2.dataset.c.split(",");const c={l:+p[0],b:+p[1],s:+p[2],h:p[3]};
     if(selMode){toggleSel(c);return}
+    if(e.shiftKey){if(!ANCH)ANCH=Object.assign({},cur);setCur(c);RNG={a:ANCH,z:Object.assign({},cur)};rngHL();return}
+    if(RNG||ANCH){RNG=null;ANCH=null;rngHL()}
     pend=null;setCur(c);const x=entryAt(c);audio();if(isGrp(x))playEntry(x,AC.currentTime,60/song.bpm);else x.forEach(i=>vN(i));return}
   const a=e.target.closest("[data-lact]");if(a){const li=+a.dataset.li;
     if(a.dataset.lact==="del"){if(song.lines.length<=1)return toast("ต้องมีอย่างน้อย 1 ท่อน");if(!a.dataset.sure){a.dataset.sure=1;a.textContent="แน่ใจ?";setTimeout(()=>{a.textContent="ลบท่อน";delete a.dataset.sure},2500);return}
@@ -520,6 +548,7 @@ function lkDlg(){
   $("#lkDel").addEventListener("click",()=>put(""));
 }
 $("#tLk").addEventListener("click",lkDlg);
+$("#kCopy").addEventListener("click",copyNotes);$("#kPaste").addEventListener("click",pasteNotes);
 /* ---------- เครื่องหมายเฉพาะเครื่อง: สายลวด/สายทุ้ม (จะเข้) · พรม/คันชัก (ซอ) ---------- */
 var TOOL="",drag=null;
 const MKT={jakhe:[["w","═ สายลวด"],["t","─ สายทุ้ม"],["x","ลบเครื่องหมาย"]],saw:[["p","พรม"],["i","⌒ คันชักเข้า"],["o","⌣ คันชักออก"],["x","ลบเครื่องหมาย"]]};
@@ -563,6 +592,8 @@ $$(".ctl [data-k]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset
 document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z"||e.key==="y")){if(e.target.matches("input,textarea"))return;e.preventDefault();(e.key==="y"||e.shiftKey)?redo():undo();return}
   if(e.target.matches("input,textarea,select"))return;
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.code==="KeyC"||e.code==="KeyV"||e.code==="KeyX")){if(window.getSelection&&String(window.getSelection()).length&&e.code!=="KeyV")return;e.preventDefault();if(e.code==="KeyV")pasteNotes();else copyNotes();return}
+  if(e.key==="Escape"&&(RNG||ANCH)){RNG=null;ANCH=null;rngHL();return}
   if(e.ctrlKey||e.metaKey||!$("#ov").classList.contains("hidden"))return;
   /* ใช้รหัสปุ่มจริง (e.code) — ใช้ได้ทั้งแป้นไทย/อังกฤษ และนัมแพดแม้ปิด NumLock */
   const c=e.code||"",np=/^Numpad[0-9]$/.test(c)?+c.slice(6):null;
@@ -576,7 +607,7 @@ document.addEventListener("keydown",e=>{
   if(c==="NumpadDivide"){e.preventDefault();lastPut=null;setHand(cur.h==="L"?"R":"L");return}
   if(e.key===" "||c==="Space"||np===0||c==="Digit0"){e.preventDefault();lastPut=null;rest()}else if(e.key==="Backspace"||c==="NumpadDecimal"){e.preventDefault();lastPut=null;back()}
   else if(e.key==="ArrowUp"){e.preventDefault();setHand("L")}else if(e.key==="ArrowDown"){e.preventDefault();setHand("R")}
-  else if(e.key==="ArrowRight"){e.preventDefault();move(1)}else if(e.key==="ArrowLeft"){e.preventDefault();move(-1)}
+  else if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();const d=e.key==="ArrowRight"?1:-1;if(e.shiftKey){if(!ANCH)ANCH=Object.assign({},cur);move(d);RNG={a:ANCH,z:Object.assign({},cur)}}else{ANCH=null;RNG=null;move(d)}rngHL()}
 });
 
 /* ---------- ตั้งค่าเพลง ---------- */
@@ -670,6 +701,8 @@ $("#dlg").addEventListener("click",e=>{
     if(o.startsWith("x:")){if(!b.dataset.sure){b.dataset.sure=1;b.textContent="แน่ใจ?";return}setDrafts(getDrafts().filter(y=>y.id!==o.slice(2)));b.closest(".it").remove();toast("ลบแล้ว");return}
   }
   if(b.dataset.s){const s=b.dataset.s;
+    if(s==="copy"){forkSong("");$("#bSave").click();return}
+    forkIfWayChanged();
     if(s==="local"){ensureAuthor();const l=getDrafts().filter(x=>x.id!==song.id);l.unshift(pack(song));setDrafts(l.slice(0,80));closeDlg();toast("บันทึก “"+song.title+"” ในเครื่องนี้แล้ว")}
     else if(s==="club")publish();
     return}
@@ -677,10 +710,14 @@ $("#dlg").addEventListener("click",e=>{
 });
 
 /* บันทึก */
+/* บันทึกแยกฉบับตามทาง (รุ่น 3.26): เปิดโน้ตทางหนึ่งแล้วเปลี่ยน “ทาง” → บันทึกเป็นฉบับใหม่เสมอ ฉบับเดิมไม่ถูกทับ */
+function forkSong(msg){song.id="s"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);song.libId="";song.w0=song.way||"";persist();if(msg)toast(msg)}
+function forkIfWayChanged(){const w0=song.w0!=null?song.w0:(song.way||"");if(w0!==(song.way||"")){const a=w0?WAYS[w0]:"ไม่ระบุทาง",b=song.way?WAYS[song.way]:"ไม่ระบุทาง";forkSong("ทางเปลี่ยนจาก "+a+" เป็น "+b+" — บันทึกเป็นฉบับใหม่ ฉบับเดิมยังอยู่ครบ");return true}song.w0=song.way||"";return false}
 $("#bSave").addEventListener("click",()=>{
   if(!song.title.trim()){toast("ตั้งชื่อเพลงก่อน");$("#title").focus();return}
   const mine=inApp()?myPending():[];
-  dlg('<h3>บันทึก “'+esc(song.title)+'”</h3><button class="xb" data-s="local"><b>💾 บันทึกในเครื่องนี้</b><span>เก็บเป็นร่างไว้แก้ต่อ เปิดได้จากปุ่ม “เปิด”</span></button>'+
+  const w0=song.w0!=null?song.w0:(song.way||""),wch=w0!==(song.way||"");
+  dlg('<h3>บันทึก “'+esc(song.title)+'”'+(song.way?' · '+esc(WAYS[song.way]):'')+'</h3>'+(wch?'<div style="margin:0 0 8px;padding:8px 10px;border-radius:8px;background:rgba(111,208,140,.15);font-size:13px">แผ่นนี้เปิดมาจาก'+esc(w0?WAYS[w0]:"โน้ตที่ไม่ระบุทาง")+' แล้วเปลี่ยนเป็น'+esc(song.way?WAYS[song.way]:"ไม่ระบุทาง")+' — จะบันทึกเป็น<b>ฉบับใหม่</b> ฉบับเดิมไม่ถูกทับ</div>':'')+'<button class="xb" data-s="local"><b>💾 บันทึกในเครื่องนี้</b><span>เก็บเป็นร่างไว้แก้ต่อ เปิดได้จากปุ่ม “เปิด”</span></button>'+(wch?'':'<button class="xb" data-s="copy"><b>📄 บันทึกเป็นฉบับใหม่ (สำเนา)</b><span>แยกเป็นอีกฉบับ ฉบับที่บันทึกไว้ก่อนหน้าไม่ถูกแก้</span></button>')+
     (inApp()?(isTeacher()
       ?'<button class="xb" data-s="club"><b>🏫 บันทึกเป็นสื่อของชมรม</b><span>'+(song.libId?"อัปเดตเพลงเดิมใน":"เพิ่มลงใน")+'คลังความรู้ หมวด “โน้ตและเพลง” ทันที · เครดิตผู้บันทึก: '+esc((song.author&&song.author.name)||myName())+'</span></button>'
       :'<button class="xb" data-s="club"><b>📨 ส่งให้ครูตรวจ เป็นสื่อของชมรม</b><span>ครูตรวจแล้วกดยอมรับ เพลงจะขึ้นในคลังความรู้พร้อมชื่อผู้บันทึก “'+esc((song.author&&song.author.name)||myName())+'” · ถ้าครูไม่รับ จะไม่เผยแพร่</span></button>'+
