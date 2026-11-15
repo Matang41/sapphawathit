@@ -119,5 +119,31 @@
   function rateText(p) { return p.sec.map(s => RATE[s.r].n).filter((v, i, a) => a.indexOf(v) === i).join(' → '); }
   function bars(p) { return p.sec.reduce((a, s) => a + parse(s.s).bars, 0); }
 
-  window.NATAB = { SYM, RATE, LIST, parse, check, timeline, countInCh, get, single, rateText, bars };
+
+  /* ---------- คลังหน้าทับของชมรม (แอป › คลังหน้าทับ): ครูแก้หน้าทับตั้งต้นหรือเพิ่มใหม่ได้ มีผลกับทุกเกมที่ใช้ไฟล์นี้ ----------
+     อ่านจาก APP.D.natab ของแอป (เก็บสำเนาไว้ในเครื่องสำหรับตอนเปิดเกมเดี่ยว ๆ) */
+  const ORIG = {}; LIST.forEach(p => { if (p.sec.length === 1) ORIG[p.id] = { s: p.sec[0].s, r: p.sec[0].r, name: p.name, tip: p.tip, src: p.src }; });
+  const CHS = ['ต', 'โ', 'ท', 'จ'], CKEY = 'spw_natab';
+  function fromIdx(s) {
+    const bars = String(s || '').trim().split(/\s+/).filter(Boolean); let a = '', b = '', two = false;
+    for (const bar of bars) { const c = bar.split(','); if (c.length !== 4) return null; let x = '', y = '';
+      for (const e of c) { const v = e === '-' || !e ? [] : e.split('+').map(Number); if (v.some(n => !(n >= 0 && n < 4))) return null; x += v.length ? CHS[v[0]] : '-'; y += v.length > 1 ? CHS[v[1]] : '-'; if (v.length > 1) two = true; }
+      a += (a ? ' ' : '') + x; b += (b ? ' ' : '') + y; }
+    return a ? (two ? a + ' / ' + b : a) : null;
+  }
+  function clubData() {
+    let d = null; try { if (window.parent !== window && window.parent.APP && window.parent.APP.D) d = window.parent.APP.D.natab || {}; } catch (e) { d = null; }
+    if (d) { try { localStorage.setItem(CKEY, JSON.stringify(d)); } catch (e) { /* ignore */ } } else { try { d = JSON.parse(localStorage.getItem(CKEY) || 'null'); } catch (e) { d = null; } }
+    return d || {};
+  }
+  try {
+    const d = clubData();
+    Object.keys(d).forEach(id => { const x = d[id]; if (!x || x.kit !== 'khaek') return; const s = fromIdx(x.s); if (!s || parse(s).err) return; const r = RATE[x.r] ? +x.r : 2;
+      if (x.base) { const b = LIST.find(p => p.id === x.base && p.sec.length === 1), o = ORIG[x.base]; if (!b || !o) return;
+        LIST.forEach(p => { if (p === b || p.sec.length > 1) p.sec.forEach(sc => { if (sc.s === o.s) sc.s = s; }); });
+        b.sec[0].r = r; if (x.n) b.name = String(x.n); if (x.tip) b.tip = String(x.tip); if (x.src) b.src = String(x.src); b.fixed = true; }
+      else LIST.push({ id: 'n_' + id, grp: '🏫 คลังหน้าทับของชมรม', name: String(x.n || 'หน้าทับ'), sec: [{ s: s, r: r }], tip: String(x.tip || ''), src: String(x.src || x.by || '') }); });
+  } catch (e) { /* ใช้ชุดตั้งต้น */ }
+
+  window.NATAB = { ORIG, SYM, RATE, LIST, parse, check, timeline, countInCh, get, single, rateText, bars };
 })();
