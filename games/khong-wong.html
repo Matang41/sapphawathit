@@ -145,12 +145,14 @@ h1,h2,h3{font-family:"Mitr","Sarabun",sans-serif;font-weight:500}
       <li>แตะลูกฆ้องตามลำดับเดิมให้ถูกทั้งหมด</li>
       <li>ผ่านด่านแล้วทำนองจะยาวขึ้น ผิดได้ 3 ครั้ง</li>
       <li>ผ่านครบ 4 ด่าน ครูประทานพร ได้หัวใจคืน 1 ดวง ♥</li>
+      <li>โหมด “เพลงของชมรม”: จำทำนองเพลงจริงทีละห้อง ครบ 4 ห้องแล้วขึ้นวรรคใหม่</li>
     </ol>
   </div>
   <div class="modes">
     <button class="mode" data-mode="easy"><span class="ico">๑</span><span><div class="t">ง่าย</div><div class="d">ใช้ 6 ลูก · จังหวะช้า</div></span><span class="best">สถิติ<b data-best="easy">0</b></span></button>
     <button class="mode" data-mode="mid"><span class="ico">๒</span><span><div class="t">ปานกลาง</div><div class="d">ใช้ 10 ลูก · คะแนน ×1.5</div></span><span class="best">สถิติ<b data-best="mid">0</b></span></button>
     <button class="mode" data-mode="hard"><span class="ico">๓</span><span><div class="t">ยาก</div><div class="d">ครบวง 16 ลูก · เร็ว · ×2</div></span><span class="best">สถิติ<b data-best="hard">0</b></span></button>
+    <button class="mode" id="songBtn"><span class="ico">♫</span><span><div class="t">เพลงของชมรม</div><div class="d">จำทำนองเพลงจริงจากคลังโน้ต ทีละห้อง · ×1.5</div></span><span class="best">สถิติ<b data-best="song">0</b></span></button>
   </div>
   <button class="free" data-mode="free">🎵 เล่นอิสระ — ลองตีฆ้องวงตามใจ</button>
   <div class="credit">พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</div>
@@ -186,6 +188,10 @@ h1,h2,h3{font-family:"Mitr","Sarabun",sans-serif;font-weight:500}
   <div class="panel" id="panel"></div>
 </div>
 
+<script src="natab.js"></script>
+<script src="thaisound.js"></script>
+<script src="thaiinst.js"></script>
+<script src="skill.js"></script>
 <script src="khaotaen.js"></script>
 <script>
 (function(){
@@ -197,6 +203,7 @@ const MODES={
   easy:{name:"ง่าย",lo:5,hi:10,speed:720,mult:1},
   mid:{name:"ปานกลาง",lo:3,hi:12,speed:580,mult:1.5},
   hard:{name:"ยาก",lo:0,hi:15,speed:450,mult:2},
+  song:{name:"เพลงของชมรม",lo:0,hi:15,speed:420,mult:1.5},
   free:{name:"เล่นอิสระ",lo:0,hi:15,speed:0,mult:0}
 };
 const RANKS=[[0,"ศิษย์หัดตี"],[3,"มือฆ้องฝึกหัด"],[6,"มือฆ้องประจำวง"],[9,"มือฆ้องเอก"],[13,"ครูฆ้องวง"]];
@@ -346,11 +353,25 @@ function nextNote(){
 }
 function showScreen(id){["#menu","#game"].forEach(s=>$(s).classList.toggle("hidden",s!==id));if(id==="#game")layout()}
 
-function start(mode){
+/* ---------- โหมดเพลงของชมรม: ดึงทำนองจากคลังโน้ต (สื่อชมรม / ร่างในเครื่อง) ---------- */
+let SONG=null;
+const escH=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const gi=n=>{while(n<0)n+=7;while(n>15)n-=7;return n};
+function buildSong(x){const TL=TI.timeline(x.song),bars=[];for(let i=0;i<TL.slots.length;i+=4)bars.push(TL.slots.slice(i,i+4).map(s=>s.mel==null?null:gi(s.mel)));
+  return {title:x.title,bars,gap:Math.max(230,Math.min(520,Math.round(60000/(TL.bpm||120)*1.3)))}}
+function pickSong(){
+  let L=[];try{L=window.TI?TI.songs():[]}catch(e){}
+  L=L.map(x=>{try{const s=buildSong(x);return s.bars.some(b=>b.some(v=>v!=null))?{x,s}:null}catch(e){return null}}).filter(Boolean);
+  $("#panel").innerHTML='<h2>เลือกเพลง</h2>'+(L.length?'<div style="max-height:50vh;overflow:auto;text-align:left">'+L.map((o,i)=>'<button class="btn sec" data-sg="'+i+'" style="display:block;width:100%;margin:6px 0;text-align:left">♫ '+escH(o.x.title)+' <small style="opacity:.7">· '+escH(o.x.src)+' · '+o.s.bars.length+' ห้อง</small></button>').join("")+'</div>':'<div style="color:var(--muted);margin:10px 0;line-height:1.6">ยังไม่มีเพลงในคลัง — เปิดเกมนี้จากในแอปชมรม และให้มีเพลงที่บันทึกเป็นสื่อของชมรมในเกม “บันทึกโน้ตเพลงไทย” ก่อน</div>')+'<button class="btn sec" id="sgX">กลับ</button>';
+  $("#over").classList.remove("hidden");$("#sgX").onclick=()=>$("#over").classList.add("hidden");
+  $("#panel").querySelectorAll("[data-sg]").forEach(b=>b.onclick=()=>{$("#over").classList.add("hidden");start("song",L[+b.dataset.sg].s)});
+}
+function start(mode,song){
   audio();runId++;
   const m=MODES[mode];
   G={mode,seq:[],pos:0,level:0,score:0,lives:3,streak:0,missThisLevel:false,accepting:false};
   $("#modeTag").textContent="โหมด"+m.name;
+  if(mode==="song"){if(song)SONG=song;G.bars=SONG.bars;G.bi=-1;G.total=SONG.bars.filter(b=>b.some(x=>x!=null)).length;$("#modeTag").textContent="♫ "+SONG.title}
   gongs.forEach((g,i)=>g.classList.toggle("off",i<m.lo||i>m.hi));
   $("#over").classList.add("hidden");
   react(gKru,null);gKru.classList.remove("play");
@@ -363,6 +384,10 @@ function start(mode){
   nextRound();
 }
 async function nextRound(){
+  if(G.mode==="song"){let bi=G.bi+1;while(bi<G.bars.length&&!G.bars[bi].some(x=>x!=null))bi++;
+    if(bi>=G.bars.length){G.win=true;gameOver();return}
+    G.bi=bi;const p0=Math.floor(bi/4)*4;G.slots=[];for(let b=p0;b<=bi;b++)G.slots=G.slots.concat(G.bars[b]);
+    G.seq=G.slots.filter(x=>x!=null);G.pos=0;G.missThisLevel=false;hud();await playSeq();return}
   G.seq.push(nextNote());G.pos=0;G.missThisLevel=false;hud();
   await playSeq();
 }
@@ -371,10 +396,11 @@ async function playSeq(){
   setStatus("ฟังให้ดี…","",`ทำนองยาว ${G.seq.length} ลูก`);
   await sleep(700);if(id!==runId)return;
   say("#gBubble",pick(SAY.listen));gKru.classList.add("play");
-  const gap=Math.max(260,MODES[G.mode].speed-G.level*14);
-  for(const n of G.seq){
+  const gap=G.mode==="song"?SONG.gap:Math.max(260,MODES[G.mode].speed-G.level*14);
+  if(G.mode==="song")setStatus("ฟังให้ดี…","","ห้องที่ "+(G.bi+1)+" จาก "+G.bars.length+" · วรรคนี้ยาว "+G.seq.length+" ลูก");
+  for(const n of (G.mode==="song"?G.slots:G.seq)){
     if(id!==runId){gKru.classList.remove("play");return}
-    light(n,"lit",Math.min(320,gap*.7));strike(n);
+    if(n!=null){light(n,"lit",Math.min(320,gap*.7));strike(n)}
     await sleep(gap);
   }
   gKru.classList.remove("play");
@@ -436,11 +462,13 @@ function gameOver(){
   const best=getBest(mode),isNew=score>best.score;
   if(isNew)setBest(mode,{score,level});
   try{if(window.parent!==window)window.parent.postMessage({source:"sapphawathit-game",game:"khong-wong",mode,score,level,rank},"*")}catch(e){}
+  /* ส่งผลเป็นทักษะด้าน “ทำนอง” ให้แอปชมรม */
+  try{if(window.SKILL&&mode!=="free"&&(level>0||G.lives<=0)){const v=mode==="song"?(G.total?level/G.total:0):Math.min(1,level/({easy:12,mid:10,hard:8}[mode]||10));SKILL("melody",v,{game:"khong-wong"})}}catch(e){}
   try{if(window.KT)KT.roll("khong-wong",level>=3)}catch(e){}
   $("#panel").innerHTML=`
     <div class="kru${level>=6?" happy":""}"><img src="${gKru.querySelector("img").src}" alt="ครู"></div>
     <div class="bubble">${isNew?"ทำสถิติใหม่ด้วย! ":""}${SAY.end[rank]}</div>
-    <h2>จบเกม</h2>
+    <h2>${G.win?"จบเพลงแล้ว! 🎉":"จบเกม"}</h2>
     <div style="color:var(--muted);font-size:14px">ยศของคุณในรอบนี้</div>
     <div class="rank">${rank}</div>
     <div class="stats"><div><b>${level}</b>ด่านที่ผ่าน</div><div><b>${score}</b>คะแนน</div></div>
@@ -455,6 +483,7 @@ function gameOver(){
 function toMenu(){runId++;G=null;$("#over").classList.add("hidden");refreshBest();showScreen("#menu")}
 
 document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.mode)));
+$("#songBtn").addEventListener("click",()=>{audio();pickSong()});
 $("#backBtn").addEventListener("click",toMenu);
 refreshBest();
 })();

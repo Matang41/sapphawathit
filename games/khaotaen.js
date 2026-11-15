@@ -38,7 +38,8 @@ function show(cp){const old=document.getElementById('ktOv');if(old)old.remove();
   d.querySelector('button').onclick=()=>d.remove();(document.body||document.documentElement).appendChild(d);
   try{const AC=new (window.AudioContext||window.webkitAudioContext)(),t=AC.currentTime;[784,988,1175,1568].forEach((fq,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=fq;g.gain.setValueAtTime(.0001,t+i*.09);g.gain.exponentialRampToValueAtTime(.18,t+i*.09+.01);g.gain.exponentialRampToValueAtTime(.0001,t+i*.09+.35);o.connect(g);g.connect(AC.destination);o.start(t+i*.09);o.stop(t+i*.09+.4)});setTimeout(()=>AC.close(),1500)}catch(e){}}
 /* เรียกตอนจบรอบ: ok = เล่นดีพอจะลุ้นรางวัล · คืนคูปองถ้าได้ */
-function roll(game,ok,force){if(!ok&&!force)return null;const o=load(),d=today();const n=o.list.filter(x=>x.day===d).length;if(n>=PERDAY&&!force)return null;if(!force&&Math.random()>=CHANCE)return null;
+/* แคมเปญเปิด/พักได้จากหน้า “เกม” ของครู (config/ktOn) — แอปเขียนสถานะไว้ที่ localStorage spw_kt_on · ไม่มีค่า = พัก */
+function roll(game,ok,force){try{if(localStorage.getItem('spw_kt_on')!=='1')return null}catch(e){return null}if(!ok&&!force)return null;const o=load(),d=today();const n=o.list.filter(x=>x.day===d).length;if(n>=PERDAY&&!force)return null;if(!force&&Math.random()>=CHANCE)return null;
   const cp={code:make(),game:String(game||''),day:d,at:Date.now(),name:nameOf()};o.list.unshift(cp);o.list=o.list.slice(0,60);store(o);
   try{if(window.parent!==window)window.parent.postMessage({source:'sapphawathit-game',type:'khaotaen',game:cp.game,code:cp.code},'*')}catch(e){}
   setTimeout(()=>show(cp),700);return cp}
