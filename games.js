@@ -32,6 +32,8 @@
     { n: 'เพื่อนรักทั้งโรงเรียน', d: 'มีเพื่อนสนิท 5 หัวใจอย่างน้อย 5 คน ในโหมดเดินเล่นอิสระของตำนานสรรพวาทิต', px: 'ing', bg: '#c0407a', ok: () => { const f = J('spw_pisat_free'); const a = (f.life && f.life.aff) || {}; return Object.values(a).filter(v => v >= 250).length >= 5; } },
     { n: 'อยู่ครบปี', d: 'อยู่โรงเรียนครบหนึ่งปีในเกม จนถึงงานเกษียณ ผอ.อับดุลเราะห์มาน', px: 'maha', bg: '#2f6a4a', ok: () => { const f = J('spw_pisat_free'); return !!(f.life && f.life.gen >= 2); } },
     { n: 'เจ็ดเสียงครบวง', d: 'จบตำนานสรรพวาทิต ภาค เจ็ดเสียงที่หายไปในแม่สอด', px: 'mateo', bg: '#1e2a57', ok: () => { const s = J('spw_pisat2'); return !!(s.fin || s.finOld); } },
+    { n: 'มือฆ้องเอก', d: 'ผ่าน 9 ด่านขึ้นไปในเกมฆ้องวงใหญ่แสนกล (โหมดใดก็ได้ รวมโหมดเพลงของชมรม)', px: 'mateo', bg: '#7a5a1e', ok: () => ['easy', 'mid', 'hard', 'song'].some(m => (J('sapphawathit_khongwong_best_' + m).level || 0) >= 9) },
+    { n: 'คู่ขวัญจังหวะเป๊ะ', d: 'ตีกลองแขกคู่ขวัญได้ความแม่นยำ 90% ขึ้นไป', px: 'ing', bg: '#a8452a', ok: () => { try { return localStorage.getItem('sapphawathit_klongkhaek_ace') === '1'; } catch (e) { return false; } } },
     { n: 'นักถอดรหัสเสียง', d: 'บันทึกผลถอดรหัสเสียงกลองหลวงอย่างน้อย 1 วง', px: 'waen', bg: '#3a3a4a', ok: () => J('sapphawathit_klongscan', []).length > 0 }
   ];
   const medalCache = {};
@@ -46,10 +48,20 @@
 
   /* ---------- รุ่น 3.11: คูปอง “ข้าวแต๋นฟรีจากครูตังค์” (สุ่มได้ในเกม · ครูตัดคูปองที่นี่ · บันทึกการแลกที่ ktused/{รหัส}) ---------- */
   function ktLoad() { return new Promise(r => { if (window.KT) return r(window.KT); const sc = document.createElement('script'); sc.src = 'games/khaotaen.js'; sc.onload = () => r(window.KT); sc.onerror = () => r(null); document.head.appendChild(sc); }); }
+  /* รุ่น 3.34: เปิด/พักแคมเปญข้าวแต๋น (config/ktOn · ค่าเริ่มต้น = พัก) — แอปบอกเกมผ่าน localStorage spw_kt_on */
+  function syncKT() { try { localStorage.setItem('spw_kt_on', A.cfg().ktOn ? '1' : '0'); } catch (e) { /* ignore */ } }
+  A.HOME.push({ order: 999, html: () => { syncKT(); return ''; } });
+  A.ACT.ktToggle = async () => {
+    if (!A.teacher()) return; const on = !!A.cfg().ktOn;
+    if (!(await M.confirmBox(on ? 'พักแคมเปญข้าวแต๋น' : 'เปิดแคมเปญข้าวแต๋น', on ? 'ทุกเกมจะหยุดสุ่มคูปองใหม่ (คูปองเดิมยังแลกได้)' : 'ทุกเกมจะกลับมาสุ่มคูปองข้าวแต๋นอีกครั้ง', on ? 'พักแคมเปญ' : 'เปิดแคมเปญ'))) return;
+    A.W(window.B.set('config/ktOn', on ? null : true)); A.log('khaotaen.' + (on ? 'off' : 'on'), '', ''); toast(on ? 'พักแคมเปญข้าวแต๋นแล้ว' : 'เปิดแคมเปญข้าวแต๋นแล้ว 🍘');
+  };
   function ktHTML() {
     const mine = (J('spw_khaotaen', { list: [] }).list || []), NM = (window.KT && window.KT.NAMES) || {};
-    let h = '<section class="card"><div class="lb">🍘 ข้าวแต๋นฟรีจากครูตังค์</div><div class="muted">เล่นเกมให้ดี ๆ มีโอกาสสุ่มได้คูปองข้าวแต๋น (วันละไม่เกิน 1 ใบต่อเครื่อง) เอารหัสไปแลกข้าวแต๋นจริงกับครูตังค์ที่ห้อง 512</div>' +
+    const on = !!A.cfg().ktOn; syncKT(); if (!on && !A.teacher() && !mine.length) return '';
+    let h = '<section class="card"><div class="lb">🍘 ข้าวแต๋นฟรีจากครูตังค์' + (on ? '' : ' ' + chip('พักแคมเปญ', 'line')) + '</div><div class="muted">' + (on ? 'เล่นเกมให้ดี ๆ มีโอกาสสุ่มได้คูปองข้าวแต๋น (วันละไม่เกิน 1 ใบต่อเครื่อง) เอารหัสไปแลกข้าวแต๋นจริงกับครูตังค์ที่ห้อง 512' : 'แคมเปญข้าวแต๋นพักไว้ชั่วคราว ตอนนี้ทุกเกมยังไม่สุ่มคูปองใหม่ · คูปองที่ได้ไปแล้วยังนำมาแลกกับครูตังค์ได้') + '</div>' +
       (mine.length ? '<div style="margin-top:8px">' + mine.slice(0, 12).map(x => '<div class="row" style="padding:6px 0;border-top:1px solid var(--line)"><b style="font-family:ui-monospace,monospace;letter-spacing:2px">' + esc(x.code) + '</b><span class="grow muted" style="text-align:right">' + esc(NM[x.game] || x.game) + ' · ' + esc(x.day) + '</span></div>').join('') + '</div>' : '<div class="muted" style="margin-top:6px">เครื่องนี้ยังไม่มีคูปอง</div>');
+    if (A.teacher()) h += '<div class="row" style="margin-top:12px;gap:8px"><span class="grow"><b>สถานะแคมเปญ: ' + (on ? 'เปิดอยู่' : 'พักไว้') + '</b></span><button class="btn sm' + (on ? ' ghost' : ' gold') + '" data-act="ktToggle">' + (on ? 'พักแคมเปญ' : 'เปิดแคมเปญอีกครั้ง') + '</button></div>';
     if (A.teacher()) h += '<div class="lb" style="margin-top:12px">สำหรับครู: ตรวจและตัดคูปอง</div><div class="row wrap"><input class="in grow" id="ktCode" placeholder="KT-XXXX-YY" style="text-transform:uppercase;min-width:140px"><input class="in grow" id="ktWho" placeholder="ชื่อผู้แลก (ไม่บังคับ)"><button class="btn sm" data-act="ktCheck">ตรวจ</button></div><div id="ktRes" class="muted" style="margin-top:6px"></div>';
     return h + '</section>';
   }
@@ -89,7 +101,7 @@
     return { title: 'เกม', body: b };
   };
   A.ACT.gamePlay = d => {
-    const g = list().find(x => x.id === d.id); if (!g) return;
+    const g = list().find(x => x.id === d.id); if (!g) return; syncKT();
     const w = modal('<div class="row" style="margin-bottom:8px"><h3 class="grow" style="margin:0">' + esc(g.title) + '</h3><button class="btn ghost sm" data-close>ปิดเกม</button></div><div class="gm-host"></div>', { full: true, sticky: true }); w.classList.add('gm-modal');
     const host = $('.gm-host', w);
     const cl = $('[data-close]', w); if (cl) cl.addEventListener('click', () => setTimeout(() => { try { A.rerender(); } catch (e) { } }, 60));
