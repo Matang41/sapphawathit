@@ -163,7 +163,7 @@ body.selmode .sl{cursor:copy}
     <button class="btn" id="tTri" title="เลือกโน้ต 3 ตัวเรียงกัน แล้วรวมให้อยู่ในเวลา 2 ช่อง">สามพยางค์</button>
     <span class="kyi"><button class="btn" id="tKyiB" title="รวมโน้ตที่เลือกให้ถี่ขึ้นตามอัตราที่ตั้ง">ขยี้</button><select id="tKyi" aria-label="อัตราขยี้"><option value="2">×2 (2 เสียง/ช่อง)</option><option value="3">×3 (3 เสียง/ช่อง)</option><option value="4">×4 (4 เสียง/ช่อง)</option><option value="6">×6 (6 เสียง/ช่อง)</option></select></span>
     <button class="btn" id="tUn">แยกกลุ่ม</button>
-    <button class="btn" id="tLk" title="กำหนดช่วงห้องเป็นลูกล้อ/ลูกขัด ฝ่ายนำหรือฝ่ายตาม เริ่มจากห้องที่เคอร์เซอร์อยู่">ล้อ / ขัด</button>
+    <button class="btn" id="tLk" title="กำหนดช่วงห้องเป็นลูกล้อ/ลูกขัด ฝ่ายนำหรือฝ่ายตาม เริ่มจากห้องที่เคอร์เซอร์อยู่">ล้อ / ขัด / เหลื่อม</button>
     <span id="mkTools"></span>
     <span id="tSelN" class="seln"></span>
   </div>
@@ -244,14 +244,25 @@ function decBars(str){
 }
 /* ลูกล้อ / ลูกขัด (รุ่น 3.24): l.lk[ห้อง] = รหัส ชนิด (l ล้อ · k ขัด) + ฝ่าย (n นำ · t ตาม) + x (จุดพิเศษ: สลับบทบาทเฉพาะช่วง) + s (ห้องแรกของช่วง)
    song.role = บทบาทของโน้ตชุดนี้ (n เครื่องนำ · t เครื่องตาม) — ช่วงของอีกฝ่ายแสดงเป็นวงเล็บ ( นำ ) / ( ตาม ) */
-const lkDec=s=>String(s||"").trim().split(/\s+/).map(x=>/^[lk][nt]x?s?$/.test(x)?x:"");
+const lkDec=s=>String(s||"").trim().split(/\s+/).map(x=>/^[lkh][nt][1-8]?x?s?$/.test(x)?x:"");
 const lkAt=(l,bi)=>(l.lk||[])[bi]||"";
 const lkBase=c=>c.replace("s","");
 const lkStart=(l,bi)=>{const c=lkAt(l,bi);return !!c&&(bi===0||c.includes("s")||lkBase(lkAt(l,bi-1))!==lkBase(c))};
 const lkEnd=(l,bi)=>{const c=lkAt(l,bi);return !!c&&(lkStart(l,bi+1)||!lkAt(l,bi+1))};
-const lkMine=c=>((c[1]===(song.role||"n"))!==c.includes("x"));
-const LKK={l:"ล้อ",k:"ขัด"},LKP={n:"นำ",t:"ตาม"};
-function lkWrap(l,bi,txt){const c=lkAt(l,bi);if(!c)return txt;if(lkMine(c))return (lkStart(l,bi)?"["+LKP[c[1]]+LKK[c[0]]+"] ":"")+txt;return (lkStart(l,bi)?"( ":"")+LKP[c[1]]+(lkEnd(l,bi)?" )":"")}
+/* ลูกเหลื่อม (รุ่น 3.27): ชนิด h — สองพวกบรรเลงทำนองเดียวกัน ยาวเท่ากัน พร้อมกัน แต่พวกหน้า (นำ) เริ่มก่อนเล็กน้อย
+   เสียงลงท้ายประโยคของพวกหน้าจึงตกก่อนจังหวะ · ตัวเลขในรหัส = เหลื่อมกี่ตัวโน้ต · ไม่มีวงเล็บเพราะเล่นพร้อมกัน */
+const lkMine=c=>c[0]==="h"||((c[1]===(song.role||"n"))!==c.includes("x"));
+const LKK={l:"ล้อ",k:"ขัด",h:"เหลื่อม"},LKP={n:"นำ",t:"ตาม"};
+const lkOff=c=>{const m=/[1-8]/.exec(c||"");return m?+m[0]:0};
+const lkLab=c=>LKP[c[1]]+LKK[c[0]]+(c[0]==="h"&&lkOff(c)?" "+TH(lkOff(c)):"");
+function lkWrap(l,bi,txt){const c=lkAt(l,bi);if(!c)return txt;if(lkMine(c))return (lkStart(l,bi)?"["+lkLab(c)+"] ":"")+txt;const st=lkStart(l,bi),en=lkEnd(l,bi);return st&&en?"( "+LKP[c[1]]+" )":st?"( "+LKP[c[1]]+" …":en?"… )":"…"}
+function lkShift(li,b0,n2,N){const L=song.lines[li],p0=b0*4,p1=(b0+n2)*4;let lost=0,bad=false;
+  HANDS().forEach(h=>{for(let p=p0;p<p1;p++){const e=lget(li,h,p);if(e===null||isGrp(e))bad=true}});if(bad){toast("ช่วงนี้มีกลุ่มสามพยางค์/ขยี้ — กด “แยกกลุ่ม” ก่อนจึงจะเลื่อนได้");return false}
+  HANDS().forEach(h=>{const a=[],m=[];for(let p=p0;p<p1;p++){a.push(lget(li,h,p));m.push(mkAt(L,h,Math.floor(p/4),p%4))}
+    /* N > 0 = ช้าลง (ไปทางขวา) · N < 0 = ขึ้นก่อน (ไปทางซ้าย) */
+    for(let k=0;k<a.length;k++){const q=k+N;if((q<0||q>=a.length)&&a[k].length)lost++}
+    for(let p=p0;p<p1;p++){const k=p-p0-N,ok=k>=0&&k<a.length;lset(li,h,p,ok?a[k]:[]);mkSet(L,h,Math.floor(p/4),p%4,ok?m[k]:"")}bowFix(li,h)});
+  toast((N<0?"เลื่อนโน้ตให้ขึ้นก่อน ":"เลื่อนโน้ตให้ช้าลง ")+Math.abs(N)+" ตัวแล้ว"+(lost?" · โน้ต "+lost+" ตัวหลุดออกนอกช่วง (ย้อนกลับได้ด้วย Ctrl/⌘+Z · ถ้าต้องการเก็บไว้ ให้เริ่มช่วงเร็วขึ้น/ยาวขึ้นหนึ่งห้อง)":""));return true}
 /* ทางเครื่องดนตรีและเครื่องหมายเฉพาะเครื่อง (รุ่น 3.25)
    song.way = ทางของโน้ตชุดนี้ · l.mk[มือ][ห้อง][ช่อง] = รหัส: w สายลวด · t สายทุ้ม (จะเข้) · p พรม (ซอ) · I/i คันชักเข้า (โค้งคว่ำด้านบน) · O/o คันชักออก (โค้งหงายด้านล่าง) ตัวใหญ่ = ช่องแรกของเส้น */
 const WAYS={klang:"ทางกลาง (อ้างอิงต่อเพลง)",khong:"ทางฆ้องวงใหญ่",ranad:"ทางระนาดเอก",thum:"ทางระนาดทุ้ม",jakhe:"ทางจะเข้",sod:"ทางซอด้วง",sou:"ทางซออู้",khlui:"ทางขลุ่ย"};
@@ -280,7 +291,7 @@ const blankBars=n=>Array.from({length:n},()=>[[],[],[],[]]);
 /* แต่ละท่อนมีสองแถว: h.L = มือซ้าย (แถวบน) · h.R = มือขวา (แถวล่าง) จำนวนห้องเท่ากันเสมอ */
 const blankLine=(label,n)=>({label,h:{L:blankBars(n),R:blankBars(n)}});
 function newSong(){return {id:"s"+Date.now().toString(36),title:"เพลงใหม่",voice:"khong",rate:2,bpm:160,natab:"pk2",mix:{khong:true,drum:true,ching:true,pujae:false},author:null,hands:true,west:{tr:0,chords:true},lines:[blankLine("ท่อน ๑",8)]}}
-function pack(s){return {id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,role:s.role||"",way:s.way||"",w0:s.w0!=null?s.w0:(s.way||""),west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{},l.rep===2?{rep:2}:{},mkEnc(l,"R")?{mkR:mkEnc(l,"R")}:{},mkEnc(l,"L")?{mkL:mkEnc(l,"L")}:{},l.lk&&l.lk.some(Boolean)?{lk:Array.from({length:l.h.R.length},(_,i)=>l.lk[i]||"-").join(" ")}:{})),at:Date.now()}}
+function pack(s){return {exp:s.exp||null,id:s.id,libId:s.libId||"",title:s.title,voice:s.voice||"khong",rate:s.rate,bpm:s.bpm,natab:s.natab||"",mix:s.mix,author:s.author||null,hands:!!s.hands,role:s.role||"",way:s.way||"",w0:s.w0!=null?s.w0:(s.way||""),west:s.west,lines:s.lines.map(l=>Object.assign({label:l.label,bars:encBars(l.h.R),barsL:encBars(l.h.L)},l.rate?{rate:l.rate}:{},l.natab?{natab:l.natab}:{},l.rep===2?{rep:2}:{},mkEnc(l,"R")?{mkR:mkEnc(l,"R")}:{},mkEnc(l,"L")?{mkL:mkEnc(l,"L")}:{},l.lk&&l.lk.some(Boolean)?{lk:Array.from({length:l.h.R.length},(_,i)=>l.lk[i]||"-").join(" ")}:{})),at:Date.now()}}
 /* เพลงรุ่นเก่า (แถวเดียว): ตีคู่แยกเป็นเสียงต่ำ→มือซ้าย เสียงสูง→มือขวา · โน้ตเดี่ยวอยู่มือขวา */
 function splitOld(bars){
   const L=bars.map(b=>b.map(e=>Array.isArray(e)&&e.length>1?[Math.min(...e)]:[]));
@@ -366,7 +377,7 @@ function render(){
   song.lines.forEach((l,li)=>{
     h+='<div class="line'+(l.rep===2?' rep2':'')+'"><div class="lhead"><input data-lab="'+li+'" value="'+esc(l.label)+'" placeholder="ชื่อท่อน" aria-label="ชื่อท่อน"><select class="lrate" data-lrate="'+li+'" aria-label="อัตราจังหวะของท่อน"><option value="">อัตรา: ตามเพลง ('+NT.RATE[song.rate].n+')</option>'+[3,2,1].map(r=>'<option value="'+r+'"'+(l.rate===r?" selected":"")+'>'+NT.RATE[r].n+'</option>').join("")+'</select><select class="lrate" data-lnatab="'+li+'" aria-label="หน้าทับของท่อน">'+natabOpts(li)+'</select>'+(song.hands?'<span class="hleg"><i class="hl">บน = มือซ้าย</i><i class="hr">ล่าง = มือขวา</i></span>':'')+'<button class="mini rep'+(l.rep===2?' on':'')+'" data-lact="rep" data-li="'+li+'" title="ให้ท่อนนี้เล่นวนสองเที่ยว" aria-pressed="'+(l.rep===2)+'">🔁 '+(l.rep===2?'เล่น 2 เที่ยว':'เที่ยวเดียว')+'</button><button class="mini" data-lact="up" data-li="'+li+'" title="ย้ายขึ้น">▲</button><button class="mini" data-lact="del" data-li="'+li+'">ลบท่อน</button></div><div class="bars">';
     for(let bi=0;bi<nBars(li);bi++){
-      const g0=g,lc=lkAt(l,bi),lm=lc&&lkMine(lc);h+='<div class="bar'+(lc?(lm?" lkm":" lko")+(lkStart(l,bi)?" lks":"")+(lkEnd(l,bi)?" lke":""):"")+'"'+(lc?' data-lk="'+LKP[lc[1]]+(lm?LKK[lc[0]]:"")+'"':"")+'>'+(CH?'<span class="chd">'+esc(CH[barNo]||"")+'</span>':'')+'<span class="no">'+TH(barNo+1)+'</span>';barNo++;
+      const g0=g,lc=lkAt(l,bi),lm=lc&&lkMine(lc);h+='<div class="bar'+(lc?(lm?" lkm":" lko")+(lkStart(l,bi)?" lks":"")+(lkEnd(l,bi)?" lke":""):"")+'"'+(lc?' data-lk="'+(lm?lkLab(lc):LKP[lc[1]])+'"':"")+'>'+(CH?'<span class="chd">'+esc(CH[barNo]||"")+'</span>':'')+'<span class="no">'+TH(barNo+1)+'</span>';barNo++;
       HANDS().forEach(hd=>{h+='<div class="hrow '+(song.hands?hd:"one")+'">';
         l.h[hd][bi].forEach((e,si)=>{if(e!==null){const span=isGrp(e)?e.span:1;h+='<div class="sl'+(isGrp(e)?" isg":"")+'" style="grid-column:span '+span+'" data-g="'+(g0+si)+'" data-span="'+span+'" data-c="'+li+","+bi+","+si+","+hd+'">'+cellHTML(e)+mkHTML(li,hd,bi,si)+'</div>'}});
         h+='</div>'});
@@ -532,19 +543,24 @@ function lkDlg(){
   else if(b0>0&&lkAt(l,b0-1)){const p=lkAt(l,b0-1);let m=1;while(b0-1-m>=0&&lkAt(l,b0-m)&&!lkStart(l,b0-m))m++;K=p[0];if(p[1]==="n"){P="t";n=Math.min(m,nb-b0)}}
   const sel=(id,o,v)=>'<select id="'+id+'" style="font:inherit;padding:6px 8px;border-radius:8px">'+o.map(x=>'<option value="'+x[0]+'"'+(x[0]===v?" selected":"")+'>'+x[1]+'</option>').join("")+'</select>';
   const row=(t,h)=>'<label style="display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap"><span style="min-width:150px">'+t+'</span>'+h+'</label>';
-  dlg('<h3 style="margin:0 0 4px">ลูกล้อ / ลูกขัด</h3><div style="opacity:.75;font-size:13px;margin-bottom:8px">เริ่มที่ห้อง '+TH(b0+1)+' ของ'+esc(l.label||"ท่อนนี้")+' · ถ้าจำนวนห้องของนำกับตามไม่เท่ากัน ใส่จำนวนห้องของแต่ละช่วงได้อิสระ</div>'+
-    row("โน้ตเพลงนี้เป็นของ",sel("lkRole",[["n","เครื่องนำ"],["t","เครื่องตาม"]],song.role||"n"))+row("ชนิด",sel("lkK",[["l","ลูกล้อ"],["k","ลูกขัด"]],K))+row("ช่วงนี้เป็นของฝ่าย",sel("lkP",[["n","นำ"],["t","ตาม"]],P))+
+  dlg('<h3 style="margin:0 0 4px">ลูกล้อ / ลูกขัด / ลูกเหลื่อม</h3><div style="opacity:.75;font-size:13px;margin-bottom:8px">เริ่มที่ห้อง '+TH(b0+1)+' ของ'+esc(l.label||"ท่อนนี้")+' · ถ้าจำนวนห้องของนำกับตามไม่เท่ากัน ใส่จำนวนห้องของแต่ละช่วงได้อิสระ</div>'+
+    row("โน้ตเพลงนี้เป็นของ",sel("lkRole",[["n","เครื่องนำ"],["t","เครื่องตาม"]],song.role||"n"))+row("ชนิด",sel("lkK",[["l","ลูกล้อ"],["k","ลูกขัด"],["h","ลูกเหลื่อม"]],K))+row("ช่วงนี้เป็นของฝ่าย",sel("lkP",[["n","นำ"],["t","ตาม"]],P))+
     row("จำนวนห้อง",'<input id="lkN" type="number" min="1" max="'+(nb-b0)+'" value="'+n+'" style="font:inherit;width:80px;padding:6px 8px;border-radius:8px">')+
+    '<div id="lkHw">'+row("เหลื่อมกัน (ตัวโน้ต)",'<input id="lkO" type="number" min="1" max="8" value="'+(lkOff(c)||2)+'" style="font:inherit;width:80px;padding:6px 8px;border-radius:8px">')+
+    '<button class="btn" id="lkShift" style="width:100%;margin:2px 0 6px" title="วางทำนองปกติ (ตรงจังหวะ) ไว้ก่อน แล้วกดเพื่อเลื่อนทั้งช่วง">⇤ เลื่อนโน้ตในช่วงนี้</button></div>'+
     '<label style="display:flex;gap:8px;margin:8px 0"><input type="checkbox" id="lkX"'+(c&&c.includes("x")?" checked":"")+'><span>จุดพิเศษ: สลับบทบาทเฉพาะช่วงนี้ (เครื่องนี้เล่นฝ่ายตรงข้ามกับที่ตั้งไว้)</span></label>'+
     '<div id="lkPrev" style="margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(242,193,78,.12);font-size:14px"></div>'+
     '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn play" id="lkOk" style="flex:1">ใส่เครื่องหมาย</button><button class="btn" id="lkDel" style="flex:1">ลบเครื่องหมายช่วงนี้</button></div>');
-  const v=id=>$("#"+id).value,prev=()=>{const mine=(v("lkP")===v("lkRole"))!==$("#lkX").checked;$("#lkPrev").textContent=mine?"เครื่องนี้บรรเลงช่วงนี้ — แสดงป้าย “"+LKP[v("lkP")]+LKK[v("lkK")]+"” และพิมพ์โน้ตตามปกติ":"เครื่องนี้พักช่วงนี้ — แสดงเป็นวงเล็บ ( "+LKP[v("lkP")]+" )"};
-  ["lkRole","lkK","lkP","lkX"].forEach(id=>$("#"+id).addEventListener("change",prev));prev();
+  const v=id=>$("#"+id).value,prev=()=>{const H=v("lkK")==="h";$("#lkHw").style.display=H?"":"none";if(H){const N=v("lkO")||2,ld=v("lkP")==="n";$("#lkShift").textContent=ld?"⇤ เลื่อนโน้ตในช่วงนี้ให้ขึ้นก่อน "+N+" ตัว (ทำเป็นทางนำเหลื่อม)":"⇥ เลื่อนโน้ตในช่วงนี้ให้ช้าลง "+N+" ตัว (ทำเป็นทางตามเหลื่อม)";
+    $("#lkPrev").textContent="ลูกเหลื่อม: สองพวกบรรเลงทำนองเดียวกัน ยาวเท่ากัน พร้อมกัน แต่พวกนำเริ่มก่อนพวกตาม "+N+" ตัว เสียงลงท้ายของพวกนำจึงตกก่อนจังหวะ — แสดงป้าย “"+LKP[v("lkP")]+"เหลื่อม” ไม่มีวงเล็บ · ปุ่มเลื่อนโน้ต: พวกนำเลื่อนขึ้นก่อน ส่วนพวกตามมักบรรเลงตรงจังหวะตามทำนองปกติ";return}const mine=(v("lkP")===v("lkRole"))!==$("#lkX").checked;$("#lkPrev").textContent=mine?"เครื่องนี้บรรเลงช่วงนี้ — แสดงป้าย “"+LKP[v("lkP")]+LKK[v("lkK")]+"” และพิมพ์โน้ตตามปกติ":"เครื่องนี้พักช่วงนี้ — แสดงเป็นวงเล็บ ( "+LKP[v("lkP")]+" )"};
+  ["lkRole","lkK","lkP","lkX","lkO"].forEach(id=>$("#"+id).addEventListener("change",prev));prev();
+  const code=()=>v("lkK")+v("lkP")+(v("lkK")==="h"?String(Math.max(1,Math.min(8,Math.floor(+v("lkO")||2)))):"")+($("#lkX").checked&&v("lkK")!=="h"?"x":"");
+  $("#lkShift").addEventListener("click",()=>{const n2=Math.max(1,Math.min(nb-b0,Math.floor(+v("lkN")||1)));const N=Math.max(1,Math.min(8,Math.floor(+v("lkO")||2)));if(lkShift(cur.l,b0,n2,v("lkP")==="n"?-N:N))put(code())});
   const put=code=>{const n2=Math.max(1,Math.min(nb-b0,Math.floor(+v("lkN")||1)));l.lk=Array.from({length:nb},(_,i)=>lkAt(l,i));
     for(let k=0;k<n2;k++)l.lk[b0+k]=code?code+(k===0?"s":""):"";
     if(b0+n2<nb&&l.lk[b0+n2]&&!l.lk[b0+n2].includes("s"))l.lk[b0+n2]+="s";
     if(code)song.role=v("lkRole");touch();closeDlg();render();setCur({l:cur.l,b:Math.min(b0+n2,nb-1),s:0,h:cur.h},true)};
-  $("#lkOk").addEventListener("click",()=>put(v("lkK")+v("lkP")+($("#lkX").checked?"x":"")));
+  $("#lkOk").addEventListener("click",()=>put(code()));
   $("#lkDel").addEventListener("click",()=>put(""));
 }
 $("#tLk").addEventListener("click",lkDlg);
@@ -706,7 +722,7 @@ $("#dlg").addEventListener("click",e=>{
     if(s==="local"){ensureAuthor();const l=getDrafts().filter(x=>x.id!==song.id);l.unshift(pack(song));setDrafts(l.slice(0,80));closeDlg();toast("บันทึก “"+song.title+"” ในเครื่องนี้แล้ว")}
     else if(s==="club")publish();
     return}
-  if(b.dataset.e){const x=b.dataset.e;if(x==="west")return showWestern();closeDlg();$("#dlg").style.maxWidth="";if(x==="pdf")exportPDF();else if(x==="docx")exportDocx();else if(x==="xml")exportXML();else if(x==="abc")exportABC();else if(x==="wpdf")exportWesternPDF();}
+  if(b.dataset.e){const x=b.dataset.e;if(x==="west")return showWestern();closeDlg();$("#dlg").style.maxWidth="";if(x==="pdf"||x==="docx"){expDlg(x);return}else if(x==="xml")exportXML();else if(x==="abc")exportABC();else if(x==="wpdf")exportWesternPDF();}
 });
 
 /* บันทึก */
@@ -870,49 +886,85 @@ function thDate(ts){const M=["มกราคม","กุมภาพันธ�
 const fname=ext=>(song.title.trim()||"โน้ตเพลง").replace(/[\\/:*?"<>|\s]+/g,"_")+"."+ext;
 const CLUB="ชมรมดนตรีไทยสรรพวาทิต โรงเรียนสรรพวิทยาคม";
 
-function pdfBar(li,hd,bi){const l=song.lines[li],c=lkAt(l,bi);if(c&&!lkMine(c))return esc(lkWrap(l,bi,""));const pad=isSaw()?"15px 0 10px":song.way==="jakhe"?"2px 0 10px":"2px 0";
-  return (c&&lkStart(l,bi)?'<span style="position:absolute;right:3px;top:0;font-size:9px;color:#1f7a3f">'+LKP[c[1]]+LKK[c[0]]+'</span>':'')+'<div style="display:flex">'+l.h[hd][bi].map((e,si)=>e===null?"":'<div style="flex:'+(isGrp(e)?e.span:1)+';position:relative;text-align:center;padding:'+pad+'">'+esc(isGrp(e)?e.g.map(x=>x.length?x.map(nm).join(""):"-").join("")+(e.t==="tri"?"³":""):(!e.length?"-":e.map(nm).join("")))+mkHTML(li,hd,bi,si)+'</div>').join("")+'</div>'}
-function pagesHTML(){
-  const PH=1123,top=56,bottom=70,usable=PH-top-bottom,FONT="'Sarabun','TH Sarabun New',sans-serif",CH=song.west.chords?chordsAll():null;
-  const head='<div style="text-align:center;margin-bottom:14px"><div style="font-size:13px;color:#7a5a6e">'+CLUB+'</div><div style="font-size:28px;font-weight:700;margin:4px 0">'+esc(song.title||"โน้ตเพลง")+'</div>'+metaLines().map(t=>'<div style="font-size:14px;color:#444">'+esc(t)+'</div>').join("")+'</div>';
-  const td='border:1px solid #555;text-align:center;font-size:17px;padding:2px 0;position:relative';
+/* ---------- แผ่นโน้ตสำหรับส่งออก (รุ่น 3.27): ตั้งค่าหัวโน้ต ตาราง และการวางหน้าได้ ---------- */
+const KEXP="sapphawathit_exp";
+const EXPDEF={club:true,clubTxt:"",title:"",meta1:true,meta2:true,lineHead:true,lineMeta:true,perRow:8,rowLabel:"auto",barNo:true,size:"m",grid:"n",chords:true,orient:"p",margin:"n",pageBreak:false,footer:true};
+function expOpts(){let d={};try{d=JSON.parse(localStorage.getItem(KEXP)||"{}")||{}}catch(e){}const o=Object.assign({},EXPDEF,d,song.exp||{});if(!o.title)o.title=song.title||"โน้ตเพลง";if(!o.clubTxt)o.clubTxt=CLUB;return o}
+const expLbl=o=>o.rowLabel==="on"||(o.rowLabel==="auto"&&!!song.hands);
+function expNotes(li,hd,bi,fs){const l=song.lines[li],pad=isSaw()?"15px 0 10px":song.way==="jakhe"?"1px 0 10px":"1px 0 2px";
+  return '<div style="display:flex;font-size:'+fs+'px;line-height:1.25">'+l.h[hd][bi].map((e,si)=>e===null?"":'<div style="flex:'+(isGrp(e)?e.span:1)+';position:relative;text-align:center;padding:'+pad+'">'+esc(isGrp(e)?e.g.map(x=>x.length?x.map(nm).join(""):"-").join("")+(e.t==="tri"?"³":""):(!e.length?"-":e.map(nm).join("")))+mkHTML(li,hd,bi,si)+'</div>').join("")+'</div>'}
+function pagesHTML(o){o=o||expOpts();
+  const land=o.orient==="l",PW=land?1123:794,PH=land?794:1123,mx=o.margin==="s"?30:60,top=o.margin==="s"?32:56,bottom=o.footer?62:30,usable=PH-top-bottom;
+  const FS={s:14,m:17,l:21}[o.size]||17,NH=Math.round(FS*1.3)+(isSaw()?25:song.way==="jakhe"?12:4),per=Math.max(2,Math.min(12,+o.perRow||8)),LBL=expLbl(o);
+  const FONT="'Sarabun','TH Sarabun New',sans-serif",CH=o.chords&&song.west.chords?chordsAll():null,bc=o.grid==="b"?"#111":"#777",bw=o.grid==="b"?1.6:1;
+  const td='border:'+bw+'px solid '+bc+';text-align:center;padding:0;position:relative;vertical-align:top';
+  const ML=metaLines();let head='<div style="text-align:center;margin-bottom:14px">'+(o.club?'<div style="font-size:13px;color:#7a5a6e">'+esc(o.clubTxt)+'</div>':'')+'<div style="font-size:28px;font-weight:700;margin:4px 0">'+esc(o.title)+'</div>'+(o.meta1?'<div style="font-size:14px;color:#444">'+esc(ML[0])+'</div>':'')+(o.meta2?'<div style="font-size:14px;color:#444">'+esc(ML[1])+'</div>':'')+'</div>';
+  const headH=58+(o.club?18:0)+(o.meta1?21:0)+(o.meta2?21:0);
   const blocks=[];let barNo=0;
-  song.lines.forEach((l,li)=>{const n=l.h.R.length;let h='<div style="margin-bottom:12px"><div style="font-size:16px;font-weight:700;margin:0 0 4px">'+esc(l.label||"")+(l.rep===2?' <span style="font-weight:700;font-size:13px;color:#8a5d1a">(เล่น 2 เที่ยว)</span>':'')+((mixedRates().length>1||mixedNatab())?' <span style="font-weight:400;font-size:13px;color:#7a5a6e">· '+NT.RATE[lineRate(li)].n+' · หน้าทับ'+esc(natabName(lineNatab(li)))+'</span>':'')+'</div><table style="width:100%;border-collapse:collapse;table-layout:fixed"><col style="width:44px">'+'<col>'.repeat(8);let rows=0;
-    for(let i=0;i<n;i+=8){
-      if(CH){h+='<tr><td style="font-size:10px;color:#2a6f8f;text-align:center">คอร์ด</td>';for(let k=0;k<8;k++)h+='<td style="font-size:12px;color:#2a6f8f;text-align:left;padding-left:4px;height:16px">'+(i+k<n?esc(CH[barNo+k]||""):"")+'</td>';h+='</tr>';rows+=.45}
-      HANDS().forEach(hd=>{h+='<tr><td style="'+td+';font-size:11px;background:'+(!song.hands?"#f6f6f6":hd==="L"?"#eef3ff":"#fff7e0")+'">'+(!song.hands?"โน้ต":hd==="L"?"ซ้าย":"ขวา")+'</td>';
-        for(let k=0;k<8;k++){const b=i+k<n?l.h[hd][i+k]:null;h+='<td style="'+td+';height:34px;background:'+(hd==="L"?"#f7f9ff":"#fff")+'">'+(b?(hd===HANDS()[0]?'<span style="position:absolute;left:3px;top:0;font-size:9px;color:#999">'+TH(barNo+k+1)+'</span>':'')+pdfBar(li,hd,i+k):"")+'</td>'}
-        h+='</tr>';rows++});
-      barNo+=Math.min(8,n-i);
+  song.lines.forEach((l,li)=>{const n=l.h.R.length;let h='<div style="margin-bottom:12px">',ht=12;
+    if(o.lineHead){h+='<div style="font-size:16px;font-weight:700;margin:0 0 4px">'+esc(l.label||"")+(l.rep===2?' <span style="font-size:13px;color:#8a5d1a">(เล่น 2 เที่ยว)</span>':'')+(o.lineMeta&&(mixedRates().length>1||mixedNatab())?' <span style="font-weight:400;font-size:13px;color:#7a5a6e">· '+NT.RATE[lineRate(li)].n+' · หน้าทับ'+esc(natabName(lineNatab(li)))+'</span>':'')+'</div>';ht+=26}
+    h+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'+(LBL?'<col style="width:40px">':'')+'<col>'.repeat(per);
+    for(let i=0;i<n;i+=per){
+      if(CH){h+='<tr>'+(LBL?'<td style="font-size:10px;color:#2a6f8f;text-align:center">คอร์ด</td>':'');for(let k=0;k<per;k++)h+='<td style="font-size:12px;color:#2a6f8f;text-align:left;padding-left:4px;height:16px">'+(i+k<n?esc(CH[barNo+k]||""):"")+'</td>';h+='</tr>';ht+=17}
+      HANDS().forEach((hd,hi)=>{const first=hi===0,strip=first&&(o.barNo||(l.lk||[]).slice(i,i+per).some(Boolean)),SH=strip?12:0,RH=NH+SH;
+        h+='<tr>'+(LBL?'<td style="'+td+';vertical-align:middle;font-size:11px;background:'+(!song.hands?"#f6f6f6":hd==="L"?"#eef3ff":"#fff7e0")+'">'+(!song.hands?"โน้ต":hd==="L"?"ซ้าย":"ขวา")+'</td>':'');
+        let k=0;while(k<per){const bi=i+k;if(bi>=n){h+='<td style="'+td+';height:'+RH+'px"></td>';k++;continue}
+          const c=lkAt(l,bi),bn=barNo+k+1,stp=t=>strip?'<div style="display:flex;justify-content:space-between;height:12px;line-height:12px;font-size:9px;padding:0 3px"><span style="color:#999">'+(o.barNo?TH(bn):"")+'</span><span style="color:#1f7a3f;font-weight:700">'+(t||"")+'</span></div>':'';
+          if(c&&!lkMine(c)){let m=1;while(k+m<per&&bi+m<n&&lkAt(l,bi+m)&&!lkStart(l,bi+m))m++;const st=lkStart(l,bi),en=lkEnd(l,bi+m-1);
+            h+='<td colspan="'+m+'" style="'+td+';height:'+RH+'px;background:#fbf7ef">'+stp("")+'<div style="font-size:'+FS+'px;line-height:'+NH+'px;color:#8a5a00;font-weight:700;letter-spacing:.06em">'+(st?"( ":"")+LKP[c[1]]+(en?" )":"")+'</div></td>';k+=m;continue}
+          h+='<td style="'+td+';height:'+RH+'px;background:'+(hd==="L"&&song.hands?"#f7f9ff":"#fff")+'">'+stp(c&&lkStart(l,bi)?lkLab(c):"")+expNotes(li,hd,bi,FS)+'</td>';k++}
+        h+='</tr>';ht+=RH+bw});
+      barNo+=Math.min(per,n-i);
     }
-    h+='</table></div>';blocks.push({h,ht:28+rows*(isSaw()?52:song.way==="jakhe"?45:37)+12});
+    h+='</table></div>';blocks.push({h,ht});
   });
-  const pages=[];let curP=[],used=170;
-  blocks.forEach(b=>{if(used+b.ht>usable&&curP.length){pages.push(curP);curP=[];used=0}curP.push(b.h);used+=b.ht});pages.push(curP);
-  return pages.map((p,i)=>'<div class="rp-page" style="width:794px;height:1123px;padding:'+top+'px 60px 0;box-sizing:border-box;background:#fff;color:#111;font-family:'+FONT+';position:relative">'+(i===0?head:"")+p.join("")+
-    '<div style="position:absolute;left:60px;right:60px;bottom:28px;display:flex;justify-content:space-between;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:6px"><span>บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</span><span>หน้า '+TH(i+1)+'/'+TH(pages.length)+'</span></div></div>').join("");
+  const pages=[];let curP=[],used=headH;
+  blocks.forEach(b=>{if(curP.length&&(o.pageBreak||used+b.ht>usable)){pages.push(curP);curP=[];used=0}curP.push(b.h);used+=b.ht});pages.push(curP);
+  return pages.map((p,i)=>'<div class="rp-page'+(land?' land':'')+'" style="width:'+PW+'px;height:'+PH+'px;padding:'+top+'px '+mx+'px 0;box-sizing:border-box;background:#fff;color:#111;font-family:'+FONT+';position:relative;overflow:hidden">'+(i===0?head:"")+p.join("")+
+    (o.footer?'<div style="position:absolute;left:'+mx+'px;right:'+mx+'px;bottom:24px;display:flex;justify-content:space-between;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:6px"><span>บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026</span><span>หน้า '+TH(i+1)+'/'+TH(pages.length)+'</span></div>':'')+'</div>').join("");
 }
-async function exportPDF(){
+function expDlg(kind){
+  const o=expOpts(),sel=(id,list,v)=>'<select id="'+id+'">'+list.map(x=>'<option value="'+x[0]+'"'+(String(x[0])===String(v)?" selected":"")+'>'+x[1]+'</option>').join("")+'</select>',ck2=(id,t,v)=>'<label class="xo"><input type="checkbox" id="'+id+'"'+(v?" checked":"")+'> '+t+'</label>',tx=(id,v)=>'<input id="'+id+'" value="'+esc(v)+'" style="width:100%">';
+  dlg('<style>#dlg .xg{display:grid;grid-template-columns:minmax(250px,330px) 1fr;gap:14px}@media(max-width:760px){#dlg .xg{grid-template-columns:1fr}}#dlg .xf{font-size:13px;max-height:470px;overflow:auto;padding-right:4px}#dlg .xf b{display:block;margin:10px 0 4px;color:var(--gold2)}#dlg .xo{display:flex;align-items:center;gap:6px;margin:3px 0}#dlg .xr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0}#dlg .xf input:not([type]),#dlg .xf select{font:inherit;padding:4px 6px;border-radius:7px;border:1px solid #bbb;background:#fff;color:#111}#xpv{height:470px;overflow:auto;background:#6d6670;border-radius:10px;padding:10px}</style>'+
+    '<h3 style="margin:0 0 8px">ตั้งค่าแผ่นโน้ตก่อนส่งออก</h3><div class="xg"><div class="xf">'+
+    '<b>หัวโน้ต</b>'+ck2("xClub","บรรทัดชื่อชมรม",o.club)+tx("xClubT",o.clubTxt)+'<div style="margin-top:6px">ชื่อเพลงบนแผ่น</div>'+tx("xTitle",o.title)+ck2("xM1","บรรทัดรายละเอียด (ทาง · อัตรา · หน้าทับ · ความเร็ว)",o.meta1)+ck2("xM2","บรรทัดผู้บันทึกและวันที่",o.meta2)+ck2("xLH","ชื่อท่อน",o.lineHead)+ck2("xLM","อัตรา/หน้าทับของแต่ละท่อน (เพลงเถา)",o.lineMeta)+
+    '<b>รูปแบบตาราง</b><div class="xr">ห้องต่อแถว '+sel("xPer",[[4,"4 ห้อง"],[6,"6 ห้อง"],[8,"8 ห้อง"]],o.perRow)+'</div><div class="xr">คอลัมน์แรก (โน้ต/ซ้าย/ขวา) '+sel("xLbl",[["auto","อัตโนมัติ (แสดงเมื่อแยกมือ)"],["on","แสดง"],["off","ปิด"]],o.rowLabel)+'</div>'+
+    '<div class="xr">ขนาดตัวโน้ต '+sel("xSize",[["s","เล็ก"],["m","กลาง"],["l","ใหญ่"]],o.size)+'</div><div class="xr">เส้นตาราง '+sel("xGrid",[["n","บาง"],["b","หนา"]],o.grid)+'</div>'+ck2("xNo","เลขห้อง",o.barNo)+(song.west.chords?ck2("xCh","แถวคอร์ดสากล",o.chords):"")+
+    '<b>วางหน้า</b><div class="xr">แนวกระดาษ '+sel("xOr",[["p","แนวตั้ง"],["l","แนวนอน"]],o.orient)+'</div><div class="xr">ขอบกระดาษ '+sel("xMar",[["n","ปกติ"],["s","แคบ (ได้ห้องต่อหน้ามากขึ้น)"]],o.margin)+'</div>'+ck2("xPB","ขึ้นหน้าใหม่ทุกท่อน",o.pageBreak)+ck2("xFt","ท้ายกระดาษ (เครดิต · เลขหน้า)",o.footer)+
+    '<div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap"><button class="btn play" data-xg="pdf" style="flex:1">⤓ PDF</button><button class="btn" data-xg="docx" style="flex:1">⤓ Word</button><button class="btn" data-xg="reset">ค่าเริ่มต้น</button></div><div style="font-size:11px;opacity:.7;margin-top:6px">ค่าที่ตั้งจะจำไว้กับเพลงนี้ และใช้เป็นค่าเริ่มต้นของเพลงใหม่</div>'+
+    '</div><div id="xpv"></div></div>');
+  $("#dlg").style.maxWidth="1000px";
+  const read=()=>{const g=id=>$("#"+id),c=id=>!!(g(id)&&g(id).checked);return {club:c("xClub"),clubTxt:g("xClubT").value.trim()||CLUB,title:g("xTitle").value.trim()||song.title||"โน้ตเพลง",meta1:c("xM1"),meta2:c("xM2"),lineHead:c("xLH"),lineMeta:c("xLM"),perRow:+g("xPer").value,rowLabel:g("xLbl").value,barNo:c("xNo"),size:g("xSize").value,grid:g("xGrid").value,chords:g("xCh")?c("xCh"):true,orient:g("xOr").value,margin:g("xMar").value,pageBreak:c("xPB"),footer:c("xFt")}};
+  const save=x=>{const y=Object.assign({},x);if(y.title===song.title)delete y.title;song.exp=y;const d=Object.assign({},y);delete d.title;try{localStorage.setItem(KEXP,JSON.stringify(d))}catch(e){}touch()};
+  const pv=()=>{const x=read(),land=x.orient==="l",W=land?1123:794,H=land?794:1123,sc=Math.min(.62,($("#xpv").clientWidth-24)/W);const box=document.createElement("div");box.innerHTML=pagesHTML(x);
+    $("#xpv").innerHTML="";[...box.children].forEach((p,i)=>{const w=document.createElement("div");w.style.cssText="width:"+(W*sc)+"px;height:"+(H*sc)+"px;margin:0 auto 10px;box-shadow:0 2px 10px rgba(0,0,0,.4);overflow:hidden;background:#fff";p.style.transform="scale("+sc+")";p.style.transformOrigin="0 0";w.appendChild(p);$("#xpv").appendChild(w)})};
+  $(".xf").addEventListener("change",pv);$(".xf").addEventListener("input",e=>{if(e.target.matches("#xTitle,#xClubT")){clearTimeout(pv.t);pv.t=setTimeout(pv,250)}});setTimeout(pv,30);
+  $(".xf").addEventListener("click",e=>{const b=e.target.closest("[data-xg]");if(!b)return;const k=b.dataset.xg;
+    if(k==="reset"){delete song.exp;try{localStorage.removeItem(KEXP)}catch(er){}touch();expDlg(kind);return}
+    const x=read();save(x);closeDlg();if(k==="pdf")exportPDF(x);else exportDocx(x)});
+}
+async function exportPDF(o){o=o||expOpts();
   if(P&&P.MC&&P.MC.exportPDF){
     toast("กำลังสร้าง PDF…");
-    try{const root=P.document.createElement("div");root.innerHTML=pagesHTML();await P.MC.exportPDF(root,fname("pdf"));toast("ส่งออก PDF แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
+    try{const root=P.document.createElement("div");root.innerHTML=pagesHTML(o);await P.MC.exportPDF(root,fname("pdf"));toast("ส่งออก PDF แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
     return;
   }
   // นอกแอป: เปิดหน้าพิมพ์ แล้วเลือก “บันทึกเป็น PDF”
   const w=window.open("","_blank");if(!w)return toast("เบราว์เซอร์บล็อกหน้าต่างใหม่");
   w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(song.title)+'</title><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet"><style>@page{size:A4;margin:0}body{margin:0}.rp-page{page-break-after:always}</style></head><body>'+pagesHTML()+'<script>setTimeout(()=>print(),700)<\/script></body></html>');w.document.close();
 }
-async function exportDocx(){
+async function exportDocx(o){o=o||expOpts();
   const rows=[];
   if(P&&P.MC&&P.MC.docxDoc){
-    const M=P.MC;let body=M.wPara(M.wRun(CLUB,{sz:24}),{jc:"center"})+M.wPara(M.wRun(song.title||"โน้ตเพลง",{b:true,sz:44}),{jc:"center"})+metaLines().map((t,i,a)=>M.wPara(M.wRun(t,{sz:28}),{jc:"center",after:i===a.length-1?200:0})).join("");
-    const CH=song.west.chords?chordsAll():null;let bn=0;
-    song.lines.forEach((l,li)=>{body+=M.wPara(M.wRun((l.label||"")+(l.rep===2?" (เล่น 2 เที่ยว)":"")+((mixedRates().length>1||mixedNatab())?" · "+NT.RATE[lineRate(li)].n+" · หน้าทับ"+natabName(lineNatab(li)):""),{b:true,sz:32}),{after:60});const rs=[],n=l.h.R.length;
-      for(let i=0;i<n;i+=8){if(CH){const r=["คอร์ด"];for(let k=0;k<8;k++)r.push(i+k<n?CH[bn+k]||"":"");rs.push(r)}
-        HANDS().forEach(hd=>{const r=[!song.hands?"โน้ต":hd==="L"?"ซ้าย":"ขวา"];for(let k=0;k<8;k++)r.push(i+k<n?lkWrap(l,i+k,cellText(l.h[hd][i+k])):"");rs.push(r)});bn+=Math.min(8,n-i)}
-      body+=M.wTable(rs,[758].concat(Array(8).fill(1110)),{sz:28,align:Array(9).fill("center")})+M.wPara("",{after:160})});
-    body+=M.wPara(M.wRun("บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026",{sz:22}),{jc:"center"});
-    try{await M.saveBlob(M.docxDoc(body),fname("docx"));toast("ส่งออก Word แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
+    const M=P.MC,ML=metaLines(),per=Math.max(2,Math.min(12,+o.perRow||8)),LBL=expLbl(o),SZ={s:24,m:28,l:36}[o.size]||28,land=o.orient==="l",mar=o.margin==="s"?567:1134,TW=(land?16838:11906)-2*mar,LW=LBL?720:0,CW=Math.floor((TW-LW)/per);
+    let body=(o.club?M.wPara(M.wRun(o.clubTxt,{sz:24}),{jc:"center"}):"")+M.wPara(M.wRun(o.title,{b:true,sz:44}),{jc:"center",after:o.meta1||o.meta2?0:200})+[o.meta1?ML[0]:null,o.meta2?ML[1]:null].filter(Boolean).map((t,i,a)=>M.wPara(M.wRun(t,{sz:28}),{jc:"center",after:i===a.length-1?200:0})).join("");
+    const CH=o.chords&&song.west.chords?chordsAll():null;let bn=0;
+    song.lines.forEach((l,li)=>{if(o.lineHead)body+=M.wPara(M.wRun((l.label||"")+(l.rep===2?" (เล่น 2 เที่ยว)":"")+(o.lineMeta&&(mixedRates().length>1||mixedNatab())?" · "+NT.RATE[lineRate(li)].n+" · หน้าทับ"+natabName(lineNatab(li)):""),{b:true,sz:32}),{after:60});const rs=[],n=l.h.R.length;
+      for(let i=0;i<n;i+=per){if(CH){const r=LBL?["คอร์ด"]:[];for(let k=0;k<per;k++)r.push(i+k<n?CH[bn+k]||"":"");rs.push(r)}
+        HANDS().forEach((hd,hi)=>{const r=LBL?[!song.hands?"โน้ต":hd==="L"?"ซ้าย":"ขวา"]:[];for(let k=0;k<per;k++)r.push(i+k<n?(o.barNo&&hi===0?TH(bn+k+1)+"  ":"")+lkWrap(l,i+k,cellText(l.h[hd][i+k])):"");rs.push(r)});bn+=Math.min(per,n-i)}
+      body+=M.wTable(rs,(LBL?[LW]:[]).concat(Array(per).fill(CW)),{sz:SZ,align:Array(per+1).fill("center")})+M.wPara("",{after:160});if(o.pageBreak&&li<song.lines.length-1)body+='<w:p><w:r><w:br w:type="page"/></w:r></w:p>'});
+    if(o.footer)body+=M.wPara(M.wRun("บันทึกด้วยแอปสรรพวาทิต · พัฒนาโดย นายนนทพัทธ์ วงค์มูล 2026",{sz:22}),{jc:"center"});
+    try{await M.saveBlob(M.docxDoc(body,{land,margin:mar}),fname("docx"));toast("ส่งออก Word แล้ว")}catch(e){console.error(e);toast("ส่งออกไม่สำเร็จ: "+(e.message||e))}
     return;
   }
   // นอกแอป: ไฟล์ .doc แบบ HTML (Word เปิดได้)
