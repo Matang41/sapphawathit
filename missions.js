@@ -77,9 +77,10 @@
   const instFor = (m, sid) => { const L = A.insts(ms()[sid]); return m.inst && m.inst !== 'main' && L.includes(m.inst) ? m.inst : (m.inst && m.inst !== 'main' && !L.length ? m.inst : mainInst(sid)); };
   function xpBar(sid, inst) {
     if (!inst) return '<div class="muted">ยังไม่มีเครื่องดนตรีในข้อมูลสมาชิก</div>';
-    const x = xpOf(sid, inst), mx = XPMAX(), pc = Math.min(100, Math.round(x / mx * 100)), lv = A.lvOf(sid, inst);
+    const x = xpOf(sid, inst), mx = XPMAX(), pc = Math.min(100, Math.round(x / mx * 100)), lv = A.lvOf(sid, inst), nx = A.levels()[lv || 0];
     return '<div class="ms-xp"><div class="ms-xph"><b>' + esc(inst) + '</b><span class="muted">' + esc(A.lvName(lv)) + '</span><span class="grow"></span><span>' + x + ' / ' + mx + ' แต้ม</span></div><div class="ms-bar"><i style="width:' + pc + '%"></i></div>' +
-      (x >= mx ? '<div class="ms-full">🔥 หลอดเต็มแล้ว — รอครูประเมินเลื่อนยศ</div>' : '') + '</div>';
+      (x >= mx ? '<div class="ms-full">🔥 หลอดเต็มแล้ว — รอครูประเมินเลื่อนยศ</div>' : '') +
+      (nx ? '<div class="muted" style="font-size:.8rem;margin-top:5px">🎯 เกณฑ์ยศถัดไป · Lv.' + (lv + 1) + ' ' + esc(nx.name || '') + (nx.desc ? ' — ' + esc(nx.desc) : '') + '</div>' : '') + '</div>';
   }
   function ready() {
     const out = [], mx = XPMAX();
