@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 21;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 22;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -388,14 +388,14 @@
       try { F.photo = await M.fileToSquare(f, 160, 0.8); F.print = await M.fileToSquare(f, 640, 0.82); $('#f-av', w).innerHTML = '<img class="av xl" src="' + F.photo + '" alt="">'; } catch (er) { toast(er.message); }
     });
     /* รุ่น 3.7: อวตารพิกเซลแบบตัวละครในเกมตำนานสรรพวาทิต (เก็บในช่องรูปเดิม ไม่ต้องแก้ฐานข้อมูล) */
-    const pxb = $('#f-px', w); if (pxb) pxb.addEventListener('click', async () => { const r = await window.PX.builder(); if (!r) return; F.photo = r.photo; F.print = r.print; $('#f-av', w).innerHTML = '<img class="av xl" src="' + F.photo + '" alt="" style="image-rendering:pixelated">'; });
+    const pxb = $('#f-px', w); if (pxb) pxb.addEventListener('click', async () => { const r = await window.PX.builder(m && m.px ? Object.assign({}, m.px) : undefined); if (!r) return; F.photo = r.photo; F.print = r.print; F.px = r.spec || null; $('#f-av', w).innerHTML = '<img class="av xl" src="' + F.photo + '" alt="" style="image-rendering:pixelated">'; });
     $('form', w).addEventListener('submit', e => {
       e.preventDefault(); const v = id => { const el = $(id, w); return el ? el.value.trim() : ''; };
       const err = t => { const el = $('#f-err', w); el.textContent = t; el.hidden = false; };
       const id = isNew ? v('#f-sid') : sid; const now = Date.now();
       const priv = { phone: v('#f-phone') }; if (!selfOnly) { priv.parentName = v('#f-pname'); priv.parentPhone = v('#f-pphone'); }
       if (selfOnly) {
-        if (F.photo) { W(B.update('', { ['members/' + id + '/photo']: F.photo, ['members/' + id + '/updatedAt']: now, ['members/' + id + '/updatedBy']: by(), ['/people/' + id + '/photo']: F.photo })); W(B.set('photos/' + id, F.print)); }
+        if (F.photo) { W(B.update('', Object.assign({ ['members/' + id + '/photo']: F.photo, ['members/' + id + '/updatedAt']: now, ['members/' + id + '/updatedBy']: by(), ['/people/' + id + '/photo']: F.photo }, F.px ? { ['members/' + id + '/px']: F.px } : {}))); W(B.set('photos/' + id, F.print)); }
         W(B.update('privateInfo/' + id, priv)); delete PRIV[id]; w.remove(); toast('บันทึกแล้ว'); return;
       }
       if (isNew) {
@@ -408,7 +408,7 @@
       const rec = { prefix: v('#f-prefix'), first: v('#f-first'), last: v('#f-last'), grade: +v('#f-grade'), room: +v('#f-room'), type: v('#f-type'), inst };
       if ($('#f-main', w)) { const mv = $('#f-main', w).value, ks = Object.keys(inst); rec.main = ks.length > 1 && inst[mv] ? mv : null; }
       if (teacher) { rec.am = $('#f-am', w).checked; rec.pm = $('#f-pm', w).checked; }
-      if (F.photo) rec.photo = F.photo;
+      if (F.photo) rec.photo = F.photo; if (F.px) rec.px = F.px;
       if (isNew) {
         const upd = { ['members/' + id]: Object.assign({ status: 'active', am: false, pm: false, createdAt: now, createdBy: by() }, rec), ['/people/' + id + '/clubs/' + C._club]: true }; sharedWrites(id, sharedOf(rec), upd);
         W(B.update('', upd)); log('member.add', id, fullName(rec));

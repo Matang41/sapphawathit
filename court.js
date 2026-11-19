@@ -98,14 +98,27 @@
   function stageSfx(key, x) { const k = x.st + (x.verdict ? 'v' : ''); if (LAST[key] === undefined) { LAST[key] = k; return; } if (LAST[key] === k) return; LAST[key] = k;
     if (x.st === 'vote') sfx('ching', 2, .6); else if (x.st === 'sent') sfx('mong'); else if (x.st === 'done') { sfx('gavel', 3, .35); setTimeout(() => sfx('mong'), 1100); } else sfx('ching'); }
 
+
+  /* ---------- อวตารประจำตัว (รุ่น 3.43): members/{sid}/px = spec ตัวละครพิกเซล ใช้ในศาล เกม และทุกที่ที่ใช้ตัวละคร ---------- */
+  const avaOf = s => { const m = A.members()[s]; return m && m.px && typeof m.px === 'object' ? m.px : null; };
+  window.AVA = { of: avaOf };
+  A.ACT.myAvatar = async () => { if (T() || !me() || !window.PX) return; const m = A.members()[me()] || {}; const r = await window.PX.builder(m.px ? Object.assign({}, m.px) : undefined); if (!r) return;
+    const s = me(), now = Date.now(), upd = {}; upd['members/' + s + '/photo'] = r.photo; upd['members/' + s + '/px'] = r.spec; upd['members/' + s + '/updatedAt'] = now; upd['members/' + s + '/updatedBy'] = A.myName(); upd['/people/' + s + '/photo'] = r.photo;
+    A.W(B.update('', upd).then(() => { A.W(B.set('photos/' + s, r.print)); toast('บันทึกอวตารประจำตัวแล้ว · ใช้ในศาลชมรมและเกมทุกเครื่อง'); })); };
+  A.HOME.push({ order: 98, html: () => { if (T() || !me()) return ''; const m = A.members()[me()]; if (!m) return '';
+    try { if (m.px) { const j = JSON.stringify(m.px); if (localStorage.getItem('spw_px_spec') !== j) localStorage.setItem('spw_px_spec', j); } } catch (e) { /* ignore */ }
+    return m.px ? '' : '<section class="card row" style="gap:10px;align-items:center"><span style="font-size:1.6rem">🎮</span><span class="grow"><b>สร้างอวตารประจำตัว</b><div class="muted" style="font-size:.85rem">ตัวละครพิกเซลของเรา ใช้ในศาลชมรม เกม และรูปโปรไฟล์</div></span><button class="btn gold sm" data-act="myAvatar">สร้างเลย</button></section>'; } });
   /* ---------- ภาพห้องพิจารณาคดี (พิกเซล 192×150) ---------- */
   const PK = () => Object.keys(PX.PRESETS).filter(k => k !== 'tang');
-  const spec = s => { if (s === 'T') return PX.PRESETS.tang; const L = PK(); let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PX.PRESETS[L[h % L.length]]; };
+  let CUR = null;
+  const spec = s => { if (s === 'T') return PX.PRESETS.tang; const pp = ((CUR || {}).ppl || {})[s], own = avaOf(s) || (pp && pp.px && typeof pp.px === 'object' ? pp.px : null); if (own) return own; const L = PK(); let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PX.PRESETS[L[h % L.length]]; };
   const judgesOf = x => { const J = x.judges || {}, ks = Object.keys(J); return [ks.find(k => J[k].r === 'p'), 'T', ks.find(k => J[k].r === 'v')]; };
   const IMG = {}, W = 192, H = 150;
   function room(x, hi) {
     if (!window.PX) return '';
-    const jd = judgesOf(x), jr = Object.keys(x.jury || {}).slice(0, 7), wt = Object.keys(x.wit || {})[0] || '', sig = [jd.join(), jr.join(), wt, x.d, hi].join('|');
+    CUR = x; const jd = judgesOf(x), jr = Object.keys(x.jury || {}).slice(0, 7), wt = Object.keys(x.wit || {})[0] || '', inCase = new Set([x.d, wt].concat(jd, jr)), au = A.activeSids().filter(s => avaOf(s) && !inCase.has(s)).slice(0, 8);
+    let hh = 5381; const hs = JSON.stringify([x.d, wt].concat(jd, jr).map(s => s ? spec(s) : 0).concat(au.map(avaOf))); for (let i = 0; i < hs.length; i++) hh = ((hh << 5) + hh + hs.charCodeAt(i)) >>> 0;
+    const sig = [jd.join(), jr.join(), wt, x.d, hi, au.join(), hh].join('|');
     if (!IMG[sig]) {
       const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; const R = (col, a, b, w, h) => { g.fillStyle = col; g.fillRect(a, b, w, h); };
       const spr = (s, a, b, dir) => { if (s) g.drawImage(PX.sprite(spec(s), dir || 'd', 0), a, b, 16, 24); };
@@ -120,7 +133,7 @@
       R('#2b140c', 0, 94, 56, 6); R('#4d2a17', 0, 100, 56, 12); R('#F3C95B', 0, 94, 56, 1);
       if (wt) spr(wt, 160, 72, 'l'); R('#2b140c', 152, 90, 32, 6); R('#4d2a17', 152, 96, 32, 10); R('#F3C95B', 152, 90, 32, 1);
       spr(x.d, 88, 94, 'u'); R('#2b140c', 80, 112, 32, 4); R('#4d2a17', 80, 116, 32, 8); R('#F3C95B', 80, 112, 32, 1);
-      ['pob', 'luwa', 'yum', 'waen', 'captain', 'foo', 'ice', 'che'].forEach((k, i) => { const p = PX.PRESETS[k]; if (p) g.drawImage(PX.sprite(p, 'u', 0), 6 + i * 23 + (i > 3 ? 8 : 0), 128, 16, 24); });
+      ['pob', 'luwa', 'yum', 'waen', 'captain', 'foo', 'ice', 'che'].forEach((k, i) => { const p = au[i] ? avaOf(au[i]) : PX.PRESETS[k]; if (p) g.drawImage(PX.sprite(p, 'u', 0), 6 + i * 23 + (i > 3 ? 8 : 0), 128, 16, 24); });
       R('#2b140c', 0, 140, W, 10); R('#F3C95B', 0, 140, W, 1);
       if (hi === 'judges') arrow(96, 12); if (hi === 'jury') arrow(26, 56); if (hi === 'def') arrow(96, 87); if (hi === 'wit') arrow(168, 64);
       IMG[sig] = c.toDataURL();
@@ -207,8 +220,8 @@
     const w = modal('<h3>' + esc(title) + '</h3><form class="form">' + fld(hint, '<textarea class="in" id="cf-t" rows="6" maxlength="' + max + '">' + esc(val || '') + '</textarea>') + (extra || '') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">บันทึก</button></div></form>', { center: true, sticky: true });
     w.addEventListener('click', e => { if (e.target.closest('[data-close]')) res(null); });
     $('form', w).addEventListener('submit', e => { e.preventDefault(); const t = $('#cf-t', w).value.trim(); if (!t) return toast('ยังไม่ได้เขียนข้อความ'); const o = { t }; w.querySelectorAll('[data-x]').forEach(i => { o[i.dataset.x] = i.value.trim(); }); w.remove(); res(o); }); }); }
-  async function peopleAll() { const o = {}; A.activeSids().forEach(s => { o[s] = [A.fullName(A.members()[s]), cid()]; });
-    for (const c of others()) { try { const v = await B.get(CP(c) + 'members') || {}; Object.keys(v).forEach(s => { if (v[s] && v[s].status === 'active' && !o[s]) o[s] = [A.fullName(v[s]), c]; }); } catch (e) { /* ignore */ } } return o; }
+  async function peopleAll() { const o = {}; A.activeSids().forEach(s => { o[s] = [A.fullName(A.members()[s]), cid(), avaOf(s)]; });
+    for (const c of others()) { try { const v = await B.get(CP(c) + 'members') || {}; Object.keys(v).forEach(s => { if (v[s] && v[s].status === 'active' && !o[s]) o[s] = [A.fullName(v[s]), c, v[s].px && typeof v[s].px === 'object' ? v[s].px : null]; }); } catch (e) { /* ignore */ } } return o; }
   const pOpt = (o, sel, skip) => opt([['', '— เลือก —']].concat(Object.keys(o).filter(s => !(skip || []).includes(s)).sort((a, b) => (o[a][1] === cid() ? 0 : 1) - (o[b][1] === cid() ? 0 : 1) || o[a][0].localeCompare(o[b][0], 'th')).map(s => [s, o[s][0] + (o[s][1] !== cid() ? ' · ชมรม' + clubName(o[s][1]) : '')])), sel || '');
   async function newForm() {
     if (!T()) return; toast('กำลังโหลดรายชื่อทั้งสองชมรม…', 1200); const PP = await peopleAll(), R = A.D.roles || {}, rf = r => Object.keys(R).find(s => R[s] && R[s].role === r && PP[s]);
@@ -234,7 +247,7 @@
       if (jur.length !== N()) return bad('เลือกลูกขุนให้ครบ ' + N() + ' คน'); if (jur.some(s => [d, p, v].includes(s))) return bad('ผู้ต้องหาและผู้พิพากษาเป็นลูกขุนไม่ได้'); if (!(due > Date.now())) return bad('กำหนดเวลายื่นคำแก้ต่างในอนาคต');
       if (!(await M.confirmBox('เปิดคดี', 'ผู้ต้องหา: <b>' + esc(PP[d][0]) + '</b><br>ข้อหา: ' + esc(tagTxt(tags)) + '<br>ทุกคนในองค์คณะ ลูกขุน และผู้ต้องหาจะได้รับหมายศาล', 'เปิดคดี'))) return;
       const id = B.uid(), now = Date.now(), no = Object.values(A.D.court || {}).filter(x => x && x.y === A.year()).length + 1, ppl = {}, who = {}, upd = {};
-      [d, p, v].concat(jur).forEach(s => { ppl[s] = { n: PP[s][0], c: PP[s][1] }; }); who[d] = 'd'; who[p] = 'j'; who[v] = 'j'; jur.forEach(s => { who[s] = 'u'; });
+      [d, p, v].concat(jur).forEach(s => { ppl[s] = { n: PP[s][0], c: PP[s][1], px: PP[s][2] || null }; }); who[d] = 'd'; who[p] = 'j'; who[v] = 'j'; jur.forEach(s => { who[s] = 'u'; });
       const x = { no, y: A.year(), c: cid(), d, dn: PP[d][0], dc: PP[d][1], tags, t, max: $('#cn-m', w).value, judges: { T: { r: 'T' }, [p]: { r: 'p' }, [v]: { r: 'v' } }, jury: {}, ppl, who, st: 'def', due, at: now, by: A.myName() };
       jur.forEach(s => { x.jury[s] = true; }); upd[CP() + 'court/' + id] = x;
       const ux = {}; Object.keys(who).forEach(s => { if (ppl[s].c !== cid()) ux['/courtx/' + s + '/' + cid() + '~' + id] = true; });
@@ -267,7 +280,7 @@
     ctAcc: async d => { const q = Q(d); if (!q) return; if (!(await M.confirmBox('ยอมรับคำพิพากษา', 'เมื่อยอมรับแล้วจะยื่นอุทธรณ์ไม่ได้', 'ยอมรับ'))) return; A.W(B.set(P(q) + '/acc', Date.now())); },
     ctWitT: async d => { const q = Q(d); if (!q || !T()) return; const PP = await peopleAll(), x = q.x, ex = [x.d].concat(Object.keys(x.wit || {}));
       const w = modal('<h3>🧑‍⚖️ ศาลเรียกพยาน</h3><form class="form">' + fld('พยาน (ชมรมนี้หรืออีกชมรม)', '<select class="in" id="cw-s">' + pOpt(PP, '', ex) + '</select>') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">เรียกพยาน</button></div></form>', { center: true });
-      $('form', w).addEventListener('submit', e => { e.preventDefault(); const s = $('#cw-s', w).value; if (!s) return; const upd = {}; upd[P(q) + '/wit/' + s] = { by: 'T', n: PP[s][0] }; upd[P(q) + '/who/' + s] = 'w'; upd[P(q) + '/ppl/' + s] = { n: PP[s][0], c: PP[s][1] }; const ux = PP[s][1] !== cid() ? { ['/courtx/' + s + '/' + q.c + '~' + q.id]: true } : null;
+      $('form', w).addEventListener('submit', e => { e.preventDefault(); const s = $('#cw-s', w).value; if (!s) return; const upd = {}; upd[P(q) + '/wit/' + s] = { by: 'T', n: PP[s][0] }; upd[P(q) + '/who/' + s] = 'w'; upd[P(q) + '/ppl/' + s] = { n: PP[s][0], c: PP[s][1], px: PP[s][2] || null }; const ux = PP[s][1] !== cid() ? { ['/courtx/' + s + '/' + q.c + '~' + q.id]: true } : null;
         A.W(B.update('', upd).then(() => ux ? B.update('', ux) : null).then(() => { w.remove(); toast('เรียกพยานแล้ว'); push('msg', { title: '⚖️ หมายเรียกพยาน ' + caseNo(x), body: 'ศาลชมรมเรียกท่านมาให้การ', to: [s], url: url(q) }); })); }); },
     ctHear: d => { const q = Q(d); if (!q || !T()) return; const x = q.x, d0 = new Date(x.hear || Date.now() + 2 * 864e5); if (!x.hear) d0.setHours(16, 30, 0, 0); const loc = new Date(d0 - d0.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
       const w = modal('<h3>📅 นัดอ่านคำพิพากษา</h3><form class="form">' + fld('วันเวลา', '<input class="in" type="datetime-local" id="ch-t" value="' + loc + '" required>') + fld('สถานที่', '<input class="in" id="ch-p" maxlength="60" value="' + esc(x.place || 'ห้องดนตรีไทย 512') + '">') + '<div class="muted" style="font-size:.85rem">แจ้งเตือนทันที: ผู้ต้องหา องค์คณะ ลูกขุน พยาน และประกาศทั้งชมรม · หน้าหลักทุกคนขึ้นนับถอยหลัง · มีปุ่มเพิ่มลงปฏิทินในเครื่อง (เตือนล่วงหน้า 1 วันและ 30 นาที)</div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">นัดและแจ้งเตือน</button></div></form>', { center: true });

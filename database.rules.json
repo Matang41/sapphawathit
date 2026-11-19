@@ -24,6 +24,13 @@
       },
       "updatedBy": {
        ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)"
+      },
+      "px": {
+       ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active') && auth.token.email.replace('@sappha.ac.th', '') == $sid)",
+       ".validate": "newData.hasChildren()",
+       "$k": {
+        ".validate": "$k.matches(/^[a-zA-Z]{1,10}$/) && ((newData.isString() && newData.val().length <= 16) || newData.isNumber() || newData.isBoolean())"
+       }
       }
      }
     },
@@ -547,7 +554,7 @@
    }
   },
   "rulesProbe": {
-   "v21": {
+   "v22": {
     ".read": true
    }
   },
