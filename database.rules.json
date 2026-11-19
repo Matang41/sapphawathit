@@ -554,7 +554,7 @@
    }
   },
   "rulesProbe": {
-   "v23": {
+   "v24": {
     ".read": true
    }
   },
@@ -675,7 +675,7 @@
     "pl": {
      ".read": "(auth != null && auth.token.email_verified == true)",
      "$sid": {
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid && root.child('ww').child($code).child('meta').child('st').val() == 'lobby'",
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid) || ((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) && $sid == 't_' + auth.token.email.toLowerCase().replace('.', ','))) && root.child('ww').child($code).child('meta').child('st').val() == 'lobby'",
       ".validate": "newData.child('n').isString() && newData.child('n').val().length <= 120"
      }
     },
@@ -685,19 +685,19 @@
     "vote": {
      ".read": "(auth != null && auth.token.email_verified == true)",
      "$sid": {
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid && root.child('ww').child($code).child('pub').child('ph').val() == 'vote' && root.child('ww').child($code).child('pub').child('alive').child($sid).val() == true",
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid) || ((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) && $sid == 't_' + auth.token.email.toLowerCase().replace('.', ','))) && root.child('ww').child($code).child('pub').child('ph').val() == 'vote' && root.child('ww').child($code).child('pub').child('alive').child($sid).val() == true",
       ".validate": "newData.child('r').isNumber()"
      }
     },
     "priv": {
      "$sid": {
-      ".read": "((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid) || (auth != null && root.child('ww').child($code).child('meta').child('h').val() == auth.token.email)"
+      ".read": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid) || ((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) && $sid == 't_' + auth.token.email.toLowerCase().replace('.', ','))) || (auth != null && root.child('ww').child($code).child('meta').child('h').val() == auth.token.email)"
      }
     },
     "act": {
      ".read": "(auth != null && root.child('ww').child($code).child('meta').child('h').val() == auth.token.email)",
      "$sid": {
-      ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid && (root.child('ww').child($code).child('pub').child('alive').child($sid).val() == true || root.child('ww').child($code).child('pub').child('hunter').val() == $sid)",
+      ".write": "(((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid) || ((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists())) && $sid == 't_' + auth.token.email.toLowerCase().replace('.', ','))) && (root.child('ww').child($code).child('pub').child('alive').child($sid).val() == true || root.child('ww').child($code).child('pub').child('hunter').val() == $sid)",
       ".validate": "newData.child('r').isNumber()"
      }
     },

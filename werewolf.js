@@ -9,7 +9,9 @@
   'use strict';
   const M = window.MC, B = window.B, A = window.APP;
   const { $, esc, toast, modal } = M; const { chip, fld, opt } = A;
-  const T = () => A.teacher(), me = () => A.sid();
+  const T = () => A.teacher(), me = () => A.teacher() ? tKey() : A.sid();
+  const tKey = () => 't_' + String(myEmail()).toLowerCase().replace(/\./g, ',');
+  let DEV = ''; try { DEV = localStorage.getItem('spw_ww_dev') || ''; if (!DEV) { DEV = Math.random().toString(36).slice(2, 10); localStorage.setItem('spw_ww_dev', DEV); } } catch (e) { DEV = 'd' + Math.random().toString(36).slice(2, 8); }
   const myEmail = () => { try { const u = window.firebase && window.firebase.auth && window.firebase.auth().currentUser; if (u && u.email) return u.email; } catch (e) { /* ignore */ } return (A.ME && A.ME.email) || (T() ? 'teacher@demo' : (me() || 'x') + '@sappha.ac.th'); };
   const RP = c => '/ww/' + c;
   const ROLES = {
@@ -38,7 +40,7 @@
     return R[c];
   }
   function hostSubs(c) { const r = room(c); if (r.hostOn) return; r.hostOn = true; const on = (k, p) => r.offs.push(B.on(RP(c) + p, v => { r[k] = v || {}; tick(c); A.rerender(); }, () => { })); on('act', '/act'); on('hs', '/hs'); }
-  const isHost = c => { const m = (R[c] || {}).meta; return !!(m && m.h && m.h === myEmail()); };
+  const isHost = c => { const m = (R[c] || {}).meta; return !!(m && m.h && m.h === myEmail() && (!m.hd || m.hd === DEV)); };
   const PK = () => Object.keys(PX.PRESETS).filter(k => k !== 'tang');
   const spec = (r, s) => { const p = (r.pl || {})[s]; if (p && p.px && typeof p.px === 'object') return p.px; const L = PK(); let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return PX.PRESETS[L[h % L.length]]; };
   const nm = (r, s) => (((r.pl || {})[s] || {}).n || s);
@@ -80,7 +82,57 @@
     else if (p.ph === 'hunt') { if (acted(r, p.hunter, 'hunt') || now > p.t) run(c, resolveHunt); }
     else if (p.ph === 'day') { if (p.t && now > p.t) run(c, startVote); }
     else if (p.ph === 'vote') { const vs = r.vote || {}; if (alive(r).every(s => vs[s] && vs[s].r === p.r) || now > p.t) run(c, resolveVote); }
+    if (!busy[c] && r.pub.ph && Object.keys(r.pl || {}).some(s => isBot(r, s))) bots(c, r);
   }
+  /* ---------- บอท (รุ่น 3.45): ผู้ดำเนินเกมเติมบอทได้ · บอทคิดจากข้อมูลที่บทบาทนั้นรู้จริงเท่านั้น (บทบาทตัวเอง พวกปีศาจ ผลที่หูทองฟัง ผลโหวต และคำกล่าวอ้างในที่ประชุม) ----------
+     ระดับ: easy = เดาสุ่ม · normal = จำสิ่งที่รู้ + ตามเสียงส่วนใหญ่ · hard = หูทองบอทประกาศผล ปีศาจบอทปั่นข่าวและล่าคนที่เปิดตัว ช่างเทียบเสียงคุ้มครองคนสำคัญ */
+  const BOTN = ['บอทระนาด', 'บอทฆ้อง', 'บอทขลุ่ย', 'บอทซอด้วง', 'บอทจะเข้', 'บอทฉิ่ง', 'บอทปี่', 'บอทโทน', 'บอทขิม', 'บอทกลองแขก', 'บอทฉาบ', 'บอทซออู้', 'บอทตะโพน', 'บอทกรับ', 'บอทโหม่ง'];
+  const LVN = { easy: 'ง่าย', normal: 'ปานกลาง', hard: 'ยาก' };
+  const isBot = (r, s) => !!(((r.pl || {})[s] || {}).bot);
+  const hsh = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+  const pickR = L => L.length ? L[Math.floor(Math.random() * L.length)] : '';
+  function bm(r, s) { r._bm = r._bm || {}; return (r._bm[s] = r._bm[s] || { seen: {} }); }
+  function susp(r, s, lvl) { const roles = r.hs.roles || {}, me2 = roles[s], team = (ROLES[me2] || {}).team, mem = bm(r, s), cl = r._claims || {}, vs = r.vote || {}, p = r.pub, sc = {};
+    alive(r).filter(x => x !== s).forEach(x => { let v = Math.random() * (lvl === 'hard' ? 20 : 50);
+      if (team === 'w') { if (roles[x] === 'wolf') v -= 1000; }
+      else { if (mem.seen[x] === true) v += 200; if (mem.seen[x] === false) v -= 150; if (lvl !== 'easy' && cl[x]) v += cl[x] === 'w' ? 70 : -50; }
+      if (lvl !== 'easy') { Object.keys(vs).forEach(y => { const q = vs[y]; if (q && q.r === p.r && q.t === x && y !== s) v += 18; }); }
+      sc[x] = v; });
+    return Object.keys(sc).sort((a, b) => sc[b] - sc[a]); }
+  function botAct(r, s, kind, lvl) {
+    const roles = r.hs.roles || {}, others = alive(r).filter(x => x !== s), mem = bm(r, s), cl = r._claims || {}, claimer = r._claimer || '';
+    if (lvl === 'easy' || kind === 'see' || kind === 'cupid') {
+      if (kind === 'kill') return { t: pickR(others.filter(x => roles[x] !== 'wolf')) };
+      if (kind === 'see') return { t: pickR(others.filter(x => mem.seen[x] === undefined)) || pickR(others) };
+      if (kind === 'save') return { t: pickR(alive(r).filter(x => x !== r.hs.last)) };
+      if (kind === 'cupid') { const L = alive(r).slice().sort(() => Math.random() - .5); return { t: L[0], t2: L[1] }; }
+      if (kind === 'witch') { const v = (r.hs.night || {}).victim; return { h: !!(v && v !== (r.hs.night || {}).prot && Math.random() < .5), p: Math.random() < .15 ? pickR(others) : '' }; }
+      return { t: Math.random() < .1 ? '' : pickR(others) }; }
+    if (kind === 'kill') { const mates = alive(r).filter(x => roles[x] === 'wolf' && x !== s && (r.act || {})[x] && r.act[x].r === r.pub.r && r.act[x].s === 'n1'); if (mates.length) return { t: r.act[mates[0]].t };
+      const L = others.filter(x => roles[x] !== 'wolf'); if (lvl === 'hard' && claimer && L.includes(claimer)) return { t: claimer }; return { t: pickR(L) }; }
+    if (kind === 'save') { const L = alive(r).filter(x => x !== r.hs.last); if (lvl === 'hard' && claimer && L.includes(claimer)) return { t: claimer }; return { t: L.includes(s) && Math.random() < .4 ? s : pickR(L) }; }
+    if (kind === 'witch') { const n = r.hs.night || {}, v = n.victim && n.victim !== n.prot ? n.victim : '', pot = r.hs.pot || {}; let p = '';
+      if (pot.p && lvl === 'hard') { const k = Object.keys(cl).find(x => cl[x] === 'w' && r.pub.alive[x] && x !== s); if (k) p = k; }
+      return { h: !!(v && pot.h && (r.pub.r === 1 || v === claimer || Math.random() < .6)), p }; }
+    const L = susp(r, s, lvl); return { t: L[0] || '' };
+  }
+  function bots(c, r) {
+    const p = r.pub, roles = (r.hs || {}).roles || {}, lvl = ((r.meta || {}).cfg || {}).bot || 'normal', now = Date.now(), ts = p.ts || 0, upd = {};
+    const ready = s => now - ts > 2500 + hsh(s + p.r + p.ph) % 5500, aB = alive(r).filter(s => isBot(r, s)), done = (s, st) => acted(r, s, st);
+    const put = (s, st, o) => { upd['act/' + s] = Object.assign({ r: p.r, s: st, bot: 1 }, o); r.act = r.act || {}; r.act[s] = upd['act/' + s];
+      if (st === 'n1' && roles[s] === 'seer' && o.t) bm(r, s).seen[o.t] = roles[o.t] === 'wolf'; };
+    if (p.ph === 'n1') aB.forEach(s => { const k = roles[s], kind = k === 'wolf' ? 'kill' : k === 'seer' ? 'see' : k === 'doctor' ? 'save' : k === 'cupid' && p.r === 1 ? 'cupid' : ''; if (kind && !done(s, 'n1') && ready(s)) put(s, 'n1', botAct(r, s, kind, lvl)); });
+    else if (p.ph === 'n2') aB.forEach(s => { if (roles[s] === 'witch' && !done(s, 'n2') && ready(s)) put(s, 'n2', botAct(r, s, 'witch', lvl)); });
+    else if (p.ph === 'hunt') { const h = p.hunter; if (isBot(r, h) && !done(h, 'hunt') && ready(h)) put(h, 'hunt', botAct(r, h, 'hunt', lvl)); }
+    else if (p.ph === 'day' && lvl === 'hard' && r._claimDay !== p.r && now - ts > 6000) { r._claimDay = p.r; r._claims = r._claims || {};
+      const seer = aB.find(s => roles[s] === 'seer'), sm = seer ? bm(r, seer).seen : {}, wolfK = seer && Object.keys(sm).find(x => sm[x] && p.alive[x]);
+      let line = ''; if (wolfK) { r._claims[wolfK] = 'w'; r._claimer = seer; line = '🤖 ' + nm(r, seer) + ': “ฉันคือหูทอง! ' + short(nm(r, wolfK)) + ' เป็นปีศาจ!”'; }
+      else { const wb = aB.find(s => roles[s] === 'wolf'); if (wb && Math.random() < .5) { const t = pickR(alive(r).filter(x => roles[x] !== 'wolf' && x !== wb)); if (t) { r._claims[t] = 'w'; r._claimer = wb; line = '🤖 ' + nm(r, wb) + ': “ฉันคือหูทอง! ' + short(nm(r, t)) + ' เป็นปีศาจ!”'; } } }
+      if (line) { p.log = LOG(r, line); upd['pub/log'] = p.log; } }
+    else if (p.ph === 'vote') aB.forEach(s => { const v = (r.vote || {})[s]; if (!(v && v.r === p.r) && ready(s)) { const t = botAct(r, s, 'vote', lvl).t || ''; upd['vote/' + s] = { r: p.r, t, bot: 1 }; r.vote = r.vote || {}; r.vote[s] = upd['vote/' + s]; } });
+    if (Object.keys(upd).length) W(c, upd).catch(() => { });
+  }
+
   async function startGame(c) {
     const r = R[c], ids = Object.keys(r.pl || {}).sort((a, b) => (r.pl[a].at || 0) - (r.pl[b].at || 0)), cnt = ((r.meta || {}).cfg || {}).roles || preset(ids.length), pool = [];
     ORDER.forEach(k => { for (let i = 0; i < (+cnt[k] || 0); i++) pool.push(k); });
@@ -91,12 +143,12 @@
     const upd = { act: null, vote: null, priv: {}, hs: { roles, pot: { h: 1, p: 1 }, last: '' }, 'meta/st': 'play' };
     ids.forEach(s => { upd.priv[s] = { role: roles[s], need: '', mates: roles[s] === 'wolf' ? wolves.filter(x => x !== s) : roles[s] === 'minion' ? wolves : null, pot: roles[s] === 'witch' ? { h: 1, p: 1 } : null }; });
     upd.pub = { ph: 'role', r: 0, alive: al, t: 0, log: ['🎭 แจกบทบาทแล้ว ' + ids.length + ' คน · ดูบทบาทในมือถือของตัวเอง อย่าให้ใครเห็น'] };
-    r._seen = {}; r._wp = ''; await W(c, upd); sfx('ching', 2, .6);
+    r._seen = {}; r._wp = ''; r._bm = {}; r._claims = {}; r._claimer = ''; r._claimDay = 0; await W(c, upd); sfx('ching', 2, .6);
   }
   async function startNight(c) {
     const r = R[c], p = r.pub, roles = r.hs.roles, rn = (p.r || 0) + 1, cfg = r.meta.cfg || {}, upd = { act: null };
     alive(r).forEach(s => { const k = roles[s]; upd['priv/' + s + '/need'] = k === 'wolf' ? 'kill' : k === 'seer' ? 'see' : k === 'doctor' ? 'save' : k === 'cupid' && rn === 1 ? 'cupid' : 'sus'; upd['priv/' + s + '/r'] = rn; upd['priv/' + s + '/wp'] = null; upd['priv/' + s + '/victim'] = null; if (k === 'doctor') upd['priv/' + s + '/last'] = r.hs.last || ''; });
-    upd['pub/ph'] = 'n1'; upd['pub/r'] = rn; upd['pub/t'] = Date.now() + (+cfg.night || 60) * 1000; upd['pub/log'] = LOG(r, '🌙 คืนที่ ' + rn + ' · ทุกคนก้มดูมือถือ ทำหน้าที่ของตัวเองเงียบ ๆ'); r.pub.log = upd['pub/log'];
+    upd['pub/ph'] = 'n1'; upd['pub/ts'] = Date.now(); upd['pub/r'] = rn; upd['pub/t'] = Date.now() + (+cfg.night || 60) * 1000; upd['pub/log'] = LOG(r, '🌙 คืนที่ ' + rn + ' · ทุกคนก้มดูมือถือ ทำหน้าที่ของตัวเองเงียบ ๆ'); r.pub.log = upd['pub/log'];
     r._wp = ''; await W(c, upd); sfx('mong');
   }
   async function resolveN1(c) {
@@ -107,7 +159,7 @@
     const upd = { 'hs/last': prot, 'hs/night': { victim, prot } }; hs.last = prot; hs.night = { victim, prot };
     const cup = al.find(s => roles[s] === 'cupid'); if (cup && p.r === 1) { const a = a1(cup); if (a && a.t && a.t2 && a.t !== a.t2 && p.alive[a.t] && p.alive[a.t2]) { upd['hs/lovers'] = [a.t, a.t2]; hs.lovers = [a.t, a.t2]; upd['priv/' + a.t + '/love'] = a.t2; upd['priv/' + a.t2 + '/love'] = a.t; } }
     const wit = al.find(s => roles[s] === 'witch'), pot = hs.pot || {};
-    if (wit && (pot.h || pot.p)) { upd['pub/ph'] = 'n2'; upd['pub/t'] = Date.now() + (+(r.meta.cfg || {}).witch || 40) * 1000; upd['priv/' + wit + '/need'] = 'witch'; upd['priv/' + wit + '/victim'] = victim && victim !== prot ? victim : ''; upd['priv/' + wit + '/pot'] = pot; await W(c, upd); return; }
+    if (wit && (pot.h || pot.p)) { upd['pub/ph'] = 'n2'; upd['pub/ts'] = Date.now(); upd['pub/t'] = Date.now() + (+(r.meta.cfg || {}).witch || 40) * 1000; upd['priv/' + wit + '/need'] = 'witch'; upd['priv/' + wit + '/victim'] = victim && victim !== prot ? victim : ''; upd['priv/' + wit + '/pot'] = pot; await W(c, upd); return; }
     await W(c, upd); await resolveNight(c);
   }
   async function resolveNight(c) {
@@ -128,7 +180,7 @@
     const upd = { 'pub/alive': al, 'pub/dead': dead, 'pub/log': ((p.log || []).concat(msgs)).slice(-8) }; newly.forEach(s => { upd['priv/' + s + '/need'] = ''; });
     p.alive = al; p.dead = dead; p.log = upd['pub/log'];
     const shot = hs.shot || {}, h = newly.find(s => roles[s] === 'hunter' && !shot[s]);
-    if (h) { (hs.shot = shot)[h] = true; Object.assign(upd, { ['hs/shot/' + h]: true, 'pub/ph': 'hunt', 'pub/hunter': h, 'pub/after': after, 'pub/t': Date.now() + 30000, ['priv/' + h + '/need']: 'hunt', ['priv/' + h + '/r']: p.r });
+    if (h) { (hs.shot = shot)[h] = true; Object.assign(upd, { ['hs/shot/' + h]: true, 'pub/ph': 'hunt', 'pub/ts': Date.now(), 'pub/hunter': h, 'pub/after': after, 'pub/t': Date.now() + 30000, ['priv/' + h + '/need']: 'hunt', ['priv/' + h + '/r']: p.r });
       upd['pub/log'] = p.log = p.log.concat(['🥁 ' + short(nm(r, h)) + ' คือพรานกลองหลวง! กำลังเลือกคนที่จะพาออกไปด้วย']).slice(-8); await W(c, upd); sfx('drum', 4, .3); return; }
     if (newly.length) sfx('mong');
     const win = winner(r, al); if (win) return end(c, win, upd);
@@ -139,8 +191,8 @@
     const win = winner(r, p.alive); p.log = LOG(r, '🥁 พรานไม่ได้เลือกใคร'); if (win) return end(c, win, { 'pub/log': p.log });
     await W(c, { 'pub/log': p.log }); if (after === 'day') await startDay(c); else await startNight(c); }
   async function startDay(c) { const r = R[c], d = +((r.meta.cfg || {}).disc) || 180; r.pub.log = LOG(r, '💬 ถกเถียงกัน ' + Math.round(d / 60 * 10) / 10 + ' นาที แล้วโหวตหาตัวปีศาจ');
-    await W(c, { 'pub/ph': 'day', 'pub/t': Date.now() + d * 1000, 'pub/log': r.pub.log, act: null }); sfx('ching', 2, .6); }
-  async function startVote(c) { const r = R[c]; await W(c, { 'pub/ph': 'vote', 'pub/t': Date.now() + (+((r.meta.cfg || {}).vote) || 60) * 1000, vote: null }); sfx('ching'); }
+    await W(c, { 'pub/ph': 'day', 'pub/ts': Date.now(), 'pub/t': Date.now() + d * 1000, 'pub/log': r.pub.log, act: null }); sfx('ching', 2, .6); }
+  async function startVote(c) { const r = R[c]; await W(c, { 'pub/ph': 'vote', 'pub/ts': Date.now(), 'pub/t': Date.now() + (+((r.meta.cfg || {}).vote) || 60) * 1000, vote: null }); sfx('ching'); }
   async function resolveVote(c) {
     const r = R[c], p = r.pub, roles = r.hs.roles, vs = r.vote || {}, tally = {};
     alive(r).forEach(s => { const v = vs[s]; if (v && v.r === p.r && v.t && p.alive[v.t]) tally[v.t] = (tally[v.t] || 0) + 1; });
@@ -194,18 +246,20 @@
     const c = String(code).toUpperCase(), r = room(c);
     if (r.meta === undefined) return { title: 'คืนปีศาจเสียงเพี้ยน', body: '<div class="empty">กำลังโหลด…</div>', back: '#/ww' };
     if (r.meta === null) return { title: 'คืนปีศาจเสียงเพี้ยน', body: '<div class="empty">ไม่พบห้อง ' + esc(c) + ' (ห้องอาจถูกปิดแล้ว)</div>', back: '#/ww' };
-    return isHost(c) ? (hostSubs(c), hostView(c, r)) : playerView(c, r);
+    if (isHost(c)) { hostSubs(c); if ((r.pl || {})[me()]) { const pv = playerView(c, r); pv.body += hostView(c, r, true); return pv; } return hostView(c, r); }
+    return playerView(c, r);
   };
   function head(c, r) { const p = r.pub || {}, ph = p.ph || 'lobby'; return '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><b class="grow">ห้อง ' + esc(c) + ' · ' + esc(PH[ph] || '') + (p.r ? ' คืนที่ ' + p.r : '') + tmr(p) + '</b>' + chip(alive(r).length + '/' + Object.keys(r.pl || {}).length + ' คนยังอยู่', 'line') + '</div>'; }
   const logBox = p => (p.log || []).length ? '<section class="card"><div class="lb">เหตุการณ์</div>' + p.log.slice().reverse().map((x, i) => '<div style="padding:4px 0;border-top:1px dashed var(--line);' + (i ? 'opacity:.75;font-size:.88rem' : 'font-weight:700') + '">' + esc(x) + '</div>').join('') + '</section>' : '';
   function revealBox(r) { const p = r.pub; return '<section class="card"><div class="lb">เฉลยบทบาท</div>' + Object.keys(p.reveal || {}).map(s => { const k = p.reveal[s], w = isWinner(p, s); return '<div class="row" style="padding:5px 0;border-top:1px dashed var(--line);gap:6px"><span>' + ROLES[k].i + '</span><b class="grow">' + esc(nm(r, s)) + '</b><span class="muted" style="font-size:.82rem">' + esc(ROLES[k].n) + '</span>' + (w ? chip('ชนะ', 'gold') : '') + ((p.dead || {})[s] ? chip('ตกรอบ', 'line') : '') + '</div>'; }).join('') + '</section>'; }
-  function hostView(c, r) {
+  function hostView(c, r, mini) {
     const p = r.pub || {}, ph = p.ph || 'lobby', ids = Object.keys(r.pl || {}), cfg = (r.meta || {}).cfg || {}, cnt = cfg.roles || preset(ids.length), K = esc(c);
-    let b = head(c, r) + scene(r), say = '', btn = '';
+    let b = mini ? '' : head(c, r) + scene(r), say = '', btn = ''; const inPl = !!(r.pl || {})[me()], lvl = cfg.bot || 'normal', nBot = ids.filter(s => isBot(r, s)).length, fill = +cfg.fill || 6;
     if (ph === 'lobby') { const n = ORDER.reduce((a, k) => a + (+cnt[k] || 0), 0);
       say = '<div style="font-size:1.05rem">ให้ผู้เล่นเปิดแอป › เกม › คืนปีศาจเสียงเพี้ยน แล้วใส่รหัส</div><div style="font-size:3rem;font-weight:800;letter-spacing:10px;color:#F3C95B;margin:6px 0">' + K + '</div><div>ผู้เล่น ' + ids.length + ' คน · บทบาท: ' + ORDER.filter(k => +cnt[k]).map(k => ROLES[k].i + (cnt[k] > 1 ? '×' + cnt[k] : '')).join(' ') + (ids.length > n ? ' ' + ROLES.vil.i + '×' + (ids.length - n) : '') + (cfg.roles ? '' : ' (จัดอัตโนมัติตามจำนวนคน)') + '</div>';
-      btn = '<button data-act="wwCfg" data-c="' + K + '">⚙️ ตั้งค่า</button><button class="p" data-act="wwStart" data-c="' + K + '">▶ แจกบทบาท</button>';
-      b += '<section class="card"><div class="lb">ผู้เล่นในห้อง (' + ids.length + ')</div>' + (ids.length ? ids.map(s => '<span class="chip" style="margin:2px">' + esc(short(nm(r, s))) + ' <a href="javascript:void 0" data-act="wwKick" data-c="' + K + '" data-s="' + esc(s) + '" title="นำออก">✕</a></span>').join('') : '<div class="muted">ยังไม่มีผู้เล่น</div>') + '</section>'; }
+      btn = '<button data-act="wwCfg" data-c="' + K + '">⚙️ ตั้งค่า</button><button class="p" data-act="wwStart" data-c="' + K + '">▶ แจกบทบาท</button><button data-act="wwPlay" data-c="' + K + '">' + (inPl ? '🚶 ไม่ร่วมเล่น' : '🙋 ร่วมเล่นด้วย') + '</button><button data-act="wwBot" data-c="' + K + '">🤖 เพิ่มบอท 1 ตัว</button>' + (ids.length < fill ? '<button data-act="wwFill" data-c="' + K + '">🤖 เติมบอทให้ครบ ' + fill + ' คน</button>' : '') + (nBot ? '<button data-act="wwUnbot" data-c="' + K + '">ลบบอททั้งหมด</button>' : '');
+      say += '<div style="margin-top:8px">ความยากของบอท: ' + Object.keys(LVN).map(k => '<button class="btn sm ' + (lvl === k ? 'gold' : 'ghost') + '" data-act="wwLvl" data-l="' + k + '" data-c="' + K + '">' + LVN[k] + '</button>').join(' ') + '</div>' + (inPl ? '<div class="muted" style="font-size:.82rem;margin-top:6px">คุณร่วมเล่นด้วยจากเครื่องนี้ จอนี้จะแสดงบทบาทของคุณ อย่าฉายขึ้นจอให้คนอื่นเห็น</div>' : '');
+      b += '<section class="card"><div class="lb">ผู้เล่นในห้อง (' + ids.length + ')</div>' + (ids.length ? ids.map(s => '<span class="chip" style="margin:2px">' + (isBot(r, s) ? '🤖 ' : '') + esc(short(nm(r, s))) + ' <a href="javascript:void 0" data-act="wwKick" data-c="' + K + '" data-s="' + esc(s) + '" title="นำออก">✕</a></span>').join('') : '<div class="muted">ยังไม่มีผู้เล่น</div>') + '</section>'; }
     else if (ph === 'role') { say = 'ทุกคนแตะดูบทบาทในมือถือของตัวเอง อย่าให้ใครเห็น · พร้อมแล้วเริ่มคืนแรก'; btn = '<button class="p" data-act="wwNight" data-c="' + K + '">🌙 เริ่มคืนที่ 1</button>'; }
     else if (ph === 'n1' || ph === 'n2') { say = '🌙 คืนที่ ' + p.r + ' · ทุกคนก้มดูมือถือ ทำหน้าที่ของตัวเองเงียบ ๆ ห้ามพูด ห้ามมองจอคนอื่น'; btn = '<button data-act="wwSkip" data-c="' + K + '">⏭ ข้ามเวลา</button>'; }
     else if (ph === 'hunt') { say = '🥁 พรานกลองหลวงกำลังเลือกคนที่จะพาออกไปด้วย…'; btn = '<button data-act="wwSkip" data-c="' + K + '">⏭ ข้ามเวลา</button>'; }
@@ -213,7 +267,9 @@
     else if (ph === 'vote') { const vs = r.vote || {}, tl = {}; let n = 0; alive(r).forEach(s => { const v = vs[s]; if (v && v.r === p.r) { n++; if (v.t) tl[v.t] = (tl[v.t] || 0) + 1; } });
       say = '🗳️ โหวตแล้ว ' + n + '/' + alive(r).length + ' คน' + '<div style="margin-top:8px;text-align:left">' + Object.keys(tl).sort((a, b) => tl[b] - tl[a]).map(s => '<div class="row" style="gap:6px"><span style="width:90px">' + esc(short(nm(r, s))) + '</span><span style="height:12px;background:#c0392b;border-radius:3px;width:' + (tl[s] * 22) + 'px"></span><b>' + tl[s] + '</b></div>').join('') + '</div>'; btn = '<button class="p" data-act="wwSkip" data-c="' + K + '">ปิดโหวต</button>'; }
     else if (ph === 'end') { say = '<div style="font-size:1.3rem;font-weight:800">' + esc(WMSG[p.win] || '') + '</div>'; btn = '<button class="p" data-act="wwAgain" data-c="' + K + '">🔁 เล่นอีกรอบ</button><button data-act="wwClose" data-c="' + K + '">ปิดห้อง</button>'; }
+    if (mini && ph !== 'lobby' && ph !== 'end' && ph !== 'role') say = '';
     b += '<div class="ct-dlg" style="text-align:center"><span class="who">ผู้ดำเนินเกม</span><div style="margin:8px 0 12px;line-height:1.6">' + say + '</div><div class="ct-acts">' + btn + '<button data-act="wwSnd">' + (SND.on ? '🔊 เสียงเปิด' : '🔇 เสียงปิด') + '</button></div></div>';
+    if (mini) return b;
     if (ph === 'end') b += revealBox(r);
     return { title: 'คืนปีศาจเสียงเพี้ยน · ผู้ดำเนินเกม', body: b + (ph !== 'lobby' ? logBox(p) : rolesHelp()), back: '#/ww' };
   }
@@ -222,7 +278,7 @@
   function playerView(c, r) {
     const p = r.pub || {}, ph = p.ph || 'lobby', v = r.priv || {}, s = me(), K = esc(c), inG = !!(s && (r.pl || {})[s]), live = !!(p.alive || {})[s], ro = ROLES[v.role];
     let b = head(c, r) + scene(r);
-    if (!inG) { b += '<section class="card" style="text-align:center">' + (ph === 'lobby' && s ? '<div style="margin-bottom:8px">ห้อง ' + K + ' กำลังรอผู้เล่น</div><button class="btn gold" data-act="wwJoin2" data-c="' + K + '">เข้าร่วมเกม</button>' : '<div class="muted">' + (s ? 'เกมเริ่มไปแล้ว ดูได้อย่างเดียว' : 'ครูดูได้อย่างเดียว · ผู้ดำเนินเกมคือเครื่องที่เปิดห้อง') + '</div>') + '</section>';
+    if (!inG) { b += '<section class="card" style="text-align:center">' + (ph === 'lobby' && s ? '<div style="margin-bottom:8px">ห้อง ' + K + ' กำลังรอผู้เล่น</div><button class="btn gold" data-act="wwJoin2" data-c="' + K + '">เข้าร่วมเกม</button>' : '<div class="muted">' + 'เกมเริ่มไปแล้ว ดูได้อย่างเดียว' + '</div>') + '</section>';
       return { title: 'คืนปีศาจเสียงเพี้ยน', body: b + (ph === 'end' ? revealBox(r) : '') + logBox(p), back: '#/ww' }; }
     const lk = ph + '|' + (v.need || '') + '|' + (p.r || 0); if (LN[c] && LN[c] !== lk && v.need && v.need !== 'sus') { try { navigator.vibrate && navigator.vibrate(180); } catch (e) { /* ignore */ } } LN[c] = lk;
     if (ro) { const sh = SHOW[c], L = [];
@@ -260,20 +316,26 @@
 
   /* ---------- ปุ่ม ---------- */
   const RQ = d => { const c = String(d.c || '').toUpperCase(); return [c, R[c]]; };
-  async function join(c) { if (!/^[A-Z0-9]{4}$/.test(c)) return toast('ใส่รหัสห้อง 4 ตัว'); if (T() || !me()) { location.hash = '#/ww/' + c; return; }
+  async function join(c) { if (!/^[A-Z0-9]{4}$/.test(c)) return toast('ใส่รหัสห้อง 4 ตัว'); if (!me()) { location.hash = '#/ww/' + c; return; }
     let m = null; try { m = await B.get(RP(c) + '/meta'); } catch (e) { return toast('เข้าห้องไม่ได้: ' + (A.errTH ? A.errTH(e) : e.message)); } if (!m) return toast('ไม่พบห้อง ' + c);
     if (m.st !== 'lobby') { toast('เกมเริ่มไปแล้ว เข้าดูได้อย่างเดียว'); location.hash = '#/ww/' + c; return; }
-    try { await B.set(RP(c) + '/pl/' + me(), { n: A.myName(), px: (window.AVA && window.AVA.of(me())) || null, c: M.C.club.id, at: Date.now() }); } catch (e) { return toast('เข้าห้องไม่ได้: ' + (A.errTH ? A.errTH(e) : e.message)); }
+    try { await B.set(RP(c) + '/pl/' + me(), { n: A.myName(), px: T() ? (window.PX ? PX.PRESETS.tang : null) : ((window.AVA && window.AVA.of(me())) || null), c: M.C.club.id, at: Date.now() }); } catch (e) { return toast('เข้าห้องไม่ได้: ' + (A.errTH ? A.errTH(e) : e.message)); }
     location.hash = '#/ww/' + c; }
   const host = (d, fn) => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; run(c, fn); };
   Object.assign(A.ACT, {
     wwNew: async () => { const AL = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c = ''; for (let k = 0; k < 6; k++) { c = Array.from({ length: 4 }, () => AL[Math.floor(Math.random() * AL.length)]).join(''); let ex = null; try { ex = await B.get(RP(c) + '/meta'); } catch (e) { ex = null; } if (!ex) break; }
-      try { await B.set(RP(c) + '/meta', { h: myEmail(), by: A.myName(), st: 'lobby', at: Date.now(), cfg: { night: 60, witch: 40, disc: 180, vote: 60, reveal: true } }); } catch (e) { return toast('เปิดห้องไม่ได้: ' + (A.errTH ? A.errTH(e) : e.message)); }
+      try { await B.set(RP(c) + '/meta', { h: myEmail(), hd: DEV, by: A.myName(), st: 'lobby', at: Date.now(), cfg: { night: 60, witch: 40, disc: 180, vote: 60, reveal: true } }); } catch (e) { return toast('เปิดห้องไม่ได้: ' + (A.errTH ? A.errTH(e) : e.message)); }
       try { ac(); } catch (e) { /* ignore */ } location.hash = '#/ww/' + c; },
     wwJoin: () => join((($('#ww-code') || {}).value || '').trim().toUpperCase()),
     wwJoin2: d => join(String(d.c || '')),
     wwLeave: d => { const [c] = RQ(d); A.W(B.remove(RP(c) + '/pl/' + me())); location.hash = '#/ww'; },
     wwKick: d => { const [c, r] = RQ(d); if (r && isHost(c)) A.W(B.remove(RP(c) + '/pl/' + d.s)); },
+    wwPlay: async d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; if ((r.pl || {})[me()]) A.W(B.remove(RP(c) + '/pl/' + me())); else A.W(B.set(RP(c) + '/pl/' + me(), { n: A.myName(), px: T() ? PX.PRESETS.tang : ((window.AVA && window.AVA.of(me())) || null), c: M.C.club.id, at: Date.now() })); },
+    wwBot: d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; const ids = Object.keys(r.pl || {}); if (ids.length >= 15) return toast('ห้องเต็ม 15 คนแล้ว'); const used = new Set(ids.map(s => (r.pl[s] || {}).n)); const n = BOTN.find(x => !used.has(x)) || ('บอท' + ids.length); let k = 1; while ((r.pl || {})['bot' + k]) k++; A.W(B.set(RP(c) + '/pl/bot' + k, { n, bot: 1, at: Date.now() })); },
+    wwFill: d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; const fill = +((r.meta.cfg || {}).fill) || 6, ids = Object.keys(r.pl || {}), used = new Set(ids.map(s => (r.pl[s] || {}).n)), upd = {}; let k = 1, i = 0;
+      for (let n = ids.length; n < fill; n++) { while ((r.pl || {})['bot' + k] || upd['pl/bot' + k]) k++; while (i < BOTN.length && used.has(BOTN[i])) i++; upd['pl/bot' + k] = { n: BOTN[i] || ('บอท' + k), bot: 1, at: Date.now() + n }; i++; } if (Object.keys(upd).length) W(c, upd); },
+    wwUnbot: d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; const upd = {}; Object.keys(r.pl || {}).filter(s => isBot(r, s)).forEach(s => { upd['pl/' + s] = null; }); W(c, upd); },
+    wwLvl: d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; W(c, { 'meta/cfg/bot': d.l }); },
     wwStart: d => host(d, startGame), wwNight: d => host(d, startNight),
     wwSkip: d => { const [c, r] = RQ(d); if (r && isHost(c)) { r.pub.t = Date.now() - 1; tick(c); } },
     wwMore: d => { const [c, r] = RQ(d); if (r && isHost(c)) W(c, { 'pub/t': Math.max(Date.now(), r.pub.t || 0) + 60000 }); },
@@ -292,9 +354,9 @@
     wwCfg: d => { const [c, r] = RQ(d); if (!r || !isHost(c)) return; const cfg = r.meta.cfg || {}, n = Object.keys(r.pl || {}).length, cnt = cfg.roles || preset(Math.max(n, 5));
       const w = modal('<h3>⚙️ ตั้งค่าเกม</h3><form class="form"><label class="ck wide"><input type="checkbox" id="wc-auto"' + (cfg.roles ? '' : ' checked') + '> จัดบทบาทอัตโนมัติตามจำนวนผู้เล่น</label><div id="wc-r">' + ORDER.map(k => '<div class="row" style="gap:8px;padding:4px 0"><span class="grow">' + ROLES[k].i + ' ' + esc(ROLES[k].n) + '</span><input class="in" type="number" min="0" max="' + (k === 'wolf' ? 4 : 1) + '" data-k="' + k + '" value="' + (+cnt[k] || 0) + '" style="width:70px"></div>').join('') + '<div class="muted" style="font-size:.8rem">ที่เหลือเป็นนักดนตรีชาวบ้าน</div></div>' +
         '<div class="row" style="gap:8px">' + fld('กลางคืน (วินาที)', '<input class="in" type="number" id="wc-n" min="20" max="300" value="' + (cfg.night || 60) + '">') + fld('หมอยา (วินาที)', '<input class="in" type="number" id="wc-w" min="15" max="120" value="' + (cfg.witch || 40) + '">') + '</div><div class="row" style="gap:8px">' + fld('ถกเถียง (วินาที)', '<input class="in" type="number" id="wc-d" min="30" max="900" value="' + (cfg.disc || 180) + '">') + fld('โหวต (วินาที)', '<input class="in" type="number" id="wc-v" min="15" max="300" value="' + (cfg.vote || 60) + '">') + '</div>' +
-        '<label class="ck wide"><input type="checkbox" id="wc-rv"' + (cfg.reveal === false ? '' : ' checked') + '> เปิดเผยบทบาทของคนที่ตกรอบ</label><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">บันทึก</button></div></form>', { center: true });
+        fld('เติมบอทให้ครบ (คน)', '<input class="in" type="number" id="wc-f" min="4" max="15" value="' + (cfg.fill || 6) + '">') + '<label class="ck wide"><input type="checkbox" id="wc-rv"' + (cfg.reveal === false ? '' : ' checked') + '> เปิดเผยบทบาทของคนที่ตกรอบ</label><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">บันทึก</button></div></form>', { center: true });
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const ro = {}; w.querySelectorAll('[data-k]').forEach(i => { ro[i.dataset.k] = Math.max(0, Math.min(+i.max, +i.value || 0)); }); const num = (id, a, z) => Math.max(a, Math.min(z, +$(id, w).value || a));
-        W(c, { 'meta/cfg': { roles: $('#wc-auto', w).checked ? null : ro, night: num('#wc-n', 20, 300), witch: num('#wc-w', 15, 120), disc: num('#wc-d', 30, 900), vote: num('#wc-v', 15, 300), reveal: $('#wc-rv', w).checked } }); w.remove(); toast('บันทึกแล้ว'); }); }
+        W(c, { 'meta/cfg': { roles: $('#wc-auto', w).checked ? null : ro, night: num('#wc-n', 20, 300), witch: num('#wc-w', 15, 120), disc: num('#wc-d', 30, 900), vote: num('#wc-v', 15, 300), reveal: $('#wc-rv', w).checked, bot: cfg.bot || 'normal', fill: num('#wc-f', 4, 15) } }); w.remove(); toast('บันทึกแล้ว'); }); }
   });
   window.WW = { R, tick };
 })();
