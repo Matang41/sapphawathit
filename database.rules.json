@@ -547,7 +547,7 @@
    }
   },
   "rulesProbe": {
-   "v20": {
+   "v21": {
     ".read": true
    }
   },
@@ -652,7 +652,9 @@
   },
   "courtx": {
    "$sid": {
-    ".read": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid"
+    ".read": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $sid",
+    ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).exists()))",
+    ".validate": "$sid.matches(/^[0-9]{4,8}$/)"
    }
   }
  }
