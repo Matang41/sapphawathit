@@ -74,7 +74,8 @@
     if (p.ph === 'n1') {
       const wolves = alive(r).filter(s => roles[s] === 'wolf'), wp = {}, upd = {}; wolves.forEach(s => { if (acted(r, s, 'n1')) wp[s] = r.act[s].t; });
       const k = JSON.stringify(wp); if (k !== r._wp) { r._wp = k; wolves.forEach(s => { upd['priv/' + s + '/wp'] = wp; }); }
-      alive(r).filter(s => roles[s] === 'seer' && acted(r, s, 'n1')).forEach(s => { const t = r.act[s].t; if (t && !(r._seen || {})[s + t]) { (r._seen = r._seen || {})[s + t] = 1; upd['priv/' + s + '/seen/' + t] = roles[t] === 'wolf'; } });
+      /* หูทองฟังได้ 1 คนต่อคืน: เปิดผลให้เฉพาะตัวเลือกแรกของคืนนั้น ตัวเลือกหลังจากนั้นไม่นับ */
+      alive(r).filter(s => roles[s] === 'seer' && acted(r, s, 'n1')).forEach(s => { const t = r.act[s].t, k = s + ':' + p.r; if (t && t !== s && p.alive[t] && (hs.seenR || {})[s] !== p.r && !(r._seen || {})[k]) { (r._seen = r._seen || {})[k] = t; upd['priv/' + s + '/seen/' + t] = roles[t] === 'wolf'; upd['priv/' + s + '/seenR'] = p.r; upd['priv/' + s + '/seenT'] = t; upd['hs/seenR/' + s] = p.r; } });
       if (Object.keys(upd).length) W(c, upd).catch(() => { });
       const need = alive(r).filter(s => ['wolf', 'seer', 'doctor'].includes(roles[s]) || (roles[s] === 'cupid' && p.r === 1));
       if (need.every(s => acted(r, s, 'n1')) || now > p.t) run(c, resolveN1);
@@ -143,7 +144,7 @@
     const upd = { act: null, vote: null, priv: {}, hs: { roles, pot: { h: 1, p: 1 }, last: '' }, 'meta/st': 'play' };
     ids.forEach(s => { upd.priv[s] = { role: roles[s], need: '', mates: roles[s] === 'wolf' ? wolves.filter(x => x !== s) : roles[s] === 'minion' ? wolves : null, pot: roles[s] === 'witch' ? { h: 1, p: 1 } : null }; });
     upd.pub = { ph: 'role', r: 0, alive: al, t: 0, log: ['🎭 แจกบทบาทแล้ว ' + ids.length + ' คน · ดูบทบาทในมือถือของตัวเอง อย่าให้ใครเห็น'] };
-    r._seen = {}; r._wp = ''; r._bm = {}; r._claims = {}; r._claimer = ''; r._claimDay = 0; await W(c, upd); sfx('ching', 2, .6);
+    r._seen = {}; r._wp = ''; r._bm = {}; upd.hs.seenR = null; r._claims = {}; r._claimer = ''; r._claimDay = 0; await W(c, upd); sfx('ching', 2, .6);
   }
   async function startNight(c) {
     const r = R[c], p = r.pub, roles = r.hs.roles, rn = (p.r || 0) + 1, cfg = r.meta.cfg || {}, upd = { act: null };
@@ -153,7 +154,7 @@
   }
   async function resolveN1(c) {
     const r = R[c], p = r.pub, hs = r.hs, roles = hs.roles, al = alive(r), a1 = s => acted(r, s, 'n1') ? r.act[s] : null, tally = {};
-    al.filter(s => roles[s] === 'wolf').forEach(s => { const a = a1(s); if (a && a.t && p.alive[a.t]) tally[a.t] = (tally[a.t] || 0) + 1; });
+    al.filter(s => roles[s] === 'wolf').forEach(s => { const a = a1(s); if (a && a.t && p.alive[a.t] && roles[a.t] !== 'wolf') tally[a.t] = (tally[a.t] || 0) + 1; });
     const mx = Math.max(0, ...Object.values(tally)), top = Object.keys(tally).filter(k => tally[k] === mx), victim = mx ? top[Math.floor(Math.random() * top.length)] : '';
     let prot = ''; const doc = al.find(s => roles[s] === 'doctor'); if (doc) { const a = a1(doc); if (a && a.t && a.t !== hs.last) prot = a.t; }
     const upd = { 'hs/last': prot, 'hs/night': { victim, prot } }; hs.last = prot; hs.night = { victim, prot };
@@ -296,7 +297,9 @@
     else if (!live && !(ph === 'hunt' && v.need === 'hunt')) { say = '👻 คุณตกรอบแล้ว ดูเกมต่อได้ แต่ห้ามบอกใบ้คนที่ยังอยู่'; }
     else if (ph === 'n1') { who = '🌙 คืนที่ ' + p.r; const n = v.need, sel = MY[mk('n1')];
       if (n === 'kill') { say = 'เลือกคนที่จะสาป'; acts = grid(others.filter(x => !(v.mates || []).includes(x)), 'wwAct', sel, 'n1'); const wp = v.wp || {}; note = Object.keys(wp).length ? 'ปีศาจเลือกแล้ว: ' + Object.keys(wp).map(x => short(nm(r, x)) + ' → ' + short(nm(r, wp[x]))).join(' · ') : 'เห็นตัวเลือกของพวกปีศาจด้วยกันที่นี่ · เสียงไม่ตรงกันระบบสุ่มจากที่ได้เสียงมากสุด'; }
-      else if (n === 'see') { say = 'เลือกคนที่จะฟังเสียง'; acts = grid(others, 'wwAct', sel, 'n1'); if (sel && v.seen && v.seen[sel] !== undefined) note = short(nm(r, sel)) + (v.seen[sel] ? ' คือ 👹 ปีศาจ!' : ' ไม่ใช่ปีศาจ 🎵'); }
+      else if (n === 'see') { if (v.seenR === p.r && v.seenT) { say = 'คืนนี้ฟังเสียงไปแล้ว (ได้ 1 คนต่อคืน)'; acts = grid([v.seenT], 'wwNop', v.seenT); note = short(nm(r, v.seenT)) + (v.seen && v.seen[v.seenT] ? ' คือ 👹 ปีศาจ!' : ' ไม่ใช่ปีศาจ 🎵'); }
+        else if (sel) { say = 'กำลังฟังเสียง ' + short(nm(r, sel)) + ' …'; note = 'รอผลสักครู่ · คืนนี้เปลี่ยนคนไม่ได้แล้ว'; }
+        else { say = 'เลือกคนที่จะฟังเสียง (ได้ 1 คนต่อคืน เลือกแล้วเปลี่ยนไม่ได้)'; acts = grid(others, 'wwAct', sel, 'n1'); } }
       else if (n === 'save') { say = 'เลือกคนที่จะคุ้มครอง'; acts = grid(alive(r).filter(x => x !== v.last), 'wwAct', sel, 'n1'); if (v.last) note = 'คืนนี้คุ้มครอง ' + short(nm(r, v.last)) + ' ซ้ำไม่ได้'; }
       else if (n === 'cupid') { const cs = CUP[c] || []; say = 'เลือก 2 คนเป็นคู่ขวัญ (' + cs.length + '/2)'; acts = '<div class="ct-acts">' + alive(r).map(t => '<button class="' + (cs.includes(t) ? 'p' : '') + '" data-act="wwCup" data-c="' + K + '" data-t="' + esc(t) + '">' + (cs.includes(t) ? '🎎 ' : '') + esc(short(nm(r, t))) + '</button>').join('') + (cs.length === 2 ? '<button class="g" data-act="wwCupGo" data-c="' + K + '">ผูกคู่ขวัญ</button>' : '') + '</div>'; if (sel) note = 'ผูกแล้ว'; }
       else { say = 'เลือกคนที่คุณสงสัย'; acts = grid(others, 'wwSus', MY[mk('sus')]); note = 'ทุกคนต้องแตะเลือกเหมือนกัน คนอื่นจะได้ดูไม่ออก'; } }
@@ -344,6 +347,7 @@
     wwSnd: () => { SND.on = !SND.on; try { localStorage.setItem('spw_ww_snd', SND.on ? '1' : '0'); } catch (e) { /* ignore */ } loopPh = '?'; if (SND.on) { ac(); sfx('ching'); } else loop(''); A.rerender(); },
     wwShow: d => { const [c] = RQ(d); SHOW[c] = !SHOW[c]; A.rerender(); },
     wwAct: d => { const [c, r] = RQ(d); if (!r) return; const st = d.s, p = r.pub; MY[c + ':' + p.r + ':' + st] = d.t; A.W(B.set(RP(c) + '/act/' + me(), { r: p.r, s: st, t: d.t })); try { navigator.vibrate && navigator.vibrate(40); } catch (e) { /* ignore */ } A.rerender(); },
+    wwNop: () => { },
     wwSus: d => { const [c, r] = RQ(d); if (!r) return; MY[c + ':' + r.pub.r + ':sus'] = d.t; try { navigator.vibrate && navigator.vibrate(40); } catch (e) { /* ignore */ } A.rerender(); },
     wwCup: d => { const [c] = RQ(d); const cs = CUP[c] = CUP[c] || []; const i = cs.indexOf(d.t); if (i >= 0) cs.splice(i, 1); else if (cs.length < 2) cs.push(d.t); A.rerender(); },
     wwCupGo: d => { const [c, r] = RQ(d); const cs = CUP[c] || []; if (!r || cs.length !== 2) return; MY[c + ':' + r.pub.r + ':n1'] = cs.join(); A.W(B.set(RP(c) + '/act/' + me(), { r: r.pub.r, s: 'n1', t: cs[0], t2: cs[1] })); toast('ผูกคู่ขวัญแล้ว'); A.rerender(); },
