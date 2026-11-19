@@ -76,6 +76,7 @@
   const mainInst = sid => A.insts(ms()[sid])[0] || '';
   const instFor = (m, sid) => { const L = A.insts(ms()[sid]); return m.inst && m.inst !== 'main' && L.includes(m.inst) ? m.inst : (m.inst && m.inst !== 'main' && !L.length ? m.inst : mainInst(sid)); };
   function xpBar(sid, inst) {
+    if (inst && A.jailed(sid)) return '<div class="ms-xp"><div class="ms-xph"><b>' + esc(inst) + '</b><span class="muted">⛓️ พักยศ (จำตรุ) · ไม่ได้รับแต้มจนพ้นโทษ</span></div></div>';
     if (!inst) return '<div class="muted">ยังไม่มีเครื่องดนตรีในข้อมูลสมาชิก</div>';
     const x = xpOf(sid, inst), mx = XPMAX(), pc = Math.min(100, Math.round(x / mx * 100)), lv = A.lvOf(sid, inst), nx = A.levels()[lv || 0];
     return '<div class="ms-xp"><div class="ms-xph"><b>' + esc(inst) + '</b><span class="muted">' + esc(A.lvName(lv)) + '</span><span class="grow"></span><span>' + x + ' / ' + mx + ' แต้ม</span></div><div class="ms-bar"><i style="width:' + pc + '%"></i></div>' +
@@ -133,6 +134,8 @@
     if (rd.length) b += '<section class="card alert"><div class="lb">🔥 หลอดเต็ม รอประเมินเลื่อนยศ (' + rd.length + ')</div>' + rd.map(x => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><span class="grow"><b>' + esc(nm(x.sid)) + '</b><div class="muted" style="font-size:.82rem">' + esc(x.inst) + ' · ' + esc(A.lvName(A.lvOf(x.sid, x.inst))) + ' · ' + xpOf(x.sid, x.inst) + '/' + XPMAX() + ' แต้ม</div></span><button class="btn sm" data-act="misPromote" data-sid="' + esc(x.sid) + '" data-inst="' + esc(x.inst) + '">ประเมิน / เลื่อนยศ</button></div>').join('') + '</section>';
     { const lg = allLog(), pb = A.activeSids().map(s => [s, probOf(s)]).filter(x => x[1]);
       if (pb.length) b += '<section class="card" style="border-left:4px solid #e0a800"><div class="lb">⚠️ อยู่ระหว่างทัณฑ์บน (' + pb.length + ')</div>' + pb.map(x => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line)"><span class="grow"><b>' + esc(nm(x[0])) + '</b><div class="ms-sv">ถึง ' + esc(A.dTH(x[1].until, 'short')) + (x[1].cond ? ' · ' + esc(x[1].cond) : '') + ' · มลทิน: ' + esc(tagTxt(x[1].tags)) + '</div></span><button class="btn sm ghost" data-act="probEnd" data-sid="' + esc(x[0]) + '" data-id="' + esc(x[1].id) + '">ยุติทัณฑ์บน</button></div>').join('') + '</section>';
+      const jl = Object.keys(A.D.jail || {}).filter(s => A.jailed(s));
+      if (jl.length) b += '<section class="card" style="border-left:4px solid #c0392b"><div class="lb">⛓️ อยู่ระหว่างจำตรุ (' + jl.length + ')</div>' + jl.map(s => '<div class="row" style="padding:6px 0;border-top:1px dashed var(--line);gap:6px;flex-wrap:wrap"><span class="grow"><b>' + esc(nm(s)) + '</b><div class="ms-sv">พ้นโทษ ' + esc(A.dTH(A.D.jail[s].until, 'short')) + '</div></span><button class="btn sm ghost" data-act="jailExt" data-sid="' + esc(s) + '">ปรับวัน</button><button class="btn sm ghost" data-act="jailEnd" data-sid="' + esc(s) + '">ปล่อยพ้นโทษ</button></div>').join('') + '</section>';
       if (lg.length) b += '<details class="card"><summary class="lb" style="cursor:pointer;margin:0">ประวัติการเลื่อน / ลด / ถอดยศ และทัณฑ์บน (' + lg.length + ')</summary>' + lg.slice(0, 40).map(x => logRow(x, true)).join('') + '</details>'; }
     b += '<div class="row" style="gap:6px;margin-bottom:10px">' + [['open', 'กำลังดำเนินการ'], ['closed', 'ปิดแล้ว']].map(t => '<button class="btn sm' + (UI.tab === t[0] ? '' : ' ghost') + '" data-act="misTab" data-t="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
     const l = all().filter(m => UI.tab === 'closed' ? m.st === 'closed' : m.st !== 'closed');
@@ -236,7 +239,7 @@
     const pv = () => { const i = $('#md-i', w).value, x = xpOf(sid, i) + Math.max(0, +$('#md-x', w).value || 0), mx = XPMAX(); $('#md-pv', w).innerHTML = '<div class="muted" style="font-size:.85rem;margin:2px 0 8px">หลอด' + esc(i) + ' จะเป็น ' + x + ' / ' + mx + ' แต้ม' + (x >= mx ? ' — <b style="color:#b5561d">เต็มหลอด รอประเมินเลื่อนยศ</b>' : '') + '</div>'; };
     pv(); $('#md-i', w).addEventListener('change', pv); $('#md-x', w).addEventListener('input', pv);
     $('form', w).addEventListener('submit', ev => {
-      ev.preventDefault(); const inst = $('#md-i', w).value, pts = Math.max(0, Math.min(1000, Math.round(+$('#md-x', w).value || 0))), tn = $('#md-n', w).value.trim(), now = Date.now();
+      ev.preventDefault(); const inst = $('#md-i', w).value, pts = A.jailed(sid) ? (toast('อยู่ระหว่างจำตรุ — ภารกิจนี้ไม่ได้รับแต้ม', 4500), 0) : Math.max(0, Math.min(1000, Math.round(+$('#md-x', w).value || 0))), tn = $('#md-n', w).value.trim(), now = Date.now();
       const x1 = xpOf(sid, inst) + pts, upd = {};
       upd[RP(m.id, sid) + '/st'] = 'done'; upd[RP(m.id, sid) + '/pg'] = 100; upd[RP(m.id, sid) + '/xp'] = pts; upd[RP(m.id, sid) + '/inst'] = inst; upd[RP(m.id, sid) + '/rv'] = now; upd[RP(m.id, sid) + '/doneAt'] = now; if (tn) upd[RP(m.id, sid) + '/tn'] = tn;
       if (pts) upd[CP() + 'skills/' + sid + '/' + inst + '/xp'] = x1;
@@ -259,7 +262,8 @@
     if (window.PUSH) window.PUSH.notify('ann', { title: '🎖️ ประกาศเกียรติคุณ', body: 'ขอแสดงความยินดีกับ ' + body, url: '#/home' });
   }
   function promoteForm(sid0, inst0) {
-    const act = A.activeSids().sort(A.byClass), lvs = A.levels();
+    if (sid0 && A.jailed(sid0)) return toast('สมาชิกคนนี้อยู่ระหว่างจำตรุ — ยศถูกพักไว้ เลื่อนยศได้เมื่อพ้นโทษ', 4500);
+    const act = A.activeSids().filter(s => !A.jailed(s)).sort(A.byClass), lvs = A.levels();
     const w = modal('<h3>🎖️ ' + (sid0 ? 'ประเมินเลื่อนยศ' : 'สถาปนายศ') + '</h3><form class="form">' +
       fld('สมาชิก', '<select class="in" id="mp-s"' + (sid0 ? ' disabled' : '') + '>' + opt([['', '— เลือกสมาชิก —']].concat(act.map(s => [s, nm(s) + ' · ' + A.cls(ms()[s])])), sid0 || '') + '</select>') +
       fld('เครื่องดนตรี', '<select class="in" id="mp-i"></select>') + '<div id="mp-now"></div>' +
@@ -294,8 +298,9 @@
   /* ---------- ลดยศ / ถอดยศ / ทัณฑ์บน / ไถ่โทษ (รุ่น 3.33) ----------
      ranklog/{sid}/{id} = ประวัติยศรายคน (ครู + เจ้าตัวเห็น) · rankpub/{id} = ประกาศต่อชมรม (เมื่อครูเลือกประกาศ) */
   const TAINT = { abs: 'ขาดซ้อม / ไม่มาตามนัดบ่อย', disc: 'ผิดวินัยหรือกฎของชมรม', resp: 'ไม่เคารพครู/รุ่นพี่ หรือพฤติกรรมไม่เหมาะสม', duty: 'ละทิ้งหน้าที่หรือภารกิจที่ได้รับมอบหมาย', prop: 'ทำเครื่องดนตรี/ทรัพย์สินชมรมเสียหายโดยประมาท', hon: 'ไม่ซื่อสัตย์ / ทุจริต', fame: 'ทำให้ชมรมเสื่อมเสียชื่อเสียง', skill: 'ฝีมือไม่เป็นไปตามระดับยศ', other: 'อื่น ๆ' };
-  const KN = { up: ['▲ เลื่อนยศ', 'ok'], down: ['▼ ลดยศ', 'bad'], strip: ['✕ ถอดยศ', 'bad'], prob: ['⚠️ ทัณฑ์บน', 'gold'], back: ['↺ คืนยศ', 'ok'] };
-  const kTxt = (k, to) => k === 'strip' ? 'ถอดยศ' : k === 'prob' ? 'ทัณฑ์บน' : k === 'back' ? 'คืนยศ' : 'ลดยศเป็น ' + A.lvName(to || 0);
+  const KN = { up: ['▲ เลื่อนยศ', 'ok'], down: ['▼ ลดยศ', 'bad'], strip: ['✕ ถอดยศ', 'bad'], prob: ['⚠️ ทัณฑ์บน', 'gold'], back: ['↺ คืนยศ', 'ok'], jail: ['⛓️ จำตรุ', 'bad'], out: ['🚫 ขับออก', 'bad'] };
+  const KT = { prob: 'ทัณฑ์บน', jail: 'โทษจำตรุ', out: 'การขับออก', strip: 'การถอดยศ', down: 'การลดยศ' };
+  const kTxt = (k, to) => k === 'jail' ? 'จำตรุ' : k === 'out' ? 'ขับออก' : k === 'strip' ? 'ถอดยศ' : k === 'prob' ? 'ทัณฑ์บน' : k === 'back' ? 'คืนยศ' : 'ลดยศเป็น ' + A.lvName(to || 0);
   /* ทัณฑ์บนที่ยังมีผล: รายการ prob ที่ยังไม่ถึงวันสิ้นสุดและยังไม่ถูกยุติ */
   const probOf = sid => logOf(sid).find(x => x.k === 'prob' && !x.end && x.until && x.until >= A.todayISO());
   A.SUBS.push({ key: 'rankpub', path: () => CP() + 'rankpub' });
@@ -311,41 +316,67 @@
   const tagTxt = t => (Array.isArray(t) ? t : Object.values(t || {})).map(k => TAINT[k] || k).join(' · ');
   function logRow(x, withName) {
     const k = KN[x.k] || ['', ''];
-    return '<div style="padding:8px 0;border-top:1px dashed var(--line)"><div class="row" style="gap:6px;flex-wrap:wrap">' + chip(k[0], k[1]) + (withName ? '<b>' + esc(nm(x.sid)) + '</b>' : '') + '<span class="grow">' + esc(x.k === 'prob' ? 'ถึง ' + A.dTH(x.until, 'short') + (x.end ? ' (ยุติแล้ว)' : '') : (x.inst === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + (x.inst || '')) + (x.k === 'strip' ? '' : ' → ' + A.lvName(x.to || 0))) + '</span><small class="muted">' + esc(M.thDate(x.at)) + '</small>' + (x.pub ? chip('ประกาศแล้ว', 'line') : '') + '</div>' +
+    return '<div style="padding:8px 0;border-top:1px dashed var(--line)"><div class="row" style="gap:6px;flex-wrap:wrap">' + chip(k[0], k[1]) + (withName ? '<b>' + esc(nm(x.sid)) + '</b>' : '') + '<span class="grow">' + esc(x.k === 'out' ? 'ขับออกจากชมรม' : x.k === 'prob' || x.k === 'jail' ? 'ถึง ' + A.dTH(x.until, 'short') + (x.end ? ' (ยุติแล้ว)' : x.until < A.todayISO() ? ' (พ้นโทษแล้ว)' : '') : (x.inst === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + (x.inst || '')) + (x.k === 'strip' ? '' : ' → ' + A.lvName(x.to || 0))) + '</span><small class="muted">' + esc(M.thDate(x.at)) + '</small>' + (x.pub ? chip('ประกาศแล้ว', 'line') : '') + '</div>' +
       (x.tags ? '<div class="ms-sv">มลทิน: ' + esc(tagTxt(x.tags)) + '</div>' : '') + (x.cond ? '<div class="ms-sv">เงื่อนไข: ' + esc(x.cond) + '</div>' : '') + (x.note ? '<div class="ms-sv">' + esc(x.note) + '</div>' : '') + (x.mis ? '<div class="ms-sv"><a href="#/mi/' + esc(x.mis) + '">ภารกิจบำเพ็ญประโยชน์เพื่อไถ่โทษ ↗</a></div>' : '') + '</div>';
   }
   /* ประกาศต่อชมรม (7 วัน) บนหน้าหลักของทุกคน */
   A.HOME.push({ order: 13, html: () => {
     const p = A.D.rankpub || {}, l = Object.keys(p).map(id => p[id]).filter(x => x && Date.now() - (x.at || 0) < 7 * 864e5).sort((a, b) => b.at - a.at);
     if (!l.length) return '';
-    return '<section class="card" style="border-left:4px solid #c0392b"><div class="lb">📢 ประกาศจากชมรม</div>' + l.map(x => '<div style="padding:6px 0;border-top:1px dashed var(--line)"><b>' + esc(x.name || '') + '</b> ' + esc(x.k === 'prob' ? 'อยู่ระหว่างทัณฑ์บน ถึง ' + A.dTH(x.until, 'short') : (x.k === 'strip' ? 'ถูกถอดยศ' : 'ถูกลดยศเป็น ' + A.lvName(x.to || 0)) + ' ' + (x.inst === '*' ? '(ทุกเครื่องดนตรี)' : '(เครื่อง' + (x.inst || '') + ')')) + '<div class="ms-sv">มลทิน: ' + esc(tagTxt(x.tags)) + '</div><small class="muted">' + esc(M.thDate(x.at)) + '</small></div>').join('') + '</section>';
+    return '<section class="card" style="border-left:4px solid #c0392b"><div class="lb">📢 ประกาศจากชมรม</div>' + l.map(x => '<div style="padding:6px 0;border-top:1px dashed var(--line)"><b>' + esc(x.name || '') + '</b> ' + esc(x.k === 'jail' ? 'ต้องโทษจำตรุ ถึง ' + A.dTH(x.until, 'short') : x.k === 'out' ? 'ถูกขับออกจากชมรม' : x.k === 'prob' ? 'อยู่ระหว่างทัณฑ์บน ถึง ' + A.dTH(x.until, 'short') : (x.k === 'strip' ? 'ถูกถอดยศ' : 'ถูกลดยศเป็น ' + A.lvName(x.to || 0)) + ' ' + (x.inst === '*' ? '(ทุกเครื่องดนตรี)' : '(เครื่อง' + (x.inst || '') + ')')) + '<div class="ms-sv">มลทิน: ' + esc(tagTxt(x.tags)) + '</div><small class="muted">' + esc(M.thDate(x.at)) + '</small></div>').join('') + '</section>';
   } });
+
+  /* ---------- จำตรุ (รุ่น 3.40): jail/{sid} = { until, at, log } สมาชิกทุกคนอ่านได้ เพื่อให้ “พักยศ” เห็นตรงกันทั้งชมรม ----------
+     ระหว่างจำตรุ: ยศทุกเครื่องถูกพัก (lvOf = 0) · ภารกิจไม่ได้รับแต้ม · ไม่ถูกเลือกในจัดวง/กิจกรรม/โหวต · นักเรียนเห็นเฉพาะหน้าโทษของตัวเองและภารกิจไถ่โทษ
+     ครบวันพ้นโทษ ระบบปล่อยเอง (ไม่ต้องลบข้อมูล) · ครูปล่อยก่อนกำหนดหรือปรับวันได้ */
+  A.SUBS.push({ key: 'jail', path: () => CP() + 'jail' });
+  A.jailed = sid => { const j = (A.D.jail || {})[sid]; return !!(j && j.until && j.until >= A.todayISO()); };
+  function hist(s) {
+    if (!s) return ''; const L = logOf(s);
+    return L.length ? '<div class="note" style="margin-bottom:8px"><b>ประวัติโทษ ' + L.length + ' ครั้ง</b>' + L.slice(0, 5).map(x => '<div class="ms-sv">' + esc((KN[x.k] || [''])[0]) + ' · ' + esc(M.thDate(x.at)) + (x.tags ? ' · ' + esc(tagTxt(x.tags)) : '') + '</div>').join('') + '</div>' : '<div class="muted" style="font-size:.85rem;margin-bottom:8px">ยังไม่มีประวัติโทษ</div>';
+  }
+  function jailView() {
+    const j = (A.D.jail || {})[me()] || {}, x = logOf(me()).find(l => l.id === j.log) || {}, red = mine().filter(m => m.cat === 'redeem' && m.st !== 'closed');
+    return { title: 'อยู่ระหว่างจำตรุ', body: '<section class="card" style="border:2px solid #c0392b;text-align:center"><div style="font-size:2.6rem;line-height:1">⛓️</div><h2 style="margin:6px 0 2px">อยู่ระหว่างโทษจำตรุ</h2><div>พ้นโทษวันที่ <b>' + esc(A.dTH(j.until, 'short')) + '</b> (เมื่อครบกำหนด ทุกอย่างกลับมาเหมือนเดิมเอง)</div>' +
+      (x.tags ? '<div class="ms-sv" style="margin-top:8px">มลทิน: ' + esc(tagTxt(x.tags)) + '</div>' : '') + (x.cond ? '<div class="ms-sv">เงื่อนไข: ' + esc(x.cond) + '</div>' : '') + '</section>' +
+      '<section class="card"><div class="lb">ระหว่างจำตรุ</div><div class="ms-sv">ยศทุกเครื่องถูกพักไว้ · ภารกิจไม่ได้รับแต้ม · ไม่ร่วมวง กิจกรรม และการโหวต · เข้าเกมและเมนูอื่นของชมรมไม่ได้</div></section>' +
+      (red.length ? '<section class="card"><div class="lb">ภารกิจไถ่โทษ</div>' + red.map(m => '<a class="rowcard" href="#/mi/' + esc(m.id) + '" style="display:block;padding:8px 0;border-top:1px dashed var(--line)"><b>' + esc(m.t) + '</b><div class="row" style="font-size:.82rem"><span class="grow"></span>' + dl(m) + '</div></a>').join('') + '</section>' : '') +
+      '<div class="muted" style="text-align:center;font-size:.85rem">มีข้อสงสัยเรื่องโทษ ติดต่อครูที่ปรึกษาชมรมโดยตรง</div>' };
+  }
+  A.GATE = r => { if (T() || !me() || !A.jailed(me())) return null; if (r.name === 'manual') return null; if (r.name === 'mi' && (one(r.arg) || {}).cat === 'redeem') return null; return jailView(); };
+  A.ACT.jailEnd = async d => { if (!T()) return; if (!(await M.confirmBox('ปล่อยพ้นโทษจำตรุ', esc(nm(d.sid)) + ' พ้นโทษจำตรุก่อนกำหนด · ยศและสิทธิ์กลับมาเหมือนเดิม', 'ปล่อยพ้นโทษ'))) return;
+    const j = (A.D.jail || {})[d.sid] || {}, upd = {}; upd[CP() + 'jail/' + d.sid] = null; if (j.log) upd[CP() + 'ranklog/' + d.sid + '/' + j.log + '/end'] = Date.now();
+    A.W(B.update('', upd)); A.log('rank.jailEnd', d.sid, ''); if (window.PUSH) window.PUSH.notify('msg', { title: '🔓 พ้นโทษจำตรุ', body: 'ยศและสิทธิ์ในชมรมกลับมาเหมือนเดิมแล้ว', to: [d.sid], url: '#/home' }); toast('ปล่อยพ้นโทษแล้ว'); };
+  A.ACT.jailExt = d => { if (!T()) return; const j = (A.D.jail || {})[d.sid]; if (!j) return;
+    const w = modal('<h3>ปรับวันพ้นโทษจำตรุ</h3><div class="muted" style="margin-bottom:8px">' + esc(nm(d.sid)) + ' · เดิม ' + esc(A.dTH(j.until, 'short')) + '</div><form class="form">' + fld('วันพ้นโทษใหม่', '<input class="in" type="date" id="je-u" value="' + esc(j.until) + '" required>') + '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">บันทึก</button></div></form>', { center: true });
+    $('form', w).addEventListener('submit', ev => { ev.preventDefault(); const u = $('#je-u', w).value; if (!u || u < A.todayISO()) return toast('เลือกวันตั้งแต่วันนี้เป็นต้นไป');
+      const upd = {}; upd[CP() + 'jail/' + d.sid + '/until'] = u; if (j.log) upd[CP() + 'ranklog/' + d.sid + '/' + j.log + '/until'] = u; A.W(B.update('', upd)); A.log('rank.jailExt', d.sid, u); w.remove(); toast('ปรับวันพ้นโทษเป็น ' + A.dTH(u, 'short') + ' แล้ว'); }); };
 
   function downForm(sid0, inst0) {
     const act = A.activeSids().sort(A.byClass), lvs = A.levels();
-    const w = modal('<h3>⚖️ ลงโทษ: ลดยศ / ถอดยศ / ทัณฑ์บน</h3><form class="form">' +
+    const w = modal('<h3>⚖️ ลงโทษ: ทัณฑ์บน / ลดยศ / ถอดยศ / จำตรุ / ขับออก</h3><form class="form">' +
       fld('สมาชิก', '<select class="in" id="md-s"' + (sid0 ? ' disabled' : '') + '>' + opt([['', '— เลือกสมาชิก —']].concat((sid0 && !act.includes(sid0) ? [sid0] : []).concat(act).map(s => [s, nm(s) + ' · ' + A.cls(ms()[s])])), sid0 || '') + '</select>') +
-      '<div class="fld"><span>การดำเนินการ</span><div class="checks"><label class="ck"><input type="radio" name="md-k" value="down" checked><span>▼ ลดยศ</span></label><label class="ck"><input type="radio" name="md-k" value="strip"><span>✕ ถอดยศ</span></label><label class="ck"><input type="radio" name="md-k" value="prob"><span>⚠️ ทัณฑ์บน (ยังไม่ลดยศ)</span></label></div></div>' +
+      '<div id="md-h"></div><div class="fld"><span>การดำเนินการ</span><div class="checks"><label class="ck"><input type="radio" name="md-k" value="down" checked><span>▼ ลดยศ</span></label><label class="ck"><input type="radio" name="md-k" value="strip"><span>✕ ถอดยศ</span></label><label class="ck"><input type="radio" name="md-k" value="prob"><span>⚠️ ทัณฑ์บน (ยังไม่ลดยศ)</span></label><label class="ck"><input type="radio" name="md-k" value="jail"><span>⛓️ จำตรุ</span></label><label class="ck"><input type="radio" name="md-k" value="out"><span>🚫 ขับออก</span></label></div></div>' +
       '<div id="md-iw">' + fld('เครื่องดนตรี', '<select class="in" id="md-i"></select>') + '<div id="md-now"></div></div>' +
-      '<div id="md-pw" hidden>' + fld('ทัณฑ์บนถึงวันที่', '<input class="in" type="date" id="md-u">') + fld('เงื่อนไขทัณฑ์บน (นักเรียนเห็น)', '<input class="in" id="md-c" maxlength="200" placeholder="เช่น หากขาดซ้อมโดยไม่ลาอีก จะถูกลดยศทันที">') + '</div>' +
-      '<div id="md-lw">' + fld('ยศใหม่', '<select class="in" id="md-l"></select>') + '</div>' +
+      '<div id="md-pw" hidden>' + fld('ถึงวันที่ (วันพ้นโทษ)', '<input class="in" type="date" id="md-u">') + fld('เงื่อนไข (นักเรียนเห็น)', '<input class="in" id="md-c" maxlength="200" placeholder="เช่น หากขาดซ้อมโดยไม่ลาอีก จะถูกลดยศทันที">') + '</div>' +
+      '<div class="note bad" id="md-ow" hidden>ขับออก = นำออกจากชมรมทันที เข้าแอปของชมรมนี้ไม่ได้ ยศถูกถอดทุกเครื่อง ประวัติเก็บไว้ · ครูกู้คืนได้ที่ จัดการ › สมาชิกที่นำออกแล้ว</div><div class="note" id="md-jw" hidden>จำตรุ = พักยศทุกเครื่อง ไม่ได้รับแต้ม ไม่ร่วมวง/กิจกรรม/โหวต เข้าเกมไม่ได้ เห็นเฉพาะหน้าโทษของตัวเองและภารกิจไถ่โทษ · ครบกำหนดพ้นโทษเอง</div>' + '<div id="md-lw">' + fld('ยศใหม่', '<select class="in" id="md-l"></select>') + '</div>' +
       '<div class="fld"><span>มลทิน (เลือกได้หลายข้อ)</span><div class="ms-pick" style="max-height:none">' + Object.keys(TAINT).map(k => '<label><input type="checkbox" name="md-t" value="' + k + '"> <span>' + esc(TAINT[k]) + '</span></label>').join('') + '</div></div>' +
       fld('รายละเอียด / พฤติการณ์ (บันทึกไว้ในประวัติ ไม่แสดงในประกาศ)', '<textarea class="in" id="md-n" rows="3" maxlength="600"></textarea>') +
       '<label class="ck wide" id="md-xw"><input type="checkbox" id="md-x" checked> ล้างแต้มในหลอดของเครื่องนี้</label>' +
-      '<div class="fld" style="border:1px dashed var(--line);border-radius:10px;padding:8px 10px"><label class="ck wide"><input type="checkbox" id="md-r"> มอบภารกิจบำเพ็ญประโยชน์เพื่อไถ่โทษ</label><div id="md-rw" hidden>' + fld('งานบำเพ็ญประโยชน์ที่ต้องทำ (ครูระบุ)', '<textarea class="in" id="md-rt" rows="2" maxlength="300" placeholder="เช่น ทำความสะอาดและจัดเก็บเครื่องดนตรีห้อง 512 หลังซ้อม 5 ครั้ง"></textarea>') + fld('ต้องทำให้เสร็จภายใน', '<input class="in" type="date" id="md-rd">') + '<div class="muted" style="font-size:.8rem">ทำสำเร็จแล้วครูเลือก “คืนยศเดิม” และ/หรือ “ยุติทัณฑ์บน” ได้ตอนตรวจภารกิจ</div></div></div>' +
+      '<div class="fld" id="md-rr" style="border:1px dashed var(--line);border-radius:10px;padding:8px 10px"><label class="ck wide"><input type="checkbox" id="md-r"> มอบภารกิจบำเพ็ญประโยชน์เพื่อไถ่โทษ</label><div id="md-rw" hidden>' + fld('งานบำเพ็ญประโยชน์ที่ต้องทำ (ครูระบุ)', '<textarea class="in" id="md-rt" rows="2" maxlength="300" placeholder="เช่น ทำความสะอาดและจัดเก็บเครื่องดนตรีห้อง 512 หลังซ้อม 5 ครั้ง"></textarea>') + fld('ต้องทำให้เสร็จภายใน', '<input class="in" type="date" id="md-rd">') + '<div class="muted" style="font-size:.8rem">ทำสำเร็จแล้วครูเลือก “คืนยศเดิม” และ/หรือ “ยุติทัณฑ์บน” ได้ตอนตรวจภารกิจ</div></div></div>' +
       '<label class="ck wide"><input type="checkbox" id="md-me" checked> แจ้งนักเรียนคนนี้ (แจ้งเตือนส่วนตัว)</label>' +
       '<label class="ck wide"><input type="checkbox" id="md-pub"> ประกาศให้ทั้งชมรมทราบ (ขึ้นหน้าหลัก 7 วัน + แจ้งเตือนทุกคน · แสดงเฉพาะชื่อ ยศ และมลทิน)</label>' +
       '<div class="note bad" id="md-err" hidden></div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow danger" style="background:#c0392b;color:#fff">ยืนยัน</button></div></form>', { center: true, sticky: true });
     const K = () => ($('input[name="md-k"]:checked', w) || {}).value || 'down';
     const fill = () => {
-      const s = $('#md-s', w).value, L = s ? A.insts(ms()[s]).filter(i => A.lvOf(s, i) > 0) : [], pr = K() === 'prob';
-      $('#md-iw', w).hidden = pr; $('#md-pw', w).hidden = !pr; $('#md-xw', w).hidden = pr; if (pr && !$('#md-u', w).value) { const d = new Date(Date.now() + 30 * 864e5); $('#md-u', w).value = d.toISOString().slice(0, 10); }
+      const s = $('#md-s', w).value, L = s ? A.insts(ms()[s]).filter(i => ((sk(s, i) || {}).lv || 0) > 0) : [], kk = K(), tm = kk === 'prob' || kk === 'jail', pr = tm || kk === 'out';
+      $('#md-iw', w).hidden = pr; $('#md-pw', w).hidden = !tm; $('#md-xw', w).hidden = pr; $('#md-ow', w).hidden = kk !== 'out'; $('#md-jw', w).hidden = kk !== 'jail'; $('#md-rr', w).hidden = kk === 'out'; $('#md-h', w).innerHTML = hist(s); if (tm && !$('#md-u', w).value) { const d = new Date(Date.now() + 30 * 864e5); $('#md-u', w).value = d.toISOString().slice(0, 10); }
       const list = L.map(i => [i, i + ' · ' + A.lvName(A.lvOf(s, i))]).concat(K() === 'strip' && L.length > 1 ? [['*', 'ทุกเครื่องดนตรี']] : []);
       $('#md-i', w).innerHTML = list.length ? opt(list, inst0 && L.includes(inst0) ? inst0 : L[0]) : '<option value="">— ยังไม่มียศ —</option>'; fillLv();
     };
     const fillLv = () => {
       const s = $('#md-s', w).value, i = $('#md-i', w).value, cur = s && i && i !== '*' ? A.lvOf(s, i) : 0, strip = K() === 'strip';
-      $('#md-lw', w).hidden = strip || K() === 'prob';
+      $('#md-lw', w).hidden = strip || ['prob', 'jail', 'out'].includes(K());
       $('#md-now', w).innerHTML = s && i && i !== '*' ? '<div class="muted" style="font-size:.85rem;margin-bottom:6px">ยศปัจจุบัน: ' + esc(A.lvName(cur)) + ' · หลอด ' + xpOf(s, i) + '/' + XPMAX() + ' แต้ม</div>' : '';
       $('#md-l', w).innerHTML = cur > 1 ? opt(lvs.slice(0, cur - 1).map((l, k) => [k + 1, 'Lv.' + (k + 1) + (l.name ? ' ' + l.name : '')]), cur - 1) : '<option value="">— ลดต่ำกว่านี้ไม่ได้ ใช้ “ถอดยศ” —</option>';
     };
@@ -354,26 +385,29 @@
     $('form', w).addEventListener('submit', async ev => {
       ev.preventDefault(); const err = $('#md-err', w), bad = t => { err.textContent = t; err.hidden = false; };
       const s = $('#md-s', w).value, i = $('#md-i', w).value, k = K(), tags = Array.from(w.querySelectorAll('input[name="md-t"]:checked')).map(c => c.value), note = $('#md-n', w).value.trim();
-      const pr = k === 'prob', until = $('#md-u', w).value, cond = $('#md-c', w).value.trim(), red = $('#md-r', w).checked, rt = $('#md-rt', w).value.trim(), rd = $('#md-rd', w).value;
-      if (!s) return bad('เลือกสมาชิก'); if (!pr && !i) return bad('สมาชิกคนนี้ยังไม่มียศให้ลด/ถอด — ใช้ “ทัณฑ์บน” แทนได้'); if (!tags.length) return bad('เลือกมลทินอย่างน้อย 1 ข้อ');
-      if (pr && (!until || until < A.todayISO())) return bad('กำหนดวันสิ้นสุดทัณฑ์บน (ตั้งแต่วันนี้เป็นต้นไป)'); if (red && (!rt || !rd)) return bad('ระบุงานบำเพ็ญประโยชน์และวันที่ต้องทำให้เสร็จ');
+      const pr = k === 'prob' || k === 'jail', nx = pr || k === 'out', until = $('#md-u', w).value, cond = $('#md-c', w).value.trim(), red = k !== 'out' && $('#md-r', w).checked, rt = $('#md-rt', w).value.trim(), rd = $('#md-rd', w).value;
+      if (!s) return bad('เลือกสมาชิก'); if (!nx && !i) return bad('สมาชิกคนนี้ยังไม่มียศให้ลด/ถอด — ใช้ “ทัณฑ์บน” แทนได้'); if (!tags.length) return bad('เลือกมลทินอย่างน้อย 1 ข้อ');
+      if (pr && (!until || until < A.todayISO())) return bad('กำหนดวันพ้นโทษ (ตั้งแต่วันนี้เป็นต้นไป)'); if (red && (!rt || !rd)) return bad('ระบุงานบำเพ็ญประโยชน์และวันที่ต้องทำให้เสร็จ');
       if (tags.includes('other') && !note) return bad('มลทิน “อื่น ๆ” — กรุณาระบุรายละเอียด');
       const to = k === 'down' ? +$('#md-l', w).value : 0; if (k === 'down' && !to) return bad('เลือกยศใหม่ (ถ้าลดต่ำกว่านี้ไม่ได้ ให้เลือก “ถอดยศ”)');
-      const pub = $('#md-pub', w).checked, clr = $('#md-x', w).checked, now = Date.now(), list = pr ? [] : i === '*' ? A.insts(ms()[s]).filter(x => A.lvOf(s, x) > 0) : [i];
-      const what = pr ? 'ทัณฑ์บนถึง ' + A.dTH(until, 'short') + (cond ? ' (' + cond + ')' : '') : kTxt(k, to) + ' ' + (i === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + i);
-      if (!(await M.confirmBox('ยืนยัน' + (pr ? 'ทัณฑ์บน' : 'การ' + (k === 'strip' ? 'ถอดยศ' : 'ลดยศ')), esc(nm(s)) + ' — ' + esc(what) + '<br>มลทิน: ' + esc(tagTxt(tags)) + (red ? '<br>มอบภารกิจไถ่โทษ: ' + esc(rt) : '') + (pub ? '<br><b>จะประกาศให้ทั้งชมรมทราบ</b>' : ''), 'ยืนยัน', true))) return;
-      const upd = {}, lid = B.uid(), from = {}; list.forEach(x => { from[x] = A.lvOf(s, x); }); const mid = red ? B.uid() : null;
+      const pub = $('#md-pub', w).checked, clr = $('#md-x', w).checked, now = Date.now(), list = pr ? [] : k === 'out' ? A.insts(ms()[s]).filter(x => ((sk(s, x) || {}).lv || 0) > 0) : i === '*' ? A.insts(ms()[s]).filter(x => A.lvOf(s, x) > 0) : [i];
+      const what = k === 'out' ? 'ขับออกจากชมรม' : k === 'jail' ? 'จำตรุถึง ' + A.dTH(until, 'short') + (cond ? ' (' + cond + ')' : '') : pr ? 'ทัณฑ์บนถึง ' + A.dTH(until, 'short') + (cond ? ' (' + cond + ')' : '') : kTxt(k, to) + ' ' + (i === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + i);
+      if (!(await M.confirmBox('ยืนยัน' + KT[k], esc(nm(s)) + ' — ' + esc(what) + '<br>มลทิน: ' + esc(tagTxt(tags)) + (red ? '<br>มอบภารกิจไถ่โทษ: ' + esc(rt) : '') + (pub ? '<br><b>จะประกาศให้ทั้งชมรมทราบ</b>' : ''), 'ยืนยัน', true))) return;
+      if (k === 'out' && !(await M.confirmBox('ยืนยันอีกครั้ง: ขับออกจากชมรม', '<b>' + esc(nm(s)) + '</b> จะถูกนำออกจากชมรมทันทีและเข้าแอปของชมรมนี้ไม่ได้<br>ยศทุกเครื่องถูกถอด · ประวัติเก็บไว้ · กู้คืนได้ภายหลัง', 'ขับออก', true))) return;
+      const upd = {}, lid = B.uid(), from = {}; list.forEach(x => { from[x] = (sk(s, x) || {}).lv || 0; }); const mid = red ? B.uid() : null;
       list.forEach(x => { const old = sk(s, x), keep = !clr && old.xp ? { xp: old.xp } : {};
-        upd[CP() + 'skills/' + s + '/' + x] = Object.assign(k === 'strip' ? {} : { lv: to }, { at: now, by: A.myName(), dAt: now }, keep); });
-      upd[CP() + 'ranklog/' + s + '/' + lid] = { k, inst: pr ? null : i, from: list.length ? from : null, to: k === 'down' ? to : null, until: pr ? until : null, cond: pr && cond ? cond : null, tags, note: note || null, pub: pub || null, mis: mid, at: now, by: A.myName() };
-      if (pub) upd[CP() + 'rankpub/' + B.uid()] = { sid: s, name: nm(s), k, inst: pr ? null : i, to: k === 'down' ? to : null, until: pr ? until : null, tags, at: now, by: A.myName() };
+        upd[CP() + 'skills/' + s + '/' + x] = Object.assign(k === 'strip' || k === 'out' ? {} : { lv: to }, { at: now, by: A.myName(), dAt: now }, keep); });
+      upd[CP() + 'ranklog/' + s + '/' + lid] = { k, inst: nx ? null : i, from: list.length ? from : null, to: k === 'down' ? to : null, until: pr ? until : null, cond: pr && cond ? cond : null, tags, note: note || null, pub: pub || null, mis: mid, at: now, by: A.myName() };
+      if (pub) upd[CP() + 'rankpub/' + B.uid()] = { sid: s, name: nm(s), k, inst: nx ? null : i, to: k === 'down' ? to : null, until: pr ? until : null, tags, at: now, by: A.myName() };
+      if (k === 'jail') upd[CP() + 'jail/' + s] = { until, at: now, log: lid };
+      if (k === 'out') { const mp = CP() + 'members/' + s + '/'; upd[mp + 'status'] = 'removed'; upd[mp + 'removedReason'] = 'expel'; upd[mp + 'removedAt'] = now; upd[mp + 'removedBy'] = A.myName(); upd[CP() + 'roles/' + s] = null; upd[CP() + 'jail/' + s] = null; upd['/people/' + s + '/clubs/' + (M.C._club || cid())] = null; }
       if (red) upd[CP() + 'mis/' + mid] = { t: 'ไถ่โทษ: ' + rt.slice(0, 100), d: rt + '\n\n(ภารกิจบำเพ็ญประโยชน์เพื่อไถ่โทษ — มลทิน: ' + tagTxt(tags) + ')', cat: 'redeem', star: 1, xp: 0, inst: 'main', from: A.todayISO(), to: rd, who: { [s]: true }, st: 'open', at: now, by: A.myName(), y: A.year(), redeem: { sid: s, log: lid, k, from: list.length ? from : null } };
       A.W(B.update('', upd)); A.log('rank.' + k, s, what + ' · ' + tagTxt(tags) + (red ? ' · ไถ่โทษ: ' + rt : ''));
       if (window.PUSH) {
-        if ($('#md-me', w).checked) window.PUSH.notify('msg', { title: pr ? 'แจ้งการทัณฑ์บน' : k === 'strip' ? 'แจ้งการถอดยศ' : 'แจ้งการปรับลดยศ', body: what + ' · มลทิน: ' + tagTxt(tags) + (red ? ' · ภารกิจไถ่โทษ: ' + rt : '') + (note ? ' · ' + note : ''), to: [s], url: red ? '#/mi/' + mid : '#/mis' });
-        if (pub) window.PUSH.notify('ann', { title: '📢 ประกาศจากชมรม', body: nm(s) + ' ' + (pr ? 'อยู่ระหว่างทัณฑ์บนถึง ' + A.dTH(until, 'short') : (k === 'strip' ? 'ถูกถอดยศ' : 'ถูกลดยศเป็น ' + A.lvName(to)) + ' (' + (i === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + i) + ')') + ' · มลทิน: ' + tagTxt(tags), url: '#/home' });
+        if ($('#md-me', w).checked) window.PUSH.notify('msg', { title: k === 'jail' ? 'แจ้งโทษจำตรุ' : k === 'out' ? 'แจ้งการขับออกจากชมรม' : pr ? 'แจ้งการทัณฑ์บน' : k === 'strip' ? 'แจ้งการถอดยศ' : 'แจ้งการปรับลดยศ', body: what + ' · มลทิน: ' + tagTxt(tags) + (red ? ' · ภารกิจไถ่โทษ: ' + rt : '') + (note ? ' · ' + note : ''), to: [s], url: red ? '#/mi/' + mid : '#/mis' });
+        if (pub) window.PUSH.notify('ann', { title: '📢 ประกาศจากชมรม', body: nm(s) + ' ' + (k === 'jail' ? 'ต้องโทษจำตรุถึง ' + A.dTH(until, 'short') : k === 'out' ? 'ถูกขับออกจากชมรม' : pr ? 'อยู่ระหว่างทัณฑ์บนถึง ' + A.dTH(until, 'short') : (k === 'strip' ? 'ถูกถอดยศ' : 'ถูกลดยศเป็น ' + A.lvName(to)) + ' (' + (i === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + i) + ')') + ' · มลทิน: ' + tagTxt(tags), url: '#/home' });
       }
-      w.remove(); toast('บันทึก' + (pr ? 'ทัณฑ์บน' : 'การ' + (k === 'strip' ? 'ถอดยศ' : 'ลดยศ')) + 'แล้ว' + (red ? ' · มอบภารกิจไถ่โทษแล้ว' : '') + (pub ? ' · ประกาศให้ทั้งชมรมทราบ' : ' (ไม่ประกาศ)'), 4500);
+      w.remove(); toast('บันทึก' + KT[k] + 'แล้ว' + (red ? ' · มอบภารกิจไถ่โทษแล้ว' : '') + (pub ? ' · ประกาศให้ทั้งชมรมทราบ' : ' (ไม่ประกาศ)'), 4500);
     });
   }
   window.MIS.downForm = downForm;

@@ -12,7 +12,7 @@
   let MYCLUBS = [];   /* ชมรมที่ผู้ใช้คนนี้เข้าได้ */
   const SHARED = ['prefix', 'first', 'last', 'grade', 'room', 'photo'];   /* ช่องที่ใช้ร่วมกันทุกชมรม (ต้นฉบับอยู่ที่ people/{sid}) */   /* โมดูลอื่นลงทะเบียนเพิ่มผ่าน window.APP */
   const UI = { q: '', type: '', ses: '', grade: '' };
-  const RULES_V = 18;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
+  const RULES_V = 19;   /* ★ เพิ่มเลขนี้พร้อมกับ rulesProbe ใน database.rules.json ทุกครั้งที่แก้ Rules */
 
   /* ---------- ไอคอน (เส้น) ---------- */
   const ICON = {
@@ -58,7 +58,7 @@
   const roleName = r => { if (!r) return ''; if (r.role === 'rep') return 'กรรมการ ม.' + r.grade; const x = C.roles.find(y => y.id === r.role); return x ? x.name : ''; };
   /* เครื่องดนตรีของสมาชิก — เครื่องหลัก (m.main) อยู่ลำดับแรกเสมอ */
   const insts = m => { const l = Object.keys((m && m.inst) || {}), k = m && m.main; return k && l.includes(k) ? [k].concat(l.filter(x => x !== k)) : l; };
-  const lvOf = (sid, i) => { const s = ((D.skills || {})[sid] || {})[i]; return s && s.lv ? s.lv : 0; };
+  const lvOf = (sid, i) => { if (window.APP && window.APP.jailed && window.APP.jailed(sid)) return 0; const s = ((D.skills || {})[sid] || {})[i]; return s && s.lv ? s.lv : 0; };
   /* ระดับฝีมือของชมรม: ครูแก้ชื่อ/รายละเอียด/จำนวนขั้นได้ (config/levels) — แสดงเลขระดับนำหน้าเสมอ */
   const levels = () => { const l = Array.isArray(cfg().levels) && cfg().levels.length ? cfg().levels : C.club.levels; return l.map(x => typeof x === 'string' ? { name: x } : (x || { name: '' })); };
   const lvName = n => { if (!n) return 'ยังไม่ประเมิน'; const L = levels()[n - 1]; return 'Lv.' + n + (L && L.name ? ' ' + L.name : ''); };
@@ -207,7 +207,7 @@
     const sig = year() + '|' + (ME.teacher ? 'T' : ME.sid + ':' + ME.role + ':' + ME.roleGrade);
     if (sig !== SIG) { SIG = sig; resub(); }
     if (!V[r.name] || (r.name === 'manage' && !can.manage())) { location.hash = '#/home'; return; }
-    const out = V[r.name](r.arg, r); if (!out) return;
+    const out = (window.APP.GATE && window.APP.GATE(r)) || V[r.name](r.arg, r); if (!out) return;
     const html = shell(r, out.title, out.body, out.back);
     if (html === lastHTML) return;
     const keep = document.activeElement && document.activeElement.id === 'q';
@@ -265,7 +265,7 @@
   }
   function skillLine(sid, inst, editable) {
     const n = lvOf(sid, inst);
-    return '<div class="skill"><div class="row"><span class="grow"><b>' + esc(inst) + '</b>' + ((members()[sid] || {}).main === inst ? ' ' + chip('★ เครื่องหลัก', 'plum') : '') + '</span>' + chip(lvName(n), n ? 'gold' : 'line') +
+    return '<div class="skill"><div class="row"><span class="grow"><b>' + esc(inst) + '</b>' + ((members()[sid] || {}).main === inst ? ' ' + chip('★ เครื่องหลัก', 'plum') : '') + '</span>' + (window.APP.jailed && window.APP.jailed(sid) ? chip('⛓️ พักยศ (จำตรุ)', 'line') : chip(lvName(n), n ? 'gold' : 'line')) +
       (editable ? '<button class="btn sm ghost" data-act="skill" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ประเมิน</button>' + (n && ME && ME.teacher && ACT.rankDown ? '<button class="btn sm ghost" style="color:#c0392b" data-act="rankDown" data-sid="' + esc(sid) + '" data-inst="' + esc(inst) + '">ลด/ถอดยศ</button>' : '') : '') + '</div>' + lvBar(n) + '</div>';
   }
 
@@ -319,7 +319,7 @@
     const m = members()[sid]; if (!m) { location.hash = '#/members'; return null; }
     const r = roleOf(sid); const gone = m.status !== 'active';
     let b = '<section class="card hero"><div class="row">' + avatar(m, 'xl ring') + '<div class="grow"><div class="hero-name">' + esc(fullName(m)) + '</div><div class="hero-sub">' + esc(cls(m) + ' · สมาชิก' + typeName(m.type) + ' · เลขประจำตัว ' + sid) + '</div></div></div>' +
-      '<div class="row wrap" style="margin-top:12px;gap:8px">' + chip(gone ? (m.status === 'alumni' ? 'ศิษย์เก่า' : 'นำออกแล้ว') : (roleName(r) || 'สมาชิก'), 'gold') + chip(topLv(sid) ? 'ระดับ ' + lvName(topLv(sid)) : '', 'dark') + '</div></section>';
+      '<div class="row wrap" style="margin-top:12px;gap:8px">' + chip(gone ? (m.status === 'alumni' ? 'ศิษย์เก่า' : m.removedReason === 'expel' ? 'ถูกขับออก' : 'นำออกแล้ว') : (roleName(r) || 'สมาชิก'), 'gold') + chip(topLv(sid) ? 'ระดับ ' + lvName(topLv(sid)) : '', 'dark') + '</div></section>';
     if (can.edit() && !gone) b += '<div class="row wrap" style="margin-bottom:14px"><button class="btn" data-act="editMember" data-sid="' + esc(sid) + '">' + ic('edit', 18) + 'แก้ไขข้อมูล</button>' +
       (can.manage() ? '<button class="btn ghost" data-act="role" data-sid="' + esc(sid) + '">' + ic('badge', 18) + 'กำหนดตำแหน่ง</button><button class="btn ghost danger" data-act="removeMember" data-sid="' + esc(sid) + '">' + ic('trash', 18) + 'นำออก</button>' : '') + '</div>';
     b += '<section class="card"><div class="lb">รอบซ้อมประจำ</div>' + (can.manage() && !gone ? '<div class="row">' + sesToggle(sid, m) + '<span class="muted">' + esc(sesText(m)) + '</span></div>' : '<div>' + esc(sesText(m)) + '</div>') + '</section>';
@@ -356,7 +356,7 @@
     b += '<section class="card"><div class="lb">นำเข้าและส่งออก</div><div class="row wrap"><button class="btn ghost" data-act="importMembers">' + ic('up', 18) + 'นำเข้ารายชื่อ</button><button class="btn ghost" data-act="exportMenu">' + ic('down', 18) + 'ส่งออกบอร์ด / แผนผัง / รายชื่อ</button></div></section>';
     b += '<section class="card"><div class="lb">ตั้งค่า</div><div class="kv"><span>ปีการศึกษาปัจจุบัน</span><b>' + esc(year()) + '</b><button class="btn sm ghost" data-act="setYear">แก้ไข</button></div><div class="kv"><span>รายการเครื่องดนตรี</span><b>' + instList().length + ' ชนิด</b><button class="btn sm ghost" data-act="setInst">แก้ไข</button></div><div class="kv"><span>ระดับฝีมือ (ชื่อ รายละเอียด จำนวนขั้น)</span><b>' + levels().length + ' ขั้น</b><button class="btn sm ghost" data-act="setLevels">แก้ไข</button></div></section>';
     if (D.legacy) b += '<section class="card hl"><div class="lb">ข้อมูลจากรุ่นก่อน (ก่อนแยกชมรม)</div><div class="muted" style="margin-bottom:10px">' + (activeSids().length ? 'ย้ายเข้าชมรม' + esc(C.club.name) + 'แล้ว ข้อมูลชุดเก่ายังเก็บไว้เป็นสำรอง ลบได้เมื่อตรวจว่าครบ' : 'พบข้อมูลสมาชิก การซ้อม กิจกรรม และบัญชีของรุ่นก่อน กดย้ายเพื่อนำเข้าชมรม' + esc(C.club.name) + ' ข้อมูลเดิมไม่ถูกลบ') + '</div><div class="row wrap">' + (activeSids().length ? '' : '<button class="btn gold" data-act="migrate">ย้ายข้อมูลรุ่นก่อนเข้าชมรมนี้</button>') + '<button class="btn ghost danger" data-act="legacyDelete">ลบข้อมูลชุดเก่า</button></div></section>';
-    b += '<section class="card"><div class="lb">สมาชิกที่นำออกแล้ว / ศิษย์เก่า (' + gone.length + ')</div>' + (gone.map(s => '<div class="mrow"><a class="mrow-main" href="#/m/' + esc(s) + '">' + avatar(ms[s]) + '<span class="grow"><b>' + esc(fullName(ms[s])) + '</b><span class="muted">' + esc(s + ' · ' + ((C.removeReasons.find(x => x.id === ms[s].removedReason) || {}).name || 'นำออก') + ' · ' + M.thDate(ms[s].removedAt)) + '</span></span></a>' +
+    b += '<section class="card"><div class="lb">สมาชิกที่นำออกแล้ว / ศิษย์เก่า (' + gone.length + ')</div>' + (gone.map(s => '<div class="mrow"><a class="mrow-main" href="#/m/' + esc(s) + '">' + avatar(ms[s]) + '<span class="grow"><b>' + esc(fullName(ms[s])) + '</b><span class="muted">' + esc(s + ' · ' + ((C.removeReasons.find(x => x.id === ms[s].removedReason) || {}).name || (ms[s].removedReason === 'expel' ? '🚫 ขับออก (โทษ)' : 'นำออก')) + ' · ' + M.thDate(ms[s].removedAt)) + '</span></span></a>' +
       '<span class="mrow-act"><button class="btn sm ghost" data-act="restore" data-sid="' + esc(s) + '">กู้คืน</button>' + (ms[s].removedReason === 'mistake' ? '<button class="btn sm ghost danger" data-act="purge" data-sid="' + esc(s) + '">ลบถาวร</button>' : '') + '</span></div>').join('') || '<div class="muted">ไม่มี</div>') + '</section>';
     MANAGE.forEach(f => { try { b += f() || ''; } catch (e) { console.error(e); } });
     if (B.mode === 'demo') b += '<section class="card"><div class="lb">โหมดสาธิต</div><div class="muted" style="margin-bottom:10px">ล้างแล้วเริ่มข้อมูลสมมติชุดใหม่ ไม่กระทบข้อมูลจริง</div><button class="btn ghost danger" data-act="resetDemo">ล้างข้อมูลสาธิต</button></section>';
@@ -440,6 +440,7 @@
     });
   }
   function skillForm(sid, inst) {
+    if (window.APP.jailed && window.APP.jailed(sid)) return window.MC.toast('อยู่ระหว่างจำตรุ — ยศถูกพักไว้ ประเมินได้เมื่อพ้นโทษ');
     const cur = lvOf(sid, inst);
     const w = modal('<h3>ประเมินระดับฝีมือ</h3><div class="muted" style="margin-bottom:10px">' + esc(fullName(members()[sid])) + ' · ' + esc(inst) + '</div><div class="lvpick">' +
       levels().map((l, i) => '<button class="lvopt' + (cur === i + 1 ? ' on' : '') + '" data-lv="' + (i + 1) + '"><i>' + (i + 1) + '</i><span><b>' + esc(l.name) + '</b>' + (l.desc ? '<small>' + esc(l.desc) + '</small>' : '') + '</span></button>').join('') + '</div>' +

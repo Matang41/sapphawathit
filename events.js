@@ -104,7 +104,7 @@
   function pickPeople(sel) {
     const ms = A.members();
     return '<div class="fld"><span>ผู้เข้าร่วม</span><div class="row wrap" style="margin-bottom:8px">' + [['all', 'ทั้งหมด'], ['am', 'ผู้ซ้อมเช้า'], ['pm', 'ผู้ซ้อมเย็น'], ['none', 'ล้าง']].map(x => '<button type="button" class="btn ghost sm" data-pick="' + x[0] + '">' + x[1] + '</button>').join('') + '<span class="muted" id="p-n"></span></div><div class="plist">' +
-      A.activeSids().sort(A.byClass).map(s => '<label class="ck wide"><input type="checkbox" name="pp" value="' + esc(s) + '" data-am="' + (ms[s].am ? 1 : 0) + '" data-pm="' + (ms[s].pm ? 1 : 0) + '"' + (sel[s] ? ' checked' : '') + '><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s]) + (A.insts(ms[s]).length ? ' · ' + A.insts(ms[s]).join(', ') : '')) + '</small></span></label>').join('') + '</div></div>';
+      A.activeSids().filter(s => !(A.jailed && A.jailed(s))).sort(A.byClass).map(s => '<label class="ck wide"><input type="checkbox" name="pp" value="' + esc(s) + '" data-am="' + (ms[s].am ? 1 : 0) + '" data-pm="' + (ms[s].pm ? 1 : 0) + '"' + (sel[s] ? ' checked' : '') + '><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s]) + (A.insts(ms[s]).length ? ' · ' + A.insts(ms[s]).join(', ') : '')) + '</small></span></label>').join('') + '</div></div>';
   }
   function wirePick(w) {
     const cnt = () => { const n = $('#p-n', w); if (n) n.textContent = 'เลือก ' + $$('input[name=pp]:checked', w).length + ' คน'; }; cnt();
@@ -263,7 +263,7 @@
     });
   }
   function seatForm(bid, row) {
-    const b = bands()[bid], used = new Set(seatsOf(b).map(s => s.sid).filter(Boolean)), ms = A.members(), list = A.activeSids().filter(s => !used.has(s)).sort(A.byClass);
+    const b = bands()[bid], used = new Set(seatsOf(b).map(s => s.sid).filter(Boolean)), ms = A.members(), list = A.activeSids().filter(s => !used.has(s) && !(A.jailed && A.jailed(s))).sort(A.byClass);
     const instOpt = own => opt(own.map(i => [i, i]).concat(A.instList().filter(i => !own.includes(i)).map(i => [i, i])));
     const w = modal('<h3>เพิ่มผู้บรรเลง' + (row ? ' · ' + ROWN[row] : '') + '</h3><form class="form"><div class="muted" style="margin-bottom:8px">ติ๊กเลือกได้หลายคน เครื่องดนตรีเลือกจากที่แต่ละคนเล่นได้ก่อน เปลี่ยนได้</div>' +
       (list.length ? '<div class="plist tall">' + list.map(s => '<div class="pick"><label class="ck"><input type="checkbox" name="ad" value="' + esc(s) + '"><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s])) + '</small></span></label><select class="in sm" data-for="' + esc(s) + '" aria-label="เครื่องดนตรีของ ' + esc(ms[s].first) + '">' + instOpt(A.insts(ms[s])) + '</select></div>').join('') + '</div>'

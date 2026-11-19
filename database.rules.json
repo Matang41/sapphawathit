@@ -411,6 +411,9 @@
     },
     "natab": {
      ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')"
+    },
+    "jail": {
+     ".read": "(auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')"
     }
    }
   },
@@ -472,7 +475,7 @@
    }
   },
   "rulesProbe": {
-   "v18": {
+   "v19": {
     ".read": true
    }
   },

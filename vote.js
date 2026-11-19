@@ -20,7 +20,7 @@
   const polls = () => Object.keys(A.D.polls || {}).map(id => Object.assign({ id }, A.D.polls[id])).filter(p => p.title).sort((a, b) => b.createdAt - a.createdAt);
   const optsOf = p => p.kind === 'yesno' ? ['เห็นด้วย', 'ไม่เห็นด้วย', 'งดออกเสียง'] : (p.options || []);
   const eligible = (p, sid) => { const m = A.members()[sid]; return !!m && m.status === 'active' && (p.who === 'regular' ? m.type === 'regular' : p.who === 'notstart' ? m.type !== 'start' : true); };
-  const voters = p => A.activeSids().filter(s => eligible(p, s));
+  const voters = p => A.activeSids().filter(s => eligible(p, s) && !(A.jailed && A.jailed(s)));
   const canSeeAll = p => A.teacher() || (p.openBallot && !p.election);
   function loadMine(p) { const sid = A.sid(); if (!sid || MY[p.id] !== undefined) return; MY[p.id] = null; B.get('ballots/' + p.id + '/' + sid).then(v => { MY[p.id] = v || false; }).catch(() => { MY[p.id] = false; }).then(A.rerender); }
   function loadAll(p, force) { if (!canSeeAll(p) || (ALL[p.id] !== undefined && !force)) return; if (!force) ALL[p.id] = null; B.get('ballots/' + p.id).then(v => { ALL[p.id] = v || {}; }).catch(() => { ALL[p.id] = {}; }).then(A.rerender); }
@@ -72,7 +72,7 @@
       (el ? fld('ตำแหน่ง', '<select class="in" id="p-pos">' + opt([['president', 'ประธานชมรม'], ['vice', 'รองประธานชมรม']]) + '</select>') + fld('หัวข้อ', '<input class="in" id="p-title" value="หยั่งเสียงตำแหน่งประธานชมรม ปีการศึกษา ' + (+A.year() + 1) + '" required>')
         : fld('หัวข้อ', '<input class="in" id="p-title" required>') + fld('รูปแบบ', '<select class="in" id="p-kind">' + opt(KINDS) + '</select>')) +
       fld('คำอธิบาย', '<textarea class="in" id="p-desc" rows="2"></textarea>') +
-      (el ? '<div class="fld"><span>ผู้ได้รับการเสนอชื่อ</span><div class="plist">' + A.activeSids().sort(A.byClass).map(s => '<label class="ck wide"><input type="checkbox" name="cd" value="' + esc(s) + '"><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s]) + ' · ' + A.typeName(ms[s].type)) + '</small></span></label>').join('') + '</div></div>'
+      (el ? '<div class="fld"><span>ผู้ได้รับการเสนอชื่อ</span><div class="plist">' + A.activeSids().filter(s => !(A.jailed && A.jailed(s))).sort(A.byClass).map(s => '<label class="ck wide"><input type="checkbox" name="cd" value="' + esc(s) + '"><span>' + esc(A.fullName(ms[s])) + ' <small class="muted">' + esc(A.cls(ms[s]) + ' · ' + A.typeName(ms[s].type)) + '</small></span></label>').join('') + '</div></div>'
         : '<div id="p-ow" hidden>' + fld('ตัวเลือก (หนึ่งข้อต่อหนึ่งบรรทัด)', '<textarea class="in" id="p-opts" rows="4"></textarea>') + '</div><label class="ck wide"><input type="checkbox" id="p-open"><span>เปิดเผยชื่อผู้ลงคะแนน และให้สมาชิกเห็นผลสด</span></label>') +
       fld('ผู้มีสิทธิ์ลงคะแนน', '<select class="in" id="p-who">' + opt(WHO) + '</select>') + '<div class="note bad" id="p-err" hidden></div><div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn grow">เปิดรับคะแนน</button></div></form>', { sticky: true, wide: true });
     if (el) $('#p-pos', w).addEventListener('change', e => { $('#p-title', w).value = 'หยั่งเสียงตำแหน่ง' + POS[e.target.value] + ' ปีการศึกษา ' + (+A.year() + 1); });
