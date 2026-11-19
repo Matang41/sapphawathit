@@ -343,7 +343,7 @@
       (red.length ? '<section class="card"><div class="lb">ภารกิจไถ่โทษ</div>' + red.map(m => '<a class="rowcard" href="#/mi/' + esc(m.id) + '" style="display:block;padding:8px 0;border-top:1px dashed var(--line)"><b>' + esc(m.t) + '</b><div class="row" style="font-size:.82rem"><span class="grow"></span>' + dl(m) + '</div></a>').join('') + '</section>' : '') +
       '<div class="muted" style="text-align:center;font-size:.85rem">มีข้อสงสัยเรื่องโทษ ติดต่อครูที่ปรึกษาชมรมโดยตรง</div>' };
   }
-  A.GATE = r => { if (T() || !me() || !A.jailed(me())) return null; if (r.name === 'manual') return null; if (r.name === 'mi' && (one(r.arg) || {}).cat === 'redeem') return null; return jailView(); };
+  A.GATE = r => { if (T() || !me() || !A.jailed(me())) return null; if (r.name === 'manual' || r.name === 'court') return null; if (r.name === 'mi' && (one(r.arg) || {}).cat === 'redeem') return null; return jailView(); };
   A.ACT.jailEnd = async d => { if (!T()) return; if (!(await M.confirmBox('ปล่อยพ้นโทษจำตรุ', esc(nm(d.sid)) + ' พ้นโทษจำตรุก่อนกำหนด · ยศและสิทธิ์กลับมาเหมือนเดิม', 'ปล่อยพ้นโทษ'))) return;
     const j = (A.D.jail || {})[d.sid] || {}, upd = {}; upd[CP() + 'jail/' + d.sid] = null; if (j.log) upd[CP() + 'ranklog/' + d.sid + '/' + j.log + '/end'] = Date.now();
     A.W(B.update('', upd)); A.log('rank.jailEnd', d.sid, ''); if (window.PUSH) window.PUSH.notify('msg', { title: '🔓 พ้นโทษจำตรุ', body: 'ยศและสิทธิ์ในชมรมกลับมาเหมือนเดิมแล้ว', to: [d.sid], url: '#/home' }); toast('ปล่อยพ้นโทษแล้ว'); };
@@ -352,7 +352,7 @@
     $('form', w).addEventListener('submit', ev => { ev.preventDefault(); const u = $('#je-u', w).value; if (!u || u < A.todayISO()) return toast('เลือกวันตั้งแต่วันนี้เป็นต้นไป');
       const upd = {}; upd[CP() + 'jail/' + d.sid + '/until'] = u; if (j.log) upd[CP() + 'ranklog/' + d.sid + '/' + j.log + '/until'] = u; A.W(B.update('', upd)); A.log('rank.jailExt', d.sid, u); w.remove(); toast('ปรับวันพ้นโทษเป็น ' + A.dTH(u, 'short') + ' แล้ว'); }); };
 
-  function downForm(sid0, inst0) {
+  function downForm(sid0, inst0, pre) {
     const act = A.activeSids().sort(A.byClass), lvs = A.levels();
     const w = modal('<h3>⚖️ ลงโทษ: ทัณฑ์บน / ลดยศ / ถอดยศ / จำตรุ / ขับออก</h3><form class="form">' +
       fld('สมาชิก', '<select class="in" id="md-s"' + (sid0 ? ' disabled' : '') + '>' + opt([['', '— เลือกสมาชิก —']].concat((sid0 && !act.includes(sid0) ? [sid0] : []).concat(act).map(s => [s, nm(s) + ' · ' + A.cls(ms()[s])])), sid0 || '') + '</select>') +
@@ -380,7 +380,8 @@
       $('#md-now', w).innerHTML = s && i && i !== '*' ? '<div class="muted" style="font-size:.85rem;margin-bottom:6px">ยศปัจจุบัน: ' + esc(A.lvName(cur)) + ' · หลอด ' + xpOf(s, i) + '/' + XPMAX() + ' แต้ม</div>' : '';
       $('#md-l', w).innerHTML = cur > 1 ? opt(lvs.slice(0, cur - 1).map((l, k) => [k + 1, 'Lv.' + (k + 1) + (l.name ? ' ' + l.name : '')]), cur - 1) : '<option value="">— ลดต่ำกว่านี้ไม่ได้ ใช้ “ถอดยศ” —</option>';
     };
-    fill(); $('#md-s', w).addEventListener('change', fill); $('#md-i', w).addEventListener('change', fillLv);
+    fill(); $('#md-s', w).addEventListener('change', fill);
+    if (pre) { const pr0 = w.querySelector('input[name="md-k"][value="' + pre.k + '"]'); if (pr0) { pr0.checked = true; fill(); } (pre.tags || []).forEach(t => { const c = w.querySelector('input[name="md-t"][value="' + t + '"]'); if (c) c.checked = true; }); if (pre.note) $('#md-n', w).value = pre.note; } $('#md-i', w).addEventListener('change', fillLv);
     w.addEventListener('change', e => { if (e.target.name === 'md-k') fill(); if (e.target.id === 'md-r') { $('#md-rw', w).hidden = !e.target.checked; if (e.target.checked && !$('#md-rd', w).value) $('#md-rd', w).value = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10); } });
     $('form', w).addEventListener('submit', async ev => {
       ev.preventDefault(); const err = $('#md-err', w), bad = t => { err.textContent = t; err.hidden = false; };
@@ -407,10 +408,11 @@
         if ($('#md-me', w).checked) window.PUSH.notify('msg', { title: k === 'jail' ? 'แจ้งโทษจำตรุ' : k === 'out' ? 'แจ้งการขับออกจากชมรม' : pr ? 'แจ้งการทัณฑ์บน' : k === 'strip' ? 'แจ้งการถอดยศ' : 'แจ้งการปรับลดยศ', body: what + ' · มลทิน: ' + tagTxt(tags) + (red ? ' · ภารกิจไถ่โทษ: ' + rt : '') + (note ? ' · ' + note : ''), to: [s], url: red ? '#/mi/' + mid : '#/mis' });
         if (pub) window.PUSH.notify('ann', { title: '📢 ประกาศจากชมรม', body: nm(s) + ' ' + (k === 'jail' ? 'ต้องโทษจำตรุถึง ' + A.dTH(until, 'short') : k === 'out' ? 'ถูกขับออกจากชมรม' : pr ? 'อยู่ระหว่างทัณฑ์บนถึง ' + A.dTH(until, 'short') : (k === 'strip' ? 'ถูกถอดยศ' : 'ถูกลดยศเป็น ' + A.lvName(to)) + ' (' + (i === '*' ? 'ทุกเครื่องดนตรี' : 'เครื่อง' + i) + ')') + ' · มลทิน: ' + tagTxt(tags), url: '#/home' });
       }
+      if (pre && pre.done) pre.done(k);
       w.remove(); toast('บันทึก' + KT[k] + 'แล้ว' + (red ? ' · มอบภารกิจไถ่โทษแล้ว' : '') + (pub ? ' · ประกาศให้ทั้งชมรมทราบ' : ' (ไม่ประกาศ)'), 4500);
     });
   }
-  window.MIS.downForm = downForm;
+  window.MIS.downForm = downForm; window.MIS.TAINT = TAINT; window.MIS.KT = KT;
   A.ACT.probEnd = async d => { if (!T()) return; if (!(await M.confirmBox('ยุติทัณฑ์บน', esc(nm(d.sid)) + ' พ้นทัณฑ์บนก่อนกำหนด', 'ยุติทัณฑ์บน'))) return; A.W(B.set(CP() + 'ranklog/' + d.sid + '/' + d.id + '/end', Date.now())); A.log('rank.probEnd', d.sid, ''); toast('ยุติทัณฑ์บนแล้ว'); };
   A.ACT.misDown = d => { if (T()) downForm(d && d.sid, d && d.inst); };
   A.ACT.rankDown = A.ACT.misDown;
