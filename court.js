@@ -1,5 +1,5 @@
 /* ============================================================
-   court.js — รุ่น 3.41: ศาลชมรม (คดีเปิด)
+   court.js — รุ่น 3.47: ศาลชมรม (คดีเปิด) · ส่วนต่อขยาย: court2.js
    ข้อมูล: c/{ชมรม}/court/{id} = คดี · c/{ชมรม}/courtv/{id}/{sid} = บัตรลูกขุน (ลับ เจ้าตัว+ครูเห็น) · courtx/{sid}/{ชมรม}~{id} = หมายศาลข้ามชมรม
    ขั้น: def แก้ต่าง → vote ลูกขุนลงมติ → sent ผู้พิพากษากำหนดโทษ → done อ่านคำพิพากษา (อุทธรณ์ต่อครูได้ 1 ครั้ง) → closed
    องค์คณะ: ครู (ประธานองค์คณะ มีสิทธิ์ยับยั้ง) + ประธาน + รองประธานชมรม (ครูแต่งตั้งแทนได้ ข้ามชมรมได้)
@@ -223,8 +223,8 @@
   async function peopleAll() { const o = {}; A.activeSids().forEach(s => { o[s] = [A.fullName(A.members()[s]), cid(), avaOf(s)]; });
     for (const c of others()) { try { const v = await B.get(CP(c) + 'members') || {}; Object.keys(v).forEach(s => { if (v[s] && v[s].status === 'active' && !o[s]) o[s] = [A.fullName(v[s]), c, v[s].px && typeof v[s].px === 'object' ? v[s].px : null]; }); } catch (e) { /* ignore */ } } return o; }
   const pOpt = (o, sel, skip) => opt([['', '— เลือก —']].concat(Object.keys(o).filter(s => !(skip || []).includes(s)).sort((a, b) => (o[a][1] === cid() ? 0 : 1) - (o[b][1] === cid() ? 0 : 1) || o[a][0].localeCompare(o[b][0], 'th')).map(s => [s, o[s][0] + (o[s][1] !== cid() ? ' · ชมรม' + clubName(o[s][1]) : '')])), sel || '');
-  async function newForm() {
-    if (!T()) return; toast('กำลังโหลดรายชื่อทั้งสองชมรม…', 1200); const PP = await peopleAll(), R = A.D.roles || {}, rf = r => Object.keys(R).find(s => R[s] && R[s].role === r && PP[s]);
+  async function newForm(pre) {
+    pre = pre || {}; if (!T()) return; toast('กำลังโหลดรายชื่อทั้งสองชมรม…', 1200); const PP = await peopleAll(), R = A.D.roles || {}, rf = r => Object.keys(R).find(s => R[s] && R[s].role === r && PP[s]);
     const ven = A.activeSids().sort(A.byClass), d0 = new Date(Date.now() + 3 * 864e5); d0.setHours(18, 0, 0, 0); const loc = new Date(d0 - d0.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
     const w = modal('<h3>⚖️ เปิดคดีใหม่ (คดีเปิด)</h3><form class="form">' + fld('ผู้ต้องหา (สมาชิกชมรมนี้หรืออีกชมรม)', '<select class="in" id="cn-d">' + pOpt(PP) + '</select>') +
       '<div class="fld"><span>ข้อหา (มลทิน)</span><div class="ms-pick" style="max-height:none">' + Object.keys(TA()).map(k => '<label><input type="checkbox" name="cn-tg" value="' + k + '"> <span>' + esc(TA()[k]) + '</span></label>').join('') + '</div></div>' +
@@ -238,18 +238,19 @@
       '<div class="row" style="margin-top:14px"><button type="button" class="btn ghost grow" data-close>ยกเลิก</button><button class="btn gold grow">เปิดคดี</button></div></form>', { center: true, sticky: true });
     const N = () => +$('#cn-n', w).value, sel = () => [...w.querySelectorAll('input[name="cn-j"]:checked')].map(c => c.value), cc = () => { $('#cn-c', w).textContent = sel().length + '/' + N(); };
     w.addEventListener('change', cc); cc();
-    $('#cn-r', w).addEventListener('click', () => { const ex = [$('#cn-d', w).value, $('#cn-p', w).value, $('#cn-v', w).value], L = ven.filter(s => !ex.includes(s) && !(A.jailed && A.jailed(s))).sort(() => Math.random() - .5).slice(0, N());
+    if (pre.d) $('#cn-d', w).value = pre.d; if (pre.tags) w.querySelectorAll('input[name="cn-tg"]').forEach(c => { c.checked = pre.tags.includes(c.value); }); if (pre.t) $('#cn-t', w).value = pre.t; if (pre.max) $('#cn-m', w).value = pre.max; if (pre.of) { const h3 = w.querySelector('h3'); if (h3) h3.textContent = pre.k === 'jj' ? '⚖️ ไต่สวนการตัดสินที่ไม่เป็นธรรม' : '⚖️ ตั้งศาลรื้อฟื้นคดี'; }
+    $('#cn-r', w).addEventListener('click', () => { const ex = [$('#cn-d', w).value, $('#cn-p', w).value, $('#cn-v', w).value].concat(pre.ban || []), L = ven.filter(s => !ex.includes(s) && !(A.jailed && A.jailed(s))).sort(() => Math.random() - .5).slice(0, N());
       w.querySelectorAll('input[name="cn-j"]').forEach(c => { c.checked = L.includes(c.value); }); cc(); });
     $('form', w).addEventListener('submit', async e => { e.preventDefault(); const err = $('#cn-err', w), bad = t => { err.textContent = t; err.hidden = false; };
       const d = $('#cn-d', w).value, p = $('#cn-p', w).value, v = $('#cn-v', w).value, tags = [...w.querySelectorAll('input[name="cn-tg"]:checked')].map(c => c.value), t = $('#cn-t', w).value.trim(), jur = sel(), due = new Date($('#cn-due', w).value).getTime();
       if (!d) return bad('เลือกผู้ต้องหา'); if (!tags.length) return bad('เลือกข้อหาอย่างน้อย 1 ข้อ'); if (!t) return bad('เขียนคำฟ้อง');
       if (!p || !v) return bad('ระบุผู้พิพากษาให้ครบ 2 คน (ถ้าประธานหรือรองฯ ไม่ว่าง ให้เลือกผู้แทน)'); if (p === v || p === d || v === d) return bad('ผู้พิพากษาต้องเป็นคนละคน และไม่ใช่ผู้ต้องหา');
-      if (jur.length !== N()) return bad('เลือกลูกขุนให้ครบ ' + N() + ' คน'); if (jur.some(s => [d, p, v].includes(s))) return bad('ผู้ต้องหาและผู้พิพากษาเป็นลูกขุนไม่ได้'); if (!(due > Date.now())) return bad('กำหนดเวลายื่นคำแก้ต่างในอนาคต');
+      if ([p, v].concat(jur).some(s => (pre.ban || []).includes(s))) return bad('คนในคณะเดิมร่วมศาลชุดนี้ไม่ได้ (ผู้พิพากษาและลูกขุนต้องเป็นคนใหม่)'); if (jur.length !== N()) return bad('เลือกลูกขุนให้ครบ ' + N() + ' คน'); if (jur.some(s => [d, p, v].includes(s))) return bad('ผู้ต้องหาและผู้พิพากษาเป็นลูกขุนไม่ได้'); if (!(due > Date.now())) return bad('กำหนดเวลายื่นคำแก้ต่างในอนาคต');
       if (!(await M.confirmBox('เปิดคดี', 'ผู้ต้องหา: <b>' + esc(PP[d][0]) + '</b><br>ข้อหา: ' + esc(tagTxt(tags)) + '<br>ทุกคนในองค์คณะ ลูกขุน และผู้ต้องหาจะได้รับหมายศาล', 'เปิดคดี'))) return;
       const id = B.uid(), now = Date.now(), no = Object.values(A.D.court || {}).filter(x => x && x.y === A.year()).length + 1, ppl = {}, who = {}, upd = {};
       [d, p, v].concat(jur).forEach(s => { ppl[s] = { n: PP[s][0], c: PP[s][1], px: PP[s][2] || null }; }); who[d] = 'd'; who[p] = 'j'; who[v] = 'j'; jur.forEach(s => { who[s] = 'u'; });
-      const x = { no, y: A.year(), c: cid(), d, dn: PP[d][0], dc: PP[d][1], tags, t, max: $('#cn-m', w).value, judges: { T: { r: 'T' }, [p]: { r: 'p' }, [v]: { r: 'v' } }, jury: {}, ppl, who, st: 'def', due, at: now, by: A.myName() };
-      jur.forEach(s => { x.jury[s] = true; }); upd[CP() + 'court/' + id] = x;
+      const x = { no, y: A.year(), c: cid(), d, dn: PP[d][0], dc: PP[d][1], tags, t, max: $('#cn-m', w).value, judges: { T: { r: 'T' }, [p]: { r: 'p' }, [v]: { r: 'v' } }, jury: {}, ppl, who, st: 'def', due, at: now, by: A.myName() }; if (pre.of) x.re = { c: pre.of.c, id: pre.of.id, no: pre.of.no || 1, y: pre.of.y || '', k: pre.k || 'rt' };
+      jur.forEach(s => { x.jury[s] = true; }); upd[CP() + 'court/' + id] = x; if (pre.of) upd[CP(pre.of.c) + 'court/' + pre.of.id + (pre.k === 'jj' ? '/jj/' + d : '/rtd')] = { c: cid(), id, at: now };
       const ux = {}; Object.keys(who).forEach(s => { if (ppl[s].c !== cid()) ux['/courtx/' + s + '/' + cid() + '~' + id] = true; });
       try { await B.update('', upd); } catch (er) { return bad('เปิดคดีไม่สำเร็จ: ' + (A.errTH ? A.errTH(er) : er.message)); }
       if (Object.keys(ux).length) B.update('', ux).catch(er => toast('ส่งหมายศาลข้ามชมรมไม่สำเร็จ: ' + (A.errTH ? A.errTH(er) : er.message), 6000)); A.log('court.new', d, caseNo(x) + ' · ' + tagTxt(tags)); w.remove(); const q = { c: cid(), id };
@@ -304,9 +305,9 @@
       $('form', w).addEventListener('submit', e => { e.preventDefault(); const k = $('#cr-k', w).value, why = $('#cr-w', w).value.trim(), veto = k !== maj; if (veto && !why) return toast('ใส่เหตุผลการใช้สิทธิ์ยับยั้ง');
         const now = Date.now(), v = { g: true, k, by: veto ? 'veto' : 'maj', why: veto ? why : null, ch };
         A.W(B.update(P(q), { st: 'done', verdict: v, vAt: now, aplUntil: now + 3 * 864e5 }).then(() => { w.remove(); const body = 'มีความผิด · ' + PN[k] + ' (ลูกขุน ผิด ' + ((x.tally || {}).g || 0) + ' · ไม่ผิด ' + ((x.tally || {}).n || 0) + ')';
-          push('msg', { title: '🔨 คำพิพากษา ' + caseNo(x), body: body + ' · ยื่นอุทธรณ์ได้ภายใน 3 วัน', to: [x.d], url: url(q) }); push('msg', { title: '🔨 คำพิพากษา ' + caseNo(x), body, to: parts(x).filter(s => s !== x.d), url: url(q) });
+          push('msg', { title: '🔨 คำพิพากษา ' + caseNo(x), body: body + ' · ยื่นอุทธรณ์ได้ภายใน 3 วัน · ขอรื้อฟื้นคดีได้ภายใน 30 วัน', to: [x.d], url: url(q) }); push('msg', { title: '🔨 คำพิพากษา ' + caseNo(x), body, to: parts(x).filter(s => s !== x.d), url: url(q) });
           if ($('#cr-a', w).checked) push('ann', { title: '🔨 ศาลชมรมอ่านคำพิพากษา ' + caseNo(x), body: x.dn + ' ' + body, url: url(q) }); toast('อ่านคำพิพากษาแล้ว · กด “ลงโทษตามคำพิพากษา” เพื่อบันทึกโทษ', 5000); })); }); },
-    ctApply: d => { const q = Q(d); if (!q || !T()) return; const x = q.x; if (x.dc !== cid()) return toast('สลับไปชมรม' + clubName(x.dc) + ' ก่อน');
+    ctApply: d => { const q = Q(d); if (!q || !T()) return; const x = q.x; if (x.re && x.re.k === 'rt') return toast('คดีรื้อฟื้น: ถ้ายืนตามเดิมไม่ต้องลงโทษซ้ำ · ถ้าแก้โทษ ใช้ปุ่ม “ยกเลิกโทษเดิมแล้วลงโทษใหม่” ในแผงรื้อฟื้น', 6000); if (x.dc !== cid()) return toast('สลับไปชมรม' + clubName(x.dc) + ' ก่อน');
       if (!window.MIS || !window.MIS.downForm) return toast('ระบบลงโทษยังไม่พร้อม'); if (!A.members()[x.d]) return toast('ไม่พบผู้ต้องหาในทะเบียนชมรมนี้');
       window.MIS.downForm(x.d, null, { k: x.verdict.k, tags: x.tags, note: caseNo(x) + ' · คำพิพากษาศาลชมรม' + clubName(q.c), done: () => A.W(B.set(P(q) + '/applied', Date.now())) }); },
     ctApr: d => { const q = Q(d); if (!q || !T()) return; const x = q.x;
@@ -316,5 +317,5 @@
           toast(r === 'keep' ? 'ยืนตามเดิมแล้ว' : 'บันทึกผลแล้ว — ถ้าลงโทษเดิมไปแล้ว ให้ยกเลิกโทษเดิมที่หน้าภารกิจ (ปล่อยพ้นโทษ / ยุติทัณฑ์บน / คืนยศ / กู้คืนสมาชิก)' + (r === 'change' ? ' แล้วลงโทษใหม่' : ''), 7000); })); }); },
     ctClose: async d => { const q = Q(d); if (!q || !T()) return; if (!(await M.confirmBox('ปิดคดี', 'ปิดคดีนี้ (ผู้ต้องหายื่นอุทธรณ์ไม่ได้อีก)', 'ปิดคดี'))) return; A.W(B.update(P(q), { st: 'closed' })); }
   });
-  window.COURT = { allCases, getCase };
+  window.COURT = { allCases, getCase, newForm, X: { CP, P, url, push, parts, Q, textForm, caseNo, nOf, dt, thNo, tagTxt, clubName, PN, PEN } };
 })();

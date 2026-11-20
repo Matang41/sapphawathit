@@ -482,6 +482,21 @@
       "acc": {
        ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && !data.exists() && root.child('c').child($cid).child('court').child($id).child('d').val() == auth.token.email.replace('@sappha.ac.th', '') && root.child('c').child($cid).child('court').child($id).child('st').val() == 'done'",
        ".validate": "newData.isNumber()"
+      },
+      "rq": {
+       ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && !data.exists() && root.child('c').child($cid).child('court').child($id).child('d').val() == auth.token.email.replace('@sappha.ac.th', '') && root.child('c').child($cid).child('court').child($id).child('verdict').child('g').val() == true && (root.child('c').child($cid).child('court').child($id).child('st').val() == 'done' || root.child('c').child($cid).child('court').child($id).child('st').val() == 'closed') && now <= root.child('c').child($cid).child('court').child($id).child('vAt').val() + 2592000000 && !root.child('c').child($cid).child('court').child($id).child('rtd').exists() && !root.child('c').child($cid).child('court').child($id).child('rtx').exists() && !root.child('c').child($cid).child('court').child($id).child('re').exists() && root.child('c').child($cid).child('court').child($id).child('apr').child('r').val() != 'drop'",
+       "t": {
+        ".validate": "newData.isString() && newData.val().length <= 2000"
+       },
+       "at": {
+        ".validate": "newData.isNumber()"
+       },
+       "by": {
+        ".validate": "newData.val() == auth.token.email.replace('@sappha.ac.th', '')"
+       },
+       "$o": {
+        ".validate": "false"
+       }
       }
      }
     },
@@ -491,6 +506,39 @@
        ".read": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $s",
        ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && auth.token.email.replace('@sappha.ac.th', '') == $s && !data.exists() && root.child('c').child($cid).child('court').child($id).child('st').val() == 'vote' && root.child('c').child($cid).child('court').child($id).child('jury').child($s).exists()",
        ".validate": "newData.val() == 'g' || newData.val() == 'n'"
+      }
+     }
+    },
+    "courte": {
+     "$id": {
+      ".read": "((auth != null && auth.token.email_verified == true && (auth.token.email == 'ntpwm2541@gmail.com' || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).val() == true || root.child('teachers').child(auth.token.email.toLowerCase().replace('.', ',')).child($cid).val() == true)) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('members').child(auth.token.email.replace('@sappha.ac.th', '')).child('status').val() == 'active')) || ((auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && root.child('c').child($cid).child('court').child($id).child('who').child(auth.token.email.replace('@sappha.ac.th', '')).exists())",
+      "$e": {
+       ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && $e.beginsWith(auth.token.email.replace('@sappha.ac.th', '') + '_') && root.child('c').child($cid).child('court').child($id).child('st').val() == 'def' && (root.child('c').child($cid).child('court').child($id).child('d').val() == auth.token.email.replace('@sappha.ac.th', '') || root.child('c').child($cid).child('court').child($id).child('wit').child(auth.token.email.replace('@sappha.ac.th', '')).exists()) && newData.child('side').val() != 'T'",
+       ".validate": "$e.matches(/^([0-9]{4,8}|T)_[0-4]$/) && newData.hasChildren(['s', 'side', 'cap', 'at']) && $e.beginsWith(newData.child('s').val() + '_')",
+       "s": {
+        ".validate": "newData.isString() && newData.val().length <= 12"
+       },
+       "side": {
+        ".validate": "newData.val() == 'd' || newData.val() == 'w' || newData.val() == 'T'"
+       },
+       "cap": {
+        ".validate": "newData.isString() && newData.val().length <= 200"
+       },
+       "n": {
+        ".validate": "newData.isString() && newData.val().length <= 80"
+       },
+       "link": {
+        ".validate": "newData.isString() && newData.val().length <= 300 && newData.val().matches(/^https?:\\/\\//)"
+       },
+       "img": {
+        ".validate": "newData.isString() && newData.val().length <= 230000 && newData.val().beginsWith('data:image/jpeg;base64,')"
+       },
+       "at": {
+        ".validate": "newData.isNumber()"
+       },
+       "$o": {
+        ".validate": "false"
+       }
       }
      }
     }
@@ -554,7 +602,7 @@
    }
   },
   "rulesProbe": {
-   "v24": {
+   "v25": {
     ".read": true
    }
   },
