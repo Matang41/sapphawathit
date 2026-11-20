@@ -497,6 +497,27 @@
        "$o": {
         ".validate": "false"
        }
+      },
+      "prop": {
+       "$p": {
+        ".write": "(auth != null && auth.token.email_verified == true && auth.token.email.endsWith('@sappha.ac.th')) && !data.exists() && root.child('c').child($cid).child('court').child($id).child('judges').child(auth.token.email.replace('@sappha.ac.th', '')).exists() && (root.child('c').child($cid).child('court').child($id).child('st').val() == 'def' || root.child('c').child($cid).child('court').child($id).child('st').val() == 'vote' || root.child('c').child($cid).child('court').child($id).child('st').val() == 'sent')",
+        ".validate": "newData.hasChildren(['s', 'why', 'by', 'at'])",
+        "s": {
+         ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4,8}$/)"
+        },
+        "why": {
+         ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "by": {
+         ".validate": "newData.val() == auth.token.email.replace('@sappha.ac.th', '')"
+        },
+        "at": {
+         ".validate": "newData.isNumber()"
+        },
+        "$o": {
+         ".validate": "false"
+        }
+       }
       }
      }
     },
@@ -602,7 +623,7 @@
    }
   },
   "rulesProbe": {
-   "v25": {
+   "v26": {
     ".read": true
    }
   },

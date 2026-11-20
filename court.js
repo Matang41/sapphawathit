@@ -1,5 +1,5 @@
 /* ============================================================
-   court.js — รุ่น 3.47: ศาลชมรม (คดีเปิด) · ส่วนต่อขยาย: court2.js
+   court.js — รุ่น 3.48: ศาลชมรม (คดีเปิด) · ส่วนต่อขยาย: court2.js (รื้อฟื้น หมายศาล หลักฐาน) · court3.js (คดีพ่วง ซัดทอด)
    ข้อมูล: c/{ชมรม}/court/{id} = คดี · c/{ชมรม}/courtv/{id}/{sid} = บัตรลูกขุน (ลับ เจ้าตัว+ครูเห็น) · courtx/{sid}/{ชมรม}~{id} = หมายศาลข้ามชมรม
    ขั้น: def แก้ต่าง → vote ลูกขุนลงมติ → sent ผู้พิพากษากำหนดโทษ → done อ่านคำพิพากษา (อุทธรณ์ต่อครูได้ 1 ครั้ง) → closed
    องค์คณะ: ครู (ประธานองค์คณะ มีสิทธิ์ยับยั้ง) + ประธาน + รองประธานชมรม (ครูแต่งตั้งแทนได้ ข้ามชมรมได้)
@@ -18,7 +18,7 @@
   const TA = () => (window.MIS && window.MIS.TAINT) || {}, tagTxt = t => (t || []).map(k => TA()[k] || k).join(' · ');
   const clubName = c => ((M.C.clubs.find(x => x.id === c) || {}).name || c), others = () => M.C.clubs.map(c => c.id).filter(c => c !== cid());
   const thNo = n => String(n).replace(/[0-9]/g, d => '๐๑๒๓๔๕๖๗๘๙'[d]);
-  const caseNo = x => 'คดีที่ ' + thNo(x.no || 1) + '/' + thNo(x.y || '');
+  const caseNo = x => 'คดีที่ ' + thNo(x.no || 1) + '/' + thNo(x.y || '') + (x.sub ? ' (ผู้ต้องหาที่ ' + thNo(x.sub) + ')' : '');
   const dt = ms => ms ? new Date(ms).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
   const nOf = (x, s) => s === 'T' ? 'ครูที่ปรึกษาชมรม' : ((x.ppl || {})[s] || {}).n || (A.members()[s] ? A.fullName(A.members()[s]) : s);
   const links = s => String(s || '').split(/\s+/).filter(u => /^https?:\/\/\S+$/i.test(u)).map(u => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u.length > 48 ? u.slice(0, 46) + '…' : u) + '</a>').join('<br>');
@@ -247,7 +247,7 @@
       if (!p || !v) return bad('ระบุผู้พิพากษาให้ครบ 2 คน (ถ้าประธานหรือรองฯ ไม่ว่าง ให้เลือกผู้แทน)'); if (p === v || p === d || v === d) return bad('ผู้พิพากษาต้องเป็นคนละคน และไม่ใช่ผู้ต้องหา');
       if ([p, v].concat(jur).some(s => (pre.ban || []).includes(s))) return bad('คนในคณะเดิมร่วมศาลชุดนี้ไม่ได้ (ผู้พิพากษาและลูกขุนต้องเป็นคนใหม่)'); if (jur.length !== N()) return bad('เลือกลูกขุนให้ครบ ' + N() + ' คน'); if (jur.some(s => [d, p, v].includes(s))) return bad('ผู้ต้องหาและผู้พิพากษาเป็นลูกขุนไม่ได้'); if (!(due > Date.now())) return bad('กำหนดเวลายื่นคำแก้ต่างในอนาคต');
       if (!(await M.confirmBox('เปิดคดี', 'ผู้ต้องหา: <b>' + esc(PP[d][0]) + '</b><br>ข้อหา: ' + esc(tagTxt(tags)) + '<br>ทุกคนในองค์คณะ ลูกขุน และผู้ต้องหาจะได้รับหมายศาล', 'เปิดคดี'))) return;
-      const id = B.uid(), now = Date.now(), no = Object.values(A.D.court || {}).filter(x => x && x.y === A.year()).length + 1, ppl = {}, who = {}, upd = {};
+      const id = B.uid(), now = Date.now(), no = Object.values(A.D.court || {}).filter(x => x && x.y === A.year() && !x.sub).length + 1, ppl = {}, who = {}, upd = {};
       [d, p, v].concat(jur).forEach(s => { ppl[s] = { n: PP[s][0], c: PP[s][1], px: PP[s][2] || null }; }); who[d] = 'd'; who[p] = 'j'; who[v] = 'j'; jur.forEach(s => { who[s] = 'u'; });
       const x = { no, y: A.year(), c: cid(), d, dn: PP[d][0], dc: PP[d][1], tags, t, max: $('#cn-m', w).value, judges: { T: { r: 'T' }, [p]: { r: 'p' }, [v]: { r: 'v' } }, jury: {}, ppl, who, st: 'def', due, at: now, by: A.myName() }; if (pre.of) x.re = { c: pre.of.c, id: pre.of.id, no: pre.of.no || 1, y: pre.of.y || '', k: pre.k || 'rt' };
       jur.forEach(s => { x.jury[s] = true; }); upd[CP() + 'court/' + id] = x; if (pre.of) upd[CP(pre.of.c) + 'court/' + pre.of.id + (pre.k === 'jj' ? '/jj/' + d : '/rtd')] = { c: cid(), id, at: now };
@@ -317,5 +317,5 @@
           toast(r === 'keep' ? 'ยืนตามเดิมแล้ว' : 'บันทึกผลแล้ว — ถ้าลงโทษเดิมไปแล้ว ให้ยกเลิกโทษเดิมที่หน้าภารกิจ (ปล่อยพ้นโทษ / ยุติทัณฑ์บน / คืนยศ / กู้คืนสมาชิก)' + (r === 'change' ? ' แล้วลงโทษใหม่' : ''), 7000); })); }); },
     ctClose: async d => { const q = Q(d); if (!q || !T()) return; if (!(await M.confirmBox('ปิดคดี', 'ปิดคดีนี้ (ผู้ต้องหายื่นอุทธรณ์ไม่ได้อีก)', 'ปิดคดี'))) return; A.W(B.update(P(q), { st: 'closed' })); }
   });
-  window.COURT = { allCases, getCase, newForm, X: { CP, P, url, push, parts, Q, textForm, caseNo, nOf, dt, thNo, tagTxt, clubName, PN, PEN } };
+  window.COURT = { allCases, getCase, newForm, X: { CP, P, url, push, parts, Q, textForm, peopleAll, pOpt, caseNo, nOf, dt, thNo, tagTxt, clubName, PN, PEN } };
 })();
